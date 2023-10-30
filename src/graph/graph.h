@@ -6,25 +6,29 @@
 #include <unordered_map>
 #include <vector>
 
+template<typename NodeId>
 struct path
 {
-  std::vector<node_id_t> nodes;
+  std::vector<NodeId> nodes;
 };
 
+template<typename NodeId, typename EdgeId>
 struct subgraph
 {
-  std::vector<node_id_t> nodes;
-  std::vector<edge_id_t> edges;
+  std::vector<NodeId> nodes;
+  std::vector<EdgeId> edges;
 
   subgraph () = default;
-  subgraph (std::vector<node_id_t> &&__n, std::vector<edge_id_t> &&__e);
+  subgraph (std::vector<NodeId> &&__n, std::vector<EdgeId> &&__e);
 };
 
-template <typename NodeInfo, typename EdgeInfo> class graph
+template <typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId> class graph
 {
 public:
   using node_info_type = NodeInfo;
   using edge_info_type = EdgeInfo;
+  using path = path<NodeId>;
+  using subgraph = subgraph<NodeId, EdgeId>;
 
 private:
   // node data
@@ -38,10 +42,10 @@ private:
 
   // move constructor
   graph (graph &&__graph) noexcept;
-  graph (const graph<NodeInfo, EdgeInfo> &other) = default;
+  graph (const graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &other) = default;
 
-  graph<NodeInfo, EdgeInfo> &operator= (const graph<NodeInfo, EdgeInfo> &) = default;
-  graph<NodeInfo, EdgeInfo> &operator= (graph<NodeInfo, EdgeInfo> &&) = default;
+  graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &operator= (const graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &) = default;
+  graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &operator= (graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &&) = default;
 
 public:
   // destructor
@@ -77,6 +81,7 @@ public:
 };
 
 
+template<typename Nid>
 std::ostream &
-operator<< (std::ostream &stream, path &r);
+operator<< (std::ostream &stream, path<Nid> &r);
 
