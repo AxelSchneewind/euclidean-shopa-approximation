@@ -19,7 +19,7 @@ template <typename E> struct adjacency_list_edge
 
   adjacency_list_edge (node_id_t source, node_id_t destination, E info);
 
-  adjacency_list_edge invert (const std::vector<edge_id_t> &new_edge_indices) const;
+  adjacency_list_edge<E> invert () const;
 
   bool operator== (const adjacency_list_edge &other) const;
 };
@@ -79,9 +79,9 @@ public:
 
   inline size_t edge_count () const;
 
-  inline edge_id_t &offset (const node_id_t &node);
+  inline const edge_id_t &offset (const node_id_t &node) const;
 
-  inline edge_id_t &offset_next (const node_id_t &node);
+  inline const edge_id_t &offset_next (const node_id_t &node) const;
 
   inline const node_id_t &source (const edge_id_t &edge) const;
 
@@ -96,10 +96,6 @@ public:
   inline bool has_edge (const node_id_t &source, const node_id_t &dest) const;
 
   inline std::span<const adjacency_list_edge<E>, std::dynamic_extent> node_edges (const node_id_t &node) const;
-
-  inline const edge_id_t &offset (const node_id_t &node) const;
-
-  inline const edge_id_t &offset_next (const node_id_t &node) const;
 
   bool operator== (const unidirectional_adjacency_list<E> &other);
 };

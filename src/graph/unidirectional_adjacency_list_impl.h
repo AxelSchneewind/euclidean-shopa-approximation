@@ -106,19 +106,6 @@ unidirectional_adjacency_list<E>::edge_count () const
   return edgecount;
 }
 
-template <typename E>
-inline edge_id_t &
-unidirectional_adjacency_list<E>::offset (const node_id_t &node)
-{
-  return offsets[node];
-}
-
-template <typename E>
-inline edge_id_t &
-unidirectional_adjacency_list<E>::offset_next (const node_id_t &node)
-{
-  return offsets[node + 1];
-}
 
 template <typename E>
 inline const node_id_t &
@@ -195,9 +182,9 @@ adjacency_list_edge<E>::adjacency_list_edge (node_id_t source, node_id_t destina
 
 template <typename E>
 adjacency_list_edge<E>
-adjacency_list_edge<E>::invert (const std::vector<edge_id_t> &new_edge_indices) const
+adjacency_list_edge<E>::invert () const
 {
-  return adjacency_list_edge (destination, source, info.invert (new_edge_indices));
+  return adjacency_list_edge (destination, source, info);
 }
 
 template <typename E>
@@ -306,7 +293,7 @@ unidirectional_adjacency_list<E>::inverse () const
     for (edge_id_t edge_id : incoming)
     {
       const adjacency_list_edge<E> &edge = edges[edge_id];
-      inv_edges.push_back (edge.invert (backward_ids));
+      inv_edges.push_back (edge.invert ());
     }
 
     incoming_edges.pop_back ();

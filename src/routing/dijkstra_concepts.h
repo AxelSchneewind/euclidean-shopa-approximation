@@ -1,9 +1,14 @@
 #pragma once
 
+#include <ranges>
+
 template <typename G>
 concept RoutableGraph = std::move_constructible<G> && std::copy_constructible<G> && requires {
   typename G::edge_info_type;
   typename G::node_id_type;
+} && requires (G g, typename G::node_id_type n) {
+  std::begin(g.node_edges(n));
+  std::end(g.node_edges(n));
 };
 
 template <typename Q, typename G>

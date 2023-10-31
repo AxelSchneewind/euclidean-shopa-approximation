@@ -36,7 +36,7 @@ main (int argc, char const *argv[])
 
   triangulation_file_io reader;
 
-  std::shared_ptr<const std_graph_t> graph_ptr (new std_graph_t (reader.read<node_t, edge_t> (input)));
+  std::shared_ptr<const std_graph_t> graph_ptr (new std_graph_t (reader.read<std_graph_t> (input)));
   std::cout << "done, graph has " << graph_ptr->node_count() << " nodes and " << graph_ptr->edge_count() << " edges" << std::endl;
 
   std_routing_t router (graph_ptr);
@@ -68,16 +68,17 @@ main (int argc, char const *argv[])
     gl_file_io writer;
 
     //
-    path route;
-    subgraph tree_subgraph;
+    std_graph_t::path route;
+    std_graph_t::subgraph tree_subgraph;
     std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> before;
     std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> after;
 
-    before = std::chrono::high_resolution_clock::now ();
     switch (mode)
     {
     case 'B':
-      router.compute_route (src, dest);
+      router.init (src, dest);
+      before = std::chrono::high_resolution_clock::now ();
+      router.compute_route ();
       after = std::chrono::high_resolution_clock::now ();
 
       if (router.route_found ())
@@ -88,7 +89,9 @@ main (int argc, char const *argv[])
       break;
 
     case 'A':
-      a_star_router.compute_route (src, dest);
+      a_star_router.init (src, dest);
+      before = std::chrono::high_resolution_clock::now ();
+      a_star_router.compute_route ();
       after = std::chrono::high_resolution_clock::now ();
 
       if (a_star_router.route_found ())

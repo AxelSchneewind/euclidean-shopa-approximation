@@ -8,7 +8,6 @@
 
 #include "formatters_impl.h"
 
-
 template<typename Graph, typename formatter>
 Graph
 triangulation_file_io::read(std::istream &input) {

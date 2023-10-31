@@ -26,7 +26,7 @@ dijkstra<G, Queue, U, L>::dijkstra (const std::shared_ptr<const G> &__graph,
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 dijkstra<G, Queue, U, L>::dijkstra (dijkstra<G, Queue, U, L> &&other) noexcept
-  : _M_adj_list (other._M_adj_list), _M_labels (std::move (other._M_labels)), _M_queue (std::move (other._M_queue))
+  : _M_adj_list (other._M_adj_list), _M_labels (std::move (other._M_labels)), _M_graph(std::move(other._M_graph)), _M_queue (std::move (other._M_queue))
 {}
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>

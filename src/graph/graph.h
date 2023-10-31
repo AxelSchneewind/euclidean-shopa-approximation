@@ -66,13 +66,15 @@ public:
 
   inline size_t edge_count () const;
 
-  inline const NodeInfo &node (const node_id_t &__node_id) const;
+  inline const NodeInfo &node (const NodeId &__node_id) const;
 
   const adjacency_list<EdgeInfo> & list() const { return _M_adjacency_list; };
 
   inline const unidirectional_adjacency_list<EdgeInfo> &forward () const;
 
   inline const unidirectional_adjacency_list<EdgeInfo> &backward () const;
+
+  std::span<EdgeId> node_edges(const NodeId& node) const { return forward().node_edges (node);};
 
   distance_type path_length (const path &__route) const;
 
