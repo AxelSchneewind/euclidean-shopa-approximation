@@ -6,12 +6,6 @@
 #include <vector>
 #include <complex>
 
-// euclidian distance
-distance_t distance(const coordinate_t& c1, const coordinate_t& c2) {
-    coordinate_t delta { c2.latitude - c1.latitude, c2.longitude - c1.longitude };
-    return std::sqrt(delta.latitude * delta.latitude + delta.longitude * delta.longitude);
-}
-
 edge_t
 edge_t::invert (const std::vector<edge_id_t> &) const
 { return edge_t{cost}; }

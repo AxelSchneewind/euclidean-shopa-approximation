@@ -4,12 +4,13 @@
 
 #include "../graph/graph_impl.h"
 #include "../graph/adjacency_list_impl.h"
+#include "../graph/geometry.h"
 
 #include "formatters_impl.h"
 
 
-template<typename node_info, typename edge_info, typename formatter>
-graph<node_info, edge_info>
+template<typename Graph, typename formatter>
+Graph
 triangulation_file_io::read(std::istream &input) {
     formatter f;
     f.skip_comments(input);
@@ -18,9 +19,9 @@ triangulation_file_io::read(std::istream &input) {
     edge_id_t edge_count(f.template read<edge_id_t>(input));
 
     // read nodes
-    std::vector<node_t> nodes;
+    std::vector<typename Graph::node_info_type> nodes;
     for (int i = 0; i < node_count; ++i) {
-        node_info n;
+        typename Graph::node_info_type n;
         n.coordinates = f.template read<coordinate_t>(input);
         nodes.push_back(n);
     }
@@ -34,7 +35,7 @@ triangulation_file_io::read(std::istream &input) {
         triangle tri = f.template read<triangle>(input);
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;
-            edge_info edge;
+            typename Graph::edge_info_type edge;
             edge.cost = distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
 
             builder.add_edge(tri[i], tri[next], edge);
@@ -42,6 +43,6 @@ triangulation_file_io::read(std::istream &input) {
         }
     }
 
-    adjacency_list<edge_t> adj_list = adjacency_list<edge_t>::make_bidirectional_undirected(std::move(builder).get());
-    return graph<node_t, edge_t>::make_graph(std::move(nodes), std::move(adj_list));
+    auto adj_list = Graph::adjacency_list_type::make_bidirectional_undirected(std::move(builder).get());
+    return Graph::make_graph(std::move(nodes), std::move(adj_list));
 }

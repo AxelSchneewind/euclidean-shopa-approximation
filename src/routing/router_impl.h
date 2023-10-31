@@ -14,7 +14,7 @@
 
 template <typename Graph, typename Dijkstra>
 distance_t
-routing<Graph, Dijkstra>::min_route_distance (const node_id_t &node) const
+router<Graph, Dijkstra>::min_route_distance (const node_id_t &node) const
 {
   distance_t result = 0;
 
@@ -50,8 +50,8 @@ routing<Graph, Dijkstra>::min_route_distance (const node_id_t &node) const
 }
 
 template <typename Graph, typename Dijkstra>
-subgraph
-routing<Graph, Dijkstra>::shortest_path_tree () const
+Graph::subgraph
+router<Graph, Dijkstra>::shortest_path_tree () const
 {
   std::vector<node_id_t> nodes;
   std::vector<edge_id_t> edges;
@@ -82,20 +82,20 @@ routing<Graph, Dijkstra>::shortest_path_tree () const
 }
 
 template <typename Graph, typename Dijkstra>
-routing<Graph, Dijkstra>::routing (std::shared_ptr<const Graph> graph)
-  : graph (graph), forward (this->graph, graph->get_list ()), backward (this->graph, graph->get_list ().inverse ()),
+router<Graph, Dijkstra>::router (std::shared_ptr<const Graph> graph)
+  : graph (graph), forward (this->graph, graph->list()), backward (this->graph, graph->list().inverse()),
     start_node (NO_NODE_ID), target_node (NO_NODE_ID), _mid_node (NO_NODE_ID)
 {}
 
 template <typename Graph, typename Dijkstra>
-routing<Graph, Dijkstra>::routing (routing &&routing) noexcept
+router<Graph, Dijkstra>::router (router &&routing) noexcept
   : graph (routing.graph), forward (std::move (routing.forward)), backward (std::move (routing.backward)),
     start_node (routing.start_node), target_node (routing.target_node), _mid_node (routing._mid_node)
 {}
 
 template <typename Graph, typename Dijkstra>
 void
-routing<Graph, Dijkstra>::step_forward ()
+router<Graph, Dijkstra>::step_forward ()
 {
   assert (!forward.queue_empty ());
 
@@ -110,7 +110,7 @@ routing<Graph, Dijkstra>::step_forward ()
 
 template <typename Graph, typename Dijkstra>
 void
-routing<Graph, Dijkstra>::step_backward ()
+router<Graph, Dijkstra>::step_backward ()
 {
   assert (!backward.queue_empty ());
 
@@ -125,27 +125,17 @@ routing<Graph, Dijkstra>::step_backward ()
 
 template <typename Graph, typename Dijkstra>
 void
-routing<Graph, Dijkstra>::compute_route (node_id_t __start_node, node_id_t __target_node)
+router<Graph, Dijkstra>::compute_route ()
 {
   // check args
-  if (__start_node >= graph->node_count () || __target_node >= graph->node_count () || __start_node < 0
-      || __target_node < 0 || __start_node == NO_NODE_ID || __target_node == NO_NODE_ID)
+  if (start_node >= graph->node_count () || target_node >= graph->node_count () || start_node < 0
+      || target_node < 0 || start_node == NO_NODE_ID || target_node == NO_NODE_ID)
     throw;
 
-  start_node = __start_node;
-  target_node = __target_node;
-  forward.init (start_node, target_node);
-  backward.init (target_node, start_node);
-
-  _mid_node = NO_NODE_ID;
-
-  // TODO
+  // TODO: 2 threads performing forward and backward search simultaneously?
   bool done = false;
   while (!done)
   {
-    //bool const fwd_done = forward.queue_empty () || forward.current().distance > distance();
-    //bool const bwd_done = backward.queue_empty () || backward.current().distance > distance();
-
     bool const fwd_done = forward.queue_empty () || min_route_distance (forward.current().node) > distance();
     bool const bwd_done = backward.queue_empty () || min_route_distance (backward.current().node) > distance();
 
@@ -167,7 +157,7 @@ routing<Graph, Dijkstra>::compute_route (node_id_t __start_node, node_id_t __tar
 
 template <typename Graph, typename Dijkstra>
 distance_t
-routing<Graph, Dijkstra>::distance (const node_id_t &node) const
+router<Graph, Dijkstra>::distance (const node_id_t &node) const
 {
   if (node == NO_NODE_ID || !forward.labels ().reached (node) || !backward.labels ().reached (node))
     return DISTANCE_INF;
@@ -176,7 +166,7 @@ routing<Graph, Dijkstra>::distance (const node_id_t &node) const
 
 template <typename Graph, typename Dijkstra>
 distance_t
-routing<Graph, Dijkstra>::distance () const
+router<Graph, Dijkstra>::distance () const
 {
   if (_mid_node == NO_NODE_ID)
     return DISTANCE_INF;
@@ -184,8 +174,8 @@ routing<Graph, Dijkstra>::distance () const
 }
 
 template <typename Graph, typename Dijkstra>
-path
-routing<Graph, Dijkstra>::route () const
+Graph::path
+router<Graph, Dijkstra>::route () const
 {
   if (_mid_node == NO_NODE_ID)
     throw;
@@ -219,14 +209,30 @@ routing<Graph, Dijkstra>::route () const
 
 template <typename Graph, typename Dijkstra>
 node_id_t
-routing<Graph, Dijkstra>::mid_node () const
+router<Graph, Dijkstra>::mid_node () const
 {
   return _mid_node;
 };
 
 template <typename Graph, typename Dijkstra>
 bool
-routing<Graph, Dijkstra>::route_found () const
+router<Graph, Dijkstra>::route_found () const
 {
   return _mid_node != NO_NODE_ID && forward.reached (_mid_node) && backward.reached (_mid_node);
+}
+template <typename Graph, typename Dijkstra>
+void
+router<Graph, Dijkstra>::init (node_id_t __start_node, node_id_t __target_node)
+{
+  // check args
+  if (__start_node >= graph->node_count () || __target_node >= graph->node_count () || __start_node < 0
+      || __target_node < 0 || __start_node == NO_NODE_ID || __target_node == NO_NODE_ID)
+    throw;
+
+  start_node = __start_node;
+  target_node = __target_node;
+  forward.init (start_node, target_node);
+  backward.init (target_node, start_node);
+
+  _mid_node = NO_NODE_ID;
 }

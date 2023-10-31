@@ -11,9 +11,9 @@
 class fmi_file_io
 {
 public:
-  template <typename node_info, typename edge_info, typename format = stream_encoders::encode_text>
-  graph<node_info, edge_info> read (std::istream &input);
+  template <typename Graph, typename format = stream_encoders::encode_text>
+  Graph read (std::istream &input);
 
-  template <typename node_info, typename edge_info, typename format = stream_encoders::encode_text>
-  std::ostream &write (std::ostream &output, const graph<node_info, edge_info> &graph);
+  template <typename Graph, typename format = stream_encoders::encode_text>
+  std::ostream &write (std::ostream &output, const Graph &graph);
 };

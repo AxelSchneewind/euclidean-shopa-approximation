@@ -7,8 +7,8 @@
 #include <span>
 #include <vector>
 
-template <typename node_info, typename edge_info, typename formatter>
-graph<node_info, edge_info>
+template <typename Graph, typename formatter>
+Graph
 fmi_file_io::read (std::istream &input)
 {
   formatter f;
@@ -17,21 +17,21 @@ fmi_file_io::read (std::istream &input)
   node_id_t node_count (f.template read<node_id_t> (input));
   edge_id_t edge_count (f.template read<edge_id_t> (input));
 
-  std::vector<node_info> nodes (f.template read<node_info> (input, node_count));
+  std::vector<typename Graph::node_info_type> nodes (f.template read<Graph::node_info_type> (input, node_count));
 
-  typename unidirectional_adjacency_list<edge_info>::adjacency_list_builder builder;
+  typename unidirectional_adjacency_list<typename Graph::edge_info_type>::adjacency_list_builder builder;
   builder.add_node (node_count - 1);
 
   for (edge_id_t edge_index = 0; edge_index < edge_count; edge_index++)
-    builder.add_edge (f.template read<adjacency_list_edge<edge_info>> (input));
+    builder.add_edge (f.template read<adjacency_list_edge<typename Graph::edge_info_type>> (input));
 
-  adjacency_list<edge_info> adj_list (adjacency_list<edge_info>::make_bidirectional (builder.get ()));
-  return graph<node_info, edge_info>::make_graph (std::move (nodes), std::move(adj_list));
+  typename Graph::adjacency_list_type adj_list (typename Graph::adjacency_list_type::make_bidirectional (builder.get ()));
+  return Graph::make_graph (std::move (nodes), std::move(adj_list));
 }
 
-template <typename node_info, typename edge_info, class formatter>
+template <typename Graph, class formatter>
 std::ostream &
-fmi_file_io::write (std::ostream &output, const graph<node_info, edge_info> &graph)
+fmi_file_io::write (std::ostream &output, const Graph &graph)
 {
   formatter f;
 

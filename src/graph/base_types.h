@@ -27,7 +27,7 @@ const distance_t DISTANCE_INF = (std::numeric_limits<distance_t>::max() / 2) -
                                 COST_MAX;// make sure that 2* DISTANCE_INF + (any cost value) < max(unsigned int)
 
 
-using triangle = std::array<node_id_t, 3>;
+using triangle = std::array<size_t, 3>;
 
 // euclidian distance
 distance_t distance(const coordinate_t& c1, const coordinate_t& c2);
@@ -44,7 +44,7 @@ struct edge_t {
 };
 
 struct ch_node_t : node_t {
-    node_level_t level;
+    short level;
 };
 
 struct ch_edge_t : edge_t {
@@ -52,7 +52,7 @@ struct ch_edge_t : edge_t {
     edge_id_t edgeB;
 
     [[nodiscard]] ch_edge_t
-    invert(const std::vector<edge_id_t> &__new_index) const;
+    invert(const std::vector<node_id_t> &__new_index) const;
 };
 
 

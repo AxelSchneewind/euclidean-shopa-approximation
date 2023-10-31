@@ -2,8 +2,8 @@
 
 #include "gl_file_io.h"
 
-template <typename node_info, typename edge_info, typename format>
-std::ostream& gl_file_io::write (std::ostream &output, const graph<node_info, edge_info>& graph, int line_width, int color)
+template <typename Graph, typename format>
+std::ostream& gl_file_io::write (std::ostream &output, const Graph& graph, int line_width, int color)
 {
   format f;
 

@@ -10,7 +10,7 @@
 #include <map>
 #include <ostream>
 
-template <typename Graph, typename Dijkstra> class routing
+template <typename Graph, typename Dijkstra> class router
 {
 protected:
   std::shared_ptr<const Graph> graph;
@@ -36,17 +36,17 @@ protected:
   distance_t min_route_distance (const node_id_t &node) const;
 
 public:
-  explicit routing (std::shared_ptr<const Graph> graph);
-  routing (routing &&other) noexcept;
+  explicit router (std::shared_ptr<const Graph> graph);
+  router (router &&other) noexcept;
 
-  ~routing () = default;
+  ~router () = default;
+
+  void init(node_id_t start_node, node_id_t target_node);
 
   /**
    * calculates a one to one route using bidirectional dijkstra
-   * @param start_node
-   * @param target_node
    */
-  void compute_route (node_id_t start_node, node_id_t target_node);
+  void compute_route ();
 
   /**
    * returns the distance of the calculated route
@@ -70,9 +70,9 @@ public:
    * returns the nodes of the path from start to target node
    * @return
    */
-  path route () const;
+  Graph::path route () const;
 
-  subgraph shortest_path_tree () const;
+  Graph::subgraph shortest_path_tree () const;
 
   // returns the node where forward and backward search met
   node_id_t mid_node () const;

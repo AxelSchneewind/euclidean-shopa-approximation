@@ -14,8 +14,8 @@ remove_duplicates (std::vector<T> &items)
 {
   std::unordered_map<T, bool, std::hash<T>> found(10000);
 
-  int j = 0;
-  for (int i = 0; i < items.size (); ++i)
+  size_t j = 0;
+  for (size_t i = 0; i < items.size (); ++i)
   {
     auto element = items[i];
 

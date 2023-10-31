@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../query.h"
 #include "../routing.h"
 #include <array>
 #include <cassert>
@@ -15,12 +16,6 @@
       assert (expected == actual);                                                                                     \
     }                                                                                                                  \
   }
-
-struct Query
-{
-  node_id_t from;
-  node_id_t to;
-};
 
 std::vector<Query>
 get_queries (std::ifstream &input)
@@ -79,49 +74,40 @@ test_routing (const Graph &graph, Router &router, const std::vector<Query> &quer
   }
 };
 
+template <typename Graph, typename Router1, typename Router2>
+void
+compare_routing (const Graph &graph, Router1 &router1, Router2& router2, const std::vector<Query> &queries)
+{
+  for (int i = 0; i < queries.size (); i++)
+  {
+    auto res1 = perform_query(graph, router1, queries[i]);
+    auto res2 = perform_query(graph, router2, queries[i]);
+
+    output info;
+    info.query = false;
+    info.timing = true;
+
+    compare_results (res1, res2, info);
+  }
+}
+
 template <typename Graph, typename Router>
 void
 test_routing (const Graph &graph, Router &router, const std::vector<Query> &queries)
 {
   for (int i = 0; i < queries.size (); i++)
   {
-    node_id_t from = queries[i].from;
-    node_id_t to = queries[i].to;
-
-    std::cout << "routing from " << from << " to " << to << ": " << std::flush;
-
-    // setup timing
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> before
-      = std::chrono::high_resolution_clock::now ();
-
-    router.compute_route (from, to);
-
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> after
-      = std::chrono::high_resolution_clock::now ();
-    std::chrono::duration<double, std::milli> routing_time = after - before;
-
-    if (router.route_found ())
-    {
-      path route = router.route ();
-      subgraph tree = router.shortest_path_tree ();
-
-      std::cout << " done"
-		<< "\n\ttime:      " << routing_time
-		<< "\n\tdistance:  " << graph.path_length (route)
-		<< "\n\tpath:      " << route
-		<< "\n\tmid node:  " << router.mid_node ()
-		<< "\n\ttree size: " << tree.nodes.size () << std::endl;
-    }
-    else
-    {
-      std::cout << "no route found" << std::endl;
-    }
+    auto res = perform_query(graph, router, queries[i]);
+    output info;
+    info.query = false;
+    info.timing = true;
+    print_result (res, info);
   }
 }
 
-template <typename N, typename E>
+template <typename G>
 bool
-check_graph (const graph<N, E> &graph)
+check_graph (const G &graph)
 {
   bool correct = true;
   for (edge_id_t e = 0; e < graph.edge_count (); ++e)
@@ -194,11 +180,11 @@ assert_adjacency_list_equal (const unidirectional_adjacency_list<edge> &list, si
 
 template <typename N, typename E>
 void
-test_routes (routing<N, E> *router, const std::vector<node_id_t> &sources, const std::vector<node_id_t> &targets,
+test_routes (router<N, E> *router, const std::vector<node_id_t> &sources, const std::vector<node_id_t> &targets,
 	     const std::vector<distance_t> &distances);
 template <typename N, typename E>
 void
-test_routes (routing<N, E> *router, const std::vector<node_id_t> &sources, const std::vector<node_id_t> &targets,
+test_routes (router<N, E> *router, const std::vector<node_id_t> &sources, const std::vector<node_id_t> &targets,
 	     const std::vector<distance_t> &distances)
 {
   for (int i = 0; i < sources.size (); i++)
@@ -210,7 +196,7 @@ test_routes (routing<N, E> *router, const std::vector<node_id_t> &sources, const
   }
 }
 
-template <typename Reader, typename node_t, typename edge_t, typename Check>
+template <typename Reader, typename G, typename Check>
 bool
 test_read (const std::string &filename, Check check)
 {
@@ -222,7 +208,7 @@ test_read (const std::string &filename, Check check)
     std::cout << " bad file" << std::endl;
 
   Reader reader;
-  graph<node_t, edge_t> graph (reader.template read<node_t, edge_t> (input));
+  G graph (reader.template read<G> (input));
 
   bool success = check (graph);
 

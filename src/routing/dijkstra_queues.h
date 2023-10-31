@@ -4,7 +4,24 @@
 #include <concepts>
 #include <tuple>
 
-template <typename Graph> struct use_all_edges
+
+template <typename Info = std::nullptr_t> struct node_cost_pair
+{
+  node_id_t node;
+  node_id_t predecessor;
+  distance_t distance;
+  Info info;
+};
+
+template <> struct node_cost_pair<std::nullptr_t>
+{
+  node_id_t node;
+  node_id_t predecessor;
+  distance_t distance;
+};
+
+
+template <RoutableGraph Graph> struct use_all_edges
 {
 protected:
   const Graph *g;
@@ -18,7 +35,7 @@ public:
   };
 };
 
-template <typename Graph> struct use_upward_edges
+template <RoutableGraph Graph> struct use_upward_edges
 {
 protected:
   const Graph *g;
@@ -42,19 +59,16 @@ public:
 
 template <typename NodeCostPair> struct A_Star
 {
-private:
-  distance_t factor;
-
 public:
-  A_Star (distance_t factor = 1) : factor (factor){};
+  A_Star () {};
 
   bool operator() (const NodeCostPair &__n1, const NodeCostPair &__n2)
   {
-    return __n1.distance + factor * __n1.info.remaining > __n2.distance + factor * __n2.info.remaining;
+    return __n1.info.value > __n2.info.value;
   };
 };
 
-template <typename Graph, typename NodeCostPair, typename Comp>
+template <RoutableGraph Graph, typename NodeCostPair, typename Comp>
 class dijkstra_queue : protected std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>
 {
 protected:
@@ -103,7 +117,7 @@ public:
   void push (node_id_t __node, node_id_t __predecessor, distance_t __dist) override
   {
     NodeCostPair ncp (__node, __predecessor, __dist);
-    ncp.info.remaining = distance (_M_target_coordinates, _M_graph->node (__node).coordinates);
+    ncp.info.value = __dist + distance (_M_target_coordinates, _M_graph->node (__node).coordinates);
     std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>::push (ncp);
   }
 
