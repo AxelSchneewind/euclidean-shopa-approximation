@@ -1,6 +1,6 @@
 #include "routing.h"
-#include "triangulation/granular_adjacency_list.h"
-#include "triangulation/steiner_graph.h"
+#include "file-io/triangulation_file_io.h"
+#include "triangulation/steiner_graph.h.h"
 #include <fstream>
 
 int main() {
