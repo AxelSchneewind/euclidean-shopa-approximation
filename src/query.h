@@ -75,26 +75,20 @@ compare_results (Result result1, Result result2, output info, std::ostream &out 
   if (info.query)
     out << result1.query.from << " to " << result1.query.to << '\n';
 
-  if (result1.route_found && result2.route_found)
-  {
     if (info.distance)
-      out << "\tdistance:  " << result1.distance << "\t" << result2.distance << '\n';
+      out << "\tdistance:         " << result1.distance << "\t" << result2.distance
+      << "\t\t\t\t" << (result2.distance - result1.distance) / std::max(result1.distance, result2.distance) << '\n';
     if (info.mid_node)
       out << "\tsearches met in:  " << result1.mid_node << '\t' << result2.mid_node << '\n';
     if (info.route)
-      out << "\tpath:      " << result1.route << "\n"
-	  << "\tpath:      " << result2.route << '\n';
+      out << "\tpath:             " << result1.route << "\n"
+          << "\tpath:             " << result2.route << '\n';
     if (info.route_size)
-      out << "\tpath size: " << result1.route.nodes.size () << "\t" << result2.route.nodes.size() << '\n';
+      out << "\tpath size:        " << result1.route.nodes.size () << "\t" << result2.route.nodes.size() << '\n';
     if (info.tree_size)
-      out << "\ttree size: " << result1.trees.nodes.size () << '\t' << result2.trees.nodes.size()<< '\n';
+      out << "\ttree size:        " << result1.trees.nodes.size () << '\t' << result2.trees.nodes.size()<< '\n';
     if (info.timing)
-      out << "\ttime:      " << result1.duration << "\t" << result2.duration << '\n';
-  }
-  else
-  {
-    out << "no route found" << std::endl;
-  }
+      out << "\ttime:             " << result1.duration << "\t" << result2.duration << '\n';
 }
 
 void

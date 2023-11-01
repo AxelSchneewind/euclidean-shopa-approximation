@@ -23,7 +23,7 @@ protected:
   node_id_t target_node;
 
   /*
-   * node where forward and backward search met
+   * node where topology and backward search met
    */
   node_id_t _mid_node;
 
@@ -74,6 +74,6 @@ public:
 
   Graph::subgraph shortest_path_tree () const;
 
-  // returns the node where forward and backward search met
+  // returns the node where topology and backward search met
   node_id_t mid_node () const;
 };

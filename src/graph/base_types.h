@@ -17,7 +17,22 @@ const edge_id_t NO_EDGE_ID = -1;//std::numeric_limits<edge_id_t>::max();
 struct coordinate_t {
     float latitude;
     float longitude;
+
+    float length() const { return std::sqrt(latitude * latitude + longitude * longitude); }
 };
+
+coordinate_t operator+(const coordinate_t& first, const coordinate_t& second) {
+    return {first.latitude + second.latitude, first.longitude + second.longitude};
+}
+coordinate_t operator-(const coordinate_t& first, const coordinate_t& second) {
+    return {first.latitude - second.latitude, first.longitude - second.longitude};
+}
+float operator*(const coordinate_t& first, const coordinate_t& second) {
+    return first.latitude * second.latitude + first.longitude * second.longitude;
+}
+coordinate_t operator*(const coordinate_t& first, const float& second) {
+    return {first.latitude * second, first.longitude * second};
+}
 
 using cost_t = float;
 const cost_t COST_MAX = 1000000;

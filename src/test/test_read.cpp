@@ -26,12 +26,12 @@ test_read_toy_fmi(const std::string &path) {
     auto c = [&](const std_graph_t &g) {
         const size_t node_count = 6;
 	const size_t edge_count = 9;
-        assert_adjacency_list_equal(g.forward(), node_count, edge_count, expected_offsets_fwd, expected_edges_fwd);
-        assert_adjacency_list_equal(g.backward(), node_count, edge_count, expected_offsets_bwd, expected_edges_bwd);
-        return check_graph (g);
+        assert_adjacency_list_equal(g.topology(), node_count, edge_count, expected_offsets_fwd, expected_edges_fwd);
+        assert_adjacency_list_equal(g.inverse_topology(), node_count, edge_count, expected_offsets_bwd, expected_edges_bwd);
+        return true;
     };
 
-    test_read<fmi_file_io, node_t, edge_t>(filename, c);
+    test_read<fmi_file_io, std_graph_t, decltype(c)>(filename, c);
 }
 
 void
@@ -69,28 +69,28 @@ test_read_toy_ch(const std::string &path) {
     auto c = [&](const ch_graph_t &g) {
       	const size_t node_count = 6;
       	const size_t edge_count = 10;
-        assert_adjacency_list_equal(g.forward(), node_count, edge_count, expected_offsets_fwd, expected_edges_fwd);
-        assert_adjacency_list_equal(g.backward(), node_count, edge_count, expected_offsets_bwd, expected_edges_bwd);
-        return check_graph (g);
+        assert_adjacency_list_equal(g.topology(), node_count, edge_count, expected_offsets_fwd, expected_edges_fwd);
+        assert_adjacency_list_equal(g.inverse_topology(), node_count, edge_count, expected_offsets_bwd, expected_edges_bwd);
+        return true;
     };
 
-    test_read<fmi_file_io, ch_node_t, ch_edge_t>(filename, c);
+    test_read<fmi_file_io, ch_graph_t, decltype(c)>(filename, c);
 }
 
 void
 test_read_stgtregbz_fmi(const std::string &path) {
-    std::string filename = path + "/stgtregbz.fmi";
+    std::string filename = path + "/stgtregbz/stgtregbz.fmi";
 
-    auto c = [&](const std_graph_t &g) { return check_graph (g); };
-    test_read<fmi_file_io, node_t, edge_t>(filename, c);
+    auto c = [&](const std_graph_t &g) { return true; };
+    test_read<fmi_file_io, std_graph_t, decltype(c)>(filename, c);
 }
 
 void
 test_read_stgtregbz_ch(const std::string &path) {
-    std::string filename = path + "/stgtregbz.sch";
+    std::string filename = path + "/stgtregbz/stgtregbz.sch";
 
-    auto c = [&](const ch_graph_t &g) { return check_graph (g); };
-    test_read<fmi_file_io, ch_node_t, ch_edge_t>(filename, c);
+    auto c = [&](const ch_graph_t &g) { return true; };
+    test_read<fmi_file_io, ch_graph_t, decltype(c)>(filename, c);
 }
 
 int

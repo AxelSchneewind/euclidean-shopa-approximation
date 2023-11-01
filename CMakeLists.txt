@@ -42,7 +42,8 @@ add_executable(test_read src/test/test_read.cpp)
 add_executable(test_read_triangulation src/test/test_read_aegaeis.cpp)
 add_executable(test_route_triangulation src/test/test_route_aegaeis.cpp)
 add_executable(make_gl src/make_gl.cpp
-        src/util/remove_duplicates.h)
+        src/util/remove_duplicates.h
+        src/triangulation/steiner_graph_impl.h)
 add_executable(route_interactive_triangulation src/route_interactive_triangulation.cpp)
 add_executable(route_interactive_ch src/route_interactive_ch.cpp)
 add_executable(make_granular_triangulation src/make_granular_triangulation.cpp)

@@ -22,7 +22,7 @@ router<Graph, Dijkstra>::min_route_distance (const node_id_t &node) const
 
   if (Dijkstra::search_symmetric)
   {
-    // if node is labelled in forward search, it already has its minimal distance and routes using it must be longer
+    // if node is labelled in topology search, it already has its minimal distance and routes using it must be longer
     if (forward.reached (node))
       result += forward.labels ().distance (node);
     else if (!forward.queue_empty ())
@@ -56,12 +56,12 @@ router<Graph, Dijkstra>::shortest_path_tree () const
   std::vector<node_id_t> nodes;
   std::vector<edge_id_t> edges;
 
-  // add nodes and edges of forward dijkstra
+  // add nodes and edges of topology dijkstra
   for (auto n : forward.labels ().all_visited ())
   {
     nodes.push_back (n);
     node_id_t pred = forward.labels ().predecessor (n);
-    edge_id_t edge = graph->forward ().edge_index (pred, n);
+    edge_id_t edge = graph->topology().edge_index (pred, n);
     edges.push_back (edge);
   }
 
@@ -71,7 +71,7 @@ router<Graph, Dijkstra>::shortest_path_tree () const
     nodes.push_back (n);
 
     node_id_t succ = backward.labels ().predecessor (n);
-    edge_id_t edge = graph->forward ().edge_index (n, succ);
+    edge_id_t edge = graph->topology().edge_index (n, succ);
     edges.push_back (edge);
   }
 
@@ -132,7 +132,7 @@ router<Graph, Dijkstra>::compute_route ()
       || target_node < 0 || start_node == NO_NODE_ID || target_node == NO_NODE_ID)
     throw;
 
-  // TODO: 2 threads performing forward and backward search simultaneously?
+  // TODO: 2 threads performing topology and backward search simultaneously?
   bool done = false;
   while (!done)
   {
@@ -188,7 +188,7 @@ router<Graph, Dijkstra>::route () const
 
   while (fwd_node != NO_NODE_ID && fwd_node != start_node && fwd_node != forward.labels ().predecessor (fwd_node))
   {
-    assert (graph->forward ().has_edge (forward.labels ().predecessor (fwd_node), fwd_node));
+    assert (graph->topology().has_edge (forward.labels ().predecessor (fwd_node), fwd_node));
 
     fwd_node = forward.labels ().predecessor (fwd_node);
     assert(fwd_node != NO_NODE_ID);

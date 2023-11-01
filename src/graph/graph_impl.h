@@ -38,7 +38,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph (
     assert (id_next < node_count ());
 
     nodes.push_back (id_next);
-    edges.push_back (_M_adjacency_list.forward ().edge_index (id, id_next));
+    edges.push_back (_M_adjacency_list.edge_index (id, id_next));
   }
 
   return { std::move (nodes), std::move (edges) };
@@ -69,15 +69,13 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph (
   // make one-directional adjacency list
   typename unidirectional_adjacency_list<EdgeInfo>::adjacency_list_builder forward_builder;
   forward_builder.add_node (node_count - 1);
-  for (edge_id_t edge : subgraph.edges)
+  for (auto edge : subgraph.edges)
   {
-    node_id_t src = _M_adjacency_list.forward ().source (edge);
-    node_id_t dest = _M_adjacency_list.forward ().destination (edge);
-    EdgeInfo info = _M_adjacency_list.forward ().edge (edge);
+    auto src = _M_adjacency_list.source (edge);
+    auto dest = _M_adjacency_list.destination (edge);
+    EdgeInfo info = _M_adjacency_list.edge (edge);
 
-    src = new_node_ids[src];
-    dest = new_node_ids[dest];
-    forward_builder.add_edge (src, dest, info);
+    forward_builder.add_edge (new_node_ids[src], new_node_ids[dest], info);
   }
 
   // make bidirectional adjacency list
@@ -91,7 +89,7 @@ template <typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId
 size_t
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::edge_count () const
 {
-  return forward ().edge_count ();
+  return topology().edge_count ();
 }
 
 template <typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
@@ -102,8 +100,8 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_count () const
 }
 
 template <typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-const NodeInfo &
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node (const NodeId &node_id) const
+const graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_info_type&
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node (const graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_id_type &node_id) const
 {
   return _M_node_list[node_id];
 }
@@ -166,17 +164,17 @@ operator<< (std::ostream &stream, path<NodeId> &r)
 }
 
 template <typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-const unidirectional_adjacency_list<EdgeInfo> &
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::backward () const
+const adjacency_list<EdgeInfo> &
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::inverse_topology () const
 {
-  return _M_adjacency_list.backward ();
+  return _M_adjacency_list.inverse ();
 }
 
 template <typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-const unidirectional_adjacency_list<EdgeInfo> &
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::forward () const
+const adjacency_list<EdgeInfo> &
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::topology () const
 {
-  return _M_adjacency_list.forward ();
+  return _M_adjacency_list;
 }
 
 template <typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
@@ -192,7 +190,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::path_length (const path &route) const
   {
     auto from = route.nodes[i];
     auto to = route.nodes[i + 1];
-    result += forward ().edge (forward ().edge_index (from, to)).cost;
+    result += topology().edge (topology().edge_index (from, to)).cost;
   }
 
   return result;

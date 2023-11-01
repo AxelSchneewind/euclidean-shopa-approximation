@@ -18,8 +18,8 @@ unpack(const ch_graph_t& graph, const subgraph & subgraph) {
   std::queue<edge_id_t> remaining;
   for (auto shortcut : subgraph.edges)
   {
-    nodes.push_back (graph.forward().source(shortcut));
-    nodes.push_back (graph.forward().destination(shortcut));
+    nodes.push_back (graph.topology().source(shortcut));
+    nodes.push_back (graph.topology().destination(shortcut));
     remaining.push (shortcut);
 
     while (!remaining.empty () && remaining.size() < 1000)
@@ -28,11 +28,11 @@ unpack(const ch_graph_t& graph, const subgraph & subgraph) {
       remaining.pop();
 
       // take halves of shortcut
-      auto a = graph.forward().edge(edge).edgeA;
-      auto b = graph.forward().edge(edge).edgeB;
+      auto a = graph.topology().edge(edge).edgeA;
+      auto b = graph.topology().edge(edge).edgeB;
       if (a != NO_EDGE_ID && b != NO_EDGE_ID) {
 	remaining.push(a);
-	nodes.push_back(graph.forward().destination(a));
+	nodes.push_back(graph.topology().destination(a));
 	remaining.push(b);
       } else {
 	edges.push_back(edge);

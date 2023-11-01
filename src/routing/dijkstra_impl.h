@@ -73,8 +73,8 @@ template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 void
 dijkstra<G, Queue, U, L>::expand (const dijkstra<G, Queue, U, L>::node_cost_pair &node)
 {
-  auto edges = _M_adj_list.forward ().node_edges (node.node);
-  for (const adjacency_list_edge<typename G::edge_info_type> &edge : edges)
+  auto edges = _M_adj_list.outgoing_edges(node.node);
+  for (auto &edge : edges)
   {
     // ignore certain edges
     if (!_M_use_edge (node.node, edge))

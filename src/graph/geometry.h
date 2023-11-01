@@ -5,7 +5,7 @@
 #include "cmath"
 
 // euclidian distance
-[[deprecated]] distance_t
+distance_t
 distance_euclidian (const coordinate_t &c1, const coordinate_t &c2)
 {
   coordinate_t delta{ c2.latitude - c1.latitude, c2.longitude - c1.longitude };
@@ -42,3 +42,28 @@ distance (const coordinate_t &__c1, const coordinate_t &__c2)
 
   return ans;
 };
+
+inline float
+angle (const coordinate_t &__s0, const coordinate_t &__d0, const coordinate_t &__s1, const coordinate_t &__d1) {
+    // use dot product
+    auto A = __d0 - __s0;
+    auto B = __d1 - __s1;
+    auto AB = A * B;
+
+    // TODO
+    return std::acos(AB / (A.length() * B.length()));
+}
+
+
+inline float
+line_distance(const coordinate_t& __source, const coordinate_t& __destination, const coordinate_t& __point) {
+    auto length = distance(__destination, __source);
+
+    // compute normal vector
+    coordinate_t normal = __destination - __source;
+    normal = {normal.longitude, - normal.latitude};
+    normal = normal * (1 / length);
+
+    return std::abs((__point - __source) * normal);
+}
+

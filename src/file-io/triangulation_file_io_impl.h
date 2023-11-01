@@ -20,7 +20,7 @@ triangulation_file_io::read(std::istream &input) {
     // read nodes
     std::vector<typename Graph::node_info_type> nodes;
     for (int i = 0; i < node_count; ++i) {
-        typename Graph::node_info_type n;
+        node_t n;
         n.coordinates = f.template read<coordinate_t>(input);
         nodes.push_back(n);
     }
@@ -34,7 +34,7 @@ triangulation_file_io::read(std::istream &input) {
         triangle tri = f.template read<triangle>(input);
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;
-            typename Graph::edge_info_type edge;
+            edge_t edge;
             edge.cost = distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
 
             builder.add_edge(tri[i], tri[next], edge);
