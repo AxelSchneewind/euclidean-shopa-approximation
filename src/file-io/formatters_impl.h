@@ -77,17 +77,17 @@ encode_text::write (std::ostream &output, const node_t &node)
 }
 
 template <>
-adjacency_list_edge<edge_t>
+adjacency_list_edge<node_id_t, edge_t>
 encode_text::read (std::istream &input)
 {
-  adjacency_list_edge<edge_t> result;
+  adjacency_list_edge<node_id_t, edge_t> result;
   input >> result.source >> result.destination >> result.info.cost >> ignore >> ignore;
   return result;
 }
 
 template <>
 std::ostream &
-encode_text::write (std::ostream &output, const adjacency_list_edge<edge_t> &edge)
+encode_text::write (std::ostream &output, const adjacency_list_edge<node_id_t, edge_t> &edge)
 {
   output << edge.source << ' ' <<  edge.destination << ' ' <<  edge.info.cost << ' ' <<  0 << ' ' <<  0 << ' ';
   return output;
@@ -130,10 +130,10 @@ encode_text::write (std::ostream &output, const ch_node_t &node)
 }
 
 template <>
-adjacency_list_edge<ch_edge_t>
+adjacency_list_edge<node_id_t, ch_edge_t>
 encode_text::read (std::istream &input)
 {
-  adjacency_list_edge<ch_edge_t> result;
+  adjacency_list_edge<node_id_t, ch_edge_t> result;
   input >> result.source >> result.destination >> result.info.cost >> ignore >> ignore >> result.info.edgeA
     >> result.info.edgeB;
   return result;
@@ -141,7 +141,7 @@ encode_text::read (std::istream &input)
 
 template <>
 std::ostream &
-encode_text::write (std::ostream &output, const adjacency_list_edge<ch_edge_t> &edge)
+encode_text::write (std::ostream &output, const adjacency_list_edge<node_id_t, ch_edge_t> &edge)
 {
   output << edge.source << ' ' <<  edge.destination << ' ' <<  edge.info.cost << ' ' <<  0 << ' ' <<  0 << ' ' <<  edge.info.edgeA << ' ' <<  edge.info.edgeB << ' ';
   return output;

@@ -6,6 +6,7 @@
 #include "../routing/dijkstra_concepts.h"
 #include <unordered_map>
 #include <vector>
+#include "../util/counting_iterator.h"
 
 template<typename NodeId>
 struct path {
@@ -60,23 +61,43 @@ public:
     static graph make_graph(std::vector<NodeInfo> &&__nodes, adjacency_list<EdgeInfo> &&__forward);
 
     static graph make_graph(std::vector<NodeInfo> &&__nodes,
-                            const std::shared_ptr<unidirectional_adjacency_list<EdgeInfo>> &__forward);
+                            const std::shared_ptr<unidirectional_adjacency_list<node_id_type, EdgeInfo>> &__forward);
 
     inline std::span<const node_info_type> nodes() const;
+    inline counter<node_id_type> node_ids() const;
 
     inline size_t node_count() const;
 
     inline size_t edge_count() const;
 
-    inline const node_info_type& node(const node_id_type &__node_id) const ;
+    inline const node_info_type &node(const node_id_type &__node_id) const;
 
+    const edge_info_type &edge(const edge_id_type &__edge_id) const { return _M_adjacency_list.edge(__edge_id); }
+
+    const node_id_type &source(const edge_id_type &__edge_id) const { return _M_adjacency_list.source(__edge_id); }
+
+    const node_id_type &destination(const edge_id_type &__edge_id) const {
+        return _M_adjacency_list.destination(__edge_id);
+    }
+
+    [[deprecated]]
     const adjacency_list<edge_info_type> &list() const { return _M_adjacency_list; };
 
+    [[deprecated]]
     inline const adjacency_list<edge_info_type> &topology() const;
 
+    [[deprecated]]
     inline const adjacency_list<edge_info_type> &inverse_topology() const;
 
-    std::span<edge_id_type> node_edges(const node_id_type &node) const { return topology().outgoing_edges(node); };
+    edge_id_type edge_id(const node_id_type &src, const node_id_type &dest) const {
+        return _M_adjacency_list.edge_id(src, dest);
+    };
+
+    bool has_edge(const node_id_type &src, const node_id_type &dest) const { return edge_id(src, dest) != NO_EDGE_ID; }
+
+    std::span<const internal_adjacency_list_edge<node_id_type, edge_info_type>> outgoing_edges(const node_id_type &node) const {
+        return topology().outgoing_edges(node);
+    };
 
     distance_type path_length(const path &__route) const;
 

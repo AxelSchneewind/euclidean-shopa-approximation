@@ -6,6 +6,6 @@
 
 class triangulation_file_io {
 public:
-  template <typename Graph, typename format = stream_encoders::encode_text>
-  Graph read (std::istream &input);
+  template <Topology Graph, typename format = stream_encoders::encode_text>
+  static Graph read (std::istream &input);
 };

@@ -61,7 +61,7 @@ router<Graph, Dijkstra>::shortest_path_tree () const
   {
     nodes.push_back (n);
     node_id_t pred = forward.labels ().predecessor (n);
-    edge_id_t edge = graph->topology().edge_index (pred, n);
+    edge_id_t edge = graph->topology().edge_id(pred, n);
     edges.push_back (edge);
   }
 
@@ -71,7 +71,7 @@ router<Graph, Dijkstra>::shortest_path_tree () const
     nodes.push_back (n);
 
     node_id_t succ = backward.labels ().predecessor (n);
-    edge_id_t edge = graph->topology().edge_index (n, succ);
+    edge_id_t edge = graph->topology().edge_id(n, succ);
     edges.push_back (edge);
   }
 

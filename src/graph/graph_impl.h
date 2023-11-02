@@ -38,7 +38,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph (
     assert (id_next < node_count ());
 
     nodes.push_back (id_next);
-    edges.push_back (_M_adjacency_list.edge_index (id, id_next));
+    edges.push_back (_M_adjacency_list.edge_id(id, id_next));
   }
 
   return { std::move (nodes), std::move (edges) };
@@ -67,7 +67,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph (
   }
 
   // make one-directional adjacency list
-  typename unidirectional_adjacency_list<EdgeInfo>::adjacency_list_builder forward_builder;
+  typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder forward_builder;
   forward_builder.add_node (node_count - 1);
   for (auto edge : subgraph.edges)
   {
@@ -79,7 +79,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph (
   }
 
   // make bidirectional adjacency list
-  unidirectional_adjacency_list<EdgeInfo> adj_list = forward_builder.get ();
+  unidirectional_adjacency_list<NodeId, EdgeInfo> adj_list = forward_builder.get ();
   adjacency_list<EdgeInfo> l = adjacency_list<EdgeInfo>::make_bidirectional (std::move (adj_list));
 
   return graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph (std::move (nodes), std::move (l));
@@ -114,6 +114,13 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::nodes () const
 }
 
 template <typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
+counter<NodeId>
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_ids () const
+{
+    return counter((NodeId)node_count());
+}
+
+template <typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::~graph ()
 {
   _M_node_list.clear ();
@@ -140,7 +147,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph (std::vector<NodeInfo> &&n
 template <typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph (
-  std::vector<NodeInfo> &&nodes, const std::shared_ptr<unidirectional_adjacency_list<EdgeInfo>> &forward)
+  std::vector<NodeInfo> &&nodes, const std::shared_ptr<unidirectional_adjacency_list<NodeId, EdgeInfo>> &forward)
 {
   auto adj_list = adjacency_list<EdgeInfo>::make_bidirectional (forward);
   return { std::move (nodes), std::move (adj_list) };
@@ -190,7 +197,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::path_length (const path &route) const
   {
     auto from = route.nodes[i];
     auto to = route.nodes[i + 1];
-    result += topology().edge (topology().edge_index (from, to)).cost;
+    result += topology().edge (topology().edge_id(from, to)).cost;
   }
 
   return result;

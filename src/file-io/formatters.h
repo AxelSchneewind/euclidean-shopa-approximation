@@ -13,30 +13,30 @@ static long ignore;
 class encode_text
 {
 public:
-  std::istream &skip_comments (std::istream &s);
+  static std::istream &skip_comments (std::istream &s);
 
-  template <typename T> T read (std::istream &input);
+  template <typename T> static T read (std::istream &input);
 
-  template <typename T> std::ostream &write (std::ostream &output, const T &value);
+  template <typename T> static std::ostream &write (std::ostream &output, const T &value);
 
   // read/write lists
-  template <typename T> std::vector<T> read (std::istream &input, int count);
+  template <typename T> static std::vector<T> read (std::istream &input, int count);
 
-  template <typename T> std::ostream &write (std::ostream &output, std::span<const T> &values);
+  template <typename T> static std::ostream &write (std::ostream &output, std::span<const T> &values);
 };
 
 class encode_binary
 {
 public:
-  std::istream &skip_comments (std::istream &input){};
+  std::istream &skip_comments (std::istream &input){ return input; };
 
-  template <typename T> T read (std::istream &input);
+  template <typename T> static T read (std::istream &input);
 
-  template <typename T> std::ostream &write (std::ostream &output, const T &value);
+  template <typename T> static std::ostream &write (std::ostream &output, const T &value);
 
-  template <typename T> std::vector<T> read (std::istream &input, int count);
+  template <typename T> static std::vector<T> read (std::istream &input, int count);
 
-  template <typename T> std::ostream &write (std::ostream &output, std::span<const T> &values);
+  template <typename T> static std::ostream &write (std::ostream &output, std::span<const T> &values);
 };
 
 }

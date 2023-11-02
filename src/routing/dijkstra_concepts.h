@@ -3,18 +3,6 @@
 #include <ranges>
 #include <memory>
 
-template<typename G>
-concept RoutableGraph = std::move_constructible<G> && std::copy_constructible<G> && requires {
-    typename G::node_id_type;
-    typename G::edge_id_type;
-
-    typename G::node_info_type;
-    typename G::edge_info_type;
-} && requires(G g) {
-    g.topology();           // TODO check that Topology concept is fulfilled
-    g.inverse_topology();
-};
-
 
 template<typename G>
 concept Topology = requires {
@@ -26,14 +14,32 @@ concept Topology = requires {
 && requires(G g) {
     { g.node_count() } -> std::convertible_to<size_t>;
     { g.edge_count() } -> std::convertible_to<size_t>;
+    g.node_ids() ;
 } && requires(G g, typename G::node_id_type n) {
     std::begin(g.outgoing_edges(n));
     std::end(g.outgoing_edges(n));
+} && requires(G g, typename G::node_id_type n) {
+    {g.edge_id(n, n)} -> std::convertible_to<typename G::edge_id_type>;
 } && requires(G g, typename G::edge_id_type e) {
     { g.edge(e) } -> std::convertible_to<typename G::edge_info_type>;
     { g.source(e) } -> std::convertible_to<typename G::node_id_type>;
     { g.destination(e) } -> std::convertible_to<typename G::node_id_type>;
 };
+
+template<typename G>
+concept RoutableGraph = std::move_constructible<G> && std::copy_constructible<G> && requires {
+    typename G::node_id_type;
+    typename G::edge_id_type;
+
+    typename G::node_info_type;
+    typename G::edge_info_type;
+} /*&& requires(G g) {
+    g.topology();           // TODO check that Topology concept is fulfilled
+    g.inverse_topology();
+} */&& requires(G g) {
+    g.nodes();
+} && Topology<G>;
+
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 class topology_base {
@@ -53,6 +59,10 @@ public:
     virtual size_t node_count() const;
 
     virtual size_t edge_count() const;
+
+    virtual std::span<node_id_type> node_ids() const;
+
+    virtual node_info_type edge_id(const node_id_type &id1, const node_id_type &id2) const;
 
     virtual node_info_type node(const node_id_type &id) const;
 

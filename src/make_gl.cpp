@@ -21,14 +21,12 @@ main (int argc, char const *argv[])
   // read graph
   // TODO make dependent on file ending
   std::ifstream input (filename);
-  fmi_file_io reader;
 
-  ch_graph_t graph (reader.read<ch_node_t, ch_edge_t> (input));
+  ch_graph_t graph (fmi_file_io::read<ch_graph_t> (input));
 
   // write gl file for graph
-  gl_file_io writer;
   std::ofstream output (filename_out);
-  writer.write<ch_node_t, ch_edge_t>(output, graph);
+  gl_file_io::write<ch_graph_t>(output, graph);
 
   output.close();
 }

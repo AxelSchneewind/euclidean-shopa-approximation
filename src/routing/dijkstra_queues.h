@@ -29,7 +29,7 @@ protected:
 public:
   use_all_edges (const Graph *g) : g (g) {}
 
-  bool operator() (const node_id_t &node, const internal_adjacency_list_edge<typename Graph::edge_info_type> &via)
+  bool operator() (const node_id_t &node, const internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> &via)
   {
     return true;
   };
@@ -43,7 +43,7 @@ protected:
 public:
   use_upward_edges (const Graph *g) : g (g) {}
 
-  bool operator() (const node_id_t &node, const internal_adjacency_list_edge<typename Graph::edge_info_type> &via)
+  bool operator() (const node_id_t &node, const internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> &via)
   {
     return g->node(node).level <= g->node(via.destination).level;
   };
