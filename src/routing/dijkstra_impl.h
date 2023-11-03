@@ -53,7 +53,7 @@ dijkstra<G, Queue, U, L>::queue_empty () const
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 void
-dijkstra<G, Queue, U, L>::init (node_id_t start_node, node_id_t target_node)
+dijkstra<G, Queue, U, L>::init (node_id_type start_node, node_id_type target_node)
 {
   _M_target_node = target_node;
 

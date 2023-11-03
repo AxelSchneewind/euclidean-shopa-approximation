@@ -21,6 +21,7 @@ public:
   using type = dijkstra<G, Q, UseEdge, L>;
   using node_cost_pair = Q::value_type;
   using edge_info_type = G::edge_info_type;
+  using node_id_type =  G::node_id_type;
 
   // determines optimality of labels depending on whether the graph allows shortcuts
   // TODO find more elegant way for this
@@ -30,8 +31,8 @@ private:
   std::shared_ptr<const G> _M_graph;
   adjacency_list<edge_info_type> _M_adj_list;
 
-  typename G::node_id_type _M_start_node;
-  typename G::node_id_type _M_target_node;
+  node_id_type _M_start_node;
+  node_id_type _M_target_node;
 
   Q _M_queue;
   UseEdge _M_use_edge;
@@ -64,7 +65,7 @@ public:
    * @param start_node
    * @param target_node
    */
-  void init (node_id_t start_node, node_id_t target_node = NO_NODE_ID);
+  void init (node_id_type start_node, node_id_type target_node = NO_NODE_ID);
 
   /**
    * get the current node without removing from queue
