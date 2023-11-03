@@ -15,7 +15,7 @@ triangulation_file_io::read(std::istream &input) {
     f::skip_comments(input);
 
     node_id_t node_count(f::template read<node_id_t>(input));
-    edge_id_t edge_count(f::template read<edge_id_t>(input));
+    edge_id_t triangle_count(f::template read<edge_id_t>(input));
 
     // read nodes
     std::vector<typename Graph::node_info_type> nodes;
@@ -30,7 +30,7 @@ triangulation_file_io::read(std::istream &input) {
     builder.add_node(node_count - 1);
 
     // read triangles and generate edges from them
-    for (int t = 0; t < edge_count; t++) {
+    for (int t = 0; t < triangle_count; t++) {
         triangle tri = f::template read<triangle>(input);
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;

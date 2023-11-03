@@ -8,8 +8,14 @@
 #include <fstream>
 
 int main(int argc, const char **argv) {
-    std::ifstream input(argv[1]);
-    std::ofstream output(std::string(argv[1]) + ".gl");
+    std::string filename;
+    if (argc <= 1)
+        std::cin >> filename;
+    else
+        filename = argv[1];
+
+    std::ifstream input(filename);
+    std::ofstream output(filename + ".gl");
 
     auto graph = triangulation_file_io::template read<steiner_graph>(input);
 

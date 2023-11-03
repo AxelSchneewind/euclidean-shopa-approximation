@@ -57,8 +57,12 @@ unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::get() {
         offset.push_back(m_edge_count);
 
     auto result = unidirectional_adjacency_list<NodeId, E>(m_node_count, m_edge_count, std::move(offset), std::move(edges));
+
+    // reset
     m_node_count = 0;
     m_edge_count = 0;
+    edges.clear();
+    offset.clear();
 
     return result;
 }
@@ -207,6 +211,7 @@ unidirectional_adjacency_list<NodeId, E>::unidirectional_adjacency_list(size_t n
                        this->sources.push_back(edge1.source);
                        return internal_adjacency_list_edge<NodeId, E>{edge1.destination, edge1.info};
                    });
+    __edges.clear();
 }
 
 template<typename NodeId, typename E>
