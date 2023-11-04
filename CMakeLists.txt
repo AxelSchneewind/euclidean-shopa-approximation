@@ -33,17 +33,16 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3") #
 
 # compile everything into one library file
-#add_library(routing src/routing.h)
-#link_libraries(routing)
+# add_library(routing src/routing.h)
+# link_libraries(routing)
 
 add_executable(test_route_toy src/test/test_route_toy.cpp)
 add_executable(test_route_stgtregbz src/test/test_route_stgtregbz.cpp)
 add_executable(test_read src/test/test_read.cpp)
 add_executable(test_read_triangulation src/test/test_read_aegaeis.cpp)
 add_executable(test_route_triangulation src/test/test_route_aegaeis.cpp)
-add_executable(make_gl src/make_gl.cpp
-        src/util/remove_duplicates.h
-        src/triangulation/steiner_graph_impl.h)
+add_executable(make_gl src/make_gl.cpp)
 add_executable(route_interactive_triangulation src/route_interactive_triangulation.cpp)
+add_executable(route_interactive_steiner src/route_interactive_steiner.cpp)
 add_executable(route_interactive_ch src/route_interactive_ch.cpp)
 add_executable(make_granular_triangulation src/make_granular_triangulation.cpp)

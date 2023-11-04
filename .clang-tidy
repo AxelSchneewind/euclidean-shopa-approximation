@@ -12,7 +12,8 @@ readability-*
 -*-easily-swappable-parameters,
 -*-use-trailing-return-type
 -*-const-correctness
--*-nodiscard'
+-*-nodiscard
+-misc-non-private-member-variables-in-classes'
 
 CheckOptions:
   - { key: readability-identifier-naming.NamespaceCase,       value: lower_case }
