@@ -12,229 +12,226 @@
 
 #include "dijkstra_queues.h"
 
-template <typename Graph, typename Dijkstra>
+template<typename Graph, typename Dijkstra>
 distance_t
-router<Graph, Dijkstra>::min_route_distance (const Graph::node_id_type &node) const
-{
-  distance_t result = 0;
+router<Graph, Dijkstra>::min_route_distance(const Graph::node_id_type &__node) const {
+    distance_t result = 0;
 
-  // TODO check with CH
+    // TODO check with CH
 
-  if (Dijkstra::search_symmetric)
-  {
-    // if node is labelled in topology search, it already has its minimal distance and routes using it must be longer
-    if (forward.reached (node))
-      result += forward.labels ().distance (node);
-    else if (!forward.queue_empty ())
-      // otherwise, its distance must be at least the one of the current node
-      result += forward.current ().distance;
+    if (Dijkstra::search_symmetric) {
+        // if node is labelled in topology search, it already has its minimal distance and routes using it must be longer
+        if (forward.reached(__node)) {
+            result += forward.labels().distance(__node);
+        } else if (!forward.queue_empty()) {
+            // otherwise, its distance must be at least the one of the current node
+            result += forward.current().distance;
+        }
 
-    if (backward.reached (node))
-      result += backward.labels ().distance (node);
-    else if (!backward.queue_empty ())
-      result += backward.current ().distance;
-  }
-  else
-  {
-    // if labels are not necessarily optimal, only use distances if the node has been labelled already
-    if (forward.reached (node))
-      result += forward.labels ().distance (node);
-    if (backward.reached (node))
-      result += backward.labels ().distance (node);
+        if (backward.reached(__node)) {
+            result += backward.labels().distance(__node);
+        } else if (!backward.queue_empty()) {
+            result += backward.current().distance;
+        }
+    } else {
+        // if labels are not necessarily optimal, only use distances if the node has been labelled already
+        if (forward.reached(__node)) {
+            result += forward.labels().distance(__node);
+        }
+        if (backward.reached(__node)) {
+            result += backward.labels().distance(__node);
+        }
 
-    if (!forward.reached (node) && !backward.reached (node))
-      result += std::max (forward.current ().distance, backward.current ().distance);
-  }
+        if (!forward.reached(__node) && !backward.reached(__node)) {
+            result += std::max(forward.current().distance, backward.current().distance);
+        }
+    }
 
-  return result;
+    return result;
 }
 
-template <typename Graph, typename Dijkstra>
+template<typename Graph, typename Dijkstra>
 Graph::subgraph
-router<Graph, Dijkstra>::shortest_path_tree () const
-{
-  std::vector<typename Graph::node_id_type> nodes;
-  std::vector<typename Graph::edge_id_type> edges;
+router<Graph, Dijkstra>::shortest_path_tree() const {
+    std::vector<typename Graph::node_id_type> nodes;
+    std::vector<typename Graph::edge_id_type> edges;
 
-  // add nodes and edges of topology dijkstra
-  for (auto n : forward.labels ().all_visited ())
-  {
-    nodes.push_back (n);
-    typename Graph::node_id_type pred = forward.labels ().predecessor (n);
-    typename Graph::edge_id_type edge = graph->topology().edge_id(pred, n);
-    edges.push_back (edge);
-  }
+    // add nodes and edges of topology dijkstra
+    for (auto node_id: forward.labels().all_visited()) {
+        nodes.push_back(node_id);
+        typename Graph::node_id_type pred = forward.labels().predecessor(node_id);
+        typename Graph::edge_id_type edge = graph->topology().edge_id(pred, node_id);
+        edges.push_back(edge);
+    }
 
-  // add nodes and edges of backward dijkstra
-  for (auto n : backward.labels ().all_visited ())
-  {
-    nodes.push_back (n);
+    // add nodes and edges of backward dijkstra
+    for (auto node_id: backward.labels().all_visited()) {
+        nodes.push_back(node_id);
 
-    typename Graph::node_id_type succ = backward.labels ().predecessor (n);
-    typename Graph::edge_id_type edge = graph->topology().edge_id(n, succ);
-    edges.push_back (edge);
-  }
+        typename Graph::node_id_type succ = backward.labels().predecessor(node_id);
+        typename Graph::edge_id_type edge = graph->topology().edge_id(node_id, succ);
+        edges.push_back(edge);
+    }
 
-  remove_duplicates (nodes);
-  remove_duplicates (edges);
+    remove_duplicates(nodes);
+    remove_duplicates(edges);
 
-  return graph->make_subgraph (std::move (nodes), std::move (edges));
+    return {std::move(nodes), std::move(edges)};
 }
 
-template <typename Graph, typename Dijkstra>
-router<Graph, Dijkstra>::router (std::shared_ptr<const Graph> graph)
-  : graph (graph),
-  forward (this->graph, graph->topology()),
-  backward (this->graph, graph->inverse_topology()),
-    start_node (NO_NODE_ID), target_node (NO_NODE_ID), _mid_node (NO_NODE_ID)
-{}
+template<typename Graph, typename Dijkstra>
+router<Graph, Dijkstra>::router(std::shared_ptr<const Graph> __graph)
+        : graph(__graph),
+          forward(this->graph, __graph->topology()),
+          backward(this->graph, __graph->inverse_topology()),
+          start_node(), target_node(), _mid_node() {}
 
-template <typename Graph, typename Dijkstra>
-router<Graph, Dijkstra>::router (router &&__routing) noexcept
-  : graph (__routing.graph), forward (std::move (__routing.forward)), backward (std::move (__routing.backward)),
-    start_node (__routing.start_node), target_node (__routing.target_node), _mid_node (__routing._mid_node)
-{}
+template<typename Graph, typename Dijkstra>
+router<Graph, Dijkstra>::router(router &&__routing) noexcept
+        : graph(__routing.graph), forward(std::move(__routing.forward)), backward(std::move(__routing.backward)),
+          start_node(__routing.start_node), target_node(__routing.target_node), _mid_node(__routing._mid_node) {}
 
-template <typename Graph, typename Dijkstra>
+template<typename Graph, typename Dijkstra>
 void
-router<Graph, Dijkstra>::step_forward ()
-{
-  assert (!forward.queue_empty ());
+router<Graph, Dijkstra>::step_forward() {
+    assert (!forward.queue_empty());
 
-  node_cost_pair current = forward.current ();
+    typename Dijkstra::node_cost_pair current = forward.current();
+    assert(current.node);
 
-  forward.step ();
+    forward.step();
 
-  // check if searches met and provide best result so far
-  if (backward.reached (current.node) && distance (current.node) < distance ())
-    _mid_node = current.node;
+    // check if searches met and provide best result so far
+    if (backward.reached(current.node) && distance(current.node) < distance()) {
+        _mid_node = current.node;
+    }
 }
 
-template <typename Graph, typename Dijkstra>
+template<typename Graph, typename Dijkstra>
 void
-router<Graph, Dijkstra>::step_backward ()
-{
-  assert (!backward.queue_empty ());
+router<Graph, Dijkstra>::step_backward() {
+    assert (!backward.queue_empty());
 
-  node_cost_pair current = backward.current ();
+    typename Dijkstra::node_cost_pair current = backward.current();
 
-  backward.step ();
+    backward.step();
+    assert(current.node);
 
-  // check if searches met and provide best result yet
-  if (forward.reached (current.node) && distance (current.node) < distance ())
-    _mid_node = current.node;
+    // check if searches met and provide best result yet
+    if (forward.reached(current.node) && distance(current.node) < distance()) {
+        _mid_node = current.node;
+    }
 }
 
-template <typename Graph, typename Dijkstra>
+template<typename Graph, typename Dijkstra>
 void
-router<Graph, Dijkstra>::compute_route ()
-{
-  // check args
-  // if (start_node >= graph->node_count () || target_node >= graph->node_count () || start_node < 0
-  //     || target_node < 0 || start_node == NO_NODE_ID || target_node == NO_NODE_ID)
-  //   throw;
+router<Graph, Dijkstra>::compute_route() {
+    // check args
+    // if (start_node >= graph->node_count () || target_node >= graph->node_count () || start_node < 0
+    //     || target_node < 0 || start_node == NO_NODE_ID || target_node == NO_NODE_ID)
+    //   throw;
 
-  // TODO: 2 threads performing topology and backward search simultaneously?
-  bool done = false;
-  while (!done)
-  {
-    bool const fwd_done = forward.queue_empty () || min_route_distance (forward.current().node) > distance();
-    bool const bwd_done = backward.queue_empty () || min_route_distance (backward.current().node) > distance();
+    // TODO: 2 threads performing forward and backward search simultaneously?
+    bool done = false;
+    while (!done) {
+        bool const fwd_done = forward.queue_empty() || min_route_distance(forward.current().node) > distance();
+        bool const bwd_done = backward.queue_empty() || min_route_distance(backward.current().node) > distance();
 
-    // check if no better route can be found
-    if (fwd_done && bwd_done)
-      done = true;
+        // check if no better route can be found
+        if (fwd_done && bwd_done) {
+            done = true;
+        }
 
-    if (!fwd_done)
-      step_forward ();
-    if (!bwd_done)
-      step_backward ();
-  }
+        if (!fwd_done) {
+            step_forward();
+        }
+        if (!bwd_done) {
+            step_backward();
+        }
+    }
 
-  if (!forward.queue_empty ())
-    step_forward ();
-  if (!backward.queue_empty ())
-    step_backward ();
+    // TODO: check if necessary
+    if (!forward.queue_empty()) {
+        step_forward();
+    }
+    if (!backward.queue_empty()) {
+        step_backward();
+    }
 }
 
-template <typename Graph, typename Dijkstra>
+template<typename Graph, typename Dijkstra>
 Graph::distance_type
-router<Graph, Dijkstra>::distance (const Graph::node_id_type &node) const
-{
-  if (node == NO_NODE_ID || !forward.labels ().reached (node) || !backward.labels ().reached (node))
-    return DISTANCE_INF;
-  return forward.labels ().distance (node) + backward.labels ().distance (node);
+router<Graph, Dijkstra>::distance(const Graph::node_id_type &__node) const {
+    if (!__node || !forward.labels().reached(__node) || !backward.labels().reached(__node)) {
+        return {};
+    }
+    return forward.labels().distance(__node) + backward.labels().distance(__node);
 }
 
-template <typename Graph, typename Dijkstra>
+template<typename Graph, typename Dijkstra>
 Graph::distance_type
-router<Graph, Dijkstra>::distance () const
-{
-  if (_mid_node == NO_NODE_ID)
-    return DISTANCE_INF;
-  return forward.labels ().distance (_mid_node) + backward.labels ().distance (_mid_node);
+router<Graph, Dijkstra>::distance() const {
+    if (!_mid_node) {
+        return {};
+    }
+    return forward.labels().distance(_mid_node) + backward.labels().distance(_mid_node);
 }
 
-template <typename Graph, typename Dijkstra>
+template<typename Graph, typename Dijkstra>
 Graph::path
-router<Graph, Dijkstra>::route () const
-{
-  if (_mid_node == NO_NODE_ID)
-    throw;
+router<Graph, Dijkstra>::route() const {
+    if (!_mid_node)
+        throw;
 
-  typename Graph::node_id_type fwd_node = _mid_node;
-  typename Graph::node_id_type bwd_node = _mid_node;
+    typename Graph::node_id_type fwd_node = _mid_node;
+    typename Graph::node_id_type bwd_node = _mid_node;
 
-  std::deque<typename Graph::node_id_type> p;
-  p.push_front (_mid_node);
+    std::deque<typename Graph::node_id_type> p;
+    p.push_front(_mid_node);
 
-  while (fwd_node != NO_NODE_ID && fwd_node != start_node && fwd_node != forward.labels ().predecessor (fwd_node))
-  {
-    assert (graph->topology().has_edge (forward.labels ().predecessor (fwd_node), fwd_node));
+    while (fwd_node && fwd_node != start_node && fwd_node != forward.labels().predecessor(fwd_node)) {
+        assert (graph->topology().has_edge(forward.labels().predecessor(fwd_node), fwd_node));
 
-    fwd_node = forward.labels ().predecessor (fwd_node);
-    assert(fwd_node != NO_NODE_ID);
+        fwd_node = forward.labels().predecessor(fwd_node);
+        assert(fwd_node);
 
-    p.push_front (fwd_node);
-  }
+        p.push_front(fwd_node);
+    }
 
-  while (bwd_node != NO_NODE_ID && bwd_node != target_node && bwd_node != backward.labels ().predecessor (bwd_node))
-  {
-    bwd_node = backward.labels ().predecessor (bwd_node);
-    assert(bwd_node != NO_NODE_ID);
+    while (bwd_node && bwd_node != target_node && bwd_node != backward.labels().predecessor(bwd_node)) {
+        bwd_node = backward.labels().predecessor(bwd_node);
+        assert(bwd_node);
 
-    p.push_back (bwd_node);
-  }
+        p.push_back(bwd_node);
+    }
 
-  return { std::vector<typename Graph::node_id_type> (p.begin (), p.end ()) };
+    return {std::vector<typename Graph::node_id_type>(p.begin(), p.end())};
 };
 
-template <typename Graph, typename Dijkstra>
+template<typename Graph, typename Dijkstra>
 Graph::node_id_type
-router<Graph, Dijkstra>::mid_node () const
-{
-  return _mid_node;
+router<Graph, Dijkstra>::mid_node() const {
+    return _mid_node;
 };
 
-template <typename Graph, typename Dijkstra>
+template<typename Graph, typename Dijkstra>
 bool
-router<Graph, Dijkstra>::route_found () const
-{
-  return _mid_node != NO_NODE_ID && forward.reached (_mid_node) && backward.reached (_mid_node);
+router<Graph, Dijkstra>::route_found() const {
+    return _mid_node && forward.reached(_mid_node) && backward.reached(_mid_node);
 }
-template <typename Graph, typename Dijkstra>
+
+template<typename Graph, typename Dijkstra>
 void
-router<Graph, Dijkstra>::init (Graph::node_id_type __start_node, Graph::node_id_type __target_node)
-{
-  // check args
-  //if (__start_node >= graph->node_count () || __target_node >= graph->node_count () || __start_node < 0
-  //  || __target_node < 0 || __start_node == NO_NODE_ID || __target_node == NO_NODE_ID)
-  // throw;
+router<Graph, Dijkstra>::init(Graph::node_id_type __start_node, Graph::node_id_type __target_node) {
+    // check args
+    //if (__start_node >= graph->node_count () || __target_node >= graph->node_count () || __start_node < 0
+    //  || __target_node < 0 || __start_node == NO_NODE_ID || __target_node == NO_NODE_ID)
+    // throw;
 
-  start_node = __start_node;
-  target_node = __target_node;
-  forward.init (start_node, target_node);
-  backward.init (target_node, start_node);
+    start_node = __start_node;
+    target_node = __target_node;
+    forward.init(start_node, target_node);
+    backward.init(target_node, start_node);
 
-  _mid_node = NO_NODE_ID;
+    _mid_node = typename Graph::node_id_type();
 }

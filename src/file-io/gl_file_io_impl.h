@@ -7,8 +7,8 @@ template<Topology Graph, typename format>
 std::ostream &gl_file_io::write(std::ostream &output, const Graph &graph, int line_width, int color) {
     using f = format;
 
-    node_id_t node_count = graph.node_count();
-    node_id_t edge_count = graph.edge_count();
+    size_t node_count = graph.node_count();
+    size_t edge_count = graph.edge_count();
 
     f::write(output, node_count);
     f::write(output, '\n');

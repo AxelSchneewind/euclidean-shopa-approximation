@@ -37,7 +37,7 @@ concept RoutableGraph = std::move_constructible<G> && std::copy_constructible<G>
     g.topology();           // TODO check that Topology concept is fulfilled
     g.inverse_topology();
 } */&& requires(G g) {
-    g.nodes();
+    g.node_ids();
 } && Topology<G>;
 
 

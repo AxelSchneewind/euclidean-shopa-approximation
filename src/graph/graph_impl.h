@@ -41,35 +41,32 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph(
     return {std::move(nodes), std::move(edges)};
 }
 
+
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(
-        const graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::subgraph &__subgraph) const {
+template<RoutableGraph Other>
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId> graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other &other, const typename Other::subgraph &__subgraph) {
     NodeId node_count = __subgraph.nodes.size();
     EdgeId edge_count = __subgraph.edges.size();
 
-    std::vector<NodeInfo> nodes;
-    std::vector<NodeId> old_node_ids;
-    std::unordered_map<NodeId, NodeId> new_node_ids;
+    std::vector<typename Other::node_info_type> nodes;
+    std::unordered_map<typename Other::node_id_type, size_t> new_node_ids;
 
-    // make node list
-    for (node_id_t i = 0; i < node_count; i++) {
+    // make node list and store indices for each node
+    for (size_t i = 0; i < node_count; i++) {
         auto node_id = __subgraph.nodes[i];
 
-        nodes.push_back(node(node_id));
-        old_node_ids.push_back(node_id);
-        new_node_ids[node_id] = i;
+        nodes.push_back(other.node(node_id));
+        new_node_ids[node_id] = (NodeId)i;
     }
 
     // make one-directional adjacency list
-    typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder forward_builder;
-    forward_builder.add_node(node_count - 1);
+    typename adjacency_list<NodeId, EdgeInfo>::builder forward_builder(node_count);
     for (auto edge: __subgraph.edges) {
-        auto src = _M_adjacency_list.source(edge);
-        auto dest = _M_adjacency_list.destination(edge);
-        EdgeInfo info = _M_adjacency_list.edge(edge);
+        auto src = other.source(edge);
+        auto dest = other.destination(edge);
+        EdgeInfo info = other.edge(edge);
 
-        forward_builder.add_edge(new_node_ids[src], new_node_ids[dest], info);
+        forward_builder.add_edge((NodeId)new_node_ids[src], (NodeId)new_node_ids[dest], info);
     }
 
     // make bidirectional adjacency list
@@ -106,7 +103,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::nodes() const {
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 counter<NodeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_ids() const {
-    return counter((NodeId) node_count());
+    return {(NodeId) node_count() - 1}; // FIXME
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
@@ -172,11 +169,10 @@ template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::distance_type
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::path_length(const path &__route) const {
     if (__route.nodes.empty()) {
-        return DISTANCE_INF;
+        return distance_type::DISTANCE_INF;
     }
 
     distance_t result = 0;
-
     for (int i = 0; i < __route.nodes.size() - 1; ++i) {
         auto from = __route.nodes[i];
         auto to = __route.nodes[i + 1];
@@ -209,7 +205,7 @@ EdgeId graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::edge_id(const node_id_type &__
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 bool graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::has_edge(const node_id_type &__src, const node_id_type &__dest) const {
-    return edge_id(__src, __dest) != NO_EDGE_ID;
+    return edge_id(__src, __dest) != edge_id_type::NO_EDGE_ID;
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>

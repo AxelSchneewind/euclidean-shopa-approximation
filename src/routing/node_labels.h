@@ -44,8 +44,8 @@ node_labels<G, N>::all_visited() const {
 
 template<RoutableGraph G, typename N>
 node_labels<G, N>::node_labels(const G *d)
-        : d(d), _M_predecessor(d->node_count(), NO_NODE_ID),
-          _M_distance(d->node_count(), DISTANCE_INF) {
+        : d(d), _M_predecessor(d->node_count(), {}),
+          _M_distance(d->node_count(), {}) {
     _M_touched.reserve(std::sqrt(d->node_count()));
 }
 
@@ -54,8 +54,8 @@ void
 node_labels<G, N>::init(node_labels<G, N>::node_id_type __start_node, node_labels<G, N>::node_id_type __target_node) {
     for (size_t index = 0; index < _M_touched.size(); ++index) {
         node_labels<G, N>::node_id_type node = _M_touched[index];
-        _M_predecessor[node] = NO_NODE_ID;
-        _M_distance[node] = DISTANCE_INF;
+        _M_predecessor[node] = node_id_type::NO_NODE_ID;
+        _M_distance[node] = node_id_type::DISTANCE_INF;
     }
 
     _M_touched.clear();
@@ -64,28 +64,28 @@ node_labels<G, N>::init(node_labels<G, N>::node_id_type __start_node, node_label
 template<RoutableGraph Graph, typename N>
 const node_labels<Graph, N>::node_id_type &
 node_labels<Graph, N>::predecessor(const node_labels<Graph, N>::node_id_type &node) const {
-    if (node == NO_NODE_ID) return NO_NODE_ID;
+    if (!node) return {};
     return _M_predecessor[node];
 }
 
 template<RoutableGraph G, typename N>
 const G::distance_type &
 node_labels<G, N>::distance(const node_labels<G, N>::node_id_type &node) const {
-    assert(node != NO_NODE_ID);
+    assert(node);
     return _M_distance[node];
 }
 
 template<RoutableGraph G, typename N>
 bool
 node_labels<G, N>::reached(const node_labels<G, N>::node_id_type &node) const {
-    assert(node != NO_NODE_ID);
-    return _M_predecessor[node] != NO_NODE_ID;
+    assert(node);
+    return _M_predecessor[node];
 }
 
 template<RoutableGraph G, typename N>
 void
 node_labels<G, N>::label(const node_labels<G, N>::node_cost_pair_type &node_cost_pair) {
-    if (_M_predecessor[node_cost_pair.node] == NO_NODE_ID)
+    if (!_M_predecessor[node_cost_pair.node])
         _M_touched.push_back(node_cost_pair.node);
     _M_distance[node_cost_pair.node] = node_cost_pair.distance;
     _M_predecessor[node_cost_pair.node] = node_cost_pair.predecessor;

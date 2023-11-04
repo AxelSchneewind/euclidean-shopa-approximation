@@ -101,7 +101,8 @@ public:
 
     subgraph make_subgraph(std::vector<NodeId> &&__nodes, std::vector<EdgeId> &&__edges) const;
 
-    graph make_graph(const subgraph &__subgraph) const;
+    template<RoutableGraph Other>
+    static graph make_graph(const Other& other, const Other::subgraph &__subgraph);
 
     static graph make_graph(std::vector<NodeInfo> &&__nodes, adjacency_list<NodeId, EdgeInfo> &&__forward);
 
@@ -109,7 +110,6 @@ public:
                             const std::shared_ptr<unidirectional_adjacency_list<NodeId, EdgeInfo>> &__forward);
 
 };
-
 
 static_assert(RoutableGraph<graph<int, int, int, int>>);
 

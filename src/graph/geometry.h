@@ -12,10 +12,10 @@ distance_euclidian (const coordinate_t &c1, const coordinate_t &c2)
   return std::sqrt (delta.latitude * delta.latitude + delta.longitude * delta.longitude);
 }
 
-inline distance_t
+inline double
 to_radians (const double &__degree)
 {
-  const distance_t one_deg = (M_PI) / 180;
+  const double one_deg = (M_PI) / 180;
   return one_deg * __degree;
 }
 
@@ -50,7 +50,6 @@ angle (const coordinate_t &__s0, const coordinate_t &__d0, const coordinate_t &_
     auto B = __d1 - __s1;
     auto AB = A * B;
 
-    // TODO
     return std::acos(AB / (A.length() * B.length()));
 }
 

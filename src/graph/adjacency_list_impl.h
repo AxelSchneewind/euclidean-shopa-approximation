@@ -74,7 +74,7 @@ adjacency_list<NodeId, E>::invert(const adjacency_list<NodeId, E> &__other) {
 
 template<typename NodeId, typename E>
 bool adjacency_list<NodeId, E>::has_edge(const NodeId &__source, const NodeId &__destination) const {
-    return _M_forward->edge_index(__source, __destination) != NO_EDGE_ID;
+    return _M_forward->edge_index(__source, __destination);
 }
 
 template<typename NodeId, typename E>
@@ -85,15 +85,15 @@ adjacency_list<NodeId, E>::edge_id(const NodeId &__source, const NodeId &__desti
 
 
 template<typename NodeId, typename E>
-E adjacency_list<NodeId, E>::edge(const adjacency_list::edge_id_type &__id) const { return _M_forward->edge(__id); }
+const E& adjacency_list<NodeId, E>::edge(const adjacency_list::edge_id_type &__id) const { return _M_forward->edge(__id); }
 
 template<typename NodeId, typename E>
-NodeId adjacency_list<NodeId, E>::destination(const adjacency_list::edge_id_type &__id) const {
+const NodeId& adjacency_list<NodeId, E>::destination(const adjacency_list::edge_id_type &__id) const {
     return _M_forward->destination(__id);
 }
 
 template<typename NodeId, typename E>
-NodeId adjacency_list<NodeId, E>::source(const adjacency_list::edge_id_type &__id) const {
+const NodeId& adjacency_list<NodeId, E>::source(const adjacency_list::edge_id_type &__id) const {
     return _M_forward->source(__id);
 }
 
@@ -108,7 +108,9 @@ adjacency_list<NodeId, E>::incoming_edges(const NodeId &__destination) const {
 
 template<typename NodeId, typename E>
 std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
-adjacency_list<NodeId, E>::outgoing_edges(const NodeId &__source) const { return _M_forward->outgoing_edges(__source); }
+adjacency_list<NodeId, E>::outgoing_edges(const NodeId &__source) const {
+    return _M_forward->outgoing_edges(__source);
+}
 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>::adjacency_list(adjacency_list<NodeId, E> &&__other) noexcept
@@ -116,8 +118,7 @@ adjacency_list<NodeId, E>::adjacency_list(adjacency_list<NodeId, E> &&__other) n
 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>::adjacency_list(const adjacency_list<NodeId, E> &__other) noexcept
-        : _M_forward(__other._M_forward)
-        , _M_backward(__other._M_backward) {}
+        : _M_forward(__other._M_forward), _M_backward(__other._M_backward) {}
 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>::adjacency_list(

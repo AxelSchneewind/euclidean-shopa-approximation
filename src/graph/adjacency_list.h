@@ -17,6 +17,8 @@ public:
     using edge_info_type = E;
     using type = adjacency_list<NodeId, E>;
 
+    using builder = unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder;
+
 private:
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> _M_forward;
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> _M_backward;
@@ -73,11 +75,11 @@ public:
      */
     counter<NodeId> node_ids() const;
 
-    NodeId source(const edge_id_type &__id) const;
+    const NodeId& source(const edge_id_type &__id) const;
 
-    NodeId destination(const edge_id_type &__id) const;
+    const NodeId& destination(const edge_id_type &__id) const;
 
-    E edge(const edge_id_type &__id) const;
+    const E& edge(const edge_id_type &__id) const;
 
     edge_id_type edge_id(const NodeId &__source, const NodeId &__destination) const;
 

@@ -13,14 +13,14 @@ public:
     using node_id_type = typename BaseGraph::node_id_type;
     using edge_id_type = typename BaseGraph::edge_id_type;
 
-    static constexpr std::size_t edge_count = (MaxNodesPerFace - 1) * 2;
+    static constexpr std::size_t edge_count = (MaxNodesPerFace - 1) * 2 * 2 + 2;
 
 private:
     BaseGraph _M_base_graph;
     adjacency_list<node_id_type, std::array<edge_id_type, edge_count>> _M_adjacent_edges;
 
     polyhedron(const BaseGraph &__base_graph,
-                  adjacency_list<node_id_type, std::array<node_id_type, edge_count>> __third_points)
+                  adjacency_list<node_id_type, std::array<edge_id_t, edge_count>> __third_points)
             : _M_base_graph(__base_graph), _M_adjacent_edges(__third_points) {};
 public:
 

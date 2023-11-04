@@ -65,7 +65,7 @@ public:
    * @param start_node
    * @param target_node
    */
-  void init (node_id_type __start_node, node_id_type __target_node = NO_NODE_ID);
+  void init (node_id_type __start_node, node_id_type __target_node = {});
 
   /**
    * get the current node without removing from queue

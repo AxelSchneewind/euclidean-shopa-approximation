@@ -9,18 +9,23 @@ private:
 
     counter(T __current, T __max) : current(__current), max(__max) {}
 public:
-    explicit counter(T __count) : current(), max(__count) {}
+    counter(T __count) : current(), max(__count) {}
 
     counter &begin() { return *this; };
 
     counter end() { return {max, max}; };
 
-    bool operator==(counter __other) { return current == __other.current; }
-    bool operator!=(counter __other) { return current != __other.current; }
+    bool operator==(const counter& __other) const { return current == __other.current; }
+    bool operator!=(const counter& __other) const { return current != __other.current; }
 
-    counter &operator++() {
+    counter &operator++(int) {
         current++;
         return *this;
+    }
+    counter operator++() {
+        auto result = *this;
+        current++;
+        return result;
     }
 
     const T& operator*() const { return current; }

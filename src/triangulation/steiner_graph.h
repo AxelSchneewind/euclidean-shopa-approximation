@@ -15,17 +15,24 @@ struct steiner_node_id {
     edge_id_t edge;
     int steiner_index;
 
-    steiner_node_id() = default;
-    steiner_node_id(edge_id_t edge) : edge(edge), steiner_index(0) {}
+    steiner_node_id() : edge(), steiner_index(-1) {};
 
     steiner_node_id(edge_id_t edge, int steiner_index) : edge(edge), steiner_index(steiner_index) {}
+    steiner_node_id(edge_id_t edge) : edge(edge), steiner_index(0) {}
 
     bool operator>=(const steiner_node_id &other) const {
         return edge >= other.edge || steiner_index >= other.steiner_index;
     }
+    bool operator>(const steiner_node_id &other) const {
+        return edge > other.edge || (edge == other.edge && steiner_index > other.steiner_index);
+    }
 
     bool operator==(const steiner_node_id &other) const {
         return edge == other.edge && steiner_index == other.steiner_index;
+    }
+
+    operator bool() const {
+        return (int)edge != edge_id_t::NO_EDGE_ID && steiner_index != -1;
     }
 };
 
@@ -44,7 +51,30 @@ std::size_t std::hash<steiner_node_id>::operator()(const steiner_node_id &s) con
 struct steiner_edge_id {
     steiner_node_id source;
     steiner_node_id destination;
+
+
+    bool operator>=(const steiner_edge_id &other) const {
+        return source > other.source || (source == other.source && destination >= other.destination);
+    }
+
+    bool operator==(const steiner_edge_id &other) const {
+        return source == other.source && destination == other.destination;
+    }
+
+    operator bool() const {
+        return source && destination;
+    }
 };
+
+template<>
+struct std::hash<steiner_edge_id> {
+    std::size_t operator()(const steiner_edge_id &s) const noexcept;
+};
+std::size_t std::hash<steiner_edge_id>::operator()(const steiner_edge_id &s) const noexcept {
+    std::size_t h1 = std::hash<steiner_node_id>{}(s.source);
+    std::size_t h2 = std::hash<steiner_node_id>{}(s.destination);
+    return h1 ^ (h2 << 1);
+}
 
 // class that stores edges (topology) of an adjacency list
 class steiner_graph {
@@ -55,14 +85,14 @@ public:
     using node_info_type = node_t;
     using edge_info_type = edge_t;
 
-    using triangle_node_id_t = node_id_t;
-    using triangle_edge_id_t = edge_id_t;
+    using triangle_node_id_type = node_id_t;
+    using triangle_edge_id_type = edge_id_t;
 
-    using triangle_node_info_t = node_t;
-    using triangle_edge_info_t = edge_t;
+    using triangle_node_info_type = node_t;
+    using triangle_edge_info_type = edge_t;
 
-    using triangulation_type = adjacency_list<triangle_node_id_t, triangle_edge_info_t>;
-    using adjacency_list_type = adjacency_list<triangle_node_id_t, triangle_edge_info_t>;
+    using triangulation_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
+    using adjacency_list_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
 
     using distance_type = distance_t;
 
@@ -112,9 +142,9 @@ public:
     };
 
     steiner_graph(std::vector<node_info_type> &&__triangulation_nodes,
-                  adjacency_list<triangle_node_id_t, triangle_edge_info_t> &&__triangulation_edges,
+                  adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&__triangulation_edges,
                   polyhedron<triangulation_type, 3> &&__triangles,
-                  adjacency_list<triangle_node_id_t, subdivision_edge_info> &&__steiner_info);
+                  adjacency_list<triangle_node_id_type, subdivision_edge_info> &&__steiner_info);
 
 private:
     size_t _M_node_count;
@@ -126,22 +156,23 @@ private:
     triangulation_type triangulation;
 
     // store subdivision information here
-    adjacency_list<triangle_node_id_t, subdivision_edge_info> steiner_info;
+    adjacency_list<triangle_node_id_type, subdivision_edge_info> _M_steiner_info;
 
     // for each edge, store the id of the 2 nodes that make up the adjacent triangles
     polyhedron<steiner_graph::triangulation_type, 3> _M_polyhedron;
 
     // returns the ids of the edges which are part of the 2 triangles bordering the given edge
-    std::array<triangle_edge_id_t, 4> triangle_edges(const triangle_edge_id_t &__edge) const;
+    std::array<triangle_edge_id_type, 10> triangle_edges(const triangle_edge_id_type &__edge) const;
 
 public:
+    const triangulation_type& base_graph() const { return triangulation; }
+
     size_t node_count() const { return _M_node_count; }
 
     size_t edge_count() const { return _M_edge_count; }
 
-    std::span<node_info_type, std::dynamic_extent> nodes() const { throw; /* TODO */};
-
-    node_id_iterator_type node_ids() const;;
+    node_id_iterator_type node_ids() const { return {this, {0, 0}, {triangulation.edge_count(), 0}}; }
+    node_id_iterator_type node_ids(const triangle_edge_id_type& edge) const { return {this, {edge, 0}, {edge + 1, 0}}; }
 
     node_info_type node(const node_id_type &__id) const;
 
@@ -151,10 +182,12 @@ public:
 
     edge_info_type edge(const edge_id_type &__id) const;
 
+    subdivision_edge_info steiner_info(const triangle_edge_id_type &__id) const { return _M_steiner_info.edge(__id);};
+
     edge_id_type edge_id(const node_id_type &src, const node_id_type &dest) const;
 
     bool has_edge(const node_id_type &src, const node_id_type &dest) const {
-        return edge_id(src, dest).source.edge != NO_EDGE_ID; /*ToDO*/ };
+        return edge_id(src, dest).source.edge; };
 
     const steiner_graph &topology() const { return *this; }
 
@@ -163,22 +196,38 @@ public:
     std::vector<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     outgoing_edges(const node_id_type &__node_id) const;
 
-    static adjacency_list<triangle_node_id_t, subdivision_edge_info>
-    make_steiner_info(const adjacency_list<triangle_node_id_t, triangle_edge_info_t> &triangulation,
-                      const std::vector<triangle_node_info_t> &nodes,
+    static adjacency_list<triangle_node_id_type, subdivision_edge_info>
+    make_steiner_info(const adjacency_list<triangle_node_id_type, triangle_edge_info_type> &triangulation,
+                      const std::vector<triangle_node_info_type> &nodes,
                       const polyhedron<triangulation_type, 3> &third_point,
                       float __epsilon);
 
 
-    distance_type path_length(const path &__route) const { return 0; /*TODO*/};
+    distance_type path_length(const path &__route) const {
+        distance_type result = 0;
 
-    subgraph make_subgraph(const path &__route) const { return {}; /*TODO*/ };
+        for (size_t i = 1; i < __route.nodes.size(); i++) {
+            auto src =__route.nodes[i - 1];
+            auto dest =__route.nodes[i];
+            result += distance(node(src).coordinates, node(dest).coordinates);
+        }
 
-    subgraph make_subgraph(std::vector<node_id_type> &&__nodes,
-                           std::vector<edge_id_type> &&__edges) const { return {}; /*TODO*/ };
+        return result;
+    };
 
-    //graph<node_info_type, edge_info_type, triangle_node_id_t, triangle_edge_id_t>
-    steiner_graph make_graph(const subgraph &__subgraph) const { throw; /*TODO*/ };
+    subgraph make_subgraph(const path &__route) const {
+        subgraph result;
+        result.nodes = __route.nodes;
+
+        for (size_t i = 1; i < __route.nodes.size(); i++) {
+            auto src = __route.nodes[i - 1];
+            auto dest = __route.nodes[i];
+
+            result.edges.push_back(edge_id(src, dest));
+        }
+
+        return result;
+    };
 
     static steiner_graph make_graph(std::vector<steiner_graph::node_info_type> &&__triangulation_nodes,
                                     steiner_graph::triangulation_type &&__triangulation_edges);
@@ -187,7 +236,7 @@ public:
 
 steiner_graph::node_id_iterator_type &steiner_graph::node_id_iterator_type::operator++() {
     current.steiner_index++;
-    if (current.steiner_index >= graph->steiner_info.edge(current.edge).node_count) {
+    if (current.steiner_index >= graph->_M_steiner_info.edge(current.edge).node_count) {
         current.steiner_index = 0;
         current.edge++;
     }

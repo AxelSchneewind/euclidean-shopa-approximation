@@ -52,9 +52,11 @@ public:
 template <typename NodeCostPair> struct Default
 {
 public:
-  Default (){};
+  Default () = default;
 
-  bool operator() (const NodeCostPair &n1, const NodeCostPair &n2) { return n1.distance > n2.distance; };
+  bool operator() (const NodeCostPair &n1, const NodeCostPair &n2) {
+      return n1.distance > n2.distance;
+  };
 };
 
 template <typename NodeCostPair> struct A_Star

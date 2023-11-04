@@ -14,8 +14,8 @@ triangulation_file_io::read(std::istream &input) {
     using f = formatter;
     f::skip_comments(input);
 
-    node_id_t node_count(f::template read<node_id_t>(input));
-    edge_id_t triangle_count(f::template read<edge_id_t>(input));
+    size_t node_count(f::template read<node_id_t>(input));
+    size_t triangle_count(f::template read<edge_id_t>(input));
 
     // read nodes
     std::vector<typename Graph::node_info_type> nodes;
@@ -35,7 +35,7 @@ triangulation_file_io::read(std::istream &input) {
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;
             edge_t edge;
-            edge.cost = distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
+            edge.cost = (float)distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
 
             builder.add_edge(tri[i], tri[next], edge);
             builder.add_edge(tri[next], tri[i], edge);
@@ -50,11 +50,11 @@ steiner_graph triangulation_file_io::read_steiner(std::istream &input) {
     using f = stream_encoders::encode_text;
     f::skip_comments(input);
 
-    node_id_t node_count(f::template read<node_id_t>(input));
-    edge_id_t triangle_count(f::template read<edge_id_t>(input));
+    size_t node_count(f::template read<size_t>(input));
+    size_t triangle_count(f::template read<size_t>(input));
 
     // read nodes
-    std::vector<steiner_graph::triangle_node_info_t> nodes;
+    std::vector<steiner_graph::triangle_node_info_type> nodes;
     for (int i = 0; i < node_count; ++i) {
         node_t n;
         n.coordinates = f::template read<coordinate_t>(input);
@@ -71,7 +71,7 @@ steiner_graph triangulation_file_io::read_steiner(std::istream &input) {
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;
             edge_t edge;
-            edge.cost = distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
+            edge.cost = (float)distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
 
             builder.add_edge(tri[i], tri[next], edge);
             builder.add_edge(tri[next], tri[i], edge);
