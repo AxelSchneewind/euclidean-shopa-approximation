@@ -5,79 +5,100 @@
 #include "../util/counting_iterator.h"
 #include <memory>
 
-template<typename E>
+/**
+ * stores a topology and provides O(1) access to incoming and outgoing edges for any node
+ * @tparam E the information stored for each node
+ */
+template<typename NodeId, typename E>
 class adjacency_list {
 public:
-    using node_id_type = node_id_t;
-    using edge_id_type = edge_id_t;
-    using node_info_type = node_t;
-    using distance_type = distance_t;
+    using node_id_type = NodeId;
+    using edge_id_type = unidirectional_adjacency_list<NodeId, E>::edge_index_type;
     using edge_info_type = E;
-    using adjacency_list_type = adjacency_list<edge_info_type>;
+    using type = adjacency_list<NodeId, E>;
 
 private:
-
-private:
-    std::shared_ptr<const unidirectional_adjacency_list<node_id_type, E>> m_forward;
-    std::shared_ptr<const unidirectional_adjacency_list<node_id_type, E>> m_backward;
+    std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> _M_forward;
+    std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> _M_backward;
 
 
-    adjacency_list(std::shared_ptr<const unidirectional_adjacency_list<node_id_type, E>> __forward,
-                   std::shared_ptr<unidirectional_adjacency_list<node_id_type, E>> __backward);
+    adjacency_list(std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __forward,
+                   std::shared_ptr<unidirectional_adjacency_list<NodeId, E>> __backward);
 
-    adjacency_list(const std::shared_ptr<const unidirectional_adjacency_list<node_id_type, E>> &__forward,
-                   const std::shared_ptr<const unidirectional_adjacency_list<node_id_type, E>> &__backward)
-            : m_forward(__forward), m_backward(__backward) {};
+    adjacency_list(const std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> &__forward,
+                   const std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> &__backward);
 
 public:
-    static adjacency_list<E>
-    make_bidirectional(const std::shared_ptr<const unidirectional_adjacency_list<node_id_type, E>> &__forward);
+    // copy constructor/assignment
+    adjacency_list(const adjacency_list<NodeId, E> &__other) noexcept;
+    adjacency_list<NodeId, E> &operator=(const adjacency_list<NodeId, E> &__other) = default;
 
-    static adjacency_list<E> make_bidirectional(unidirectional_adjacency_list<node_id_type, E> &&__forward);
+    // move constructor/assignment
+    adjacency_list(adjacency_list<NodeId, E> &&__other) noexcept;
+    adjacency_list<NodeId, E> &operator=(adjacency_list<NodeId, E> &&__other) = default;
 
-    static adjacency_list<E>
-    make_bidirectional_undirected(const std::shared_ptr<const unidirectional_adjacency_list<node_id_type, E>> &__edges);
+    ~adjacency_list() = default;
 
-    static adjacency_list<E> make_bidirectional_undirected(unidirectional_adjacency_list<node_id_type, E> &&__forward);
-
-    adjacency_list(const adjacency_list<E> &__other) noexcept
-            : m_forward(__other.m_forward), m_backward(__other.m_backward) {}
-
-    adjacency_list(adjacency_list<E> &&__other) noexcept
-            : m_forward(std::move(__other.m_forward)), m_backward(std::move(__other.m_backward)) {}
-
-    adjacency_list<E> &operator=(const adjacency_list<E> &other) = default;
-
-    adjacency_list<E> &operator=(adjacency_list<E> &&other) = default;
-
-    adjacency_list inverse() const;
-
+    /**
+     * number of nodes
+     * @return
+     */
     inline size_t node_count() const;
 
+    /**
+     * number of edges
+     * @return
+     */
     inline size_t edge_count() const;
 
-    std::span<const internal_adjacency_list_edge<node_id_type, edge_info_type>, std::dynamic_extent>
-    outgoing_edges(const node_id_type &source) const { return m_forward->outgoing_edges(source); }
+    /**
+     * returns a span with the destination/info pairs for the given source node
+     * @param __source
+     * @return
+     */
+    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    outgoing_edges(const NodeId &__source) const;
 
-    std::span<const internal_adjacency_list_edge<node_id_type, edge_info_type>, std::dynamic_extent>
-    incoming_edges(const node_id_type &destination) const { return m_backward->outgoing_edges(destination); }
+    /**
+     * returns a span with the source/info pairs for the given destination node
+     * @param __destination
+     * @return
+     */
+    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    incoming_edges(const NodeId &__destination) const;
 
-    counter<node_id_type> node_ids() const { return counter((node_id_type)node_count()); };
+    /**
+     * returns an iterator over all node ids
+     * @return
+     */
+    counter<NodeId> node_ids() const;
 
-    node_id_type source(const edge_id_type &id) const { return m_forward->source(id); };
+    NodeId source(const edge_id_type &__id) const;
 
-    node_id_type destination(const edge_id_type &id) const { return m_forward->destination(id); };
+    NodeId destination(const edge_id_type &__id) const;
 
-    edge_info_type edge(const edge_id_type &id) const { return m_forward->edge(id); };
+    E edge(const edge_id_type &__id) const;
 
-    edge_id_type edge_id(const node_id_type &source, const node_id_type &destination) const {
-        return m_forward->edge_index(source, destination);
-    }
+    edge_id_type edge_id(const NodeId &__source, const NodeId &__destination) const;
 
-    bool has_edge(const node_id_type &source, const node_id_type &destination) const { return m_forward->edge_index(source, destination) != NO_EDGE_ID; }
+    bool has_edge(const NodeId &__source, const NodeId &__destination) const;
 
-    bool operator==(const adjacency_list<E> &__other);
+    bool operator==(const adjacency_list<NodeId, E> &__other);
+
+
+    static adjacency_list<NodeId, E>
+    make_bidirectional(const std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> &__forward);
+
+    static adjacency_list<NodeId, E> make_bidirectional(unidirectional_adjacency_list<NodeId, E> &&__forward);
+
+    static adjacency_list<NodeId, E>
+    make_bidirectional_undirected(const std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> &__edges);
+
+    static adjacency_list<NodeId, E>
+    make_bidirectional_undirected(unidirectional_adjacency_list<NodeId, E> &&__forward);
+
+    static adjacency_list<NodeId, E> invert(const adjacency_list<NodeId, E> &__other);
+
 };
 
-
-static_assert(Topology<adjacency_list<int>>);
+static_assert(Topology<adjacency_list<int, int>>);

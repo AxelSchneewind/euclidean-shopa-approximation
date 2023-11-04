@@ -29,7 +29,7 @@ public:
 
 private:
   std::shared_ptr<const G> _M_graph;
-  adjacency_list<edge_info_type> _M_adj_list;
+  G::topology_type _M_adj_list;
 
   node_id_type _M_start_node;
   node_id_type _M_target_node;
@@ -48,7 +48,7 @@ public:
   dijkstra (const dijkstra &__other) = default;
 
   // constructs a dijkstra object for the given graph and m_adj_list
-  explicit dijkstra (const std::shared_ptr<const G> &__graph, const adjacency_list<edge_info_type> &__adj_list);
+  explicit dijkstra (const std::shared_ptr<const G> &__graph, const G::topology_type &__adj_list);
   ~dijkstra () = default;
 
   dijkstra<G, Q, UseEdge, L> &operator= (dijkstra<G, Q, UseEdge, L> &&other) = default;
@@ -65,7 +65,7 @@ public:
    * @param start_node
    * @param target_node
    */
-  void init (node_id_type start_node, node_id_type target_node = NO_NODE_ID);
+  void init (node_id_type __start_node, node_id_type __target_node = NO_NODE_ID);
 
   /**
    * get the current node without removing from queue
@@ -89,5 +89,5 @@ public:
    * @param node
    * @return
    */
-  bool reached (const node_id_t &node) const;
+  bool reached (const G::node_id_type &node) const;
 };

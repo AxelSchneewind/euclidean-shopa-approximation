@@ -5,18 +5,18 @@
 #include <tuple>
 
 
-template <typename Info = std::nullptr_t> struct node_cost_pair
+template <RoutableGraph Graph, typename Info = std::nullptr_t> struct node_cost_pair
 {
-  node_id_t node;
-  node_id_t predecessor;
+  Graph::node_id_type node;
+  Graph::node_id_type predecessor;
   distance_t distance;
   Info info;
 };
 
-template <> struct node_cost_pair<std::nullptr_t>
+template <RoutableGraph Graph> struct node_cost_pair<Graph, std::nullptr_t>
 {
-  node_id_t node;
-  node_id_t predecessor;
+  Graph::node_id_type node;
+  Graph::node_id_type predecessor;
   distance_t distance;
 };
 
@@ -29,7 +29,7 @@ protected:
 public:
   use_all_edges (const Graph *g) : g (g) {}
 
-  bool operator() (const node_id_t &node, const internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> &via)
+  bool operator() (const Graph::node_id_type &node, const internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> &via)
   {
     return true;
   };
@@ -43,7 +43,7 @@ protected:
 public:
   use_upward_edges (const Graph *g) : g (g) {}
 
-  bool operator() (const node_id_t &node, const internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> &via)
+  bool operator() (const Graph::node_id_type &node, const internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> &via)
   {
     return g->node(node).level <= g->node(via.destination).level;
   };
@@ -75,14 +75,14 @@ protected:
 public:
   using value_type = NodeCostPair;
 
-  dijkstra_queue (std::shared_ptr<const Graph> __graph, Comp __comp = Comp{}) {}
+  dijkstra_queue (const std::shared_ptr<const Graph>& __graph, Comp __comp = Comp{}) : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(__comp) {}
 
-  virtual void init (node_id_t __start_node, node_id_t __target_node){
+  virtual void init (Graph::node_id_type __start_node, Graph::node_id_type __target_node){
     while (!empty())
       pop();
   };
 
-  virtual void push (node_id_t __node, node_id_t __predecessor, distance_t __dist)
+  virtual void push (Graph::node_id_type __node, Graph::node_id_type __predecessor, distance_t __dist)
   {
     NodeCostPair ncp (__node, __predecessor, __dist);
     std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>::push (ncp);
@@ -114,14 +114,14 @@ public:
     : dijkstra_queue<Graph, NodeCostPair, Comp> (__graph, __comp), _M_graph (__graph)
   {}
 
-  void push (node_id_t __node, node_id_t __predecessor, distance_t __dist) override
+  void push (Graph::node_id_type __node, Graph::node_id_type __predecessor, distance_t __dist) override
   {
     NodeCostPair ncp (__node, __predecessor, __dist);
     ncp.info.value = __dist + distance (_M_target_coordinates, _M_graph->node (__node).coordinates);
     std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>::push (ncp);
   }
 
-  void init (node_id_t /*__start_node*/, node_id_t __target_node) override
+  void init (Graph::node_id_type /*__start_node*/, Graph::node_id_type __target_node) override
   {
     while (!dijkstra_queue<Graph, NodeCostPair, Comp>::empty())
       dijkstra_queue<Graph, NodeCostPair, Comp>::pop();

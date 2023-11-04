@@ -112,7 +112,7 @@ assert_adjacency_list_equal(const adjacency_list<edge> &list, size_t expected_no
 //    assert_equal (list.edge_count(), expected_edge_count);
 //
 //    for (size_t node_index = 0; node_index < expected_offsets.size(); node_index++) {
-//        assert_equal (list.offset(node_index), expected_offsets[node_index]);
+//        assert_equal (list._M_offsets(node_index), expected_offsets[node_index]);
 //    }
 //
 //    for (size_t edge_index = 0; edge_index < expected_edges.size(); edge_index++) {

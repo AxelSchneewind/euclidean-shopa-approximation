@@ -22,11 +22,11 @@ main (int argc, char const *argv[])
   // TODO make dependent on file ending
   std::ifstream input (filename);
 
-  ch_graph_t graph (fmi_file_io::read<ch_graph_t> (input));
+  std_graph_t graph (triangulation_file_io::read<std_graph_t> (input));
 
   // write gl file for graph
   std::ofstream output (filename_out);
-  gl_file_io::write<ch_graph_t>(output, graph);
+  gl_file_io::write<std_graph_t>(output, graph);
 
   output.close();
 }

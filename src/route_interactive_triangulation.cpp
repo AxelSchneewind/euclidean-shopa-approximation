@@ -34,9 +34,7 @@ main (int argc, char const *argv[])
   if (input.bad ())
     return 1;
 
-  triangulation_file_io reader;
-
-  std::shared_ptr<const std_graph_t> graph_ptr (new std_graph_t (reader.read<std_graph_t> (input)));
+  std::shared_ptr<const std_graph_t> graph_ptr (new std_graph_t (triangulation_file_io::read<std_graph_t> (input)));
   std::cout << "done, graph has " << graph_ptr->node_count() << " nodes and " << graph_ptr->edge_count() << " edges" << std::endl;
 
   std_routing_t router (graph_ptr);

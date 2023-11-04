@@ -49,6 +49,7 @@ distance_t distance(const coordinate_t& c1, const coordinate_t& c2);
 
 struct node_t {
     coordinate_t coordinates;
+    bool operator==(const node_t& ) const = default;
 };
 
 struct edge_t {
@@ -56,10 +57,14 @@ struct edge_t {
 
     [[nodiscard]] edge_t
     invert(const std::vector<edge_id_t> & /*unused*/) const;
+
+    bool operator==(const edge_t& ) const = default;
 };
 
 struct ch_node_t : node_t {
     short level;
+
+    bool operator==(const ch_node_t& ) const = default;
 };
 
 struct ch_edge_t : edge_t {

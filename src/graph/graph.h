@@ -23,6 +23,13 @@ struct subgraph {
     subgraph(std::vector<NodeId> &&__n, std::vector<EdgeId> &&__e);
 };
 
+/**
+ * stores a directed graph consisting of nodes and edges
+ * @tparam NodeInfo the type of information to store for each node
+ * @tparam EdgeInfo the type of information to store for each edge
+ * @tparam NodeId the type by which nodes can be accessed
+ * @tparam EdgeId the type by which edges can be accessed
+ */
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 class graph {
 public:
@@ -31,73 +38,62 @@ public:
     using node_info_type = NodeInfo;
     using distance_type = distance_t;
     using edge_info_type = EdgeInfo;
-    using adjacency_list_type = adjacency_list<EdgeInfo>;
+    using adjacency_list_type = adjacency_list<NodeId, EdgeInfo>;
     using path = path<NodeId>;
     using subgraph = subgraph<NodeId, EdgeId>;
 
+    using topology_type = adjacency_list_type;
 private:
-    // node data
-    std::vector<NodeInfo> _M_node_list; // accessed via node_id_t
 
-    // topology of topology and backward graphs
-    adjacency_list<EdgeInfo> _M_adjacency_list;
+// node data
+    std::vector<NodeInfo> _M_node_list;
 
-    // constructors
-    graph(std::vector<NodeInfo> &&__nodes, adjacency_list<EdgeInfo> &&__list);
+    // topology of forward and backward graphs
+    adjacency_list_type _M_adjacency_list;
 
-    graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &operator=(const graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &) = default;
-
-    graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &operator=(graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &&) = default;
+    graph(std::vector<NodeInfo> &&__nodes, adjacency_list<NodeId, EdgeInfo> &&__list);
 
 public:
     // move constructor
     graph(graph &&__graph) noexcept;
 
-    graph(const graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &other) = default;
+    // constructors
+    graph(const graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &__other) = default;
+
+    graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &operator=(const graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &) = default;
+
+    graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &operator=(graph<NodeInfo, EdgeInfo, NodeId, EdgeId> &&) = default;
+
 
     // destructor
     ~graph();
 
-    static graph make_graph(std::vector<NodeInfo> &&__nodes, adjacency_list<EdgeInfo> &&__forward);
+    inline std::span<const NodeInfo> nodes() const;
 
-    static graph make_graph(std::vector<NodeInfo> &&__nodes,
-                            const std::shared_ptr<unidirectional_adjacency_list<node_id_type, EdgeInfo>> &__forward);
-
-    inline std::span<const node_info_type> nodes() const;
-    inline counter<node_id_type> node_ids() const;
+    inline counter<NodeId> node_ids() const;
 
     inline size_t node_count() const;
 
     inline size_t edge_count() const;
 
-    inline const node_info_type &node(const node_id_type &__node_id) const;
+    inline const NodeInfo &node(const NodeId &__node_id) const;
 
-    const edge_info_type &edge(const edge_id_type &__edge_id) const { return _M_adjacency_list.edge(__edge_id); }
+    const EdgeInfo &edge(const EdgeId &__edge_id) const;
 
-    const node_id_type &source(const edge_id_type &__edge_id) const { return _M_adjacency_list.source(__edge_id); }
+    const NodeId &source(const EdgeId &__edge_id) const;
 
-    const node_id_type &destination(const edge_id_type &__edge_id) const {
-        return _M_adjacency_list.destination(__edge_id);
-    }
+    const NodeId &destination(const EdgeId &__edge_id) const;
 
-    [[deprecated]]
-    const adjacency_list<edge_info_type> &list() const { return _M_adjacency_list; };
+    inline const adjacency_list<NodeId, EdgeInfo> &topology() const;
 
-    [[deprecated]]
-    inline const adjacency_list<edge_info_type> &topology() const;
+    inline adjacency_list<NodeId, EdgeInfo> inverse_topology() const;
 
-    [[deprecated]]
-    inline const adjacency_list<edge_info_type> &inverse_topology() const;
+    EdgeId edge_id(const NodeId &__src, const NodeId &__dest) const;
 
-    edge_id_type edge_id(const node_id_type &src, const node_id_type &dest) const {
-        return _M_adjacency_list.edge_id(src, dest);
-    };
+    bool has_edge(const NodeId &__src, const NodeId &__dest) const;
 
-    bool has_edge(const node_id_type &src, const node_id_type &dest) const { return edge_id(src, dest) != NO_EDGE_ID; }
-
-    std::span<const internal_adjacency_list_edge<node_id_type, edge_info_type>> outgoing_edges(const node_id_type &node) const {
-        return topology().outgoing_edges(node);
-    };
+    std::span<const internal_adjacency_list_edge<NodeId, EdgeInfo>>
+    outgoing_edges(const NodeId &__node) const;
 
     distance_type path_length(const path &__route) const;
 
@@ -106,7 +102,14 @@ public:
     subgraph make_subgraph(std::vector<NodeId> &&__nodes, std::vector<EdgeId> &&__edges) const;
 
     graph make_graph(const subgraph &__subgraph) const;
+
+    static graph make_graph(std::vector<NodeInfo> &&__nodes, adjacency_list<NodeId, EdgeInfo> &&__forward);
+
+    static graph make_graph(std::vector<NodeInfo> &&__nodes,
+                            const std::shared_ptr<unidirectional_adjacency_list<NodeId, EdgeInfo>> &__forward);
+
 };
+
 
 static_assert(RoutableGraph<graph<int, int, int, int>>);
 
