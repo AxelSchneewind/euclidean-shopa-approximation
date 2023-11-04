@@ -1,54 +1,11 @@
 #pragma once
 #include "steiner_graph.h"
+#include "polyhedron_impl.h"
 
-// can be generalized to any type of polyhedron (using variable instead of static sized arrays)
-adjacency_list<std::array<steiner_graph::triangle_node_id_t, 2>>
-make_third_points(const adjacency_list<steiner_graph::triangle_edge_info_t> &triangulation) {
-    // for each edge, store the id of the 2 nodes that make up the adjacent triangles
-    unidirectional_adjacency_list<steiner_graph::triangle_node_id_t, std::array<steiner_graph::triangle_node_id_t, 2>>::adjacency_list_builder
-    third_point_builder(triangulation.node_count());
-
-    // iterate over triangulation edges
-    std::vector<steiner_graph::triangle_node_id_t> found_nodes;
-    for (auto node1: triangulation.node_ids()) {
-        for (auto t_edge: triangulation.outgoing_edges(node1)) {
-            auto node2 = t_edge.destination;
-
-            // find nodes on adjacent edges
-            for (auto edge: triangulation.outgoing_edges(node1))
-                if (found_nodes.size() < 40)
-                    found_nodes.push_back(edge.destination);
-            for (auto edge: triangulation.outgoing_edges(node2))
-                if (found_nodes.size() < 40)
-                    found_nodes.push_back(edge.destination);
-            std::sort(found_nodes.begin(), found_nodes.end());
-
-            // get duplicates from found nodes
-            int index = 0;
-            std::array<steiner_graph::triangle_node_id_t, 2> nodes{NO_NODE_ID, NO_NODE_ID};
-            for (int j = 1; j < found_nodes.size(); ++j)
-                if (found_nodes[j] == found_nodes[j - 1] && (index == 0 || found_nodes[j] != nodes[index - 1]))
-                    nodes[index++] = found_nodes[j];
-            found_nodes.clear();
-
-            // fill nodes
-            for (int j = index; j < nodes.size(); ++j)
-                nodes[j] = NO_NODE_ID;
-
-            third_point_builder.add_edge(node1, node2, nodes);
-        }
-    }
-
-    auto first = third_point_builder.get();
-    auto second = adjacency_list<std::array<steiner_graph::triangle_node_id_t, 2>>::make_bidirectional_undirected(
-            std::move(first));
-    return second;
-}
-
-adjacency_list<subdivision_edge_info>
-steiner_graph::make_steiner_info(const adjacency_list<steiner_graph::triangle_edge_info_t> &triangulation,
+adjacency_list<steiner_graph::triangle_node_id_t, steiner_graph::subdivision_edge_info>
+steiner_graph::make_steiner_info(const adjacency_list<steiner_graph::triangle_node_id_t,steiner_graph::triangle_edge_info_t> &triangulation,
                                  const std::vector<steiner_graph::triangle_node_info_t> &nodes,
-                                 const adjacency_list<std::array<steiner_graph::triangle_node_id_t, 2>> &third_point,
+                                 const polyhedron<steiner_graph::triangulation_type, 3> &third_point,
                                  float __epsilon) {
     // store subdivision information here
     unidirectional_adjacency_list<triangle_node_id_t, subdivision_edge_info>::adjacency_list_builder builder;
@@ -58,7 +15,7 @@ steiner_graph::make_steiner_info(const adjacency_list<steiner_graph::triangle_ed
         auto node1 = triangulation.source(i);
         auto node2 = triangulation.destination(i);
 
-        auto other_nodes = third_point.edge(i);
+        auto other_edges = third_point.edges(i);
 
         // get coordinates
         auto c1 = nodes[node1].coordinates;
@@ -66,10 +23,11 @@ steiner_graph::make_steiner_info(const adjacency_list<steiner_graph::triangle_ed
 
         // store minimal angle for node1 and node2
         float angle1 = 180, angle2 = 180;
-        for (auto node: other_nodes) {
-            if (node == NO_NODE_ID) continue;
+        for (auto edge: other_edges) {
+            if (edge == NO_EDGE_ID) continue;
+            auto node3  = triangulation.destination(edge);
 
-            auto c = nodes[node].coordinates;
+            auto c = nodes[node3].coordinates;
 
             // compute angles
             auto a1 = angle(c1, c2, c1, c);
@@ -86,20 +44,21 @@ steiner_graph::make_steiner_info(const adjacency_list<steiner_graph::triangle_ed
 
         // store minimal distance from the given mid-point to any other edge
         float mid_dist = 0;
-        for (auto node: other_nodes) {
-            if (node == NO_NODE_ID) continue;
+        for (auto edge: other_edges) {
+            if (edge == NO_EDGE_ID) continue;
 
-            auto c = nodes[node].coordinates;
+            auto node3  = triangulation.destination(edge);
+
+            auto c = nodes[node3].coordinates;
 
             // compute angles
-            auto d1 = line_distance(c1, c, mid_position);
-            auto d2 = line_distance(c2, c, mid_position);
+            auto d1 = line_distance(c1, c, c);
+            auto d2 = line_distance(c2, c, c);
             if (d1 < mid_dist)
                 mid_dist = d1;
             if (d2 < mid_dist)
                 mid_dist = d2;
         }
-
 
         int count = 3;
 
@@ -110,32 +69,32 @@ steiner_graph::make_steiner_info(const adjacency_list<steiner_graph::triangle_ed
 
     builder.add_node(nodes.size() - 1);
 
-    return adjacency_list<subdivision_edge_info>::make_bidirectional(std::move(builder).get());
+    return adjacency_list<steiner_graph::triangle_node_id_t, steiner_graph::subdivision_edge_info>::make_bidirectional(std::move(builder).get());
 }
 
 steiner_graph
 steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&__triangulation_nodes,
-                          steiner_graph::adjacency_list_type &&__triangulation_edges) {
+                          steiner_graph::triangulation_type &&__triangulation_edges) {
     float EPSILON = 2;
 
     std::vector<steiner_graph::node_info_type> triangulation_nodes(std::move(__triangulation_nodes));
-    adjacency_list<steiner_graph::triangle_edge_info_t> triangulation(std::move(__triangulation_edges));
+    adjacency_list<steiner_graph::triangle_node_id_t,steiner_graph::triangle_edge_info_t> triangulation(std::move(__triangulation_edges));
 
-    auto third_points = make_third_points(triangulation);
+    auto third_points = polyhedron<steiner_graph::triangulation_type, 3>::make_polyhedron(triangulation);
     auto steiner_info = make_steiner_info(triangulation, triangulation_nodes,
                                           third_points, EPSILON);
-    return steiner_graph(std::move(triangulation_nodes), std::move(triangulation), std::move(third_points),
-                         std::move(steiner_info));
+    return {std::move(triangulation_nodes), std::move(triangulation), std::move(third_points),
+                         std::move(steiner_info)};
 }
 
 steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&__triangulation_nodes,
-                             adjacency_list<steiner_graph::triangle_edge_info_t> &&__triangulation_edges,
-                             adjacency_list<std::array<steiner_graph::triangle_node_id_t, 2>> &&__triangles,
-                             adjacency_list<subdivision_edge_info> &&__steiner_info)
+                             adjacency_list<steiner_graph::triangle_node_id_t,steiner_graph::triangle_edge_info_t> &&__triangulation_edges,
+                             polyhedron<triangulation_type, 3> &&__triangles,
+                             adjacency_list<steiner_graph::triangle_node_id_t,subdivision_edge_info> &&__steiner_info)
         :
         _M_edge_count(0), _M_node_count(0), triangulation_nodes(std::move(__triangulation_nodes)),
         triangulation(std::move(__triangulation_edges)),
-        third_point(std::move(__triangles)),
+        _M_polyhedron(std::move(__triangles)),
         steiner_info(std::move(__steiner_info)) {
 
     // max nodes and edges
@@ -145,7 +104,8 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&__tria
     node_id_iterator_type it = {this, first, end};
     for (auto id: it) {
         _M_node_count++;
-        for (auto t_edge_id: outgoing_edges(id)) {
+        auto edges = outgoing_edges(id);
+        for (auto t_edge_id: edges) {
             _M_edge_count++;
         }
     }
@@ -156,28 +116,7 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&__tria
 
 std::array<steiner_graph::triangle_edge_id_t, 4>
 steiner_graph::triangle_edges(const steiner_graph::triangle_edge_id_t &__edge) const {
-    std::array<triangle_edge_id_t, 4> result;
-
-    // nodes on the given edge
-    triangle_node_id_t a = triangulation.source(__edge);
-    triangle_node_id_t b = triangulation.destination(__edge);
-
-    // the two other nodes of the triangle
-    triangle_node_id_t node1 = third_point.edge(__edge)[0];
-    triangle_node_id_t node2 = third_point.edge(__edge)[1];
-
-    result[0] = triangulation.edge_id(a, node1);
-    result[1] = triangulation.edge_id(b, node1);
-
-    if (node2 != NO_NODE_ID) {
-        result[2] = triangulation.edge_id(a, node2);
-        result[3] = triangulation.edge_id(b, node2);
-    } else {
-        result[2] = NO_EDGE_ID;
-        result[3] = NO_EDGE_ID;
-    }
-
-    return result;
+    return _M_polyhedron.edges(__edge);
 }
 
 

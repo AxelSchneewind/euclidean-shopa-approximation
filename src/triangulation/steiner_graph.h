@@ -3,25 +3,22 @@
 #include "../graph/adjacency_list.h"
 #include "../graph/base_types.h"
 #include "../graph/geometry.h"
+#include "triangulation.h"
+#include "polyhedron_impl.h"
 
 #include <algorithm>
 #include <cassert>
 #include <span>
 #include <vector>
 
-struct subdivision_edge_info {
-    // relative position of the points with highest distance to other edges
-    float mid_position;
-    // max distance of a point on this edge to other edges
-    float mid_dist;
-
-    // number of steiner points on this edge (counting the source and destination node)
-    int node_count;
-};
-
 struct steiner_node_id {
     edge_id_t edge;
     int steiner_index;
+
+    steiner_node_id() = default;
+    steiner_node_id(edge_id_t edge) : edge(edge), steiner_index(0) {}
+
+    steiner_node_id(edge_id_t edge, int steiner_index) : edge(edge), steiner_index(steiner_index) {}
 
     bool operator>=(const steiner_node_id &other) const {
         return edge >= other.edge || steiner_index >= other.steiner_index;
@@ -64,7 +61,27 @@ public:
     using triangle_node_info_t = node_t;
     using triangle_edge_info_t = edge_t;
 
-    using adjacency_list_type = adjacency_list<triangle_edge_info_t>;
+    using triangulation_type = adjacency_list<triangle_node_id_t, triangle_edge_info_t>;
+    using adjacency_list_type = adjacency_list<triangle_node_id_t, triangle_edge_info_t>;
+
+    using distance_type = distance_t;
+
+    using path = path<node_id_type>;
+    using subgraph = subgraph<node_id_type, edge_id_type>;
+
+    using topology_type = steiner_graph;
+
+    struct subdivision_edge_info {
+        // relative position of the points with the highest distance to other edges
+        float mid_position;
+        // max distance of a point on this edge to other edges
+        float mid_dist;
+
+        // number of steiner points on this edge (counting the source and destination node)
+        int node_count;
+
+        bool operator==(const subdivision_edge_info &other) const = default;
+    };
 
     struct node_id_iterator_type : public std::iterator<std::forward_iterator_tag, node_id_type> {
         node_id_iterator_type(const steiner_graph *__graph, node_id_type __current, node_id_type __max) : graph(
@@ -94,13 +111,10 @@ public:
         node_id_type &operator*() { return current; }
     };
 
-    steiner_graph(std::vector<steiner_graph::node_info_type> &&__triangulation_nodes,
-                  adjacency_list<steiner_graph::triangle_edge_info_t> &&__triangulation_edges,
-                  adjacency_list<std::array<steiner_graph::triangle_node_id_t, 2>> &&__triangles,
-                  adjacency_list<subdivision_edge_info> &&__steiner_info);
-
-    static steiner_graph make_graph(std::vector<steiner_graph::node_info_type> &&__triangulation_nodes,
-                                    steiner_graph::adjacency_list_type &&__triangulation_edges);
+    steiner_graph(std::vector<node_info_type> &&__triangulation_nodes,
+                  adjacency_list<triangle_node_id_t, triangle_edge_info_t> &&__triangulation_edges,
+                  polyhedron<triangulation_type, 3> &&__triangles,
+                  adjacency_list<triangle_node_id_t, subdivision_edge_info> &&__steiner_info);
 
 private:
     size_t _M_node_count;
@@ -109,13 +123,13 @@ private:
 
     // store triangulation here
     std::vector<node_info_type> triangulation_nodes;
-    adjacency_list<triangle_edge_info_t> triangulation;
+    triangulation_type triangulation;
 
     // store subdivision information here
-    adjacency_list<subdivision_edge_info> steiner_info;
+    adjacency_list<triangle_node_id_t, subdivision_edge_info> steiner_info;
 
     // for each edge, store the id of the 2 nodes that make up the adjacent triangles
-    adjacency_list<std::array<triangle_node_id_t, 2>> third_point;
+    polyhedron<steiner_graph::triangulation_type, 3> _M_polyhedron;
 
     // returns the ids of the edges which are part of the 2 triangles bordering the given edge
     std::array<triangle_edge_id_t, 4> triangle_edges(const triangle_edge_id_t &__edge) const;
@@ -142,14 +156,33 @@ public:
     bool has_edge(const node_id_type &src, const node_id_type &dest) const {
         return edge_id(src, dest).source.edge != NO_EDGE_ID; /*ToDO*/ };
 
+    const steiner_graph &topology() const { return *this; }
+
+    const steiner_graph &inverse_topology() const { return *this; }
+
     std::vector<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     outgoing_edges(const node_id_type &__node_id) const;
 
-    static adjacency_list<subdivision_edge_info>
-    make_steiner_info(const adjacency_list<steiner_graph::triangle_edge_info_t> &triangulation,
-                      const std::vector<steiner_graph::triangle_node_info_t> &nodes,
-                      const adjacency_list<std::array<steiner_graph::triangle_node_id_t, 2>> &third_point,
+    static adjacency_list<triangle_node_id_t, subdivision_edge_info>
+    make_steiner_info(const adjacency_list<triangle_node_id_t, triangle_edge_info_t> &triangulation,
+                      const std::vector<triangle_node_info_t> &nodes,
+                      const polyhedron<triangulation_type, 3> &third_point,
                       float __epsilon);
+
+
+    distance_type path_length(const path &__route) const { return 0; /*TODO*/};
+
+    subgraph make_subgraph(const path &__route) const { return {}; /*TODO*/ };
+
+    subgraph make_subgraph(std::vector<node_id_type> &&__nodes,
+                           std::vector<edge_id_type> &&__edges) const { return {}; /*TODO*/ };
+
+    //graph<node_info_type, edge_info_type, triangle_node_id_t, triangle_edge_id_t>
+    steiner_graph make_graph(const subgraph &__subgraph) const { throw; /*TODO*/ };
+
+    static steiner_graph make_graph(std::vector<steiner_graph::node_info_type> &&__triangulation_nodes,
+                                    steiner_graph::triangulation_type &&__triangulation_edges);
+
 };
 
 steiner_graph::node_id_iterator_type &steiner_graph::node_id_iterator_type::operator++() {
@@ -162,6 +195,5 @@ steiner_graph::node_id_iterator_type &steiner_graph::node_id_iterator_type::oper
     return *this;
 }
 
-//TODO
 static_assert(Topology<steiner_graph>);
 static_assert(RoutableGraph<steiner_graph>);
