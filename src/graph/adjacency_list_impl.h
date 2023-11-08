@@ -74,7 +74,7 @@ adjacency_list<NodeId, E>::invert(const adjacency_list<NodeId, E> &__other) {
 
 template<typename NodeId, typename E>
 bool adjacency_list<NodeId, E>::has_edge(const NodeId &__source, const NodeId &__destination) const {
-    return _M_forward->edge_index(__source, __destination);
+    return _M_forward->has_edge(__source, __destination);
 }
 
 template<typename NodeId, typename E>
@@ -98,7 +98,9 @@ const NodeId& adjacency_list<NodeId, E>::source(const adjacency_list::edge_id_ty
 }
 
 template<typename NodeId, typename E>
-counter<NodeId> adjacency_list<NodeId, E>::node_ids() const { return counter((NodeId) node_count()); }
+counter<NodeId> adjacency_list<NodeId, E>::node_ids() const {
+    return counter((NodeId) node_count());
+}
 
 template<typename NodeId, typename E>
 std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>

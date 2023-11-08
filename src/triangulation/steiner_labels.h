@@ -39,7 +39,7 @@ steiner_labels<G, N>::all_visited() const {
 
     for (auto edge: _M_touched) {
         for (auto node: _M_graph_ptr->node_ids(edge)) {
-            if (reached(node)) {
+            if (!is_none(node.edge) && node.steiner_index != -1 && reached(node)) {
                 result.emplace_back(node);
             }
         }
@@ -53,7 +53,7 @@ template<RoutableGraph G, typename N>
 steiner_labels<G, N>::steiner_labels(const G *__graph_ptr)
         : _M_graph_ptr(__graph_ptr),
           _M_predecessor(__graph_ptr->base_graph().edge_count()),
-          _M_distance(__graph_ptr->base_graph().edge_count()) {
+          _M_distance(__graph_ptr->base_graph().edge_count())  {
     _M_touched.reserve(std::sqrt(__graph_ptr->base_graph().edge_count()));
 }
 
@@ -62,11 +62,11 @@ void
 steiner_labels<G, N>::init(steiner_labels<G, N>::node_id_type  /*__start_node*/,
                            steiner_labels<G, N>::node_id_type  /*__target_node*/) {
     for (size_t index = 0; index < _M_touched.size(); ++index) {
-        steiner_labels<G, N>::node_id_type node = _M_touched[index];
-        _M_predecessor[node].clear();
-        _M_distance[node].clear();
-        _M_predecessor[node].shrink_to_fit();
-        _M_distance[node].shrink_to_fit();
+        typename G::triangle_edge_id_type edge = _M_touched[index];
+        _M_predecessor[edge].clear();
+        _M_distance[edge].clear();
+        _M_predecessor[edge].shrink_to_fit();
+        _M_distance[edge].shrink_to_fit();
     }
 
     _M_touched.clear();
@@ -75,9 +75,10 @@ steiner_labels<G, N>::init(steiner_labels<G, N>::node_id_type  /*__start_node*/,
 template<RoutableGraph Graph, typename N>
 steiner_labels<Graph, N>::node_id_type
 steiner_labels<Graph, N>::predecessor(const steiner_labels<Graph, N>::node_id_type &__node) const {
-    assert(__node);
+    assert(!is_none(__node));
+
     if (_M_predecessor[__node.edge].size() <= __node.steiner_index) {
-        return {};
+        return none_value<node_id_type>();
     }
     return _M_predecessor[__node.edge][__node.steiner_index];
 }
@@ -85,9 +86,9 @@ steiner_labels<Graph, N>::predecessor(const steiner_labels<Graph, N>::node_id_ty
 template<RoutableGraph G, typename N>
 G::distance_type
 steiner_labels<G, N>::distance(const steiner_labels<G, N>::node_id_type &__node) const {
-    assert(__node);
+    assert(!is_none(__node));
     if (_M_distance[__node.edge].size() <= __node.steiner_index) {
-        return {};
+        return infinity<distance_type>();
     }
     return _M_distance[__node.edge][__node.steiner_index];
 }
@@ -95,7 +96,8 @@ steiner_labels<G, N>::distance(const steiner_labels<G, N>::node_id_type &__node)
 template<RoutableGraph G, typename N>
 bool
 steiner_labels<G, N>::reached(const steiner_labels<G, N>::node_id_type &__node) const {
-    assert(__node);
+    assert(!is_none(__node));
+
     return _M_predecessor[__node.edge].size() > __node.steiner_index &&
            _M_predecessor[__node.edge][__node.steiner_index].edge;
 }
@@ -103,26 +105,23 @@ steiner_labels<G, N>::reached(const steiner_labels<G, N>::node_id_type &__node) 
 template<RoutableGraph G, typename N>
 void
 steiner_labels<G, N>::label(const steiner_labels<G, N>::node_cost_pair_type &__node_cost_pair) {
-    // TODO avoid
-    if(__node_cost_pair.node == __node_cost_pair.predecessor) return;
-
     auto edge_id = __node_cost_pair.node.edge;
-    auto inv_edge_id = _M_graph_ptr->base_graph().edge_id(_M_graph_ptr->base_graph().destination(edge_id),
-                                                          _M_graph_ptr->base_graph().source(edge_id));
     auto count = _M_graph_ptr->steiner_info(__node_cost_pair.node.edge).node_count;
-    if (!reached(__node_cost_pair.node)) {
-        _M_touched.push_back(edge_id);
-        _M_touched.push_back(inv_edge_id);
 
-        _M_distance[edge_id].resize(count, {});
-        _M_distance[inv_edge_id].resize(count, {});
-        _M_predecessor[edge_id].resize(count, {});
-        _M_predecessor[inv_edge_id].resize(count, {});
+    assert(_M_touched.empty() || _M_graph_ptr->topology().has_edge(__node_cost_pair.predecessor, __node_cost_pair.node));
+    assert(__node_cost_pair.node.edge >= 0 && __node_cost_pair.node.edge < _M_graph_ptr->topology().edge_count());
+    assert(count > 0);
+    assert(count > __node_cost_pair.node.steiner_index);
+
+    // if edge has not been touched yet, set up its distance/predecessor arrays
+    if (_M_distance[edge_id].size() == 0) {
+        _M_touched.push_back(edge_id);
+
+        _M_distance[edge_id].resize(count, infinity<distance_type >());
+        _M_predecessor[edge_id].resize(count, none_value<node_id_type>());
     }
 
     _M_distance[edge_id][__node_cost_pair.node.steiner_index] = __node_cost_pair.distance;
     _M_predecessor[edge_id][__node_cost_pair.node.steiner_index] = __node_cost_pair.predecessor;
-    _M_distance[inv_edge_id][count - __node_cost_pair.node.steiner_index - 1] = __node_cost_pair.distance;
-    _M_predecessor[inv_edge_id][count - __node_cost_pair.node.steiner_index - 1] = __node_cost_pair.predecessor;
 
 }

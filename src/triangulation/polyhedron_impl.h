@@ -1,11 +1,15 @@
 #pragma once
 
 #include "polyhedron.h"
+#include "../util/keep_duplicates.h"
+#include "../util/list_intersection.h"
+#include "../util/remove_duplicates.h"
 
 // can be generalized to any type of polyhedron (using variable instead of static sized arrays)
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 polyhedron<BaseGraph, MaxNodesPerFace>
-polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base) {
+polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
+                                                        const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &faces) {
     using node_id_type = polyhedron<BaseGraph, MaxNodesPerFace>::node_id_type;
     using edge_id_type = polyhedron<BaseGraph, MaxNodesPerFace>::edge_id_type;
     const std::size_t edge_count = polyhedron<BaseGraph, MaxNodesPerFace>::edge_count;
@@ -13,70 +17,81 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base)
     typename unidirectional_adjacency_list<node_id_type, std::array<edge_id_type, edge_count>>::adjacency_list_builder
             adjacent_edges_builder(__base.node_count());
 
-    // iterate over triangulation edges
-    std::vector<node_id_type> found_nodes;
-    for (auto node1: __base.node_ids()) {
-        for (auto base_edge: __base.outgoing_edges(node1)) {
-            auto node2 = base_edge.destination;
+    // for each edge, store the triangles it belongs to
+    std::vector<std::vector<int>> triangles(__base.edge_count());
+    int face_index = 0;
+    for (auto face: faces) {
+        // keep track of the triangles each node is part of
+        auto node_id = face[0];
+        auto node_id_n1 = face[1];
+        auto node_id_n2 = face[2];
+        assert(node_id != node_id_n1 && node_id != node_id_n2 && node_id_n1 != node_id_n2);
 
-            // find nodes on adjacent edges
-            // TODO directly get edge ids
-            for (auto edge: __base.incoming_edges(node1))
-                found_nodes.push_back(edge.destination);
-            for (auto edge: __base.incoming_edges(node2))
-                found_nodes.push_back(edge.destination);
-            for (auto edge: __base.outgoing_edges(node1))
-                found_nodes.push_back(edge.destination);
-            for (auto edge: __base.outgoing_edges(node2))
-                found_nodes.push_back(edge.destination);
-            std::sort(found_nodes.begin(), found_nodes.end());
+        triangles[__base.edge_id(node_id, node_id_n1)].push_back(face_index);
+        triangles[__base.edge_id(node_id, node_id_n2)].push_back(face_index);
+        triangles[__base.edge_id(node_id_n1, node_id_n2)].push_back(face_index);
+        triangles[__base.edge_id(node_id_n1, node_id)].push_back(face_index);
+        triangles[__base.edge_id(node_id_n2, node_id_n1)].push_back(face_index);
+        triangles[__base.edge_id(node_id_n2, node_id)].push_back(face_index);
 
-            // get duplicates from found nodes
-            std::vector<edge_id_type> found_edges;
-            int index = 0;
-            for (int j = 1; j < found_nodes.size(); ++j) {
-                if (found_nodes[j] == found_nodes[j - 1]) {
-                    auto edge_id1 = __base.edge_id(node1, found_nodes[j]);
-                    auto edge_id2 = __base.edge_id(found_nodes[j], node1);
-                    auto edge_id3 = __base.edge_id(node2, found_nodes[j]);
-                    auto edge_id4 = __base.edge_id(found_nodes[j], node2);
+        face_index++;
+    }
 
-
-                    if (edge_id1 >= 0 && edge_id1 < __base.edge_count())
-                        found_edges.push_back(edge_id1);
-                    if (edge_id2 >= 0 && edge_id2 < __base.edge_count())
-                        found_edges.push_back(edge_id2);
-                    if (edge_id3 >= 0 && edge_id3 < __base.edge_count())
-                        found_edges.push_back(edge_id3);
-                    if (edge_id4 >= 0 && edge_id4 < __base.edge_count())
-                        found_edges.push_back(edge_id4);
-                }
-            }
-            found_nodes.clear();
-            std::sort(found_edges.begin(), found_edges.end());
-
-            // store found edges in array
-            index = 0;
-            std::array<edge_id_type, edge_count> edges;
-            for (int j = 0; j < found_edges.size(); ++j) {
-                if (index == 0 || found_edges[j] != edges[index - 1]) {
-                    assert(found_edges[j] >= 0 && found_edges[j] < __base.edge_count());
-                    edges[index++] = found_edges[j];
-                }
-            }
-
-            found_edges.clear();
-
-            // fill edges
-            for (int j = index; j < edges.size(); ++j)
-                edges[j] = edge_id_type::NO_EDGE_ID;
-
-            adjacent_edges_builder.add_edge(node1, node2, edges);
+    // sort all lists and remove duplicates
+    for (auto base_node: __base.node_ids()) {
+        for (auto base_edge: __base.outgoing_edges(base_node)) {
+            std::sort(triangles[__base.edge_id(base_node, base_edge.destination)].begin(),
+                      triangles[__base.edge_id(base_node, base_edge.destination)].end());
+            remove_duplicates_sorted(triangles[__base.edge_id(base_node, base_edge.destination)]);
+            assert(triangles[__base.edge_id(base_node, base_edge.destination)].size() <= 2);
         }
     }
 
-    auto first = adjacent_edges_builder.get();
+    // iterate over triangulation edges
+    for (auto base_node_1: __base.node_ids()) {
+        for (auto base_edge: __base.outgoing_edges(base_node_1)) {
+            auto base_node_2 = base_edge.destination;
+            auto base_edge_id = __base.edge_id(base_node_1, base_node_2);
+
+            // get faces adjacent to both nodes
+            assert(!triangles[base_edge_id].empty() && triangles[base_edge_id].size() <= 2);
+            std::vector<edge_id_t> adjacent_edges;
+            for (auto face_index: triangles[base_edge_id]) {
+                auto face = faces[face_index];
+                auto node_id = face[0];
+                auto node_id_n1 = face[(0 + 1) % 3];
+                auto node_id_n2 = face[(0 + 2) % 3];
+
+                adjacent_edges.push_back(__base.edge_id(node_id, node_id_n1));
+                adjacent_edges.push_back(__base.edge_id(node_id, node_id_n2));
+                adjacent_edges.push_back(__base.edge_id(node_id_n1, node_id));
+                adjacent_edges.push_back(__base.edge_id(node_id_n1, node_id_n2));
+                adjacent_edges.push_back(__base.edge_id(node_id_n2, node_id));
+                adjacent_edges.push_back(__base.edge_id(node_id_n2, node_id_n1));
+            }
+            std::sort(adjacent_edges.begin(), adjacent_edges.end());
+            remove_duplicates_sorted(adjacent_edges);
+            assert(adjacent_edges.size() >= 6);
+            assert(adjacent_edges.size() <= edge_count);
+
+            // make array and attach it to edge
+            std::array<edge_id_type, edge_count> edges{};
+            int index = 0;
+            for (auto e: adjacent_edges) {
+                if (index < edge_count)
+                    edges[index++] = e;
+            }
+            while (index < edge_count) {
+                edges[index++] = none_value<edge_id_type>();
+            }
+
+            adjacent_edges_builder.add_edge(base_node_1, base_node_2, edges);
+        }
+    }
+
+     auto first = adjacent_edges_builder.get();
     auto second = adjacency_list<node_id_type, std::array<edge_id_type, edge_count>>::make_bidirectional_undirected(
             std::move(first));
+
     return polyhedron<BaseGraph, MaxNodesPerFace>(__base, second);
 }

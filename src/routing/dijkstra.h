@@ -17,6 +17,7 @@
 
 template <RoutableGraph G, DijkstraQueue<G> Q, typename UseEdge, DijkstraLabels L> class dijkstra
 {
+    static_assert(Topology<typename G::topology_type>);
 public:
   using type = dijkstra<G, Q, UseEdge, L>;
   using node_cost_pair = Q::value_type;
@@ -29,7 +30,7 @@ public:
 
 private:
   std::shared_ptr<const G> _M_graph;
-  G::topology_type _M_adj_list;
+  G::topology_type _M_topology;
 
   node_id_type _M_start_node;
   node_id_type _M_target_node;
@@ -40,7 +41,7 @@ private:
   L _M_labels;
 
   // add reachable (and not settled) nodes to active nodes in queue
-  void expand (const node_cost_pair &__node);
+  void expand (const node_id_type &__node);
 
 public:
 
@@ -54,9 +55,14 @@ public:
   dijkstra<G, Q, UseEdge, L> &operator= (dijkstra<G, Q, UseEdge, L> &&other) = default;
   dijkstra<G, Q, UseEdge, L> &operator= (const dijkstra<G, Q, UseEdge, L> &other) = default;
 
+
   typename G::node_id_type source () const { return _M_start_node; }
   typename G::node_id_type target () const { return _M_target_node; }
 
+  /**
+   * gets the stored labels
+   * @return
+   */
   const L &labels () const { return _M_labels; }
 
   /**
@@ -65,13 +71,13 @@ public:
    * @param start_node
    * @param target_node
    */
-  void init (node_id_type __start_node, node_id_type __target_node = {});
+  void init (node_id_type __start_node, node_id_type __target_node = none_value<node_id_type>());
 
   /**
    * get the current node without removing from queue
    * @return
    */
-  const node_cost_pair &current () const;
+  const node_cost_pair current () const;
 
   /**
    * step to current node in queue, i.e. store label and add adjacent nodes
@@ -89,5 +95,5 @@ public:
    * @param node
    * @return
    */
-  bool reached (const G::node_id_type &node) const;
+  bool reached (G::node_id_type __node) const;
 };

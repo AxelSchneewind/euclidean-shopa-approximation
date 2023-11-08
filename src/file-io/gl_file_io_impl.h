@@ -39,7 +39,8 @@ std::ostream &gl_file_io::write(std::ostream &output, const Graph &graph, int li
     return output;
 }
 
-std::ostream &gl_file_io::write_steiner(std::ostream &output, const steiner_graph &graph, int line_width, int color) {
+template<>
+std::ostream &gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &graph, int line_width, int color) {
     using f = stream_encoders::encode_text;
 
     size_t node_count = graph.node_count();

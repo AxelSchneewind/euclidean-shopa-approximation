@@ -10,16 +10,15 @@ concept Topology = requires {
     typename G::edge_id_type;
 
     typename G::edge_info_type;
-}
-&& requires(G g) {
+} && requires(G g) {
     { g.node_count() } -> std::convertible_to<size_t>;
     { g.edge_count() } -> std::convertible_to<size_t>;
-    g.node_ids() ;
+    g.node_ids();
 } && requires(G g, typename G::node_id_type n) {
     std::begin(g.outgoing_edges(n));
     std::end(g.outgoing_edges(n));
 } && requires(G g, typename G::node_id_type n) {
-    {g.edge_id(n, n)} -> std::convertible_to<typename G::edge_id_type>;
+    { g.edge_id(n, n) } -> std::convertible_to<typename G::edge_id_type>;
 } && requires(G g, typename G::edge_id_type e) {
     { g.edge(e) } -> std::convertible_to<typename G::edge_info_type>;
     { g.source(e) } -> std::convertible_to<typename G::node_id_type>;
@@ -33,49 +32,15 @@ concept RoutableGraph = std::move_constructible<G> && std::copy_constructible<G>
 
     typename G::node_info_type;
     typename G::edge_info_type;
-} /*&& requires(G g) {
-    g.topology();           // TODO check that Topology concept is fulfilled
-    g.inverse_topology();
-} */&& requires(G g) {
+
+    typename G::topology_type;
+} && Topology<typename G::topology_type>
+  && requires(G g) {
+    { g.topology() } -> std::convertible_to<typename G::topology_type>;           // TODO check that Topology concept is fulfilled
+    { g.inverse_topology() } -> std::convertible_to<typename G::topology_type>;
+} && requires(G g) {
     g.node_ids();
-} && Topology<G>;
-
-
-template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-class topology_base {
-public:
-    using node_id_type = NodeId;
-    using edge_id_type = EdgeId;
-
-    using node_info_type = NodeInfo;
-    using edge_info_type = EdgeInfo;
-
-    struct outgoing_edge_type {
-        NodeId destination;
-        EdgeInfo info;
-    };
-    using outgoing_edges_range = std::span<const outgoing_edge_type>;
-
-    virtual size_t node_count() const;
-
-    virtual size_t edge_count() const;
-
-    virtual std::span<node_id_type> node_ids() const;
-
-    virtual node_info_type edge_id(const node_id_type &id1, const node_id_type &id2) const;
-
-    virtual node_info_type node(const node_id_type &id) const;
-
-    virtual node_id_type source(const edge_id_type &id) const;
-
-    virtual node_id_type destination(const edge_id_type &id) const;
-
-    virtual edge_info_type edge(const edge_id_type &id) const;
-
-    virtual outgoing_edges_range outgoing_edges(const node_id_type &source) const;
 };
-
-static_assert(Topology<topology_base<int, int, int, int>>);
 
 
 template<typename Q, typename G>

@@ -48,20 +48,22 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId> graph<NodeInfo, EdgeInfo, NodeId, Edge
     NodeId node_count = __subgraph.nodes.size();
     EdgeId edge_count = __subgraph.edges.size();
 
-    std::vector<typename Other::node_info_type> nodes;
+    std::vector<NodeInfo> nodes;
     std::unordered_map<typename Other::node_id_type, size_t> new_node_ids;
 
     // make node list and store indices for each node
     for (size_t i = 0; i < node_count; i++) {
         auto node_id = __subgraph.nodes[i];
 
-        nodes.push_back(other.node(node_id));
+        nodes.push_back((NodeInfo)other.node(node_id));
         new_node_ids[node_id] = (NodeId)i;
     }
 
     // make one-directional adjacency list
     typename adjacency_list<NodeId, EdgeInfo>::builder forward_builder(node_count);
     for (auto edge: __subgraph.edges) {
+        if (is_none(edge)) continue;
+
         auto src = other.source(edge);
         auto dest = other.destination(edge);
         EdgeInfo info = other.edge(edge);
@@ -103,7 +105,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::nodes() const {
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 counter<NodeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_ids() const {
-    return {(NodeId) node_count() - 1}; // FIXME
+    return {(NodeId) node_count()}; // FIXME
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
@@ -169,7 +171,7 @@ template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::distance_type
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::path_length(const path &__route) const {
     if (__route.nodes.empty()) {
-        return distance_type::DISTANCE_INF;
+        return infinity<distance_type>();
     }
 
     distance_t result = 0;
@@ -205,7 +207,7 @@ EdgeId graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::edge_id(const node_id_type &__
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 bool graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::has_edge(const node_id_type &__src, const node_id_type &__dest) const {
-    return edge_id(__src, __dest) != edge_id_type::NO_EDGE_ID;
+    return !is_none(edge_id(__src, __dest));
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>

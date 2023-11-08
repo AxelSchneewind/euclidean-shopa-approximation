@@ -48,7 +48,7 @@ private:
 // node data
     std::vector<NodeInfo> _M_node_list;
 
-    // topology of forward and backward graphs
+    // topology of _M_forward_search and backward graphs
     adjacency_list_type _M_adjacency_list;
 
     graph(std::vector<NodeInfo> &&__nodes, adjacency_list<NodeId, EdgeInfo> &&__list);

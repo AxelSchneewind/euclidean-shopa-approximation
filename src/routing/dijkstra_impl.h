@@ -18,7 +18,7 @@
 template<RoutableGraph G, DijkstraQueue<G> Q, typename U, DijkstraLabels L>
 dijkstra<G, Q, U, L>::dijkstra(const std::shared_ptr<const G> &__graph,
                                const G::topology_type &__adj_list)
-        : _M_adj_list(__adj_list),
+        : _M_topology(__adj_list),
           _M_graph(__graph),
           _M_labels(__graph.get()),
           _M_use_edge(__graph.get()),
@@ -27,12 +27,12 @@ dijkstra<G, Q, U, L>::dijkstra(const std::shared_ptr<const G> &__graph,
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 dijkstra<G, Queue, U, L>::dijkstra(dijkstra<G, Queue, U, L> &&__other) noexcept
-        : _M_adj_list(__other._M_adj_list), _M_labels(std::move(__other._M_labels)),
+        : _M_topology(__other._M_topology), _M_labels(std::move(__other._M_labels)),
           _M_graph(std::move(__other._M_graph)),
           _M_queue(std::move(__other._M_queue)) {}
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
-const dijkstra<G, Queue, U, L>::node_cost_pair &
+const dijkstra<G, Queue, U, L>::node_cost_pair
 dijkstra<G, Queue, U, L>::current() const {
     return _M_queue.top();
 }
@@ -40,7 +40,7 @@ dijkstra<G, Queue, U, L>::current() const {
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 bool
-dijkstra<G, Queue, U, L>::reached(const G::node_id_type &__node) const {
+dijkstra<G, Queue, U, L>::reached(G::node_id_type __node) const {
     return _M_labels.reached(__node);
 }
 
@@ -54,35 +54,38 @@ template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 void
 dijkstra<G, Queue, U, L>::init(node_id_type __start_node, node_id_type __target_node) {
     _M_target_node = __target_node;
-
     _M_start_node = __start_node;
 
     _M_queue.init(__start_node, __target_node);
     _M_labels.init(__start_node, __target_node);
 
     // add start node to queue
-    if (__start_node) {
+    if (!is_none(__start_node)) {
         _M_queue.push(__start_node, __start_node, 0);
     }
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 void
-dijkstra<G, Queue, U, L>::expand(const dijkstra<G, Queue, U, L>::node_cost_pair &__node) {
-    auto edges = _M_adj_list.outgoing_edges(__node.node);
+dijkstra<G, Queue, U, L>::expand(const dijkstra<G, Queue, U, L>::node_id_type &__node) {
+    assert(!is_none(__node));
+
+    auto edges = _M_topology.outgoing_edges(__node);
     for (auto &edge: edges) {
+        assert(!is_none(edge.destination));
+
         // ignore certain edges
-        if (!_M_use_edge(__node.node, edge)) {
+        if (!_M_use_edge(__node, edge)) {
             continue;
         }
 
         const typename G::node_id_type &successor = edge.destination;
-        const distance_t &successor_cost = _M_labels.distance(successor);
-        const distance_t new_cost = __node.distance + edge.info.cost;
+        const distance_t successor_cost = _M_labels.distance(successor);
+        const distance_t new_cost = _M_labels.distance(__node) + edge.info.cost;
 
         if (new_cost < successor_cost) {
             // (re-)insert node into the queue with updated priority
-            _M_queue.push(successor, __node.node, new_cost);
+            _M_queue.push(successor, __node, new_cost);
         }
     }
 }
@@ -105,7 +108,7 @@ dijkstra<G, Queue, U, L>::step() {
     _M_labels.label(ncp);
 
     // expand to adjacent nodes
-    expand(ncp);
+    expand(ncp.node);
 
     // remove current node
     _M_queue.pop();

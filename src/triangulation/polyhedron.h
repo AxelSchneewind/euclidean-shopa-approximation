@@ -20,23 +20,23 @@ private:
     adjacency_list<node_id_type, std::array<edge_id_type, edge_count>> _M_adjacent_edges;
 
     polyhedron(const BaseGraph &__base_graph,
-                  adjacency_list<node_id_type, std::array<edge_id_t, edge_count>> __third_points)
+               adjacency_list<node_id_type, std::array<edge_id_t, edge_count>> __third_points)
             : _M_base_graph(__base_graph), _M_adjacent_edges(__third_points) {};
 public:
 
     /**
-     * makes a polyhedron objcet from the given base graph
+     * makes a polyhedron object from the given base graph
      * @param __base
      * @return
      */
-    static polyhedron make_polyhedron(const BaseGraph& __base);
+    static polyhedron<BaseGraph, MaxNodesPerFace> make_polyhedron(const BaseGraph &__base,
+                                                                  const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &faces);
 
     /*
      * gets edges that belong to the faces bordering this edge
      */
-    std::array<edge_id_type, edge_count> edges(const edge_id_type &__edge) const {
-        return _M_adjacent_edges.edge(__edge);
-        //return std::span<const edge_id_type , edge_count>(_M_adjacent_edges.edge(__edge));
+    std::span<const edge_id_type, edge_count> edges(edge_id_type __edge) const {
+        return std::span(_M_adjacent_edges.edge(__edge));
     };
 
 };

@@ -98,14 +98,14 @@ test_routing(const Graph &graph, Router &router, const std::vector<Query> &queri
 
 template<typename node_id, typename edge>
 void
-assert_adjacency_list_equal(const adjacency_list<edge> &list, size_t expected_node_count,
+assert_adjacency_list_equal(const adjacency_list< node_id, edge> &list, size_t expected_node_count,
                             size_t expected_edge_count, std::vector<int> &expected_offsets,
                             std::vector<adjacency_list_edge<node_id, edge>> &expected_edges);
 
 // TODO return bool
 template<typename node_id, typename edge>
 void
-assert_adjacency_list_equal(const adjacency_list<edge> &list, size_t expected_node_count,
+assert_adjacency_list_equal(const adjacency_list<node_id, edge> &list, size_t expected_node_count,
                             size_t expected_edge_count, std::vector<int> &expected_offsets,
                             std::vector<adjacency_list_edge<node_id, edge>> &expected_edges) {
 //    assert_equal (list.node_count(), expected_node_count);

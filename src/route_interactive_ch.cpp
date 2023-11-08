@@ -126,12 +126,12 @@ main(int argc, char const *argv[]) {
 
         // make graph from route to display
         auto shortcuts_subgraph = graph_ptr->make_subgraph(route);
-        auto shortcuts_graph = graph_ptr->make_graph(shortcuts_subgraph);
+        auto shortcuts_graph = std_graph_t::make_graph(*graph_ptr, shortcuts_subgraph);
         auto route_subgraph = unpack(*graph_ptr, shortcuts_subgraph);
-        auto route_graph = graph_ptr->make_graph(route_subgraph);
+        auto route_graph = std_graph_t ::make_graph(*graph_ptr, route_subgraph);
 
         // make graph from shortest path tree
-        auto tree_graph = graph_ptr->make_graph(tree_subgraph);
+        auto tree_graph = std_graph_t::make_graph(*graph_ptr, tree_subgraph);
 
         // write output graphs
         if (route_graph.node_count() > 0) {

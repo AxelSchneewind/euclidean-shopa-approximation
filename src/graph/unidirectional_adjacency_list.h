@@ -23,6 +23,9 @@ struct adjacency_list_edge {
     E info;
 
     bool operator==(const adjacency_list_edge &__other) const = default;
+    bool operator!=(const adjacency_list_edge &__other) const = default;
+
+    operator internal_adjacency_list_edge<NodeId, E>() const { return {destination, info}; }
 };
 
 
@@ -44,19 +47,26 @@ public:
 
     public:
         adjacency_list_builder() : _M_node_count(0), _M_edge_count(0) {};
-        adjacency_list_builder(adjacency_list_builder&& __other) = default;
-        adjacency_list_builder(const adjacency_list_builder& __other) = default;
-        adjacency_list_builder(size_t __node_count) : _M_node_count(__node_count), _M_edge_count(0) { _M_edges.reserve(_M_node_count);};
+
+        adjacency_list_builder(adjacency_list_builder &&__other) = default;
+
+        adjacency_list_builder(const adjacency_list_builder &__other) = default;
+
+        adjacency_list_builder(size_t __node_count) : _M_node_count(__node_count), _M_edge_count(0) {
+            _M_edges.reserve(_M_node_count);
+        };
+
         ~adjacency_list_builder() = default;
 
-        adjacency_list_builder& operator=(adjacency_list_builder&& __other) = default;
-        adjacency_list_builder& operator=(const adjacency_list_builder& __other) = default;
+        adjacency_list_builder &operator=(adjacency_list_builder &&__other) = default;
+
+        adjacency_list_builder &operator=(const adjacency_list_builder &__other) = default;
 
         void add_node(const NodeId &__node);
 
         void add_edge(const adjacency_list_edge<NodeId, E> &__edge) { _M_edges.push_back(__edge); };
 
-        void add_edge(const NodeId &__source, const NodeId &__destination, const E &__info);
+        void add_edge(NodeId __source, NodeId __destination, E __info);
 
         unidirectional_adjacency_list<NodeId, E> get();
     };
@@ -80,22 +90,29 @@ private:
 public:
     ~unidirectional_adjacency_list();
 
-    unidirectional_adjacency_list(size_t __node_count, size_t __edge_count, std::vector<edge_id_t> &&__offsets,
+    unidirectional_adjacency_list(size_t __node_count,
                                   std::vector<adjacency_list_edge<NodeId, E> > &&__edges);
 
-    unidirectional_adjacency_list(size_t __node_count, size_t __edge_count, std::vector<edge_id_t> &&__offsets,
+    unidirectional_adjacency_list(std::vector<edge_id_t> &&__offsets,
                                   std::vector<NodeId> &&__sources,
                                   std::vector<internal_adjacency_list_edge<NodeId, E>> &&__edges);
 
     // move constructor
     unidirectional_adjacency_list(unidirectional_adjacency_list &&__other) noexcept;
-    unidirectional_adjacency_list<NodeId, E>& operator=(unidirectional_adjacency_list<NodeId,E>&& __other) = default;
+
+    unidirectional_adjacency_list<NodeId, E> &operator=(unidirectional_adjacency_list<NodeId, E> &&__other) = default;
 
     // copy constructor
-    unidirectional_adjacency_list(const unidirectional_adjacency_list& __other) = default;
-    unidirectional_adjacency_list<NodeId, E>& operator=(const unidirectional_adjacency_list<NodeId,E>& __other) = default;
+    unidirectional_adjacency_list(const unidirectional_adjacency_list &__other) = default;
+
+    unidirectional_adjacency_list<NodeId, E> &
+    operator=(const unidirectional_adjacency_list<NodeId, E> &__other) = default;
 
     unidirectional_adjacency_list<NodeId, E> inverse() const;
+
+    inline bool contains_node(node_id_type __node_id) const;
+
+    inline bool contains_edge(edge_index_type __edge_index) const;
 
     /**
      * get the number of nodes of this adjacency list
@@ -122,6 +139,7 @@ public:
      * @return
      */
     inline NodeId &destination(const edge_index_type &__edge);
+
     inline const NodeId &destination(const edge_index_type &__edge) const;
 
     /**
@@ -129,7 +147,8 @@ public:
      * @param __edge
      * @return
      */
-    inline E &edge(const edge_index_type &__edge) ;
+    inline E &edge(const edge_index_type &__edge);
+
     inline const E &edge(const edge_index_type &__edge) const;
 
     /**
@@ -153,10 +172,12 @@ public:
      * @param __node
      * @return
      */
-    inline std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent> outgoing_edges(const NodeId &__node) const;
+    inline std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    outgoing_edges(const NodeId &__node) const;
 
     bool operator==(const unidirectional_adjacency_list<NodeId, E> &__other);
 };
+
 
 template<typename NodeId, typename E>
 class std::hash<adjacency_list_edge<NodeId, E>>;

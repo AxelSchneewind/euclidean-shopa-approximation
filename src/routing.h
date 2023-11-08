@@ -28,20 +28,19 @@ using std_graph_t = graph<node_t, edge_t, node_id_t, edge_id_t>;
 using ch_graph_t = graph<ch_node_t, ch_edge_t, node_id_t, edge_id_t>;
 
 using default_node_cost_pair = node_cost_pair<std_graph_t, std::nullptr_t>;
-struct a_star_info
-{
-  // value from a* heuristic (distance + minimal remaining distance)
-  distance_t value;
+struct a_star_info {
+    // value from a* heuristic (distance + minimal remaining distance)
+    distance_t value;
 };
 using a_star_node_cost_pair = node_cost_pair<std_graph_t, a_star_info>;
 
 // check for struct packing
-static_assert (sizeof (std_graph_t::node_info_type) == 2 * sizeof (distance_t));
-static_assert (sizeof (std_graph_t::edge_info_type) == 1 * sizeof (distance_t));
-static_assert (sizeof (ch_graph_t::node_info_type) == 2 * sizeof (distance_t) + 1 * sizeof (int));
-static_assert (sizeof (ch_graph_t::edge_info_type) == 3 * sizeof (distance_t));
-static_assert (sizeof (default_node_cost_pair) == 3 * sizeof (int));
-static_assert (sizeof (a_star_node_cost_pair) == 4 * sizeof (int));
+static_assert(sizeof(std_graph_t::node_info_type) == 2 * sizeof(distance_t));
+static_assert(sizeof(std_graph_t::edge_info_type) == 1 * sizeof(distance_t));
+static_assert(sizeof(ch_graph_t::node_info_type) == 2 * sizeof(distance_t) + 1 * sizeof(int));
+static_assert(sizeof(ch_graph_t::edge_info_type) == 3 * sizeof(distance_t));
+static_assert(sizeof(default_node_cost_pair) == 3 * sizeof(int));
+static_assert(sizeof(a_star_node_cost_pair) == 4 * sizeof(int));
 
 using default_queue_t = dijkstra_queue<std_graph_t, default_node_cost_pair, Default<default_node_cost_pair>>;
 using default_labels_t = node_labels<std_graph_t, default_node_cost_pair>;
@@ -59,7 +58,8 @@ using default_ch_queue_t = dijkstra_queue<ch_graph_t, default_node_cost_pair, De
 using ch_routing_t = router<ch_graph_t, dijkstra<ch_graph_t, default_ch_queue_t, use_upward_edges<ch_graph_t>, default_ch_labels_t>>;
 
 
-using steiner_queue_t = dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph>, Default<node_cost_pair<steiner_graph>>>;
-using steiner_labels_t = steiner_labels<steiner_graph, node_cost_pair<steiner_graph>>;
+using steiner_a_star_node_cost_pair = node_cost_pair<steiner_graph, a_star_info>;
+using steiner_queue_t = a_star_queue<steiner_graph, steiner_a_star_node_cost_pair>;
+using steiner_labels_t = steiner_labels<steiner_graph, steiner_a_star_node_cost_pair>;
 using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, use_all_edges<steiner_graph>, steiner_labels_t>;
 using steiner_routing_t = router<steiner_graph, steiner_dijkstra>;

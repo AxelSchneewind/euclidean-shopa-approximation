@@ -35,7 +35,7 @@ triangulation_file_io::read(std::istream &input) {
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;
             edge_t edge;
-            edge.cost = (float)distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
+            edge.cost = (float) distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
 
             builder.add_edge(tri[i], tri[next], edge);
             builder.add_edge(tri[next], tri[i], edge);
@@ -46,7 +46,8 @@ triangulation_file_io::read(std::istream &input) {
     return Graph::make_graph(std::move(nodes), std::move(adj_list));
 }
 
-steiner_graph triangulation_file_io::read_steiner(std::istream &input) {
+template<>
+steiner_graph triangulation_file_io::read<steiner_graph>(std::istream &input) {
     using f = stream_encoders::encode_text;
     f::skip_comments(input);
 
@@ -56,7 +57,7 @@ steiner_graph triangulation_file_io::read_steiner(std::istream &input) {
     // read nodes
     std::vector<steiner_graph::triangle_node_info_type> nodes;
     for (int i = 0; i < node_count; ++i) {
-        node_t n;
+        node_t n{};
         n.coordinates = f::template read<coordinate_t>(input);
         nodes.push_back(n);
     }
@@ -66,18 +67,21 @@ steiner_graph triangulation_file_io::read_steiner(std::istream &input) {
     builder.add_node(node_count - 1);
 
     // read triangles and generate edges from them
+    std::vector<std::array<node_id_t, 3>> faces;
     for (int t = 0; t < triangle_count; t++) {
         triangle tri = f::template read<triangle>(input);
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;
             edge_t edge;
-            edge.cost = (float)distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
+            edge.cost = (float) distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
 
             builder.add_edge(tri[i], tri[next], edge);
             builder.add_edge(tri[next], tri[i], edge);
+
         }
+        faces.push_back(tri);
     }
 
     auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional_undirected(builder.get());
-    return steiner_graph::make_graph(std::move(nodes), std::move(adj_list));
+    return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces));
 }

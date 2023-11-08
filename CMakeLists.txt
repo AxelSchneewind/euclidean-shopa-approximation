@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(src/routing)
+project(routing)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -30,7 +30,7 @@ endif (DOXYGEN_FOUND)
 # performance options
 set(CMAKE_CXX_FLAGS "-Wall") # -Wextra
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3") #
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG") #
 
 # compile everything into one library file
 # add_library(routing src/routing.h)
@@ -42,7 +42,16 @@ add_executable(test_read src/test/test_read.cpp)
 add_executable(test_read_triangulation src/test/test_read_aegaeis.cpp)
 add_executable(test_route_triangulation src/test/test_route_aegaeis.cpp)
 add_executable(make_gl src/make_gl.cpp)
-add_executable(route_interactive_triangulation src/route_interactive_triangulation.cpp)
+add_executable(route_interactive_triangulation src/route_interactive_steiner.cpp)
 add_executable(route_interactive_steiner src/route_interactive_steiner.cpp)
 add_executable(route_interactive_ch src/route_interactive_ch.cpp)
 add_executable(make_granular_triangulation src/make_steiner_gl.cpp)
+
+
+# installation
+install(TARGETS route_interactive_triangulation RUNTIME DESTINATION bin)
+install(TARGETS route_interactive_steiner RUNTIME DESTINATION bin)
+
+include(CPack)
+
+# packagingadd_executable(test_steiner_graph src/test/test_steiner_graph.cpp)

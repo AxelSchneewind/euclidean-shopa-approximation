@@ -66,3 +66,16 @@ line_distance(const coordinate_t& __source, const coordinate_t& __destination, c
     return std::abs((__point - __source) * normal);
 }
 
+
+/**
+ * generates the point s + (d - s) * x
+ * @param __source
+ * @param __destination
+ * @param __relative
+ * @return
+ */
+inline coordinate_t
+interpolate_linear(const coordinate_t& __source, const coordinate_t& __destination, const float& __relative) {
+    coordinate_t const delta = __destination - __source;
+    return __source + delta * __relative;
+}
