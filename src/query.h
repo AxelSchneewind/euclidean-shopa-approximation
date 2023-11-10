@@ -17,14 +17,14 @@ struct Result {
 
     bool route_found = false;
 
-    distance_t distance = DISTANCE_INF;
-    distance_t beeline_distance = DISTANCE_INF;
+    distance_t distance = infinity<distance_t>();
+    distance_t beeline_distance = infinity<distance_t>();
 
     path<node_id_t> route;
     subgraph<node_id_t, edge_id_t> trees;
 
     size_t nodes_visited = 0;
-    node_id_t mid_node = NO_NODE_ID;
+    node_id_t mid_node = none_value<node_id_t>();
 
     std::chrono::duration<double, std::milli> duration;
 };

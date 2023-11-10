@@ -143,12 +143,12 @@ main(int argc, char const *argv[]) {
         // print stats about route computation
         output_info << "path: " << route << '\n';
         output_info << "path has cost: " << graph_ptr->path_length(route) << '\n';
-        output_info << "searches visited " << tree_graph.node_count() << " nodes";
+        output_info << "searches visited " << tree_graph.node_count() << " nodes ";
         output_info << "and took " << routing_time << '\n';
 
         std::cout << "\tpath: " << route << '\n';
         std::cout << "\tpath has cost: " << graph_ptr->path_length(route) << '\n';
-        std::cout << "\tsearches visited " << tree_graph.node_count() << " nodes";
+        std::cout << "\tsearches visited " << tree_graph.node_count() << " nodes ";
         std::cout << "\tand took " << routing_time << '\n';
 
         output_shortcuts.close();

@@ -12,7 +12,7 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
                                                         const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &faces) {
     using node_id_type = polyhedron<BaseGraph, MaxNodesPerFace>::node_id_type;
     using edge_id_type = polyhedron<BaseGraph, MaxNodesPerFace>::edge_id_type;
-    const std::size_t edge_count = polyhedron<BaseGraph, MaxNodesPerFace>::edge_count;
+    const std::size_t edge_count = polyhedron<BaseGraph, MaxNodesPerFace>::EDGE_COUNT;
 
     typename unidirectional_adjacency_list<node_id_type, std::array<edge_id_type, edge_count>>::adjacency_list_builder
             adjacent_edges_builder(__base.node_count());
@@ -52,6 +52,7 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
         for (auto base_edge: __base.outgoing_edges(base_node_1)) {
             auto base_node_2 = base_edge.destination;
             auto base_edge_id = __base.edge_id(base_node_1, base_node_2);
+            auto base_edge_id_inv = __base.edge_id(base_node_2, base_node_1);
 
             // get faces adjacent to both nodes
             assert(!triangles[base_edge_id].empty() && triangles[base_edge_id].size() <= 2);
@@ -72,13 +73,15 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
             std::sort(adjacent_edges.begin(), adjacent_edges.end());
             remove_duplicates_sorted(adjacent_edges);
             assert(adjacent_edges.size() >= 6);
-            assert(adjacent_edges.size() <= edge_count);
+            assert(adjacent_edges.size() <= edge_count + 1);
 
             // make array and attach it to edge
+            // own edge is not present, inverse edge id is first entry, others are the remaining ones (in ascending order)
             std::array<edge_id_type, edge_count> edges{};
-            int index = 0;
+            edges[0] = base_edge_id_inv;
+            int index = 1;
             for (auto e: adjacent_edges) {
-                if (index < edge_count)
+                if (e != base_edge_id && e != base_edge_id_inv && index < edge_count)
                     edges[index++] = e;
             }
             while (index < edge_count) {

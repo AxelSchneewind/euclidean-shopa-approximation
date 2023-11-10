@@ -5,103 +5,71 @@
 #include <complex>
 
 
-// /**
-//  * creates a distinct type from the given base type
-//  * @tparam Base
-//  * @tparam Id
-//  */
-// template<typename Base, std::size_t Id>
-// struct distinct_type {
-// public:
-//     using base_type = Base;
-//
-// protected:
-//     Base _M_value;
-// public:
-//     distinct_type() : _M_value() {}
-//
-//     distinct_type(const Base &val) : _M_value(val) {}
-//
-//     distinct_type(Base &&val) : _M_value(std::move(val)) {}
-//
-//     operator Base&() { return _M_value; }
-//
-//     bool operator==(Base second) const { return _M_value == second; };
-//
-//     bool operator<=(Base second) const { return _M_value <= second; };
-//
-//     bool operator>=(Base second) const { return _M_value >= second; };
-//
-//     bool operator< (Base second) const { return _M_value < second; };
-//
-//     bool operator> (Base second) const { return _M_value > second; };
-//
-//     bool operator!=(Base second) const { return _M_value != second; };
-//
-//     Base operator+ (Base second) const { return _M_value + second; };
-//
-//     Base operator- (Base second) const { return _M_value - second; };
-//
-//     Base operator* (Base second) const { return _M_value * second; };
-//
-//     Base operator/ (Base second) const { return _M_value / second; };
-//
-//     Base operator++() { Base ret = *this; _M_value++; return ret; };
-//     Base operator--() { Base ret = *this; _M_value--; return ret; };
-//     Base& operator++(int) { _M_value++; return *this; };
-//     Base& operator--(int) { _M_value--; return *this; };
-//
-//     //bool operator==(const distinct_type<Base, Id>&) const = default;
-//     //bool operator<=(const distinct_type<Base, Id>&) const = default;
-//     //bool operator>=(const distinct_type<Base, Id>&) const = default;
-//     //bool operator<(const distinct_type<Base, Id>&) const = default;
-//     //bool operator>(const distinct_type<Base, Id>&) const = default;
-//     //bool operator!=(const distinct_type<Base, Id>&) const = default;
-// };
-//
-// template<typename Base, std::size_t Id>
-// std::ostream &operator<<(std::ostream &out, const distinct_type<Base, Id> &obj) {
-//     return out << (Base) obj;
-// };
-//
-//
-// template<typename Base, std::size_t Id>
-// struct std::hash<distinct_type<Base, Id>> {
-//     std::size_t operator()(const distinct_type<Base, Id> &val) { return std::hash<Base>{}((Base) val); }
-// };
-//
-// class node_id_t : public distinct_type<int, 0> {
-// public:
-//     static constexpr int NO_NODE_ID = -1;
-//
-//     node_id_t(int val) : distinct_type<int, 0>(val) {};
-//
-//     node_id_t() : node_id_t(NO_NODE_ID) {};
-// };
-//
-// class edge_id_t : public distinct_type<int, 1> {
-// public:
-//     static constexpr int NO_EDGE_ID = -1;
-//
-//     edge_id_t(int val) : distinct_type<int, 1>(val) {};
-//
-//     edge_id_t() : edge_id_t(NO_EDGE_ID) {};
-// };
-//
-// static_assert(!std::convertible_to<node_id_t, edge_id_t>);
-// static_assert(!std::convertible_to<edge_id_t, node_id_t>);
-// static_assert(std::convertible_to<node_id_t, bool>);
-// static_assert(std::convertible_to<edge_id_t, bool>);
-//
-// template<>
-// struct std::hash<node_id_t> {
-//     std::size_t operator()(node_id_t val) { return std::hash<node_id_t::base_type>{}(val); }
-// };
-//
-// template<>
-// struct std::hash<edge_id_t> {
-//     std::size_t operator()(edge_id_t val) { return std::hash<edge_id_t::base_type>{}(val); }
-// };
+ /**
+  * creates a distinct type from the given base type
+  * @tparam Base
+  * @tparam Id
+  */
+ template<typename Base, std::size_t Id>
+ struct distinct_type {
+ public:
+     using base_type = Base;
+
+ protected:
+     Base _M_value;
+ public:
+     distinct_type() : _M_value() {}
+
+     distinct_type(const Base &val) : _M_value(val) {}
+
+     distinct_type(Base &&val) : _M_value(std::move(val)) {}
+
+     operator Base&() { return _M_value; }
+
+     bool operator==(Base second) const { return _M_value == second; };
+
+     bool operator<=(Base second) const { return _M_value <= second; };
+
+     bool operator>=(Base second) const { return _M_value >= second; };
+
+     bool operator< (Base second) const { return _M_value < second; };
+
+     bool operator> (Base second) const { return _M_value > second; };
+
+     bool operator!=(Base second) const { return _M_value != second; };
+
+     Base operator+ (Base second) const { return _M_value + second; };
+
+     Base operator- (Base second) const { return _M_value - second; };
+
+     Base operator* (Base second) const { return _M_value * second; };
+
+     Base operator/ (Base second) const { return _M_value / second; };
+
+     Base operator++() { Base ret = *this; _M_value++; return ret; };
+     Base operator--() { Base ret = *this; _M_value--; return ret; };
+     Base& operator++(int) { _M_value++; return *this; };
+     Base& operator--(int) { _M_value--; return *this; };
+
+     //bool operator==(const distinct_type<Base, Id>&) const = default;
+     //bool operator<=(const distinct_type<Base, Id>&) const = default;
+     //bool operator>=(const distinct_type<Base, Id>&) const = default;
+     //bool operator<(const distinct_type<Base, Id>&) const = default;
+     //bool operator>(const distinct_type<Base, Id>&) const = default;
+     //bool operator!=(const distinct_type<Base, Id>&) const = default;
+ };
+
+
+ template<typename Base, std::size_t Id>
+ std::ostream &operator<<(std::ostream &out, const distinct_type<Base, Id> &obj) {
+     return out << (Base) obj;
+ };
+
+
+ template<typename Base, std::size_t Id>
+ struct std::hash<distinct_type<Base, Id>> {
+     std::size_t operator()(const distinct_type<Base, Id> &val) { return std::hash<Base>{}((Base) val); }
+ };
 
 
 using node_id_t = int;
@@ -139,48 +107,6 @@ struct coordinate_t {
 };
 
 
-// /**
-//  * cost for individual nodes
-//  */
-// class cost_t : public distinct_type<float, 3> {
-// public:
-//     // make sure that 2* DISTANCE_INF + (any cost value) < max(unsigned int)
-//     static constexpr float COST_MAX = 1000000;
-//
-//     cost_t(base_type val) : distinct_type<float, 3>(val) {};
-//
-//     cost_t() : cost_t(COST_MAX) {};
-//
-//     operator bool() const { return _M_value != COST_MAX; }
-//
-//     operator const float &() const { return _M_value; }
-//
-//     operator float () { return _M_value; }
-// };
-//
-//
-// /**
-//  * length of a path
-//  */
-// class distance_t : public distinct_type<float, 4> {
-// public:
-//     // make sure that 2* DISTANCE_INF + (any cost value) < max(unsigned int)
-//     static constexpr float DISTANCE_INF = (std::numeric_limits<base_type>::max() / 2) -
-//                                           cost_t::COST_MAX;
-//
-//     distance_t(base_type val) : distinct_type<float, 4>(val) {};
-//
-//     distance_t() : distance_t(DISTANCE_INF) {};
-//
-//     operator bool() const { return _M_value != DISTANCE_INF; }
-//
-//     operator float& () { return _M_value; }
-//
-//     operator float () const { return _M_value; }
-//
-//     distance_t& operator+=(const distance_t&__other) { _M_value += (float)__other; return *this; };
-// };
-
 using cost_t = float;
 using distance_t = float;
 
@@ -207,9 +133,6 @@ constexpr distance_t infinity() {
 
 using triangle = std::array<node_id_t, 3>;
 
-
-template <typename T>
-constexpr T empty_value() { return -1; };
 
 // euclidian distance
 distance_t distance(const coordinate_t &c1, const coordinate_t &c2);

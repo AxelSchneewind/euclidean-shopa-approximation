@@ -20,10 +20,9 @@
 std::vector<Query>
 get_queries(std::ifstream &input) {
     std::vector<Query> result;
-    stream_encoders::encode_text f;
     while (input) {
-        auto s = f.read<node_id_t>(input);
-        auto t = f.read<node_id_t>(input);
+        auto s = stream_encoders::encode_text::read<node_id_t>(input);
+        auto t = stream_encoders::encode_text::read<node_id_t>(input);
         result.push_back({s, t});
     }
 
@@ -33,9 +32,8 @@ get_queries(std::ifstream &input) {
 std::vector<distance_t>
 get_distances(std::ifstream &input) {
     std::vector<distance_t> result;
-    stream_encoders::encode_text f;
     while (input) {
-        auto d = f.read<distance_t>(input);
+        auto d = stream_encoders::encode_text::read<distance_t>(input);
         result.push_back(d);
     }
 
@@ -60,8 +58,9 @@ test_routing(const Graph &graph, Router &router, const std::vector<Query> &queri
             std::cout << "path found " << route << std::endl;
 
             assert_equal (expected[i], router.distance());
-        } else
+        } else {
             std::cout << "no path found " << std::endl;
+        }
 
         std::cout << "done" << std::endl;
     }
@@ -98,28 +97,17 @@ test_routing(const Graph &graph, Router &router, const std::vector<Query> &queri
 
 template<typename node_id, typename edge>
 void
-assert_adjacency_list_equal(const adjacency_list< node_id, edge> &list, size_t expected_node_count,
-                            size_t expected_edge_count, std::vector<int> &expected_offsets,
-                            std::vector<adjacency_list_edge<node_id, edge>> &expected_edges);
-
-// TODO return bool
-template<typename node_id, typename edge>
-void
 assert_adjacency_list_equal(const adjacency_list<node_id, edge> &list, size_t expected_node_count,
-                            size_t expected_edge_count, std::vector<int> &expected_offsets,
+                            size_t expected_edge_count,
                             std::vector<adjacency_list_edge<node_id, edge>> &expected_edges) {
-//    assert_equal (list.node_count(), expected_node_count);
-//    assert_equal (list.edge_count(), expected_edge_count);
-//
-//    for (size_t node_index = 0; node_index < expected_offsets.size(); node_index++) {
-//        assert_equal (list._M_offsets(node_index), expected_offsets[node_index]);
-//    }
-//
-//    for (size_t edge_index = 0; edge_index < expected_edges.size(); edge_index++) {
-//        assert_equal (list.destination(edge_index), expected_edges[edge_index].destination);
-//        assert_equal (list.source(edge_index), expected_edges[edge_index].source);
-//        assert_equal (list.edge(edge_index).cost, expected_edges[edge_index].info.cost);
-//    }
+    assert_equal (list.node_count(), expected_node_count);
+    assert_equal (list.edge_count(), expected_edge_count);
+
+    for (size_t edge_index = 0; edge_index < expected_edges.size(); edge_index++) {
+        assert_equal (list.destination(edge_index), expected_edges[edge_index].destination);
+        assert_equal (list.source(edge_index), expected_edges[edge_index].source);
+        assert_equal (list.edge(edge_index).cost, expected_edges[edge_index].info.cost);
+    }
 }
 
 template<typename N, typename E>

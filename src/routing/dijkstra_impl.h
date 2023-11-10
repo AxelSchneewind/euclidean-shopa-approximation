@@ -32,7 +32,7 @@ dijkstra<G, Queue, U, L>::dijkstra(dijkstra<G, Queue, U, L> &&__other) noexcept
           _M_queue(std::move(__other._M_queue)) {}
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
-const dijkstra<G, Queue, U, L>::node_cost_pair
+dijkstra<G, Queue, U, L>::node_cost_pair
 dijkstra<G, Queue, U, L>::current() const {
     return _M_queue.top();
 }
@@ -73,6 +73,7 @@ dijkstra<G, Queue, U, L>::expand(const dijkstra<G, Queue, U, L>::node_id_type &_
     auto edges = _M_topology.outgoing_edges(__node);
     for (auto &edge: edges) {
         assert(!is_none(edge.destination));
+        assert(_M_graph->has_edge(__node, edge.destination));
 
         // ignore certain edges
         if (!_M_use_edge(__node, edge)) {
@@ -94,7 +95,7 @@ template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 void
 dijkstra<G, Queue, U, L>::step() {
     // remove already settled nodes
-    while (!_M_queue.empty() && current().distance >= _M_labels.distance(current().node)) {
+    while (!_M_queue.empty() && reached(_M_queue.top().node)) {
         _M_queue.pop();
     }
 

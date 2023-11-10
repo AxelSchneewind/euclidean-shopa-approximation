@@ -77,7 +77,7 @@ public:
    * get the current node without removing from queue
    * @return
    */
-  const node_cost_pair current () const;
+  node_cost_pair current () const;
 
   /**
    * step to current node in queue, i.e. store label and add adjacent nodes

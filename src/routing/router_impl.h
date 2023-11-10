@@ -96,8 +96,10 @@ router<Graph, Dijkstra>::router(std::shared_ptr<const Graph> __graph)
 
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(router &&__routing) noexcept
-        : _M_graph_ptr(__routing._M_graph_ptr), _M_forward_search(std::move(__routing._M_forward_search)), _M_backward_search(std::move(__routing._M_backward_search)),
-          _M_start_node(__routing._M_start_node), _M_target_node(__routing._M_target_node), _M_mid_node(__routing._M_mid_node) {}
+        : _M_graph_ptr(__routing._M_graph_ptr), _M_forward_search(std::move(__routing._M_forward_search)),
+          _M_backward_search(std::move(__routing._M_backward_search)),
+          _M_start_node(__routing._M_start_node), _M_target_node(__routing._M_target_node),
+          _M_mid_node(__routing._M_mid_node) {}
 
 template<typename Graph, typename Dijkstra>
 void
@@ -159,20 +161,13 @@ router<Graph, Dijkstra>::compute_route() {
             step_backward();
         }
     }
-
-    // TODO: check if necessary
-    if (!_M_forward_search.queue_empty()) {
-        step_forward();
-    }
-    if (!_M_backward_search.queue_empty()) {
-        step_backward();
-    }
 }
 
 template<typename Graph, typename Dijkstra>
 Graph::distance_type
 router<Graph, Dijkstra>::distance(const Graph::node_id_type &__node) const {
-    if (is_none(__node) || !_M_forward_search.labels().reached(__node) || !_M_backward_search.labels().reached(__node)) {
+    if (is_none(__node) || !_M_forward_search.labels().reached(__node) ||
+        !_M_backward_search.labels().reached(__node)) {
         return infinity<typename Graph::distance_type>();
     }
     return _M_forward_search.labels().distance(__node) + _M_backward_search.labels().distance(__node);
@@ -223,7 +218,7 @@ router<Graph, Dijkstra>::route() const {
     auto result = std::vector<typename Graph::node_id_type>(p.begin(), p.end());
     remove_duplicates_sorted(result);
 
-    return { result };
+    return {result};
 };
 
 template<typename Graph, typename Dijkstra>

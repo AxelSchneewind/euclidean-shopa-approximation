@@ -41,6 +41,7 @@ unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::get() {
     std::sort(_M_edges.begin(), _M_edges.end(), order);
 
     // remove duplicates
+    // TODO removing duplicates somehow breaks everything
     //remove_duplicates_sorted<adjacency_list_edge<NodeId, E>>(_M_edges);
     _M_edge_count = _M_edges.size();
 
@@ -195,8 +196,9 @@ unidirectional_adjacency_list<NodeId, E>::unidirectional_adjacency_list(size_t _
         index++;
     }
 
-    while (_M_offsets.size() <= __node_count)
+    while (_M_offsets.size() <= __node_count) {
         _M_offsets.emplace_back(_M_edge_count);
+    }
 
     // split edges into source array and dest/info-array
     // TODO make inplace
@@ -227,9 +229,11 @@ unidirectional_adjacency_list<NodeId, E>::unidirectional_adjacency_list(std::vec
 template<typename NodeId, typename E>
 unidirectional_adjacency_list<NodeId, E>::unidirectional_adjacency_list(
         unidirectional_adjacency_list &&__other) noexcept
-        : _M_node_count(__other._M_node_count), _M_edge_count(__other._M_edge_count),
+        : _M_node_count(__other._M_node_count),
+          _M_edge_count(__other._M_edge_count),
           _M_offsets(std::move(__other._M_offsets)),
-          _M_edges(std::move(__other._M_edges)), _M_sources(std::move(__other._M_sources)) {}
+          _M_sources(std::move(__other._M_sources)),
+          _M_edges(std::move(__other._M_edges)) {}
 
 // TODO refactor using adjacency_list_builder
 template<typename NodeId, typename E>
