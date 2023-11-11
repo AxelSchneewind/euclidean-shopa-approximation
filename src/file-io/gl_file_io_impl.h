@@ -66,8 +66,8 @@ std::ostream &gl_file_io::write<steiner_graph>(std::ostream &output, const stein
             auto dest = edge.destination;
 
             // avoid inserting an edge twice
-            //if (indices[node] >= indices[dest] && graph.has_edge(dest, node))
-                //continue;
+            if (indices[node] >= indices[dest] && graph.has_edge(dest, node))
+                continue;
 
             f::write(output, indices[node]) << ' ';
             f::write(output, indices[dest]) << ' ' << line_width << ' ' << color;

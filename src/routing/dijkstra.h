@@ -30,7 +30,7 @@ public:
 
 private:
   std::shared_ptr<const G> _M_graph;
-  G::topology_type _M_topology;
+  const G::topology_type& _M_topology;
 
   node_id_type _M_start_node;
   node_id_type _M_target_node;
@@ -49,7 +49,7 @@ public:
   dijkstra (const dijkstra &__other) = default;
 
   // constructs a dijkstra object for the given graph and m_adj_list
-  explicit dijkstra (const std::shared_ptr<const G> &__graph, const G::topology_type &__adj_list);
+  explicit dijkstra (std::shared_ptr<const G> __graph, const G::topology_type &__adj_list);
   ~dijkstra () = default;
 
   dijkstra<G, Q, UseEdge, L> &operator= (dijkstra<G, Q, UseEdge, L> &&other) = default;

@@ -24,10 +24,10 @@ template <RoutableGraph Graph> struct node_cost_pair<Graph, std::nullptr_t>
 template <RoutableGraph Graph> struct use_all_edges
 {
 protected:
-  const Graph *g;
+  std::shared_ptr<const Graph> g;
 
 public:
-  use_all_edges (const Graph *g) : g (g) {}
+  use_all_edges (std::shared_ptr<const Graph> g) : g (g) {}
 
   bool operator() (const Graph::node_id_type &node, const internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> &via)
   {
@@ -38,10 +38,10 @@ public:
 template <RoutableGraph Graph> struct use_upward_edges
 {
 protected:
-  const Graph *g;
+  std::shared_ptr<const Graph> g;
 
 public:
-  use_upward_edges (const Graph *g) : g (g) {}
+  use_upward_edges (std::shared_ptr<const Graph> g) : g (g) {}
 
   bool operator() (const Graph::node_id_type &node, const internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> &via)
   {
@@ -77,7 +77,7 @@ protected:
 public:
   using value_type = NodeCostPair;
 
-  dijkstra_queue (const std::shared_ptr<const Graph>& __graph, Comp __comp = Comp{}) : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(__comp) {}
+  dijkstra_queue (std::shared_ptr<const Graph> __graph, Comp __comp = Comp{}) : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(__comp) {}
 
   virtual void init (Graph::node_id_type __start_node, Graph::node_id_type __target_node){
     while (!empty())

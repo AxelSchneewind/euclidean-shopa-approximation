@@ -95,6 +95,9 @@ public:
     std::span<const internal_adjacency_list_edge<NodeId, EdgeInfo>>
     outgoing_edges(const NodeId &__node) const;
 
+    std::span<const internal_adjacency_list_edge<NodeId, EdgeInfo>>
+    incoming_edges(const NodeId &__node) const {return outgoing_edges(__node);};
+
     distance_type path_length(const path &__route) const;
 
     subgraph make_subgraph(const path &__route) const;

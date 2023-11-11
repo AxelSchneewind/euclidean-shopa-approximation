@@ -4,26 +4,17 @@
 #include <memory>
 
 
-template<typename G>
-concept Topology = requires {
-    typename G::node_id_type;
-    typename G::edge_id_type;
 
-    typename G::edge_info_type;
-} && requires(G g) {
-    { g.node_count() } -> std::convertible_to<size_t>;
-    { g.edge_count() } -> std::convertible_to<size_t>;
-    g.node_ids();
-} && requires(G g, typename G::node_id_type n) {
-    std::begin(g.outgoing_edges(n));
-    std::end(g.outgoing_edges(n));
-} && requires(G g, typename G::node_id_type n) {
-    { g.edge_id(n, n) } -> std::convertible_to<typename G::edge_id_type>;
-} && requires(G g, typename G::edge_id_type e) {
-    { g.edge(e) } -> std::convertible_to<typename G::edge_info_type>;
-    { g.source(e) } -> std::convertible_to<typename G::node_id_type>;
-    { g.destination(e) } -> std::convertible_to<typename G::node_id_type>;
+template<typename T>
+concept Topology =requires {
+    typename T::node_id_type;
+    typename T::edge_id_type;
+} && requires(T t, typename T::node_id_type n) {
+    t.outgoing_edges(n);
+    t.incoming_edges(n);
+    { t.edge_id(n, n) } -> std::convertible_to<typename T::edge_id_type>;
 };
+
 
 template<typename G>
 concept RoutableGraph = std::move_constructible<G> && std::copy_constructible<G> && requires {
@@ -34,8 +25,8 @@ concept RoutableGraph = std::move_constructible<G> && std::copy_constructible<G>
     typename G::edge_info_type;
 
     typename G::topology_type;
-} && Topology<typename G::topology_type>
-  && requires(G g) {
+}
+                        && requires(G g) {
     { g.topology() } -> std::convertible_to<typename G::topology_type>;           // TODO check that Topology concept is fulfilled
     { g.inverse_topology() } -> std::convertible_to<typename G::topology_type>;
 } && requires(G g) {
