@@ -61,7 +61,7 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
         nodes.push_back(node_id);
         typename Graph::node_id_type pred = _M_forward_search.labels().predecessor(node_id);
 
-        if (is_none(pred.edge) || pred == node_id) continue;
+        if (is_none(pred) || pred == node_id) continue;
 
         typename Graph::edge_id_type edge = _M_graph_ptr->topology().edge_id(pred, node_id);
         edges.push_back(edge);
@@ -73,7 +73,7 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 
         typename Graph::node_id_type succ = _M_backward_search.labels().predecessor(node_id);
 
-        if (is_none(succ.edge)) continue;
+        if (is_none(succ)) continue;
 
         typename Graph::edge_id_type edge = _M_graph_ptr->topology().edge_id(node_id, succ);
         edges.push_back(edge);
@@ -88,11 +88,15 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(std::shared_ptr<const Graph> __graph)
         : _M_graph_ptr(__graph),
-          _M_forward_search(this->_M_graph_ptr, __graph->topology()),
-          _M_backward_search(this->_M_graph_ptr, __graph->inverse_topology()),
+          _M_forward_search(_M_graph_ptr, _M_graph_ptr->topology()),
+          _M_backward_search(_M_graph_ptr, _M_graph_ptr->inverse_topology()),
           _M_start_node(none_value<typename Graph::node_id_type>()),
           _M_target_node(none_value<typename Graph::node_id_type>()),
           _M_mid_node(none_value<typename Graph::node_id_type>()) {}
+
+template<typename Graph, typename Dijkstra>
+router<Graph, Dijkstra>::router(const router& other) {
+}
 
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(router &&__routing) noexcept

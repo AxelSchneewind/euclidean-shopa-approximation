@@ -12,7 +12,7 @@
 
 template<typename NodeId, typename E>
 void
-unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_node(const NodeId &__node) {
+unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_node(NodeId __node) {
     if (_M_node_count <= (std::size_t) __node) {
         _M_node_count = (std::size_t) __node + 1;
     }
@@ -28,7 +28,7 @@ unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edge(NodeI
 
     auto edge = adjacency_list_edge<NodeId, E>(__source, __destination, __info);
     _M_edges.push_back(edge);
-    _M_edge_count++;
+    ++_M_edge_count;
 }
 
 template<typename NodeId, typename E>
@@ -41,8 +41,7 @@ unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::get() {
     std::sort(_M_edges.begin(), _M_edges.end(), order);
 
     // remove duplicates
-    // TODO removing duplicates somehow breaks everything
-    //remove_duplicates_sorted<adjacency_list_edge<NodeId, E>>(_M_edges);
+    remove_duplicates_sorted<adjacency_list_edge<NodeId, E>>(_M_edges);
     _M_edge_count = _M_edges.size();
 
     auto result = unidirectional_adjacency_list<NodeId, E>(_M_node_count, std::move(_M_edges));
@@ -82,35 +81,29 @@ bool unidirectional_adjacency_list<NodeId, E>::contains_edge(
 
 
 template<typename NodeId, typename E>
-inline const NodeId &
-unidirectional_adjacency_list<NodeId, E>::source(const edge_id_t &__edge) const {
+inline NodeId
+unidirectional_adjacency_list<NodeId, E>::source(edge_id_t __edge) const {
     assert(contains_edge(__edge));
     return _M_sources[__edge];
 }
 
 template<typename NodeId, typename E>
-inline const NodeId &
-unidirectional_adjacency_list<NodeId, E>::destination(const edge_id_t &__edge) const {
+inline NodeId
+unidirectional_adjacency_list<NodeId, E>::destination(edge_id_t __edge) const {
     assert(contains_edge(__edge));
     return _M_edges[__edge].destination;
 }
 
-template<typename NodeId, typename E>
-inline NodeId &
-unidirectional_adjacency_list<NodeId, E>::destination(const edge_id_t &__edge) {
-    assert(contains_edge(__edge));
-    return _M_edges[__edge].destination;
-}
 
 template<typename NodeId, typename E>
 inline unidirectional_adjacency_list<NodeId, E>::edge_index_type
-unidirectional_adjacency_list<NodeId, E>::edge_index(const NodeId &__source, const NodeId &__dest) const {
+unidirectional_adjacency_list<NodeId, E>::edge_index(NodeId __source, NodeId __dest) const {
     assert(contains_node(__source));
     assert(contains_node(__dest));
 
     edge_id_t idx = _M_offsets[__source];
     while (idx < _M_offsets[__source + 1] && destination(idx) != __dest) {
-        idx++;
+        ++idx;
     }
 
     return idx != _M_offsets[__source + 1] ? idx : none_value<edge_index_type>();
@@ -118,13 +111,13 @@ unidirectional_adjacency_list<NodeId, E>::edge_index(const NodeId &__source, con
 
 template<typename NodeId, typename E>
 inline bool
-unidirectional_adjacency_list<NodeId, E>::has_edge(const NodeId &__source, const NodeId &__dest) const {
+unidirectional_adjacency_list<NodeId, E>::has_edge(NodeId __source, NodeId __dest) const {
     assert(contains_node(__source));
     assert(contains_node(__dest));
 
     edge_id_t idx = _M_offsets[__source];
     while (idx < _M_offsets[__source + 1] && destination(idx) != __dest) {
-        idx++;
+        ++idx;
     }
 
     return (idx < _M_offsets[__source + 1]);
@@ -132,7 +125,7 @@ unidirectional_adjacency_list<NodeId, E>::has_edge(const NodeId &__source, const
 
 template<typename NodeId, typename E>
 inline std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
-unidirectional_adjacency_list<NodeId, E>::outgoing_edges(const NodeId &__node) const {
+unidirectional_adjacency_list<NodeId, E>::outgoing_edges(NodeId __node) const {
     assert(contains_node(__node));
     assert(contains_edge(offset(__node)) || offset(__node) == edge_count());
 
@@ -142,36 +135,29 @@ unidirectional_adjacency_list<NodeId, E>::outgoing_edges(const NodeId &__node) c
 }
 
 template<typename NodeId, typename E>
-inline const edge_id_t &
-unidirectional_adjacency_list<NodeId, E>::offset(const NodeId &__node) const {
+inline edge_id_t
+unidirectional_adjacency_list<NodeId, E>::offset(NodeId __node) const {
     assert(contains_node(__node));
 
     return _M_offsets[__node];
 }
 
 template<typename NodeId, typename E>
-inline const edge_id_t &
-unidirectional_adjacency_list<NodeId, E>::offset_next(const NodeId &__node) const {
+inline edge_id_t
+unidirectional_adjacency_list<NodeId, E>::offset_next(NodeId __node) const {
     assert(contains_node(__node));
 
     return _M_offsets[__node + 1];
 }
 
 template<typename NodeId, typename E>
-inline const E &
-unidirectional_adjacency_list<NodeId, E>::edge(const edge_id_t &__edge) const {
+inline E
+unidirectional_adjacency_list<NodeId, E>::edge(edge_id_t __edge) const {
     assert(contains_edge(__edge));
 
     return _M_edges[__edge].info;
 }
 
-template<typename NodeId, typename E>
-inline E &
-unidirectional_adjacency_list<NodeId, E>::edge(const edge_id_t &__edge) {
-    assert(contains_edge(__edge));
-
-    return _M_edges[__edge].info;
-}
 
 template<typename NodeId, typename E>
 unidirectional_adjacency_list<NodeId, E>::~unidirectional_adjacency_list() {
@@ -193,25 +179,31 @@ unidirectional_adjacency_list<NodeId, E>::unidirectional_adjacency_list(size_t _
         while (_M_offsets.size() <= edge.source) {
             _M_offsets.emplace_back(index);
         }
-        index++;
+        ++index;
     }
 
     while (_M_offsets.size() <= __node_count) {
         _M_offsets.emplace_back(_M_edge_count);
     }
 
-    // split edges into source array and dest/info-array
-    // TODO make inplace
-    _M_edges.resize(_M_edge_count);
-    _M_sources.reserve(_M_node_count);
-    std::transform(__edges.begin(), __edges.end(), _M_edges.begin(),
-                   [&](adjacency_list_edge<NodeId, E> __edge1) {
-                       this->_M_sources.push_back(__edge1.source);
-                       return internal_adjacency_list_edge<NodeId, E>{__edge1.destination, __edge1.info};
-                   });
+    // invert order of vector
+    for (size_t i = 0; i < __edges.size() / 2; ++i) {
+        std::swap(__edges[i], __edges[__edges.size() - i - 1]);
+    }
 
-    __edges.clear();
-    std::move(__edges);
+    // split edges into source array and dest/info-array
+    // TODO make faster/inplace
+    int count = 0;
+    while (!__edges.empty()) {
+        auto full_edge = __edges.back();
+        _M_sources.push_back(full_edge.source);
+        _M_edges.emplace_back(full_edge.destination, full_edge.info);
+        __edges.pop_back();
+        if (count % (4 * 1024 * 1024) == 0) {
+            __edges.shrink_to_fit();
+        }
+        ++count;
+    }
 }
 
 template<typename NodeId, typename E>
@@ -235,7 +227,6 @@ unidirectional_adjacency_list<NodeId, E>::unidirectional_adjacency_list(
           _M_sources(std::move(__other._M_sources)),
           _M_edges(std::move(__other._M_edges)) {}
 
-// TODO refactor using adjacency_list_builder
 template<typename NodeId, typename E>
 unidirectional_adjacency_list<NodeId, E>
 unidirectional_adjacency_list<NodeId, E>::inverse() const {

@@ -20,9 +20,9 @@ template <RoutableGraph G, DijkstraQueue<G> Q, typename UseEdge, DijkstraLabels 
     static_assert(Topology<typename G::topology_type>);
 public:
   using type = dijkstra<G, Q, UseEdge, L>;
-  using node_cost_pair = Q::value_type;
-  using edge_info_type = G::edge_info_type;
-  using node_id_type =  G::node_id_type;
+  using node_cost_pair = typename Q::value_type;
+  using edge_info_type = typename G::edge_info_type;
+  using node_id_type = typename G::node_id_type;
 
   // determines optimality of labels depending on whether the graph allows shortcuts
   // TODO find more elegant way for this
@@ -30,7 +30,6 @@ public:
 
 private:
   std::shared_ptr<const G> _M_graph;
-  const G::topology_type& _M_topology;
 
   node_id_type _M_start_node;
   node_id_type _M_target_node;
@@ -46,14 +45,14 @@ private:
 public:
 
   dijkstra (dijkstra &&__other) noexcept;
-  dijkstra (const dijkstra &__other) = default;
+  dijkstra (const dijkstra &__other) = delete;
 
   // constructs a dijkstra object for the given graph and m_adj_list
-  explicit dijkstra (std::shared_ptr<const G> __graph, const G::topology_type &__adj_list);
+  explicit dijkstra (std::shared_ptr<const G> __graph, const typename G::topology_type &__adj_list);
   ~dijkstra () = default;
 
-  dijkstra<G, Q, UseEdge, L> &operator= (dijkstra<G, Q, UseEdge, L> &&other) = default;
-  dijkstra<G, Q, UseEdge, L> &operator= (const dijkstra<G, Q, UseEdge, L> &other) = default;
+  dijkstra<G, Q, UseEdge, L> &operator= (dijkstra<G, Q, UseEdge, L> &&__other) noexcept;
+  dijkstra<G, Q, UseEdge, L> &operator= (const dijkstra<G, Q, UseEdge, L> &__other) = delete;
 
 
   typename G::node_id_type source () const { return _M_start_node; }
@@ -95,5 +94,5 @@ public:
    * @param node
    * @return
    */
-  bool reached (G::node_id_type __node) const;
+  bool reached (typename G::node_id_type __node) const;
 };

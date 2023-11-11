@@ -99,7 +99,7 @@ public:
     using triangle_edge_id_type = edge_id_t;
 
     using triangle_node_info_type = node_t;
-    using triangle_edge_info_type = edge_t;
+    using triangle_edge_info_type = std::nullptr_t;
 
     using base_topology_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
     using adjacency_list_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
@@ -162,7 +162,7 @@ public:
     steiner_graph(std::vector<node_info_type> &&__triangulation_nodes,
                   adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&__triangulation_edges,
                   polyhedron<base_topology_type, 3> &&__triangles,
-                  adjacency_list<triangle_node_id_type, subdivision_edge_info> &&__steiner_info, float __epsilon);
+                  std::vector<subdivision_edge_info> &&__steiner_info, float __epsilon);
 
 private:
     size_t _M_node_count;
@@ -177,7 +177,7 @@ private:
 
     // store subdivision information here
     // TODO combine with base topology (to only use one offset array)
-    adjacency_list<triangle_node_id_type, subdivision_edge_info> _M_steiner_info;
+    std::vector<subdivision_edge_info> _M_steiner_info;
 
     // for each edge, store the id of the 2 nodes that make up the adjacent triangles
     // TODO reuse offset array of base topology
@@ -209,7 +209,7 @@ public:
 
     edge_info_type edge(edge_id_type __id) const;
 
-    subdivision_edge_info steiner_info(const triangle_edge_id_type &__id) const;
+    subdivision_edge_info steiner_info(triangle_edge_id_type __id) const;
 
     edge_id_type edge_id(node_id_type __src, node_id_type __dest) const;
 
@@ -222,7 +222,10 @@ public:
     std::vector<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     outgoing_edges(node_id_type __node_id) const;
 
-    static adjacency_list<triangle_node_id_type, subdivision_edge_info>
+    std::vector<internal_adjacency_list_edge<node_id_type, edge_info_type>>
+    incoming_edges(node_id_type __node_id) const { return outgoing_edges(__node_id); };
+
+    static std::vector<subdivision_edge_info>
     make_steiner_info(const adjacency_list<triangle_node_id_type, triangle_edge_info_type> &__triangulation,
                       const std::vector<triangle_node_info_type> &__nodes,
                       const polyhedron<base_topology_type, 3> &__polyhedron,
@@ -238,16 +241,6 @@ public:
                                     std::vector<std::array<triangle_node_id_type, 3>> &&__faces);
 
 };
-
-steiner_graph::node_id_iterator_type &steiner_graph::node_id_iterator_type::operator++() {
-    _M_current_node.steiner_index++;
-    if (_M_current_node.steiner_index >= _M_graph_ptr->_M_steiner_info.edge(_M_current_node.edge).node_count) {
-        _M_current_node.steiner_index = 0;
-        _M_current_node.edge++;
-    }
-
-    return *this;
-}
 
 static_assert(Topology<steiner_graph>);
 static_assert(RoutableGraph<steiner_graph>);

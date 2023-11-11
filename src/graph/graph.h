@@ -76,27 +76,27 @@ public:
 
     inline size_t edge_count() const;
 
-    inline const NodeInfo &node(const NodeId &__node_id) const;
+    inline NodeInfo node(NodeId __node_id) const;
 
-    const EdgeInfo &edge(const EdgeId &__edge_id) const;
+    EdgeInfo edge(EdgeId __edge_id) const;
 
-    const NodeId &source(const EdgeId &__edge_id) const;
+    NodeId source(EdgeId __edge_id) const;
 
-    const NodeId &destination(const EdgeId &__edge_id) const;
+    NodeId destination(EdgeId __edge_id) const;
 
     inline const adjacency_list<NodeId, EdgeInfo> &topology() const;
 
     inline adjacency_list<NodeId, EdgeInfo> inverse_topology() const;
 
-    EdgeId edge_id(const NodeId &__src, const NodeId &__dest) const;
+    EdgeId edge_id(NodeId __src, NodeId __dest) const;
 
-    bool has_edge(const NodeId &__src, const NodeId &__dest) const;
-
-    std::span<const internal_adjacency_list_edge<NodeId, EdgeInfo>>
-    outgoing_edges(const NodeId &__node) const;
+    bool has_edge(NodeId __src, NodeId __dest) const;
 
     std::span<const internal_adjacency_list_edge<NodeId, EdgeInfo>>
-    incoming_edges(const NodeId &__node) const {return outgoing_edges(__node);};
+    outgoing_edges(NodeId __node) const;
+
+    std::span<const internal_adjacency_list_edge<NodeId, EdgeInfo>>
+    incoming_edges(NodeId __node) const {return outgoing_edges(__node);};
 
     distance_type path_length(const path &__route) const;
 

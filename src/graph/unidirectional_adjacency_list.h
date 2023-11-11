@@ -62,9 +62,9 @@ public:
 
         adjacency_list_builder &operator=(const adjacency_list_builder &__other) = default;
 
-        void add_node(const NodeId &__node);
+        void add_node(NodeId __node);
 
-        void add_edge(const adjacency_list_edge<NodeId, E> &__edge) { _M_edges.push_back(__edge); };
+        void add_edge(adjacency_list_edge<NodeId, E> __edge) { _M_edges.push_back(__edge); };
 
         void add_edge(NodeId __source, NodeId __destination, E __info);
 
@@ -83,9 +83,9 @@ private:
     std::vector<NodeId> _M_sources;
     std::vector<internal_adjacency_list_edge<NodeId, E> > _M_edges;
 
-    inline const edge_index_type &offset(const NodeId &__node) const;
+    inline edge_index_type offset(NodeId __node) const;
 
-    inline const edge_index_type &offset_next(const NodeId &__node) const;
+    inline edge_index_type offset_next(NodeId __node) const;
 
 public:
     ~unidirectional_adjacency_list();
@@ -131,25 +131,21 @@ public:
      * @param __edge
      * @return
      */
-    inline const NodeId &source(const edge_index_type &__edge) const;
+    inline NodeId source(edge_index_type __edge) const;
 
     /**
      * get the id of the destination for the edge with given index
      * @param __edge
      * @return
      */
-    inline NodeId &destination(const edge_index_type &__edge);
-
-    inline const NodeId &destination(const edge_index_type &__edge) const;
+    inline NodeId destination(edge_index_type __edge) const;
 
     /**
      * get the edge information at the given index
      * @param __edge
      * @return
      */
-    inline E &edge(const edge_index_type &__edge);
-
-    inline const E &edge(const edge_index_type &__edge) const;
+    inline E edge(edge_index_type __edge) const;
 
     /**
      * get the index of the edge with given source and destination ids
@@ -157,7 +153,7 @@ public:
      * @param __dest
      * @return the index, or NO_EDGE_ID otherwise
      */
-    inline edge_index_type edge_index(const NodeId &__source, const NodeId &__dest) const;
+    inline edge_index_type edge_index(NodeId __source, NodeId __dest) const;
 
     /**
      * check if an edge from the source to destination node exists
@@ -165,7 +161,7 @@ public:
      * @param __dest
      * @return
      */
-    inline bool has_edge(const NodeId &__source, const NodeId &__dest) const;
+    inline bool has_edge(NodeId __source, const NodeId __dest) const;
 
     /**
      * gets the distance info pairs for outgoing edges from the given node
@@ -173,7 +169,7 @@ public:
      * @return
      */
     inline std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
-    outgoing_edges(const NodeId &__node) const;
+    outgoing_edges( NodeId __node) const;
 
     bool operator==(const unidirectional_adjacency_list<NodeId, E> &__other);
 };

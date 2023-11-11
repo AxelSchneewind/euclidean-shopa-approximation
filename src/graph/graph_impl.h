@@ -44,7 +44,8 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph(
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 template<RoutableGraph Other>
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId> graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other &other, const typename Other::subgraph &__subgraph) {
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other &other, const typename Other::subgraph &__subgraph) {
     NodeId node_count = __subgraph.nodes.size();
     EdgeId edge_count = __subgraph.edges.size();
 
@@ -55,8 +56,8 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId> graph<NodeInfo, EdgeInfo, NodeId, Edge
     for (size_t i = 0; i < node_count; i++) {
         auto node_id = __subgraph.nodes[i];
 
-        nodes.push_back((NodeInfo)other.node(node_id));
-        new_node_ids[node_id] = (NodeId)i;
+        nodes.push_back((NodeInfo) other.node(node_id));
+        new_node_ids[node_id] = (NodeId) i;
     }
 
     // make one-directional adjacency list
@@ -68,7 +69,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId> graph<NodeInfo, EdgeInfo, NodeId, Edge
         auto dest = other.destination(edge);
         EdgeInfo info = other.edge(edge);
 
-        forward_builder.add_edge((NodeId)new_node_ids[src], (NodeId)new_node_ids[dest], info);
+        forward_builder.add_edge((NodeId) new_node_ids[src], (NodeId) new_node_ids[dest], info);
     }
 
     // make bidirectional adjacency list
@@ -90,9 +91,9 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_count() const {
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-const graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_info_type &
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_info_type
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node(
-        const graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_id_type &__node_id) const {
+        graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_id_type __node_id) const {
     return _M_node_list[__node_id];
 }
 
@@ -105,7 +106,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::nodes() const {
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 counter<NodeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_ids() const {
-    return {(NodeId) node_count()}; // FIXME
+    return {(NodeId) node_count()};
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
@@ -186,32 +187,32 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::path_length(const path &__route) cons
 
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-const NodeId &graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::destination(const EdgeId &__edge_id) const {
+NodeId graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::destination(EdgeId __edge_id) const {
     return _M_adjacency_list.destination(__edge_id);
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-const NodeId &graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::source(const EdgeId &__edge_id) const {
+NodeId graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::source(EdgeId __edge_id) const {
     return _M_adjacency_list.source(__edge_id);
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-const EdgeInfo &graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::edge(const EdgeId &__edge_id) const {
+EdgeInfo graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::edge(EdgeId __edge_id) const {
     return _M_adjacency_list.edge(__edge_id);
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-EdgeId graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::edge_id(const node_id_type &__src, const node_id_type &__dest) const {
+EdgeId graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::edge_id(node_id_type __src, node_id_type __dest) const {
     return _M_adjacency_list.edge_id(__src, __dest);
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-bool graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::has_edge(const node_id_type &__src, const node_id_type &__dest) const {
+bool graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::has_edge(node_id_type __src, node_id_type __dest) const {
     return !is_none(edge_id(__src, __dest));
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 std::span<const internal_adjacency_list_edge<NodeId, EdgeInfo>>
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::outgoing_edges(const node_id_type &__node) const {
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::outgoing_edges(node_id_type __node) const {
     return topology().outgoing_edges(__node);
 }

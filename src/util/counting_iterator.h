@@ -15,8 +15,8 @@ public:
 
     counter end() { return {max, max}; };
 
-    bool operator==(const counter& __other) const { return current == __other.current; }
-    bool operator!=(const counter& __other) const { return current != __other.current; }
+    bool operator==(counter __other) const { return current == __other.current; }
+    bool operator!=(counter __other) const { return current != __other.current; }
 
     counter &operator++(int) {
         current++;
