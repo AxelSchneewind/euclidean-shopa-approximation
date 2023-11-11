@@ -11,6 +11,7 @@
 #include "file-io/triangulation_file_io_impl.h"
 
 #include "routing.h"
+#include "query.h"
 
 #include <chrono>
 
@@ -41,8 +42,10 @@ main(int argc, char const *argv[]) {
     if (input.bad())
         return 1;
 
-    std::shared_ptr<const steiner_graph> graph_ptr(new steiner_graph(triangulation_file_io::read<steiner_graph>(input)));
-    std::cout << "\a\n\tdone, graph has " << graph_ptr->node_count() << " nodes and " << graph_ptr->edge_count() << " edges"
+    std::shared_ptr<const steiner_graph> graph_ptr(
+            new steiner_graph(triangulation_file_io::read<steiner_graph>(input)));
+    std::cout << "\a\n\tdone, graph has " << graph_ptr->node_count() << " nodes and " << graph_ptr->edge_count()
+              << " edges"
               << "\n\t           with " << graph_ptr->base_graph().node_count() << " nodes and "
               << graph_ptr->base_graph().edge_count() << " edges stored explicitly" << std::endl;
 
@@ -88,40 +91,18 @@ main(int argc, char const *argv[]) {
         std::ofstream output_route(route_file);
         std::ofstream output_tree(tree_file);
         std::ofstream output_info(info_file);
-        gl_file_io writer;
 
-        //
-        steiner_graph::path route;
-        steiner_graph::subgraph tree_subgraph;
-        std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> before;
-        std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> after;
 
-        switch (mode) {
-            case 'A' ... 'B':
-                router.init(src, dest);
-                before = std::chrono::high_resolution_clock::now();
-                router.compute_route();
-                after = std::chrono::high_resolution_clock::now();
-
-                tree_subgraph = router.shortest_path_tree();
-                if (router.route_found()) {
-                    route = router.route();
-                }
-                break;
-
-            default:
-                break;
-        }
-
-        // get time
-        std::chrono::duration<double, std::milli> routing_time = after - before;
+        Query<steiner_graph> query{src, dest};
+        Result<steiner_graph> result;
+        result = perform_query(*graph_ptr, router, query);
 
         // make graph from route to display
-        auto route_subgraph = graph_ptr->make_subgraph(route);
+        auto route_subgraph = graph_ptr->make_subgraph(result.route);
         auto route_graph = std_graph_t::make_graph(*graph_ptr, route_subgraph);
 
         // make graph from the shortest path trees
-        auto tree_graph = std_graph_t::make_graph(*graph_ptr, tree_subgraph);
+        auto tree_graph = std_graph_t::make_graph(*graph_ptr, result.trees);
 
         // make beeline
         std::vector<node_t> nodes = {graph_ptr->node(src), graph_ptr->node(dest)};
@@ -131,20 +112,20 @@ main(int argc, char const *argv[]) {
                                                       adjacency_list<int, edge_t>::make_bidirectional(edges.get()));
 
         // write output graphs
-        writer.write(output_tree, tree_graph, 3, 4);
-        writer.write(output_route, route_graph, 12, 5);
-        writer.write(output_beeline, beeline, 12, 5);
+        gl_file_io::write(output_tree, tree_graph, 3, 4);
+        gl_file_io::write(output_route, route_graph, 12, 5);
+        gl_file_io::write(output_beeline, beeline, 12, 5);
 
         // print stats about route computation
-        output_info << "path: " << route << '\n';
-        output_info << "path has cost: " << graph_ptr->path_length(route) << '\n';
+        output_info << "path: " << result.route << '\n';
+        output_info << "path has cost: " << graph_ptr->path_length(result.route) << '\n';
         output_info << "searches visited " << tree_graph.node_count() << " nodes";
-        output_info << "and took " << routing_time << '\n';
+        output_info << "and took " << result.duration << '\n';
 
-        std::cout << "\tpath: " << route << '\n';
-        std::cout << "\tpath has cost: " << graph_ptr->path_length(route) << '\n';
+        std::cout << "\tpath: " << result.route << '\n';
+        std::cout << "\tpath has cost: " << graph_ptr->path_length(result.route) << '\n';
         std::cout << "\tsearches visited " << tree_graph.node_count() << " nodes";
-        std::cout << "\tand took " << routing_time << '\n';
+        std::cout << "\tand took " << result.duration << '\n';
 
         output_route.close();
         output_tree.close();

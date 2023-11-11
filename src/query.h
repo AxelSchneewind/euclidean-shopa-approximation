@@ -7,32 +7,35 @@
 
 #include "graph/graph.h"
 
+template<typename Graph>
 struct Query {
-    node_id_t from;
-    node_id_t to;
+    typename Graph::node_id_type from;
+    typename Graph::node_id_type to;
 };
 
+template<typename Graph>
 struct Result {
-    Query query;
+    Query<Graph> query;
 
     bool route_found = false;
 
     distance_t distance = infinity<distance_t>();
     distance_t beeline_distance = infinity<distance_t>();
 
-    path<node_id_t> route;
-    subgraph<node_id_t, edge_id_t> trees;
+    typename Graph::path route;
+    typename Graph::subgraph trees;
 
     size_t nodes_visited = 0;
-    node_id_t mid_node = none_value<node_id_t>();
+    typename Graph::node_id_type mid_node = none_value<node_id_t>();
 
     std::chrono::duration<double, std::milli> duration;
 };
 
 template<typename Graph, typename Router>
-Result
-perform_query(const Graph &graph, Router &router, const Query &query) {
-    Result result;
+Result<Graph>
+perform_query(const Graph &graph, Router &router, const Query<Graph> &query) {
+    Result<Graph> result;
+
     result.query = query;
     result.beeline_distance = distance(graph.node(query.from).coordinates, graph.node(query.to).coordinates);
 
@@ -64,8 +67,9 @@ struct output {
             tree_size = false;
 };
 
+template<typename Graph>
 void
-compare_results(Result result1, Result result2, output info, std::ostream &out = std::cout) {
+compare_results(Result<Graph> result1, Result<Graph> result2, output info, std::ostream &out = std::cout) {
     if (info.query)
         out << result1.query.from << " to " << result1.query.to << '\n';
 
@@ -86,8 +90,9 @@ compare_results(Result result1, Result result2, output info, std::ostream &out =
         out << "\ttime:             " << result1.duration << "\t" << result2.duration << '\n';
 }
 
+template<typename Graph>
 void
-print_result(Result result, output info, std::ostream &out = std::cout) {
+print_result(Result<Graph> result, output info, std::ostream &out = std::cout) {
     if (info.query)
         out << result.query.from << " to " << result.query.to << '\n';
 

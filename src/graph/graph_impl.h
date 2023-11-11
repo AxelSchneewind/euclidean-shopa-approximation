@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "topology.h"
+
 template<typename NodeId, typename EdgeId>
 subgraph<NodeId, EdgeId>::subgraph(std::vector<NodeId> &&__n, std::vector<EdgeId> &&__e)
         : nodes(std::move(__n)), edges(std::move(__e)) {}
