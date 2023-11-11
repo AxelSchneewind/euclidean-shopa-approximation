@@ -6,6 +6,8 @@
 #include "../graph/adjacency_list_impl.h"
 #include "../graph/geometry.h"
 
+#include "../util/debug.h"
+
 #include "formatters_impl.h"
 
 template<Topology Graph, typename formatter>
@@ -26,8 +28,7 @@ triangulation_file_io::read(std::istream &input) {
     }
 
     // build adjacency list
-    typename unidirectional_adjacency_list<node_id_t, edge_t>::adjacency_list_builder builder;
-    builder.add_node(node_count - 1);
+    typename unidirectional_adjacency_list<node_id_t, edge_t>::adjacency_list_builder builder(node_count);
 
     // read triangles and generate edges from them
     for (int t = 0; t < triangle_count; t++) {
@@ -63,8 +64,7 @@ steiner_graph triangulation_file_io::read<steiner_graph>(std::istream &input) {
     }
 
     // build adjacency list
-    typename unidirectional_adjacency_list<node_id_t, edge_t>::adjacency_list_builder builder;
-    builder.add_node(node_count - 1);
+    typename unidirectional_adjacency_list<node_id_t, std::nullptr_t>::adjacency_list_builder builder(node_count);
 
     // read triangles and generate edges from them
     std::vector<std::array<node_id_t, 3>> faces;
@@ -72,12 +72,8 @@ steiner_graph triangulation_file_io::read<steiner_graph>(std::istream &input) {
         triangle tri = f::template read<triangle>(input);
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;
-            edge_t edge;
-            edge.cost = (float) distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
-
-            builder.add_edge(tri[i], tri[next], edge);
-            builder.add_edge(tri[next], tri[i], edge);
-
+            builder.add_edge(tri[i], tri[next], 0);
+            builder.add_edge(tri[next], tri[i], 0);
         }
         faces.push_back(tri);
     }
