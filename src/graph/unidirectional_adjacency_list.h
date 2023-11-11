@@ -9,14 +9,14 @@
 
 #include "../routing/dijkstra_concepts.h"
 
-template<typename NodeId, typename E>
+template<typename NodeId, typename E = std::nullptr_t>
 struct internal_adjacency_list_edge {
     NodeId destination;
     E info;
 };
 
 
-template<typename NodeId, typename E>
+template<typename NodeId, typename E = std::nullptr_t>
 struct adjacency_list_edge {
     NodeId source;
     NodeId destination;
@@ -28,6 +28,29 @@ struct adjacency_list_edge {
     operator internal_adjacency_list_edge<NodeId, E>() const { return {destination, info}; }
 };
 
+template<typename NodeId>
+struct internal_adjacency_list_edge<NodeId, std::nullptr_t> {
+    NodeId destination;
+    static constexpr std::nullptr_t info = nullptr;
+
+    internal_adjacency_list_edge() = default;
+    internal_adjacency_list_edge(NodeId destination, std::nullptr_t info) : destination(destination){}
+};
+
+template<typename NodeId>
+struct adjacency_list_edge<NodeId, std::nullptr_t> {
+    NodeId source;
+    NodeId destination;
+    static constexpr std::nullptr_t info = nullptr;
+
+    adjacency_list_edge() = default;
+    adjacency_list_edge(NodeId source, NodeId destination, std::nullptr_t info) : source(source), destination(destination){}
+
+    bool operator==(const adjacency_list_edge &__other) const = default;
+    bool operator!=(const adjacency_list_edge &__other) const = default;
+
+    operator internal_adjacency_list_edge<NodeId>() const { return {destination}; }
+};
 
 /**
  * stores a directed graph. Provides O(1) access to outgoing edges for any node
