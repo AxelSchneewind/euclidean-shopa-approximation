@@ -17,9 +17,9 @@ int main(int argc, const char **argv) {
     std::ifstream input(filename);
     std::ofstream output(filename + ".gl");
 
-    auto graph = triangulation_file_io::read_steiner(input);
+    auto graph = triangulation_file_io::read<steiner_graph>(input);
 
-    gl_file_io::write_steiner(output, graph);
+    gl_file_io::write<steiner_graph>(output, graph);
 
     output.close();
     return 0;

@@ -53,7 +53,7 @@ main(int argc, char const *argv[]) {
         // get query
         steiner_graph::node_id_type src(0, 0);
         steiner_graph::node_id_type dest(0, 0);
-        char mode = 'B';
+        char mode = 'A';
 
         if (argc > 6) {
             src.edge = std::stoi(argv[3]);
@@ -66,8 +66,8 @@ main(int argc, char const *argv[]) {
             std::cin >> src.edge >> src.steiner_index;
             std::cout << "dest node (base edge and index): " << std::flush;
             std::cin >> dest.edge >> src.steiner_index;
-            std::cout << "mode (B = Bidirectional Dijkstra, A = A*) : " << std::flush;
-            std::cin >> mode;
+            std::cout << "mode (B = Bidirectional Dijkstra, A = A*) : A" << std::flush;
+            //std::cin >> mode;
         }
 
         // check that query is valid
@@ -76,13 +76,13 @@ main(int argc, char const *argv[]) {
             break;
 
         // setup writer for graphs to show
-        std::string beeline_file = std::format("{}/beeline_{}_{}_{}.gl", output_directory, mode, (int) src.edge,
+        std::string beeline_file = std::format("{}/{}_{}_{}/beeline.gl", output_directory, mode, (int) src.edge,
                                                (int) dest.edge);
-        std::string route_file = std::format("{}/route_{}_{}_{}.gl", output_directory, mode, (int) src.edge,
+        std::string route_file = std::format("{}/{}_{}_{}/route.gl", output_directory, mode, (int) src.edge,
                                              (int) dest.edge);
-        std::string tree_file = std::format("{}/tree_{}_{}_{}.gl", output_directory, mode, (int) src.edge,
+        std::string tree_file = std::format("{}/{}_{}_{}/tree.gl", output_directory, mode, (int) src.edge,
                                             (int) dest.edge);
-        std::string info_file = std::format("{}/info_{}_{}_{}.gl", output_directory, mode, (int) src.edge,
+        std::string info_file = std::format("{}/{}_{}_{}/info.gl", output_directory, mode, (int) src.edge,
                                             (int) dest.edge);
         std::ofstream output_beeline(beeline_file);
         std::ofstream output_route(route_file);
