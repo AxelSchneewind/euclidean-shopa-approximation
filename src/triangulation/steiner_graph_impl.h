@@ -173,6 +173,7 @@ std::vector<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_gr
 steiner_graph::outgoing_edges(node_id_type __node_id) const {
     using temp_edge = internal_adjacency_list_edge<node_id_type, edge_info_type>;
     std::vector<temp_edge> result;
+    result.reserve(50);
     auto c1 = node(__node_id).coordinates;
 
     if (__node_id.steiner_index > 0) {

@@ -16,13 +16,11 @@ private:
     std::shared_ptr<const G> _M_graph;
 
     std::vector<typename G::triangle_edge_id_type> _M_touched;
-    std::vector<std::shared_ptr<std::array<label_type, std::dynamic_extent>>> _M_labels;  // TODO
-
-    static_assert(sizeof(std::vector<label_type>) == 3 * sizeof(nullptr));
+    std::vector<std::shared_ptr<std::vector<label_type>>> _M_labels;  // TODO
 
 public:
     static constexpr size_t SIZE_PER_NODE = 0;
-    static constexpr size_t SIZE_PER_EDGE = sizeof(std::vector<label_type>);
+    static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<std::vector<label_type>>);
 
     explicit steiner_labels(std::shared_ptr<const G> __graph);
 
@@ -62,7 +60,7 @@ steiner_labels<G, N>::all_visited() const {
 template<RoutableGraph G, typename N>
 steiner_labels<G, N>::steiner_labels(std::shared_ptr<const G> __graph)
         : _M_graph(__graph),
-          _M_labels(_M_graph->base_graph().edge_count(), nullptr) {
+          _M_labels(_M_graph->base_graph().edge_count()) {
     _M_touched.reserve(10000);
 }
 
@@ -123,9 +121,8 @@ steiner_labels<G, N>::label(steiner_labels<G, N>::node_cost_pair_type __node_cos
     // if edge has not been touched yet, set up its distance/predecessor arrays
     if (!_M_labels[edge_id]) {
         _M_touched.push_back(edge_id);
-        label_type base_array[count];
-        _M_labels[edge_id] = std::make_shared<std::array<label_type, std::dynamic_extent>>(base_array);
-        _M_labels[edge_id]->fill({infinity<distance_type>(), none_value<node_id_type>()});
+        _M_labels[edge_id] = std::make_shared<std::vector<label_type>>(count, label_type{infinity<distance_type>(),
+                                                                                         none_value<node_id_type>()});
     }
 
     (*_M_labels[edge_id])[__node_cost_pair.node.steiner_index].distance = __node_cost_pair.distance;

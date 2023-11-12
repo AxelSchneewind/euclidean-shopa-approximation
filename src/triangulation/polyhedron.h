@@ -56,6 +56,7 @@ public:
      * @return
      */
     std::array<const edge_id_type, 4 * (MaxNodesPerFace - 1)> edges(edge_id_type __edge) const {
+        //FIXME
         auto inv = _M_adjacent_edges[__edge][0];
         std::array<const edge_id_type, 4 * (MaxNodesPerFace - 1)> result{
                 _M_adjacent_edges[__edge][1],
