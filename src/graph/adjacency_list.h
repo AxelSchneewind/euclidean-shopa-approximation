@@ -19,6 +19,9 @@ public:
 
     using builder = unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder;
 
+    static constexpr size_t SIZE_PER_NODE = unidirectional_adjacency_list<NodeId, E>::SIZE_PER_NODE;
+    static constexpr size_t SIZE_PER_EDGE = unidirectional_adjacency_list<NodeId, E>::SIZE_PER_EDGE;
+
 private:
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> _M_forward;
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> _M_backward;
@@ -33,10 +36,12 @@ private:
 public:
     // copy constructor/assignment
     adjacency_list(const adjacency_list<NodeId, E> &__other) noexcept;
+
     adjacency_list<NodeId, E> &operator=(const adjacency_list<NodeId, E> &__other) = default;
 
     // move constructor/assignment
     adjacency_list(adjacency_list<NodeId, E> &&__other) noexcept;
+
     adjacency_list<NodeId, E> &operator=(adjacency_list<NodeId, E> &&__other) = default;
 
     ~adjacency_list() = default;

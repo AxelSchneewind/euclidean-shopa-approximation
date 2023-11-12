@@ -34,13 +34,17 @@ private:
     distance_t min_route_distance(const typename Graph::node_id_type &__node) const;
 
 public:
+    static constexpr size_t SIZE_PER_NODE = 2 * Dijkstra::SIZE_PER_NODE;
+    static constexpr size_t SIZE_PER_EDGE = 2 * Dijkstra::SIZE_PER_EDGE;
+
+
     explicit router(std::shared_ptr<const Graph> __graph);
 
-    router(const router &__other);
+    router(const router &__other) = delete;
 
     router(router &&__other) noexcept;
 
-    router &operator=(const router &__other) = default;
+    router &operator=(const router &__other) = delete;
 
     router &operator=(router &&__other) noexcept = default;
 

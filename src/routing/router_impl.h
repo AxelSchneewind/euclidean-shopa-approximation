@@ -95,10 +95,6 @@ router<Graph, Dijkstra>::router(std::shared_ptr<const Graph> __graph)
           _M_mid_node(none_value<typename Graph::node_id_type>()) {}
 
 template<typename Graph, typename Dijkstra>
-router<Graph, Dijkstra>::router(const router& other) {
-}
-
-template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(router &&__routing) noexcept
         : _M_graph_ptr(__routing._M_graph_ptr), _M_forward_search(std::move(__routing._M_forward_search)),
           _M_backward_search(std::move(__routing._M_backward_search)),

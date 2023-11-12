@@ -17,18 +17,18 @@
 
 template<RoutableGraph G, DijkstraQueue<G> Q, typename U, DijkstraLabels L>
 dijkstra<G, Q, U, L>::dijkstra(std::shared_ptr<const G> __graph,
-                               const typename G::topology_type&__adj_list)
-    : _M_graph(__graph),
-      _M_labels(__graph),
-      _M_use_edge(__graph),
-      _M_queue(__graph) {
+                               const typename G::topology_type &__adj_list)
+        : _M_graph(__graph),
+          _M_labels(__graph),
+          _M_use_edge(__graph),
+          _M_queue(__graph) {
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
-dijkstra<G, Queue, U, L>::dijkstra(dijkstra<G, Queue, U, L>&&__other) noexcept
-    : _M_labels(std::move(__other._M_labels)),
-      _M_graph(std::move(__other._M_graph)),
-      _M_queue(std::move(__other._M_queue)) {
+dijkstra<G, Queue, U, L>::dijkstra(dijkstra<G, Queue, U, L> &&__other) noexcept
+        : _M_labels(std::move(__other._M_labels)),
+          _M_graph(std::move(__other._M_graph)),
+          _M_queue(std::move(__other._M_queue)) {
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
@@ -67,11 +67,11 @@ dijkstra<G, Queue, U, L>::init(node_id_type __start_node, node_id_type __target_
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 void
-dijkstra<G, Queue, U, L>::expand(const dijkstra<G, Queue, U, L>::node_id_type&__node) {
+dijkstra<G, Queue, U, L>::expand(const dijkstra<G, Queue, U, L>::node_id_type &__node) {
     assert(!is_none(__node));
 
     auto edges = _M_graph->topology().outgoing_edges(__node);
-    for (auto&edge: edges) {
+    for (auto &edge: edges) {
         assert(!is_none(edge.destination));
         assert(_M_graph->has_edge(__node, edge.destination));
 
@@ -80,7 +80,7 @@ dijkstra<G, Queue, U, L>::expand(const dijkstra<G, Queue, U, L>::node_id_type&__
             continue;
         }
 
-        const typename G::node_id_type&successor = edge.destination;
+        const typename G::node_id_type &successor = edge.destination;
         const distance_t successor_cost = _M_labels.distance(successor);
         const distance_t new_cost = _M_labels.distance(__node) + edge.info.cost;
 
@@ -105,7 +105,7 @@ dijkstra<G, Queue, U, L>::step() {
 
     node_cost_pair ncp = current();
 
-    // label current node
+    // label_type current node
     _M_labels.label(ncp);
 
     // expand to adjacent nodes

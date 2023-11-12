@@ -14,12 +14,10 @@
 #include "query.h"
 
 #include <chrono>
+#include <filesystem>
 
 int
 main(int argc, char const *argv[]) {
-    // std::string directory = std::string (argv[1]) + "/aegaeis/";
-    // std::string graph_filename = "pruned.graph";
-
     std::string graph_file;
     std::string output_directory;
 
@@ -36,7 +34,10 @@ main(int argc, char const *argv[]) {
 
 
     // read triangulation
-    std::cout << "reading graph from " << graph_file << "... " << std::flush;
+    std::cout << "reading graph from " << graph_file << "... \n" << std::flush;
+    std::cout << "\tbtw: expected size per node: " << steiner_graph::SIZE_PER_NODE << " and per edge "
+              << steiner_graph::SIZE_PER_EDGE << std::endl;
+
     std::ifstream input(graph_file);
 
     if (input.bad())
@@ -44,12 +45,16 @@ main(int argc, char const *argv[]) {
 
     std::shared_ptr<const steiner_graph> graph_ptr(
             new steiner_graph(triangulation_file_io::read<steiner_graph>(input)));
-    std::cout << "\a\n\tdone, graph has " << graph_ptr->node_count() << " nodes and " << graph_ptr->edge_count()
+    std::cout << "\r\a\tdone, graph has " << std::setw(12) << graph_ptr->node_count() << " nodes and "
+              << std::setw(12) << graph_ptr->edge_count()
               << " edges"
-              << "\n\t           with " << graph_ptr->base_graph().node_count() << " nodes and "
+              << "\n\t           with " << std::setw(12) << graph_ptr->base_graph().node_count() << " nodes and "
+              << std::setw(12)
               << graph_ptr->base_graph().edge_count() << " edges stored explicitly" << std::endl;
 
     steiner_routing_t router(graph_ptr);
+    std::cout << "\tbtw: expected size per node: " << steiner_routing_t::SIZE_PER_NODE << " and per edge "
+              << steiner_routing_t::SIZE_PER_EDGE << std::endl;
 
     bool done = false;
     while (!done) {
@@ -71,22 +76,22 @@ main(int argc, char const *argv[]) {
             std::cin >> dest.edge >> src.steiner_index;
             std::cout << "mode (B = Bidirectional Dijkstra, A = A*) : A" << std::flush;
             //std::cin >> mode;
+            std::cout << std::endl;
         }
 
         // check that query is valid
-        if (src.edge < 0 || dest.edge < 0 || src.edge >= graph_ptr->node_count() ||
+        if (src.edge < 0 || dest.edge < 0 || src.edge >= graph_ptr->edge_count() ||
             dest.edge >= graph_ptr->node_count())
             break;
 
         // setup writer for graphs to show
-        std::string beeline_file = std::format("{}/{}_{}_{}/beeline.gl", output_directory, mode, (int) src.edge,
-                                               (int) dest.edge);
-        std::string route_file = std::format("{}/{}_{}_{}/route.gl", output_directory, mode, (int) src.edge,
-                                             (int) dest.edge);
-        std::string tree_file = std::format("{}/{}_{}_{}/tree.gl", output_directory, mode, (int) src.edge,
-                                            (int) dest.edge);
-        std::string info_file = std::format("{}/{}_{}_{}/info.gl", output_directory, mode, (int) src.edge,
-                                            (int) dest.edge);
+        std::string target_directory = std::format("{}/{}_{}_{}", output_directory, mode, (int) src.edge,
+                                                   (int) dest.edge);
+        std::filesystem::create_directory(target_directory);
+        std::string beeline_file = std::format("{}/beeline.gl", target_directory);
+        std::string route_file = std::format("{}/route.gl", target_directory);
+        std::string tree_file = std::format("{}/tree.gl", target_directory);
+        std::string info_file = std::format("{}/info.gl", target_directory);
         std::ofstream output_beeline(beeline_file);
         std::ofstream output_route(route_file);
         std::ofstream output_tree(tree_file);

@@ -2,12 +2,12 @@
 
 #include "../graph/adjacency_list.h"
 
-template <typename T>
+template<typename T>
 concept EdgeLinks = requires {
     typename T::edge_id_type;
 } && requires(T t, typename T::edge_id_type edge) {
-    {t.edges(edge)} -> std::convertible_to<typename T::edge_id_type>;
-    {t.inverse_edge(edge)} -> std::convertible_to<typename T::edge_id_type>;
+    { t.edges(edge) } -> std::convertible_to<typename T::edge_id_type>;
+    { t.inverse_edge(edge) } -> std::convertible_to<typename T::edge_id_type>;
 };
 
 
@@ -22,7 +22,14 @@ public:
 
     // forward and backward edges for 2 faces minus the local edge itself
     // plus the inverse to the local edge
-    static constexpr std::size_t EDGE_COUNT = (MaxNodesPerFace - 1) * 2 * 2 + 1;
+    // static constexpr std::size_t EDGE_COUNT = (MaxNodesPerFace - 1) * 2 * 2 + 1;
+
+    // only store inverse edge and two adjacent edges
+    static constexpr std::size_t EDGE_COUNT = 5;
+
+
+    static constexpr size_t SIZE_PER_NODE = 0;
+    static constexpr size_t SIZE_PER_EDGE = sizeof(std::array<edge_id_type, EDGE_COUNT>);
 
 private:
     static_assert(sizeof(std::array<edge_id_type, EDGE_COUNT>) == EDGE_COUNT * sizeof(edge_id_type));
@@ -30,7 +37,7 @@ private:
     std::vector<std::array<edge_id_type, EDGE_COUNT>> _M_adjacent_edges;
 
     polyhedron(
-               std::vector<std::array<edge_id_t, EDGE_COUNT>>&& __adjacent_edges)
+            std::vector<std::array<edge_id_t, EDGE_COUNT>> &&__adjacent_edges)
             : _M_adjacent_edges(std::move(__adjacent_edges)) {};
 public:
 
@@ -48,8 +55,20 @@ public:
      * @param __edge
      * @return
      */
-    std::span<const edge_id_type, 4 * (MaxNodesPerFace - 1)> edges(edge_id_type __edge) const {
-        return std::span(_M_adjacent_edges[__edge]).template subspan<1,EDGE_COUNT - 1>();
+    std::array<const edge_id_type, 4 * (MaxNodesPerFace - 1)> edges(edge_id_type __edge) const {
+        auto inv = _M_adjacent_edges[__edge][0];
+        std::array<const edge_id_type, 4 * (MaxNodesPerFace - 1)> result{
+                _M_adjacent_edges[__edge][1],
+                _M_adjacent_edges[__edge][2],
+                _M_adjacent_edges[__edge][3],
+                _M_adjacent_edges[__edge][4],
+                _M_adjacent_edges[inv][1],
+                _M_adjacent_edges[inv][2],
+                _M_adjacent_edges[inv][3],
+                _M_adjacent_edges[inv][4],
+        };
+        return result;
+        //return std::span(_M_adjacent_edges[__edge]).template subspan<1, EDGE_COUNT - 1>();
     };
 
     /**

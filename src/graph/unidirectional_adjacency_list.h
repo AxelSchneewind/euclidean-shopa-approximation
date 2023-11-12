@@ -23,6 +23,7 @@ struct adjacency_list_edge {
     E info;
 
     bool operator==(const adjacency_list_edge &__other) const = default;
+
     bool operator!=(const adjacency_list_edge &__other) const = default;
 
     operator internal_adjacency_list_edge<NodeId, E>() const { return {destination, info}; }
@@ -34,7 +35,8 @@ struct internal_adjacency_list_edge<NodeId, std::nullptr_t> {
     static constexpr std::nullptr_t info = nullptr;
 
     internal_adjacency_list_edge() = default;
-    internal_adjacency_list_edge(NodeId destination, std::nullptr_t info) : destination(destination){}
+
+    internal_adjacency_list_edge(NodeId destination, std::nullptr_t info) : destination(destination) {}
 };
 
 template<typename NodeId>
@@ -44,9 +46,12 @@ struct adjacency_list_edge<NodeId, std::nullptr_t> {
     static constexpr std::nullptr_t info = nullptr;
 
     adjacency_list_edge() = default;
-    adjacency_list_edge(NodeId source, NodeId destination, std::nullptr_t info) : source(source), destination(destination){}
+
+    adjacency_list_edge(NodeId source, NodeId destination, std::nullptr_t info) : source(source),
+                                                                                  destination(destination) {}
 
     bool operator==(const adjacency_list_edge &__other) const = default;
+
     bool operator!=(const adjacency_list_edge &__other) const = default;
 
     operator internal_adjacency_list_edge<NodeId>() const { return {destination}; }
@@ -94,6 +99,8 @@ public:
         unidirectional_adjacency_list<NodeId, E> get();
     };
 
+    static constexpr size_t SIZE_PER_NODE = sizeof(edge_id_t);
+    static constexpr size_t SIZE_PER_EDGE = sizeof(NodeId) + sizeof(internal_adjacency_list_edge<NodeId, E>);
 
     using edge_index_type = edge_id_t;
     using node_id_type = NodeId;
@@ -126,10 +133,10 @@ public:
     unidirectional_adjacency_list<NodeId, E> &operator=(unidirectional_adjacency_list<NodeId, E> &&__other) = default;
 
     // copy constructor
-    unidirectional_adjacency_list(const unidirectional_adjacency_list &__other) = default;
+    unidirectional_adjacency_list(const unidirectional_adjacency_list &__other) = delete;
 
     unidirectional_adjacency_list<NodeId, E> &
-    operator=(const unidirectional_adjacency_list<NodeId, E> &__other) = default;
+    operator=(const unidirectional_adjacency_list<NodeId, E> &__other) = delete;
 
     unidirectional_adjacency_list<NodeId, E> inverse() const;
 
@@ -192,7 +199,7 @@ public:
      * @return
      */
     inline std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
-    outgoing_edges( NodeId __node) const;
+    outgoing_edges(NodeId __node) const;
 
     bool operator==(const unidirectional_adjacency_list<NodeId, E> &__other);
 };

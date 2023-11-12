@@ -10,7 +10,10 @@ private:
     using node_id_type = G::node_id_type;
     using distance_type = G::distance_type;
     using node_cost_pair_type = NodeCostPair;
-    struct label { distance_type distance; node_id_type predecessor; };
+    struct label {
+        distance_type distance;
+        node_id_type predecessor;
+    };
 
     std::shared_ptr<const G> _M_graph;
 
@@ -18,6 +21,9 @@ private:
     std::vector<label> _M_labels;
 
 public:
+    static constexpr size_t SIZE_PER_NODE = sizeof(label);
+    static constexpr size_t SIZE_PER_EDGE = 0;
+
     explicit node_labels(std::shared_ptr<const G> d);
 
     // init for given query
@@ -45,7 +51,7 @@ node_labels<G, N>::all_visited() const {
 template<RoutableGraph G, typename N>
 node_labels<G, N>::node_labels(std::shared_ptr<const G> d)
         : _M_graph(d),
-          _M_labels(_M_graph->node_count(), { infinity<distance_type>(), none_value<node_id_type>() }) {
+          _M_labels(_M_graph->node_count(), {infinity<distance_type>(), none_value<node_id_type>()}) {
     _M_touched.reserve(10000);
 }
 
@@ -54,7 +60,7 @@ void
 node_labels<G, N>::init(node_labels<G, N>::node_id_type __start_node, node_labels<G, N>::node_id_type __target_node) {
     for (size_t index = 0; index < _M_touched.size(); ++index) {
         node_id_type node = _M_touched[index];
-        _M_labels[node] = { infinity<distance_type>(), none_value<node_id_type>() };
+        _M_labels[node] = {infinity<distance_type>(), none_value<node_id_type>()};
     }
 
     _M_touched.clear();
@@ -86,5 +92,5 @@ void
 node_labels<G, N>::label(node_labels<G, N>::node_cost_pair_type node_cost_pair) {
     if (is_none(_M_labels[node_cost_pair.node].predecessor))
         _M_touched.push_back(node_cost_pair.node);
-    _M_labels[node_cost_pair.node] = { node_cost_pair.distance, node_cost_pair.predecessor};
+    _M_labels[node_cost_pair.node] = {node_cost_pair.distance, node_cost_pair.predecessor};
 }

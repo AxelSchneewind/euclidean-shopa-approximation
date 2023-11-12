@@ -9,6 +9,7 @@
 #include <cassert>
 #include <span>
 #include <vector>
+#include <stdfloat>
 
 struct steiner_node_id {
     edge_id_t edge;
@@ -113,15 +114,15 @@ public:
 
     struct subdivision_edge_info {
         // relative position of the points with the highest distance to other edges
-        float mid_position;
+        std::float16_t mid_position;
         // maximum distance of a point on this edge to other edges, relative to the length of this edge
-        float mid_dist;
+        std::float16_t mid_dist;
 
         // r(v), relative to this edge
-        float r;
+        std::float16_t r;
 
         // number of steiner points on this edge (counting the source and middle node)
-        int node_count;
+        short node_count;
 
         bool operator==(const subdivision_edge_info &__other) const = default;
     };
@@ -163,6 +164,11 @@ public:
                   adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&__triangulation_edges,
                   polyhedron<base_topology_type, 3> &&__triangles,
                   std::vector<subdivision_edge_info> &&__steiner_info, float __epsilon);
+
+
+    static constexpr size_t SIZE_PER_NODE = sizeof(node_info_type) + base_topology_type::SIZE_PER_NODE;
+    static constexpr size_t SIZE_PER_EDGE =
+            sizeof(subdivision_edge_info) + polyhedron<base_topology_type, 3>::SIZE_PER_EDGE;
 
 private:
     size_t _M_node_count;
