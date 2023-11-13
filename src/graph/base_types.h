@@ -135,7 +135,7 @@ using triangle = std::array<node_id_t, 3>;
 
 
 // euclidian distance
-distance_t distance(const coordinate_t &c1, const coordinate_t &c2);
+distance_t distance(coordinate_t c1, coordinate_t c2);
 
 struct node_t {
     coordinate_t coordinates;

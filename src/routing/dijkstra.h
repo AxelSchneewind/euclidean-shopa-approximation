@@ -56,7 +56,7 @@ public:
 
     ~dijkstra() = default;
 
-    dijkstra<G, Q, UseEdge, L> &operator=(dijkstra<G, Q, UseEdge, L> &&__other) noexcept;
+    dijkstra<G, Q, UseEdge, L> &operator=(dijkstra<G, Q, UseEdge, L> &&__other) noexcept = default;
 
     dijkstra<G, Q, UseEdge, L> &operator=(const dijkstra<G, Q, UseEdge, L> &__other) = delete;
 

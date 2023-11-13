@@ -8,15 +8,17 @@
 #include "routing.h"
 
 template<RoutableGraph G, typename file_io_in, typename file_io_out>
-void make_gl(std::istream &input, std::ostream &output) {
+void make_gl(std::istream &input, std::ostream &output, int linewidth, int color) {
     using f_in = file_io_in;
     using f_out = file_io_out;
 
     // read
     G graph = f_in::template read<G>(input);
 
+    std::cout << "read graph with " << graph.node_count() << " nodes and " << graph.edge_count() << " edges" << std::endl;
+
     // write gl file for graph
-    f_out::template write<G>(output, graph, 2, 2);
+    f_out::template write<G>(output, graph, linewidth, color);
 }
 
 
@@ -30,18 +32,34 @@ main(int argc, char const *argv[]) {
     std::cout << "output filename: " << std::flush;
     std::cin >> filename_out;
 
+
     // read graph
-    std::ifstream input(filename);
-    std::ofstream output(filename_out);
+    std::ifstream input(filename, std::ios::in);
+    std::ofstream output(filename_out, std::ios::out);
 
     std::string_view input_file_ending(&filename.at(filename.find_first_of('.')));
     std::string_view output_file_ending(&filename_out.at(filename_out.find_first_of('.')));
 
     if (input_file_ending == ".graph") {
-        if (output_file_ending == ".steiner.gl")
-            make_gl<steiner_graph, triangulation_file_io, gl_file_io>(input, output);
-        else if (output_file_ending == ".gl")
-            make_gl<std_graph_t, triangulation_file_io, gl_file_io>(input, output);
+
+        if (output_file_ending == ".steiner.gl") {
+            int color, linewidth;
+            std::cout << "output linewidth: " << std::flush;
+            std::cin >> linewidth;
+            std::cout << "output color: " << std::flush;
+            std::cin >> color;
+
+            make_gl<steiner_graph, triangulation_file_io, gl_file_io>(input, output, color, linewidth);
+        }
+        else if (output_file_ending == ".gl") {
+            int color, linewidth;
+            std::cout << "output linewidth: " << std::flush;
+            std::cin >> linewidth;
+            std::cout << "output color: " << std::flush;
+            std::cin >> color;
+
+            make_gl<std_graph_t, triangulation_file_io, gl_file_io>(input, output, color, linewidth);
+        }
     }
 
     output.close();

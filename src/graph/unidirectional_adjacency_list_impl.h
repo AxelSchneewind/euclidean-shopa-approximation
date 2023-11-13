@@ -101,26 +101,21 @@ unidirectional_adjacency_list<NodeId, E>::edge_index(NodeId __source, NodeId __d
     assert(contains_node(__source));
     assert(contains_node(__dest));
 
-    edge_id_t idx = _M_offsets[__source];
-    while (idx < _M_offsets[__source + 1] && destination(idx) != __dest) {
-        ++idx;
+    edge_id_t result = none_value<edge_index_type>();
+
+#pragma GCC ivdep
+    for (int idx = _M_offsets[__source]; idx < _M_offsets[__source + 1]; ++idx) {
+        if (_M_edges[idx].destination == __dest)
+            result = idx;
     }
 
-    return idx != _M_offsets[__source + 1] ? idx : none_value<edge_index_type>();
+    return result;
 }
 
 template<typename NodeId, typename E>
 inline bool
 unidirectional_adjacency_list<NodeId, E>::has_edge(NodeId __source, NodeId __dest) const {
-    assert(contains_node(__source));
-    assert(contains_node(__dest));
-
-    edge_id_t idx = _M_offsets[__source];
-    while (idx < _M_offsets[__source + 1] && destination(idx) != __dest) {
-        ++idx;
-    }
-
-    return (idx < _M_offsets[__source + 1]);
+    return !is_none(edge_index(__source, __dest));
 }
 
 template<typename NodeId, typename E>

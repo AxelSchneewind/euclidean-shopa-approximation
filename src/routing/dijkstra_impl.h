@@ -72,13 +72,13 @@ dijkstra<G, Queue, U, L>::expand(const dijkstra<G, Queue, U, L>::node_id_type &_
 
     auto edges = _M_graph->topology().outgoing_edges(__node);
     for (auto edge: edges) {
-        assert(!is_none(edge.destination));
-        assert(_M_graph->has_edge(__node, edge.destination));
-
         // ignore certain edges
-        if (!_M_use_edge(__node, edge)) {
+        if (edge.destination == __node || !_M_use_edge(__node, edge)) {
             continue;
         }
+
+        assert(!is_none(edge.destination));
+        assert(_M_graph->has_edge(__node, edge.destination));
 
         const typename G::node_id_type &successor = edge.destination;
         const distance_t successor_cost = _M_labels.distance(successor);

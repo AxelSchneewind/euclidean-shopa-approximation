@@ -53,19 +53,19 @@ main(int argc, char const *argv[]) {
               << graph_ptr->base_graph().edge_count() << " edges stored explicitly" << std::endl;
 
     std::cout << "\texpected size per node: " << steiner_graph::SIZE_PER_NODE << " and per edge "
-              << steiner_graph::SIZE_PER_EDGE << " -> " << graph_ptr->node_count() * steiner_graph::SIZE_PER_NODE << "KB"
-              << " + " << graph_ptr->edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 << "KB" << std::endl;
+              << steiner_graph::SIZE_PER_EDGE << " -> " << graph_ptr->node_count() * steiner_graph::SIZE_PER_NODE / 1024 / 1024 << "MB"
+              << " + " << graph_ptr->edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 / 1024 << "MB" << std::endl;
     double vm, res;
     process_mem_usage(vm, res);
-    std::cout << "\tactual memory usage with graph loaded: VM " << vm << "KB, RES " << res << "KB" << std::endl;
+    std::cout << "\tactual memory usage with graph loaded: VM " << vm/1024 << "MB, RES " << res/1024 << "MB" << std::endl;
 
     // set up routing
     steiner_routing_t router(graph_ptr);
     std::cout << "\tbtw: expected size per node: " << steiner_routing_t::SIZE_PER_NODE << " and per edge "
               << steiner_routing_t::SIZE_PER_EDGE << std::endl;
     process_mem_usage(vm, res);
-    std::cout << "\tactual memory usage with graph loaded and routing set up: VM " << vm << "KB, RES " << res
-              << "KB" << std::endl;
+    std::cout << "\tactual memory usage with graph loaded and routing set up: VM " << vm/1024 << "MB, RES " << res/1024
+              << "MB" << std::endl;
 
     bool done = false;
     while (!done) {

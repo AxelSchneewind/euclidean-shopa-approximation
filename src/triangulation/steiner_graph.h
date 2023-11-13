@@ -105,6 +105,8 @@ public:
     using base_topology_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
     using adjacency_list_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
 
+    using polyhedron_type = polyhedron<base_topology_type, 3>;
+
     using distance_type = distance_t;
 
     using path = path<node_id_type>;
@@ -158,64 +160,52 @@ public:
         node_id_type &operator*() { return _M_current_node; }
     };
 
-    template<size_t BaseEdgeCount>
+    template<typename BaseEdgesIterator>
     struct edges_iterator_type {
     private:
         const steiner_graph *_M_graph_ptr;
         node_id_type src;
-        short edge_index;
         short node_index;
-        std::array<base_topology_type::edge_id_type, BaseEdgeCount> _M_edges;
+        BaseEdgesIterator it;
 
     public:
         edges_iterator_type(const steiner_graph *__graph, node_id_type src,
-                            std::initializer_list<std::array<base_topology_type::edge_id_type, BaseEdgeCount>> __edges)
+                            BaseEdgesIterator it)
                 : _M_graph_ptr(__graph),
                   src(src),
-                  _M_edges(__edges),
                   node_index(0),
-                  edge_index(0) {}
-
-        edges_iterator_type(const steiner_graph *__graph, node_id_type src,
-                            std::array<base_topology_type::edge_id_type, BaseEdgeCount> __edges, short edge_index = 0,
-                            short node_index = 0)
-                : _M_graph_ptr(__graph),
-                  src(src),
-                  _M_edges(__edges),
-                  node_index(node_index),
-                  edge_index(edge_index) {}
+                  it (it) {}
 
         edges_iterator_type &begin() { return *this; };
 
         struct end_type {
         };
 
-        end_type end() { return end_type{}; };
+        end_type end() const { return end_type{}; };
 
         bool operator==(edges_iterator_type __other) const {
-            return _M_edges == __other._M_edges &&
-                   edge_index == __other.edge_index && node_index == __other.node_index;
+            return it == __other.it && node_index == __other.node_index;
         }
 
         bool operator==(end_type __other) const {
-            return edge_index == BaseEdgeCount;
+            return it == it.end();
         }
 
         bool operator!=(edges_iterator_type __other) const {
-            return node_index != edge_index || edge_index != __other.edge_index || _M_edges.edge != __other._M_edges;
+            return it != __other.it || node_index != __other.node_index;
         }
 
         bool operator!=(end_type __other) const {
-            return edge_index != BaseEdgeCount;
+            return it != it.end();
         }
 
         edges_iterator_type &operator++() {
             edges_iterator_type &result = *this;
             node_index++;
 
-            while (is_none(_M_edges[edge_index]) || node_index >= _M_graph_ptr->steiner_info(_M_edges[edge_index]).node_count) {
+            if (node_index >= _M_graph_ptr->steiner_info(*it).node_count) {
+                ++it;
                 node_index = 0;
-                edge_index++;
             }
 
             return result;
@@ -224,16 +214,16 @@ public:
         edges_iterator_type &operator++(int) {
             node_index++;
 
-            while (is_none(_M_edges[edge_index]) || node_index >= _M_graph_ptr->steiner_info(_M_edges[edge_index]).node_count) {
+            if (node_index >= _M_graph_ptr->steiner_info(*it).node_count) {
+                ++it;
                 node_index = 0;
-                edge_index++;
             }
 
             return *this;
         };
 
         internal_adjacency_list_edge<node_id_type, edge_info_type> operator*() {
-            node_id_type dest_id = {_M_edges[edge_index], node_index};
+            node_id_type dest_id = {*it, node_index};
             edge_id_type id = { src, dest_id };
             return {dest_id, _M_graph_ptr->edge(id)};
         }
@@ -268,7 +258,7 @@ private:
     std::vector<subdivision_edge_info> _M_steiner_info;
 
     // for each edge, store the id of the 2 nodes that make up the adjacent triangles
-    polyhedron<steiner_graph::base_topology_type, 3> _M_polyhedron;
+    polyhedron_type _M_polyhedron;
 
     // computes the coordinates of a node with given id
     coordinate_t node_coordinates(node_id_type __id) const;
@@ -305,11 +295,13 @@ public:
     const steiner_graph &inverse_topology() const { return *this; }
 
     // std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    edges_iterator_type<10>
+    //auto
+    steiner_graph::edges_iterator_type<polyhedron_type::edges_iterator_type>
     outgoing_edges(node_id_type __node_id) const;
 
     // std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    edges_iterator_type<10>
+    //auto
+    steiner_graph::edges_iterator_type<polyhedron_type::edges_iterator_type>
     incoming_edges(node_id_type __node_id) const { return outgoing_edges(__node_id); };
 
     static std::vector<subdivision_edge_info>
