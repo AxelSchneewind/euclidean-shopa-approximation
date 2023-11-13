@@ -58,7 +58,7 @@ public:
     // std::span<const edge_id_type, EDGE_COUNT> edges(int __triangle) const {
     std::span<const edge_id_type, EDGE_COUNT - 1> edges(edge_id_type __edge) const {
         // return std::span(_M_adjacent_edges[__triangle]);
-        return std::span(_M_adjacent_edges[__edge]).template subspan<0,EDGE_COUNT>();
+        return std::span(_M_adjacent_edges[__edge]).template subspan<0,EDGE_COUNT - 1>();
 
     };
 
