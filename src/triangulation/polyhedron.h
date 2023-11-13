@@ -70,6 +70,9 @@ public:
         };
         return result;
         //return std::span(_M_adjacent_edges[__edge]).template subspan<1, EDGE_COUNT - 1>();
+    std::span<const edge_id_type, EDGE_COUNT - 1> edges(edge_id_type __edge) const {
+        return std::span(_M_adjacent_edges[__edge]).template subspan<0,EDGE_COUNT>();
+
     };
 
     /**
@@ -79,6 +82,7 @@ public:
      */
     edge_id_type inverse_edge(edge_id_type __edge) const {
         return _M_adjacent_edges[__edge][0];
+        return _M_adjacent_edges[__edge][EDGE_COUNT - 1];
     };
 
 
@@ -89,6 +93,7 @@ public:
      */
     // TODO get access to offset array
     std::span<const edge_id_type, std::dynamic_extent> node_edges(node_id_type __node) const {
+        throw;
         //return std::span(_M_adjacent_edges.edge(__node), _M_adjacent_edges.edge(__node + 1));
     };
 };

@@ -6,8 +6,6 @@
 #include "../graph/adjacency_list_impl.h"
 #include "../graph/geometry.h"
 
-#include "../util/debug.h"
-
 #include "formatters_impl.h"
 
 template<Topology Graph, typename formatter>

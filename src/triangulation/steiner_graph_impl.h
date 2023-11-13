@@ -2,7 +2,6 @@
 
 #include "steiner_graph.h"
 #include "polyhedron_impl.h"
-#include "../util/debug.h"
 
 std::vector<steiner_graph::subdivision_edge_info>
 steiner_graph::make_steiner_info(
@@ -162,50 +161,51 @@ coordinate_t steiner_graph::node_coordinates(steiner_graph::node_id_type __id) c
 }
 
 
-std::span<const steiner_graph::triangle_edge_id_type, 8>
-steiner_graph::triangle_edges(steiner_graph::triangle_edge_id_type __edge) const {
-    return _M_polyhedron.edges(__edge);
-}
-
 
 // TODO make iterator for this
-std::vector<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>>
-steiner_graph::outgoing_edges(node_id_type __node_id) const {
+std::span<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>>
+steiner_graph::outgoing_edges(const node_id_type __node_id) const {
     using temp_edge = internal_adjacency_list_edge<node_id_type, edge_info_type>;
-    std::vector<temp_edge> result;
-    result.reserve(50);
     auto c1 = node(__node_id).coordinates;
+
+    //std::vector<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>> _temp_edges;
+    //_temp_edges.reserve(4);
+    _temp_edges.clear();
 
     if (__node_id.steiner_index > 0) {
         node_id_type dest_id = {__node_id.edge, __node_id.steiner_index - 1};
-        result.emplace_back(dest_id, edge_info_type{distance(c1, node(dest_id).coordinates)});
+        _temp_edges.emplace_back(dest_id, edge_info_type{distance(c1, node(dest_id).coordinates)});
     }
     if (__node_id.steiner_index + 1 < _M_steiner_info[__node_id.edge].node_count) {
         node_id_type dest_id = {__node_id.edge, __node_id.steiner_index + 1};
-        result.emplace_back(dest_id, edge_info_type{distance(c1, node(dest_id).coordinates)});
+        _temp_edges.emplace_back(dest_id, edge_info_type{distance(c1, node(dest_id).coordinates)});
     } else if (__node_id.steiner_index + 1 == _M_steiner_info[__node_id.edge].node_count) {
         auto inv_id = _M_polyhedron.inverse_edge(__node_id.edge);
         node_id_type dest_id = {inv_id, steiner_info(inv_id).node_count - 1};
-        result.emplace_back(dest_id, edge_info_type{distance(c1, node(dest_id).coordinates)});
+        _temp_edges.emplace_back(dest_id, edge_info_type{distance(c1, node(dest_id).coordinates)});
     }
 
     // iterate over edges of adjacent triangles
-    auto dest_edges = triangle_edges(__node_id.edge);
-    for (auto dest_edge: dest_edges) {
-        if (is_none(dest_edge)) {
-            break;
-        }
+    auto dest_edges_1 = _M_polyhedron.edges(__node_id.edge);
+    auto dest_edges_2 = _M_polyhedron.edges(_M_polyhedron.inverse_edge(__node_id.edge));
 
-        // iterate over steiner points on destination edge
-        auto steiner_info = _M_steiner_info[dest_edge];
-        for (int steiner_index = 0; steiner_index < steiner_info.node_count; ++steiner_index) {
-            steiner_node_id dest_id = {dest_edge, steiner_index};
+    for (auto dest_edges: {dest_edges_1, dest_edges_2}) {
+        for (auto dest_edge: dest_edges) {
+            if (is_none(dest_edge)) {
+                continue;
+            }
 
-            result.emplace_back(dest_id, edge_info_type{distance(c1, node(dest_id).coordinates)});
+            // iterate over steiner points on destination edge
+            auto steiner_info = _M_steiner_info[dest_edge];
+            for (int steiner_index = 0; steiner_index < steiner_info.node_count; ++steiner_index) {
+                steiner_node_id dest_id = {dest_edge, steiner_index};
+                _temp_edges.emplace_back(dest_id, edge_info_type{distance(c1, node(dest_id).coordinates)});
+            }
         }
     }
 
-    return result;
+    return {_temp_edges.begin(), _temp_edges.end()};
+    //return _temp_edges;
 }
 
 steiner_graph::node_info_type steiner_graph::node(steiner_graph::node_id_type __id) const {
@@ -244,6 +244,13 @@ steiner_graph::edge_id(steiner_graph::node_id_type __src, steiner_graph::node_id
 
     // search the edge in the base graph, that __dest belongs to
     for (auto adjacent_edge: _M_polyhedron.edges(__src.edge)) {
+        if (adjacent_edge == __dest.edge && __dest.steiner_index < steiner_info(adjacent_edge).node_count) {
+            return {__src, __dest};
+        }
+    }
+
+    // search the edge in the base graph, that __dest belongs to
+    for (auto adjacent_edge: _M_polyhedron.edges(_M_polyhedron.inverse_edge(__src.edge))) {
         if (adjacent_edge == __dest.edge && __dest.steiner_index < steiner_info(adjacent_edge).node_count) {
             return {__src, __dest};
         }

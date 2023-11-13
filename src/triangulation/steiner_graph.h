@@ -181,6 +181,9 @@ private:
     std::vector<node_info_type> _M_base_nodes;
     base_topology_type _M_base_topology;
 
+    // vector for storing edges that are queried via incoming_edges() or outgoing_edges()
+    static inline std::vector<internal_adjacency_list_edge<node_id_type, edge_info_type>> _temp_edges;
+
     // store subdivision information here
     // TODO combine with base topology (to only use one offset array)
     std::vector<subdivision_edge_info> _M_steiner_info;
@@ -189,9 +192,7 @@ private:
     // TODO reuse offset array of base topology
     polyhedron<steiner_graph::base_topology_type, 3> _M_polyhedron;
 
-    // returns the ids of the edges which are part of the 2 triangles bordering the given edge (excluding the given edge)
-    std::span<const triangle_edge_id_type, 8> triangle_edges(triangle_edge_id_type __edge) const;
-
+    // computes the coordinates of a node with given id
     coordinate_t node_coordinates(node_id_type __id) const;
 
 public:
@@ -225,10 +226,10 @@ public:
 
     const steiner_graph &inverse_topology() const { return *this; }
 
-    std::vector<internal_adjacency_list_edge<node_id_type, edge_info_type>>
+    std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     outgoing_edges(node_id_type __node_id) const;
 
-    std::vector<internal_adjacency_list_edge<node_id_type, edge_info_type>>
+    std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     incoming_edges(node_id_type __node_id) const { return outgoing_edges(__node_id); };
 
     static std::vector<subdivision_edge_info>
