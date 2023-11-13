@@ -55,22 +55,9 @@ public:
      * @param __edge
      * @return
      */
-    std::array<const edge_id_type, 4 * (MaxNodesPerFace - 1)> edges(edge_id_type __edge) const {
-        //FIXME
-        auto inv = _M_adjacent_edges[__edge][0];
-        std::array<const edge_id_type, 4 * (MaxNodesPerFace - 1)> result{
-                _M_adjacent_edges[__edge][1],
-                _M_adjacent_edges[__edge][2],
-                _M_adjacent_edges[__edge][3],
-                _M_adjacent_edges[__edge][4],
-                _M_adjacent_edges[inv][1],
-                _M_adjacent_edges[inv][2],
-                _M_adjacent_edges[inv][3],
-                _M_adjacent_edges[inv][4],
-        };
-        return result;
-        //return std::span(_M_adjacent_edges[__edge]).template subspan<1, EDGE_COUNT - 1>();
+    // std::span<const edge_id_type, EDGE_COUNT> edges(int __triangle) const {
     std::span<const edge_id_type, EDGE_COUNT - 1> edges(edge_id_type __edge) const {
+        // return std::span(_M_adjacent_edges[__triangle]);
         return std::span(_M_adjacent_edges[__edge]).template subspan<0,EDGE_COUNT>();
 
     };
@@ -81,8 +68,8 @@ public:
      * @return
      */
     edge_id_type inverse_edge(edge_id_type __edge) const {
-        return _M_adjacent_edges[__edge][0];
         return _M_adjacent_edges[__edge][EDGE_COUNT - 1];
+        // return _M_inverse_edges[__edge];
     };
 
 
