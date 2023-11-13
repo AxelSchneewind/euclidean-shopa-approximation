@@ -15,6 +15,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include "util/memory_usage.h"
 
 int
 main(int argc, char const *argv[]) {
@@ -35,14 +36,13 @@ main(int argc, char const *argv[]) {
 
     // read triangulation
     std::cout << "reading graph from " << graph_file << "... \n" << std::flush;
-    std::cout << "\tbtw: expected size per node: " << steiner_graph::SIZE_PER_NODE << " and per edge "
-              << steiner_graph::SIZE_PER_EDGE << std::endl;
 
     std::ifstream input(graph_file);
 
     if (input.bad())
         return 1;
 
+    // read graph
     std::shared_ptr<const steiner_graph> graph_ptr(
             new steiner_graph(triangulation_file_io::read<steiner_graph>(input)));
     std::cout << "\r\a\tdone, graph has " << std::setw(12) << graph_ptr->node_count() << " nodes and "
@@ -52,9 +52,20 @@ main(int argc, char const *argv[]) {
               << std::setw(12)
               << graph_ptr->base_graph().edge_count() << " edges stored explicitly" << std::endl;
 
+    std::cout << "\texpected size per node: " << steiner_graph::SIZE_PER_NODE << " and per edge "
+              << steiner_graph::SIZE_PER_EDGE << " -> " << graph_ptr->node_count() * steiner_graph::SIZE_PER_NODE << "KB"
+              << " + " << graph_ptr->edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 << "KB" << std::endl;
+    double vm, res;
+    process_mem_usage(vm, res);
+    std::cout << "\tactual memory usage with graph loaded: VM " << vm << "KB, RES " << res << "KB" << std::endl;
+
+    // set up routing
     steiner_routing_t router(graph_ptr);
     std::cout << "\tbtw: expected size per node: " << steiner_routing_t::SIZE_PER_NODE << " and per edge "
               << steiner_routing_t::SIZE_PER_EDGE << std::endl;
+    process_mem_usage(vm, res);
+    std::cout << "\tactual memory usage with graph loaded and routing set up: VM " << vm << "KB, RES " << res
+              << "KB" << std::endl;
 
     bool done = false;
     while (!done) {

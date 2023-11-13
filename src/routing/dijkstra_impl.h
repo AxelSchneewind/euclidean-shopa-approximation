@@ -71,7 +71,7 @@ dijkstra<G, Queue, U, L>::expand(const dijkstra<G, Queue, U, L>::node_id_type &_
     assert(!is_none(__node));
 
     auto edges = _M_graph->topology().outgoing_edges(__node);
-    for (auto &edge: edges) {
+    for (auto edge: edges) {
         assert(!is_none(edge.destination));
         assert(_M_graph->has_edge(__node, edge.destination));
 
