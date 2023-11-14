@@ -29,7 +29,7 @@ protected:
 public:
   use_all_edges (std::shared_ptr<const Graph> g) : g (g) {}
 
-  bool operator() (const Graph::node_id_type &node, const internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> &via)
+  constexpr bool operator() (Graph::node_id_type node, internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> via)
   {
     return true;
   };
@@ -43,7 +43,7 @@ protected:
 public:
   use_upward_edges (std::shared_ptr<const Graph> g) : g (g) {}
 
-  bool operator() (const Graph::node_id_type &node, const internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> &via)
+  bool operator() (Graph::node_id_type node, internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> via)
   {
     return g->node(node).level <= g->node(via.destination).level;
   };

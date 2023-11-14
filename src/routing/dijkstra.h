@@ -43,7 +43,7 @@ private:
     L _M_labels;
 
     // add reachable (and not settled) nodes to active nodes in queue
-    void expand(const node_id_type &__node);
+    void expand(node_cost_pair __node);
 
 public:
 

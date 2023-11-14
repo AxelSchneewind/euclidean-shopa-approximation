@@ -49,7 +49,7 @@ main(int argc, char const *argv[]) {
             std::cout << "output color: " << std::flush;
             std::cin >> color;
 
-            make_gl<steiner_graph, triangulation_file_io, gl_file_io>(input, output, color, linewidth);
+            make_gl<steiner_graph, triangulation_file_io, gl_file_io>(input, output, linewidth, color);
         }
         else if (output_file_ending == ".gl") {
             int color, linewidth;

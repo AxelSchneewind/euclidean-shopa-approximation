@@ -31,6 +31,8 @@ public:
     operator std::array<T, Cap>() {
         return _M_data;
     }
+
+    void clear() { i = 0; }
 };
 
 

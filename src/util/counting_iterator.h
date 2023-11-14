@@ -2,21 +2,24 @@
 #include <iterator>
 
 template<typename T>
-struct counter : public std::iterator<std::forward_iterator_tag, T> {
+struct counter {
 private:
     T current;
     T max;
 
     counter(T __current, T __max) : current(__current), max(__max) {}
 public:
-    counter(T __count) : current(), max(__count) {}
+    counter(T __count) : current(0), max(__count) {}
 
     counter &begin() { return *this; };
 
-    counter end() { return {max, max}; };
+    struct end_type {};
+    end_type end() { return end_type{}; };
 
     bool operator==(counter __other) const { return current == __other.current; }
     bool operator!=(counter __other) const { return current != __other.current; }
+    bool operator==(end_type __other) const { return current == max; }
+    bool operator!=(end_type __other) const { return current != max; }
 
     counter &operator++(int) {
         current++;
@@ -28,5 +31,5 @@ public:
         return result;
     }
 
-    const T& operator*() const { return current; }
+    T operator*() const { return current; }
 };

@@ -19,7 +19,7 @@ router<Graph, Dijkstra>::min_route_distance(const Graph::node_id_type &__node) c
 
     // TODO check with CH
 
-    if (Dijkstra::search_symmetric) {
+    if constexpr (Dijkstra::search_symmetric) {
         // if node is labelled in _M_forward_search search, it already has its minimal distance and routes using it must be longer
         if (_M_forward_search.reached(__node)) {
             result += _M_forward_search.labels().distance(__node);

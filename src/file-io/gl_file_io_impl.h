@@ -40,7 +40,8 @@ std::ostream &gl_file_io::write(std::ostream &output, const Graph &graph, int li
 }
 
 template<>
-std::ostream &gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &graph, int line_width, int color) {
+std::ostream &
+gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &graph, int line_width, int color) {
     using f = stream_encoders::encode_text;
 
     size_t node_count = graph.node_count();
@@ -70,7 +71,14 @@ std::ostream &gl_file_io::write<steiner_graph>(std::ostream &output, const stein
                 continue;
 
             f::write(output, indices[node]) << ' ';
-            f::write(output, indices[dest]) << ' ' << line_width << ' ' << color;
+            f::write(output, indices[dest]) << ' ';
+
+            // set line width and color depending on whether the edge is a base node or not
+            if (node.edge == dest.edge)
+                output << 2 * line_width << ' ' << '2';
+            else
+                output << line_width << ' ' << ((color == 2) ? 1 : color);
+
             f::write(output, '\n');
         }
     }

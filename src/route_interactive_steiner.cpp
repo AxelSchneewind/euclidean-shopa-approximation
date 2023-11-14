@@ -45,27 +45,36 @@ main(int argc, char const *argv[]) {
     // read graph
     std::shared_ptr<const steiner_graph> graph_ptr(
             new steiner_graph(triangulation_file_io::read<steiner_graph>(input)));
-    std::cout << "\r\a\tdone, graph has " << std::setw(12) << graph_ptr->node_count() << " nodes and "
-              << std::setw(12) << graph_ptr->edge_count()
-              << " edges"
-              << "\n\t           with " << std::setw(12) << graph_ptr->base_graph().node_count() << " nodes and "
-              << std::setw(12)
-              << graph_ptr->base_graph().edge_count() << " edges stored explicitly" << std::endl;
 
-    std::cout << "\texpected size per node: " << steiner_graph::SIZE_PER_NODE << " and per edge "
-              << steiner_graph::SIZE_PER_EDGE << " -> " << graph_ptr->node_count() * steiner_graph::SIZE_PER_NODE / 1024 / 1024 << "MB"
-              << " + " << graph_ptr->edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 / 1024 << "MB" << std::endl;
+    std::cout << "\r\a\tdone, graph has "
+              << std::setw(12) << graph_ptr->node_count() << " nodes and "
+              << std::setw(12) << graph_ptr->edge_count() << " edges"
+              << "\n\t           with "
+              << std::setw(12) << graph_ptr->base_graph().node_count() << " nodes and "
+              << std::setw(12) << graph_ptr->base_graph().edge_count() << " edges stored explicitly" << std::endl;
+
+    std::cout << "\tgraph: expected size per node: "
+              << std::setw(3) << steiner_graph::SIZE_PER_NODE << " and per edge "
+              << std::setw(3) << steiner_graph::SIZE_PER_EDGE << " -> "
+              << graph_ptr->node_count() * steiner_graph::SIZE_PER_NODE / 1024 / 1024 << "MB" << " + "
+              << graph_ptr->edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 / 1024 << "MB" << std::endl;
+
     double vm, res;
     process_mem_usage(vm, res);
-    std::cout << "\tactual memory usage with graph loaded: VM " << vm/1024 << "MB, RES " << res/1024 << "MB" << std::endl;
+    std::cout << "\tactual memory usage with graph loaded: VM " << vm / 1024 << "MB, RES " << res / 1024 << "MB"
+              << std::endl;
 
     // set up routing
     steiner_routing_t router(graph_ptr);
-    std::cout << "\tbtw: expected size per node: " << steiner_routing_t::SIZE_PER_NODE << " and per edge "
-              << steiner_routing_t::SIZE_PER_EDGE << std::endl;
+    std::cout << "\trouter: expected size per node: "
+              << steiner_routing_t::SIZE_PER_NODE << " and per edge "
+              << steiner_routing_t::SIZE_PER_EDGE
+              << graph_ptr->node_count() * steiner_graph::SIZE_PER_NODE / 1024 / 1024 << "MB" << " + "
+              << graph_ptr->edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 / 1024 << "MB" << std::endl;
     process_mem_usage(vm, res);
-    std::cout << "\tactual memory usage with graph loaded and routing set up: VM " << vm/1024 << "MB, RES " << res/1024
-              << "MB" << std::endl;
+    std::cout << "\tactual memory usage with graph loaded and routing set up: VM "
+              << vm / 1024 << "MB, RES "
+              << res / 1024 << "MB" << std::endl;
 
     bool done = false;
     while (!done) {
@@ -109,9 +118,13 @@ main(int argc, char const *argv[]) {
         std::ofstream output_info(info_file);
 
 
+        std::cout << "computing route..." << std::flush;
+
         Query<steiner_graph> query{src, dest};
         Result<steiner_graph> result;
         result = perform_query(*graph_ptr, router, query);
+
+        std::cout << "\b\b\b, saving results..." << std::flush;
 
         // make graph from route to display
         auto route_subgraph = graph_ptr->make_subgraph(result.route);
@@ -138,6 +151,7 @@ main(int argc, char const *argv[]) {
         output_info << "searches visited " << tree_graph.node_count() << " nodes";
         output_info << "and took " << result.duration << '\n';
 
+        std::cout << "\b\b\b, done\n";
         std::cout << "\tpath: " << result.route << '\n';
         std::cout << "\tpath has cost: " << graph_ptr->path_length(result.route) << '\n';
         std::cout << "\tsearches visited " << tree_graph.node_count() << " nodes";

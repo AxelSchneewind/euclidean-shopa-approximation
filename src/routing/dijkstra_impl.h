@@ -6,6 +6,7 @@
 #include "../graph/base_types.h"
 #include "../graph/graph.h"
 #include "../graph/unidirectional_adjacency_list.h"
+#include "../triangulation/steiner_labels.h"
 
 #include <queue>
 #include <vector>
@@ -67,38 +68,42 @@ dijkstra<G, Queue, U, L>::init(node_id_type __start_node, node_id_type __target_
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 void
-dijkstra<G, Queue, U, L>::expand(const dijkstra<G, Queue, U, L>::node_id_type &__node) {
-    assert(!is_none(__node));
+dijkstra<G, Queue, U, L>::expand(node_cost_pair __node) {
+    assert(!is_none(__node.node));
 
-    auto edges = _M_graph->topology().outgoing_edges(__node);
+    auto edges = _M_graph->topology().outgoing_edges(__node.node);
     for (auto edge: edges) {
         // ignore certain edges
-        if (edge.destination == __node || !_M_use_edge(__node, edge)) {
+        if (edge.destination == __node.node || !_M_use_edge(__node.node, edge)) {
             continue;
         }
 
         assert(!is_none(edge.destination));
-        assert(_M_graph->has_edge(__node, edge.destination));
+        assert(_M_graph->has_edge(__node.node, edge.destination));
 
-        const typename G::node_id_type &successor = edge.destination;
+        const typename G::node_id_type successor = edge.destination;
         const distance_t successor_cost = _M_labels.distance(successor);
-        const distance_t new_cost = _M_labels.distance(__node) + edge.info.cost;
+        const distance_t new_cost = _M_labels.distance(__node.node) + edge.info.cost;
 
         if (new_cost < successor_cost) {
             // (re-)insert node into the queue with updated priority
-            _M_queue.push(successor, __node, new_cost);
+            _M_queue.push(successor, __node.node, new_cost);
         }
     }
 }
+
+
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 void
 dijkstra<G, Queue, U, L>::step() {
     // remove already settled nodes
+    [[unlikely]]
     while (!_M_queue.empty() && reached(_M_queue.top().node)) {
         _M_queue.pop();
     }
 
+    [[unlikely]]
     if (_M_queue.empty()) {
         return;
     }
@@ -109,7 +114,7 @@ dijkstra<G, Queue, U, L>::step() {
     _M_labels.label(ncp);
 
     // expand to adjacent nodes
-    expand(ncp.node);
+    expand(ncp);
 
     // remove current node
     _M_queue.pop();

@@ -119,8 +119,12 @@ public:
     static polyhedron<BaseGraph, MaxNodesPerFace> make_polyhedron(const BaseGraph &__base,
                                                                   const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &__faces);
 
-    std::array<int, FACE_COUNT_PER_EDGE> edge_faces(int __edge) const {
+    std::span<const int, FACE_COUNT_PER_EDGE> edge_faces(int __edge) const {
         return {_M_adjacent_faces[__edge]};
+    }
+
+    std::span<const int, EDGE_COUNT_PER_FACE> face_edges(int __face) const {
+        return {_M_adjacent_edges[__face]};
     }
 
     // /**

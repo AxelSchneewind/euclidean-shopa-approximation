@@ -251,9 +251,6 @@ private:
     std::vector<node_info_type> _M_base_nodes;
     base_topology_type _M_base_topology;
 
-    // vector for storing edges that are queried via incoming_edges() or outgoing_edges()
-    static inline std::vector<internal_adjacency_list_edge<node_id_type, edge_info_type>> _temp_edges;
-
     // store subdivision information here
     std::vector<subdivision_edge_info> _M_steiner_info;
 
@@ -265,6 +262,7 @@ private:
 
 public:
     const base_topology_type &base_graph() const { return _M_base_topology; }
+    const polyhedron_type &base_polyhedron() const { return _M_polyhedron; }
 
     size_t node_count() const { return _M_node_count; }
 

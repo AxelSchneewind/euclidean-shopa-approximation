@@ -6,25 +6,25 @@
 
 
 void make_r_values(
-        const std::vector<steiner_graph::node_info_type>& nodes,
+        const std::vector<steiner_graph::node_info_type> &__nodes,
         const steiner_graph::base_topology_type &__triangulation,
-        const steiner_graph::polyhedron_type& __polyhedron,
+        const steiner_graph::polyhedron_type &__polyhedron,
         float __epsilon,
-        std::vector<std::float16_t>& out) {
-    out.clear();
-    out.resize(nodes.size());
+        std::vector<std::float16_t> &__out) {
+    __out.clear();
+    __out.resize(__nodes.size());
 
     std::vector<steiner_graph::triangle_edge_id_type> adjacent_edge_ids;
     std::vector<steiner_graph::triangle_edge_id_type> triangle_edge_ids;
     for (int node = 0; node < __triangulation.node_count(); ++node) {
         // get edges and triangles adjacent to node
-        for (auto edge : __triangulation.outgoing_edges(node)) {
+        for (auto edge: __triangulation.outgoing_edges(node)) {
             auto edge_id = __triangulation.edge_id(node, edge.destination);
             auto inv_edge_id = __triangulation.edge_id(edge.destination, node);
             adjacent_edge_ids.push_back(edge_id);
             adjacent_edge_ids.push_back(inv_edge_id);
 
-            for (auto triangle_edge : __polyhedron.edges(edge_id))
+            for (auto triangle_edge: __polyhedron.edges(edge_id))
                 triangle_edge_ids.push_back(triangle_edge);
         }
 
@@ -32,22 +32,23 @@ void make_r_values(
         std::sort(adjacent_edge_ids.begin(), adjacent_edge_ids.end());
 
         // get edges that are only reachable via a triangle
-        set_minus_sorted(triangle_edge_ids, adjacent_edge_ids);
+        remove_duplicates_sorted(triangle_edge_ids);
+        remove_duplicates_sorted(adjacent_edge_ids);
+        int edge_count = set_minus_sorted<int>(triangle_edge_ids, adjacent_edge_ids, triangle_edge_ids);
 
         // get minimal value from triangle edges
         float dist = infinity<std::float16_t>();
-        for(auto t : triangle_edge_ids) {
-            auto c1 = nodes[__triangulation.source(t)].coordinates;
-            auto c2 = nodes[__triangulation.destination(t)].coordinates;
-            auto c3 = nodes[node].coordinates;
-            assert(c3 != c2 && c3 != c1 && c2 != c1);
-
-            dist = std::min(dist, line_distance(c1, c2, c3));
-            assert(dist > 0);
+        auto c3 = __nodes[node].coordinates;
+        for (int i = 0; i < edge_count; i++) {
+            auto edge_id = triangle_edge_ids[i];
+            auto c1 = __nodes[__triangulation.source(edge_id)].coordinates;
+            auto c2 = __nodes[__triangulation.destination(edge_id)].coordinates;
+            if (c3 != c2 && c3 != c1 && c2 != c1)
+                dist = std::min(dist, line_distance(c1, c2, c3));
         }
-        dist = std::max(dist, (float)0.001);
+        dist = std::max(dist, (float) 0.001);
         dist = __epsilon / 5 * dist;
-        out[node] = dist;
+        __out[node] = dist;
 
         adjacent_edge_ids.clear();
         triangle_edge_ids.clear();
@@ -112,8 +113,8 @@ steiner_graph::make_steiner_info(
 
         // r values have been compute already
         std::float16_t r = r_values[node1] / (mid_value * length);
-        r = std::min(r, (std::float16_t)1);
-        std::cout << "r (absolute) = " << r_values[node1] << ", r (relative) = " << r << std::endl;
+        r = std::min(r, (std::float16_t) 1);
+        //std::cout << "r (absolute) = " << r_values[node1] << ", r (relative) = " << r << std::endl;
 
         // derivative of the distance function
         float del = mid_dist / mid_value;
@@ -138,7 +139,7 @@ steiner_graph::make_steiner_info(
         unsigned int count1 = (unsigned int) std::ceil((-b + std::sqrt(b * b - 4 * a * c)) / (2 * a)) + 1;
         unsigned int count2 = (unsigned int) std::ceil((-b - std::sqrt(b * b - 4 * a * c)) / (2 * a)) + 1;
         //auto count = static_cast<int>(std::min(std::max(count1, count2), (unsigned int)10));
-        short count = 3;
+        short count = 4;
         result.emplace_back((std::float16_t) mid_value, (std::float16_t) mid_dist, (std::float16_t) r, count);
     }
 
@@ -190,7 +191,7 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&__tria
             // count edge x other_edge
             for (auto other_edge: _M_polyhedron.edges(edge_id)) {
                 if (is_none(other_edge)) continue;
-                if (other_edge == edge_id || other_edge == edge_id_inv)  {
+                if (other_edge == edge_id || other_edge == edge_id_inv) {
                     _M_edge_count += 1;
                     continue;
                 }

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "steiner_graph.h"
 #include "../graph/graph.h"
 
