@@ -7,21 +7,8 @@
 #include <unordered_map>
 #include <vector>
 #include "../util/counting_iterator.h"
+#include "subgraph.h"
 
-template<typename NodeId>
-struct path {
-    std::vector<NodeId> nodes;
-};
-
-template<typename NodeId, typename EdgeId>
-struct subgraph {
-    std::vector<NodeId> nodes;
-    std::vector<EdgeId> edges;
-
-    subgraph() = default;
-
-    subgraph(std::vector<NodeId> &&__n, std::vector<EdgeId> &&__e);
-};
 
 /**
  * stores a directed graph consisting of nodes and edges
@@ -39,8 +26,8 @@ public:
     using distance_type = distance_t;
     using edge_info_type = EdgeInfo;
     using adjacency_list_type = adjacency_list<NodeId, EdgeInfo>;
-    using path = path<NodeId>;
-    using subgraph = subgraph<NodeId, EdgeId>;
+    using path_type = path<NodeId>;
+    using subgraph_type = subgraph<NodeId, EdgeId>;
 
     using topology_type = adjacency_list_type;
 private:
@@ -96,16 +83,16 @@ public:
     outgoing_edges(NodeId __node) const;
 
     std::span<const internal_adjacency_list_edge<NodeId, EdgeInfo>>
-    incoming_edges(NodeId __node) const {return outgoing_edges(__node);};
+    incoming_edges(NodeId __node) const { return outgoing_edges(__node); };
 
-    distance_type path_length(const path &__route) const;
+    distance_type path_length(const path_type &__route) const;
 
-    subgraph make_subgraph(const path &__route) const;
+    subgraph_type make_subgraph(const path_type &__route) const;
 
-    subgraph make_subgraph(std::vector<NodeId> &&__nodes, std::vector<EdgeId> &&__edges) const;
+    subgraph_type make_subgraph(std::vector<NodeId> &&__nodes, std::vector<EdgeId> &&__edges) const;
 
     template<RoutableGraph Other>
-    static graph make_graph(const Other& other, const Other::subgraph &__subgraph);
+    static graph make_graph(const Other &__base_graph, const Other::subgraph_type &__subgraph);
 
     static graph make_graph(std::vector<NodeInfo> &&__nodes, adjacency_list<NodeId, EdgeInfo> &&__forward);
 
@@ -119,5 +106,5 @@ static_assert(RoutableGraph<graph<int, int, int, int>>);
 
 template<typename Nid>
 std::ostream &
-operator<<(std::ostream &__stream, path<Nid> &__r);
+operator<<(std::ostream &__stream, path <Nid> &__r);
 
