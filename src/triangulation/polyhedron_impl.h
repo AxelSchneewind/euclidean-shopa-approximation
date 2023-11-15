@@ -8,7 +8,7 @@
 template<typename T, size_t Cap>
 class fixed_capacity_vector {
 private:
-    short i;
+    unsigned short i;
     std::array<T, Cap> _M_data;
 public:
     fixed_capacity_vector() : i(0), _M_data() {}
@@ -58,7 +58,7 @@ void make_face_edges(const BaseGraph &__base,
 
         for (int i = 0; i < MaxNodesPerFace; ++i) {
             auto node_id = face[i % MaxNodesPerFace];
-            auto node_id_n = face[(i+1) % MaxNodesPerFace];
+            auto node_id_n = face[(i + 1) % MaxNodesPerFace];
 
             adjacent_edges.push_back(__base.edge_id(node_id, node_id_n));
             adjacent_edges.push_back(__base.edge_id(node_id_n, node_id));
@@ -93,7 +93,7 @@ void make_face_edges(const BaseGraph &__base,
 }
 
 template<Topology BaseGraph>
-void make_inverse_edges(const BaseGraph &__base, std::vector<typename BaseGraph::edge_id_type>& __result) {
+void make_inverse_edges(const BaseGraph &__base, std::vector<typename BaseGraph::edge_id_type> &__result) {
     __result.clear();
     __result.resize(__base.edge_count());
 
@@ -103,7 +103,6 @@ void make_inverse_edges(const BaseGraph &__base, std::vector<typename BaseGraph:
         __result[i] = __base.edge_id(dest, src);
     }
 }
-
 
 
 // can be generalized to any type of polyhedron (using variable instead of static sized arrays)
@@ -126,5 +125,31 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
     std::vector<edge_id_type> inverse_edges;
     make_inverse_edges(__base, inverse_edges);
 
-    return polyhedron<BaseGraph, MaxNodesPerFace>(std::move(triangle_edges), std::move(edge_triangles), std::move(inverse_edges));
+    return polyhedron<BaseGraph, MaxNodesPerFace>(std::move(triangle_edges), std::move(edge_triangles),
+                                                  std::move(inverse_edges));
 }
+
+template<Topology BaseGraph, std::size_t MaxNodesPerFace>
+polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
+        std::vector<std::array<edge_id_t, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
+        std::vector<std::array<edge_id_t, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
+        std::vector<edge_id_t> &&__inverse_edges)
+        : _M_face_info(std::move(__adjacent_edges)),
+          _M_edge_info() {
+    int i = 0;
+    while (!__adjacent_faces.empty()) {
+        edge_info_type info = {__adjacent_faces.back(), __inverse_edges.back()};
+        _M_edge_info.push_back(info);
+
+        __adjacent_faces.pop_back();
+        __inverse_edges.pop_back();
+
+        if ((i++) % (1024 * 1024) == 0) {
+            __adjacent_edges.shrink_to_fit();
+            __inverse_edges.shrink_to_fit();
+        }
+    }
+
+    list_invert(_M_edge_info);
+}
+
