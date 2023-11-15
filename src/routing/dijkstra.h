@@ -65,11 +65,8 @@ public:
 
     typename G::node_id_type target() const { return _M_target_node; }
 
-    /**
-     * gets the stored labels
-     * @return
-     */
-    const L &labels() const { return _M_labels; }
+    const L& labels() const { return _M_labels; }
+    L::label_type get_label(G::node_id_type __node) const { return _M_labels.get(__node); }
 
     /**
      * init one to one

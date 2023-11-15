@@ -3,26 +3,24 @@
 #include "steiner_graph.h"
 #include "../graph/graph.h"
 
-template<RoutableGraph G, typename NodeCostPair>
+
+template<RoutableGraph G, typename Label>
 class steiner_labels {
+public:
+    using label_type = Label;
+
 private:
     using node_id_type = G::node_id_type;
     using distance_type = G::distance_type;
-    using node_cost_pair_type = NodeCostPair;
-
-    struct label_type {
-        distance_type distance;
-        node_id_type predecessor;
-    };
 
     std::shared_ptr<const G> _M_graph;
 
     std::vector<typename G::triangle_edge_id_type> _M_touched;
-    std::vector<std::shared_ptr<std::vector<label_type>>> _M_labels;  // TODO
+    std::vector<std::unique_ptr<std::vector<Label>>> _M_labels;  // TODO
 
 public:
     static constexpr size_t SIZE_PER_NODE = 0;
-    static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<std::vector<label_type>>);
+    static constexpr size_t SIZE_PER_EDGE = sizeof(std::unique_ptr<std::vector<Label>>);
 
     explicit steiner_labels(std::shared_ptr<const G> __graph);
 
@@ -31,102 +29,10 @@ public:
 
     bool reached(node_id_type __node) const;
 
-    distance_type distance(node_id_type __node) const;
-
-    node_id_type predecessor(node_id_type __node) const;
+    Label get(node_id_type __node) const;
 
     // TODO make iterator
     std::vector<node_id_type> all_visited() const;
 
-    void label(node_cost_pair_type __node_cost_pair);
+    void label(node_id_type __node, Label __label);
 };
-
-
-template<RoutableGraph G, typename N>
-std::vector<typename steiner_labels<G, N>::node_id_type>
-steiner_labels<G, N>::all_visited() const {
-    std::vector<typename steiner_labels<G, N>::node_id_type> result;
-
-    for (auto edge: _M_touched) {
-        for (auto node: _M_graph->node_ids(edge)) {
-            if (!is_none(node.edge) && node.steiner_index != -1 && reached(node)) {
-                result.emplace_back(node);
-            }
-        }
-    }
-
-    return result;
-}
-
-
-template<RoutableGraph G, typename N>
-steiner_labels<G, N>::steiner_labels(std::shared_ptr<const G> __graph)
-        : _M_graph(__graph),
-          _M_labels(_M_graph->base_graph().edge_count()) {
-    _M_touched.reserve(10000);
-}
-
-template<RoutableGraph G, typename N>
-void
-steiner_labels<G, N>::init(steiner_labels<G, N>::node_id_type  /*__start_node*/,
-                           steiner_labels<G, N>::node_id_type  /*__target_node*/) {
-    for (size_t index = 0; index < _M_touched.size(); ++index) {
-        typename G::triangle_edge_id_type edge = _M_touched[index];
-        _M_labels[edge] = nullptr;
-    }
-
-    _M_touched.clear();
-}
-
-template<RoutableGraph Graph, typename N>
-steiner_labels<Graph, N>::node_id_type
-steiner_labels<Graph, N>::predecessor(steiner_labels<Graph, N>::node_id_type __node) const {
-    assert(!is_none(__node));
-
-    if (!_M_labels[__node.edge]) {
-        return none_value<node_id_type>();
-    }
-    return (*_M_labels[__node.edge])[__node.steiner_index].predecessor;
-}
-
-template<RoutableGraph G, typename N>
-G::distance_type
-steiner_labels<G, N>::distance(steiner_labels<G, N>::node_id_type __node) const {
-    assert(!is_none(__node));
-    if (!_M_labels[__node.edge]) {
-        return infinity<distance_type>();
-    }
-    return (*_M_labels[__node.edge])[__node.steiner_index].distance;
-}
-
-template<RoutableGraph G, typename N>
-bool
-steiner_labels<G, N>::reached(steiner_labels<G, N>::node_id_type __node) const {
-    assert(!is_none(__node));
-
-    return _M_labels[__node.edge] &&
-           !is_none((*_M_labels[__node.edge])[__node.steiner_index].predecessor.edge);
-}
-
-template<RoutableGraph G, typename N>
-void
-steiner_labels<G, N>::label(steiner_labels<G, N>::node_cost_pair_type __node_cost_pair) {
-    auto edge_id = __node_cost_pair.node.edge;
-    auto count = _M_graph->steiner_info(__node_cost_pair.node.edge).node_count;
-
-    assert(_M_touched.empty() ||
-           _M_graph->topology().has_edge(__node_cost_pair.predecessor, __node_cost_pair.node));
-    assert(__node_cost_pair.node.edge >= 0 && __node_cost_pair.node.edge < _M_graph->topology().edge_count());
-    assert(count > 0);
-    assert(count > __node_cost_pair.node.steiner_index);
-
-    // if edge has not been touched yet, set up its distance/predecessor arrays
-    if (!_M_labels[edge_id]) {
-        _M_touched.push_back(edge_id);
-        _M_labels[edge_id] = std::make_shared<std::vector<label_type>>(count, label_type{infinity<distance_type>(),
-                                                                                         none_value<node_id_type>()});
-    }
-
-    (*_M_labels[edge_id])[__node_cost_pair.node.steiner_index].distance = __node_cost_pair.distance;
-    (*_M_labels[edge_id])[__node_cost_pair.node.steiner_index].predecessor = __node_cost_pair.predecessor;
-}

@@ -82,8 +82,8 @@ dijkstra<G, Queue, U, L>::expand(node_cost_pair __node) {
         assert(_M_graph->has_edge(__node.node, edge.destination));
 
         const typename G::node_id_type successor = edge.destination;
-        const distance_t successor_cost = _M_labels.distance(successor);
-        const distance_t new_cost = _M_labels.distance(__node.node) + edge.info.cost;
+        const distance_t successor_cost = _M_labels.get(successor).distance;
+        const distance_t new_cost = __node.distance + edge.info.cost;
 
         if (new_cost < successor_cost) {
             // (re-)insert node into the queue with updated priority
@@ -93,25 +93,22 @@ dijkstra<G, Queue, U, L>::expand(node_cost_pair __node) {
 }
 
 
-
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 void
 dijkstra<G, Queue, U, L>::step() {
     // remove already settled nodes
-    [[unlikely]]
-    while (!_M_queue.empty() && reached(_M_queue.top().node)) {
+    while (!_M_queue.empty() && reached(_M_queue.top().node)) [[unlikely]] {
         _M_queue.pop();
     }
 
-    [[unlikely]]
-    if (_M_queue.empty()) {
+    if (_M_queue.empty()) [[unlikely]] {
         return;
     }
 
     node_cost_pair ncp = current();
 
-    // label_type current node
-    _M_labels.label(ncp);
+    // label current node
+    _M_labels.label(ncp.node, {ncp.distance, ncp.predecessor});
 
     // expand to adjacent nodes
     expand(ncp);
