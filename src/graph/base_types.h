@@ -5,73 +5,6 @@
 #include <complex>
 
 
- /**
-  * creates a distinct type from the given base type
-  * @tparam Base
-  * @tparam Id
-  */
- template<typename Base, std::size_t Id>
- struct distinct_type {
- public:
-     using base_type = Base;
-
- protected:
-     Base _M_value;
- public:
-     distinct_type() : _M_value() {}
-
-     distinct_type(const Base &val) : _M_value(val) {}
-
-     distinct_type(Base &&val) : _M_value(std::move(val)) {}
-
-     operator Base&() { return _M_value; }
-
-     bool operator==(Base second) const { return _M_value == second; };
-
-     bool operator<=(Base second) const { return _M_value <= second; };
-
-     bool operator>=(Base second) const { return _M_value >= second; };
-
-     bool operator< (Base second) const { return _M_value < second; };
-
-     bool operator> (Base second) const { return _M_value > second; };
-
-     bool operator!=(Base second) const { return _M_value != second; };
-
-     Base operator+ (Base second) const { return _M_value + second; };
-
-     Base operator- (Base second) const { return _M_value - second; };
-
-     Base operator* (Base second) const { return _M_value * second; };
-
-     Base operator/ (Base second) const { return _M_value / second; };
-
-     Base operator++() { Base ret = *this; _M_value++; return ret; };
-     Base operator--() { Base ret = *this; _M_value--; return ret; };
-     Base& operator++(int) { _M_value++; return *this; };
-     Base& operator--(int) { _M_value--; return *this; };
-
-     //bool operator==(const distinct_type<Base, Id>&) const = default;
-     //bool operator<=(const distinct_type<Base, Id>&) const = default;
-     //bool operator>=(const distinct_type<Base, Id>&) const = default;
-     //bool operator<(const distinct_type<Base, Id>&) const = default;
-     //bool operator>(const distinct_type<Base, Id>&) const = default;
-     //bool operator!=(const distinct_type<Base, Id>&) const = default;
- };
-
-
- template<typename Base, std::size_t Id>
- std::ostream &operator<<(std::ostream &out, const distinct_type<Base, Id> &obj) {
-     return out << (Base) obj;
- };
-
-
- template<typename Base, std::size_t Id>
- struct std::hash<distinct_type<Base, Id>> {
-     std::size_t operator()(const distinct_type<Base, Id> &val) { return std::hash<Base>{}((Base) val); }
- };
-
-
 using node_id_t = int;
 using edge_id_t = int;
 using node_level_t = int;
@@ -110,10 +43,16 @@ struct coordinate_t {
 using cost_t = float;
 using distance_t = float;
 
-template <typename T>
-constexpr T none_value() { return -1; };
+template<typename T>
+constexpr T none_value();
 
-template <typename T>
+template<>
+constexpr int none_value() { return -1; };
+
+template<>
+constexpr short none_value() { return -1; };
+
+template<typename T>
 constexpr bool is_none(T val) { return val == none_value<T>(); }
 
 
@@ -126,7 +65,7 @@ constexpr bool is_infinity(T val) { return val == infinity<T>(); }
 template<typename T>
 constexpr T max_cost() { return 10000; }
 
-template <>
+template<>
 constexpr distance_t infinity() {
     return (std::numeric_limits<distance_t>::max() / 2) - max_cost<distance_t>();
 }
