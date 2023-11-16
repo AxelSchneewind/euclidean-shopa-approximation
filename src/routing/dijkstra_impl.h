@@ -98,20 +98,18 @@ template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
 void
 dijkstra<G, Queue, U, L>::step() {
     // remove already settled nodes
-    [[unlikely]]
-    while (!_M_queue.empty() && reached(_M_queue.top().node)) {
+    while (!_M_queue.empty() && reached(_M_queue.top().node)) [[unlikely]] {
         _M_queue.pop();
     }
 
-    [[unlikely]]
-    if (_M_queue.empty()) {
+    if (_M_queue.empty()) [[unlikely]] {
         return;
     }
 
     node_cost_pair ncp = current();
 
-    // label_type current node
-    _M_labels.label(ncp);
+    // label current node
+    _M_labels.label(ncp.node, {ncp.distance, ncp.predecessor});
 
     // expand to adjacent nodes
     expand(ncp);

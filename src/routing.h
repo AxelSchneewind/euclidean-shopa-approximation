@@ -29,6 +29,8 @@ using std_graph_t = graph<node_t, edge_t, node_id_t, edge_id_t>;
 using ch_graph_t = graph<ch_node_t, ch_edge_t, node_id_t, edge_id_t>;
 
 using default_node_cost_pair = node_cost_pair<std_graph_t, std::nullptr_t>;
+
+
 struct a_star_info {
     // value from a* heuristic (distance + minimal remaining distance)
     distance_t value;
@@ -43,10 +45,25 @@ static_assert(sizeof(ch_graph_t::edge_info_type) == 3 * sizeof(distance_t));
 static_assert(sizeof(default_node_cost_pair) == 3 * sizeof(int));
 static_assert(sizeof(a_star_node_cost_pair) == 4 * sizeof(int));
 
+
+template <RoutableGraph G>
+struct label_type {
+    G::distance_type distance;
+    G::node_id_type predecessor;
+};
+template <RoutableGraph G>
+constexpr label_type<G> none_value() { return {none_value<G::distance_type>(), none_value<G::node_id_type>()}; }
+template <>
+constexpr label_type<steiner_graph> none_value() { return {none_value<steiner_graph::distance_type>(), none_value<steiner_graph::node_id_type>()}; }
+
+
 using default_queue_t = dijkstra_queue<std_graph_t, default_node_cost_pair, Default<default_node_cost_pair>>;
-using default_labels_t = node_labels<std_graph_t, default_node_cost_pair>;
+
+
+
+using default_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
 using a_star_queue_t = a_star_queue<std_graph_t, a_star_node_cost_pair>;
-using a_star_labels_t = node_labels<std_graph_t, a_star_node_cost_pair>;
+using a_star_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
 
 using std_dijkstra = dijkstra<std_graph_t, default_queue_t, use_all_edges<std_graph_t>, default_labels_t>;
 using a_star_dijkstra = dijkstra<std_graph_t, a_star_queue_t, use_all_edges<std_graph_t>, a_star_labels_t>;
@@ -61,7 +78,7 @@ using ch_routing_t = router<ch_graph_t, dijkstra<ch_graph_t, default_ch_queue_t,
 
 using steiner_a_star_node_cost_pair = node_cost_pair<steiner_graph, a_star_info>;
 using steiner_queue_t = a_star_queue<steiner_graph, steiner_a_star_node_cost_pair>;
-using steiner_labels_t = steiner_labels<steiner_graph, steiner_a_star_node_cost_pair>;
+using steiner_labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
 using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, use_all_edges<steiner_graph>, steiner_labels_t>;
 using steiner_routing_t = router<steiner_graph, steiner_dijkstra>;
 
@@ -74,11 +91,11 @@ steiner_dijkstra::expand(steiner_dijkstra::node_cost_pair __node) {
     fixed_capacity_vector<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>, 100> edges;
     assert(!is_none(__node.node));
 
+    // get inverse edge for current base edge
     auto inv_edge = _M_graph->base_polyhedron().inverse_edge(__node.node.edge);
 
     // get triangles that have not been visited yet
-    auto t = _M_graph->base_polyhedron().edge_faces(__node.node.edge);
-    std::array<steiner_graph::base_topology_type::edge_id_type, 2> triangles = {t[0], t[1]};
+    auto triangles = _M_graph->base_polyhedron().edge_faces(__node.node.edge);
     char triangle_first = 0;
     char triangle_last = 2;
 
@@ -97,13 +114,15 @@ steiner_dijkstra::expand(steiner_dijkstra::node_cost_pair __node) {
 
     // make list of edges (i.e. destination/cost pairs)
     coordinate_t source_coordinate = _M_graph->node(__node.node).coordinates;
-    for (int triangle_index = triangle_first; triangle_index < triangle_last; triangle_index++) [[unlikely]] {
+    for (char triangle_index = triangle_first; triangle_index < triangle_last; triangle_index++) [[unlikely]] {
         assert (!is_none(triangles[triangle_index]));
         auto triangle_edges = _M_graph->base_polyhedron().face_edges(triangles[triangle_index]);
 
         for (auto base_edge_id: triangle_edges) {
             auto steiner_info = _M_graph->steiner_info(base_edge_id);
-            if (base_edge_id == inv_edge) [[unlikely]] {
+
+            // for inverse edge
+            if (base_edge_id == inv_edge && __node.node.steiner_index == steiner_info.node_count - 1) [[unlikely]] {
                 steiner_graph::node_id_type destination = {inv_edge, _M_graph->steiner_info(inv_edge).node_count - 1};
                 coordinate_t destination_coordinate = _M_graph->node(destination).coordinates;
                 distance_t cost = distance(source_coordinate, destination_coordinate);
@@ -113,14 +132,14 @@ steiner_dijkstra::expand(steiner_dijkstra::node_cost_pair __node) {
             }
 
             if (base_edge_id == __node.node.edge) [[unlikely]] {
-                if (__node.node.steiner_index < steiner_info.node_count - 1) {
+                if (__node.node.steiner_index < steiner_info.node_count - 1) [[likely]] {
                     steiner_graph::node_id_type destination = {base_edge_id, __node.node.steiner_index + 1};
                     coordinate_t destination_coordinate = _M_graph->node(destination).coordinates;
                     distance_t cost = distance(source_coordinate, destination_coordinate);
                     edges.push_back({destination, {cost}});
                 }
 
-                if (__node.node.steiner_index > 0) {
+                if (__node.node.steiner_index > 0) [[likely]] {
                     steiner_graph::node_id_type destination = {base_edge_id, __node.node.steiner_index - 1};
                     coordinate_t destination_coordinate = _M_graph->node(destination).coordinates;
                     distance_t cost = distance(source_coordinate, destination_coordinate);
@@ -152,10 +171,10 @@ steiner_dijkstra::expand(steiner_dijkstra::node_cost_pair __node) {
         assert(_M_graph->has_edge(__node.node, edge.destination));
 
         const steiner_graph::node_id_type &successor = edge.destination;
-        const distance_t successor_cost = _M_labels.distance(successor);
-        const distance_t new_cost = _M_labels.distance(__node.node) + edge.info.cost;
+        const distance_t successor_cost = _M_labels.get(successor).distance;
+        const distance_t new_cost = _M_labels.get(__node.node).distance + edge.info.cost;
 
-        if (new_cost < successor_cost) {
+        if (new_cost < successor_cost) [[unlikely]] {
             // (re-)insert node into the queue with updated priority
             _M_queue.push(successor, __node.node, new_cost);
         }

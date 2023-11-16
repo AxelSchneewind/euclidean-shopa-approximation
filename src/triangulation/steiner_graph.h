@@ -161,7 +161,7 @@ public:
     };
 
     template<typename BaseEdgesIterator>
-    struct edges_iterator_type {
+    struct [[deprecated]] edges_iterator_type {
     private:
         const steiner_graph *_M_graph_ptr;
         node_id_type src;
@@ -174,7 +174,7 @@ public:
                 : _M_graph_ptr(__graph),
                   src(src),
                   node_index(0),
-                  it (it) {}
+                  it(it) {}
 
         edges_iterator_type &begin() { return *this; };
 
@@ -224,7 +224,7 @@ public:
 
         internal_adjacency_list_edge<node_id_type, edge_info_type> operator*() {
             node_id_type dest_id = {*it, node_index};
-            edge_id_type id = { src, dest_id };
+            edge_id_type id = {src, dest_id};
             return {dest_id, _M_graph_ptr->edge(id)};
         }
     };
@@ -262,6 +262,7 @@ private:
 
 public:
     const base_topology_type &base_graph() const { return _M_base_topology; }
+
     const polyhedron_type &base_polyhedron() const { return _M_polyhedron; }
 
     size_t node_count() const { return _M_node_count; }

@@ -4,24 +4,23 @@
 
 #include <vector>
 
-template<RoutableGraph G, typename NodeCostPair>
+template<RoutableGraph G, typename Label>
 class node_labels {
 private:
     using node_id_type = G::node_id_type;
     using distance_type = G::distance_type;
-    using node_cost_pair_type = NodeCostPair;
-    struct label {
-        distance_type distance;
-        node_id_type predecessor;
-    };
 
     std::shared_ptr<const G> _M_graph;
 
     std::vector<node_id_type> _M_touched;
-    std::vector<label> _M_labels;
+
+    std::vector<Label> _M_labels;
+    std::vector<bool> _M_node_labelled;
 
 public:
-    static constexpr size_t SIZE_PER_NODE = sizeof(label);
+    using label_type = Label;
+
+    static constexpr size_t SIZE_PER_NODE = sizeof(Label);
     static constexpr size_t SIZE_PER_EDGE = 0;
 
     explicit node_labels(std::shared_ptr<const G> d);
@@ -37,8 +36,15 @@ public:
 
     std::span<const node_id_type> all_visited() const;
 
-    void label(node_cost_pair_type __node_cost_pair);
+    void label(node_id_type __node, Label __label);
 };
+
+template<RoutableGraph G, typename NodeCostPair>
+node_labels<G, NodeCostPair>::label_type
+node_labels<G, NodeCostPair>::get(node_id_type __node) const {
+    assert(!is_none(__node));
+    return _M_labels[__node];
+}
 
 
 template<RoutableGraph G, typename N>
@@ -51,8 +57,8 @@ node_labels<G, N>::all_visited() const {
 template<RoutableGraph G, typename N>
 node_labels<G, N>::node_labels(std::shared_ptr<const G> d)
         : _M_graph(d),
-          _M_labels(_M_graph->node_count(), {infinity<distance_type>(), none_value<node_id_type>()}) {
-    _M_touched.reserve(10000);
+          _M_labels(_M_graph->node_count()),
+          _M_node_labelled(_M_graph->node_count()){
 }
 
 template<RoutableGraph G, typename N>
@@ -66,20 +72,6 @@ node_labels<G, N>::init(node_labels<G, N>::node_id_type __start_node, node_label
     _M_touched.clear();
 }
 
-template<RoutableGraph Graph, typename N>
-node_labels<Graph, N>::node_id_type
-node_labels<Graph, N>::predecessor(node_labels<Graph, N>::node_id_type node) const {
-    assert(!is_none(node));
-    return _M_labels[node].predecessor;
-}
-
-template<RoutableGraph G, typename N>
-G::distance_type
-node_labels<G, N>::distance(node_labels<G, N>::node_id_type node) const {
-    assert(!is_none(node));
-    return _M_labels[node].distance;
-}
-
 template<RoutableGraph G, typename N>
 bool
 node_labels<G, N>::reached(node_labels<G, N>::node_id_type node) const {
@@ -89,8 +81,10 @@ node_labels<G, N>::reached(node_labels<G, N>::node_id_type node) const {
 
 template<RoutableGraph G, typename N>
 void
-node_labels<G, N>::label(node_labels<G, N>::node_cost_pair_type node_cost_pair) {
-    if (is_none(_M_labels[node_cost_pair.node].predecessor))
-        _M_touched.push_back(node_cost_pair.node);
-    _M_labels[node_cost_pair.node] = {node_cost_pair.distance, node_cost_pair.predecessor};
+node_labels<G, N>::label(node_id_type __node, node_labels<G, N>::label_type __label) {
+    if (!_M_node_labelled[__node]) {
+        _M_touched.push_back(__node);
+        _M_node_labelled[__node] = true;
+    }
+    _M_labels[__node] = __label;
 }
