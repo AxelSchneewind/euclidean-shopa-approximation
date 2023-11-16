@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <exception>
 
 #include "router.h"
 
@@ -13,7 +14,7 @@
 #include "dijkstra_queues.h"
 
 template<typename Graph, typename Dijkstra>
-distance_t
+Graph::distance_type
 router<Graph, Dijkstra>::min_route_distance(const Graph::node_id_type &__node) const {
     distance_t result = 0;
 
@@ -51,7 +52,7 @@ router<Graph, Dijkstra>::min_route_distance(const Graph::node_id_type &__node) c
 }
 
 template<typename Graph, typename Dijkstra>
-Graph::subgraph
+Graph::subgraph_type
 router<Graph, Dijkstra>::shortest_path_tree() const {
     std::vector<typename Graph::node_id_type> nodes;
     std::vector<typename Graph::edge_id_type> edges;
@@ -183,7 +184,7 @@ router<Graph, Dijkstra>::distance() const {
 }
 
 template<typename Graph, typename Dijkstra>
-Graph::path
+Graph::path_type
 router<Graph, Dijkstra>::route() const {
     if (is_none(_M_mid_node))
         throw std::exception();
@@ -205,7 +206,8 @@ router<Graph, Dijkstra>::route() const {
     }
 
     while (!is_none(bwd_node) && bwd_node != _M_target_node) {
-        assert (_M_graph_ptr->inverse_topology().has_edge(_M_backward_search.get_label(bwd_node).predecessor, bwd_node));
+        assert (_M_graph_ptr->inverse_topology().has_edge(_M_backward_search.get_label(bwd_node).predecessor,
+                                                          bwd_node));
         assert (_M_graph_ptr->topology().has_edge(bwd_node, _M_backward_search.get_label(bwd_node).predecessor));
 
         bwd_node = _M_backward_search.get_label(bwd_node).predecessor;

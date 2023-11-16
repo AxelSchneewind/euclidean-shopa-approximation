@@ -82,8 +82,8 @@ dijkstra<G, Queue, U, L>::expand(node_cost_pair __node) {
         assert(_M_graph->has_edge(__node.node, edge.destination));
 
         const typename G::node_id_type successor = edge.destination;
-        const distance_t successor_cost = _M_labels.distance(successor);
-        const distance_t new_cost = _M_labels.distance(__node.node) + edge.info.cost;
+        const distance_t successor_cost = _M_labels.get(successor).distance;
+        const distance_t new_cost = __node.distance + edge.info.cost;
 
         if (new_cost < successor_cost) {
             // (re-)insert node into the queue with updated priority
@@ -91,7 +91,6 @@ dijkstra<G, Queue, U, L>::expand(node_cost_pair __node) {
         }
     }
 }
-
 
 
 template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>

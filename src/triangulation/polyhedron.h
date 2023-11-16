@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../graph/adjacency_list.h"
+#include "../util/list_invert.h"
 
 /**
  * stores the topology of a polyhedron. Provides O(1) access to adjacent edges for given nodes/edges
@@ -94,27 +95,10 @@ private:
     // for each edge
     std::vector<edge_info_type> _M_edge_info;
 
-    polyhedron(
-            std::vector<std::array<edge_id_t, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
-            std::vector<std::array<edge_id_t, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
-            std::vector<edge_id_t> &&__inverse_edges)
-            : _M_face_info(std::move(__adjacent_edges)),
-              _M_edge_info() {
-        for (int i = 0; i < __adjacent_faces.size(); ++i) {
-            edge_info_type info = {__adjacent_faces.back(), __inverse_edges.back()};
-            _M_edge_info.push_back(info);
+    polyhedron(std::vector<std::array<edge_id_t, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
+               std::vector<std::array<edge_id_t, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
+               std::vector<edge_id_t> &&__inverse_edges);
 
-            __adjacent_edges.pop_back();
-            __inverse_edges.pop_back();
-
-            if (i % (1024 * 1024) == 0) {
-                __adjacent_edges.shrink_to_fit();
-                __inverse_edges.shrink_to_fit();
-            }
-        }
-
-        list_invert(_M_edge_info);
-    };
 public:
 
     static constexpr size_t SIZE_PER_NODE = 0;
@@ -135,31 +119,6 @@ public:
     std::span<const int, EDGE_COUNT_PER_FACE> face_edges(int __face) const {
         return {_M_face_info[__face]};
     }
-
-    // /**
-    //  * gets edges that belong to the edge_faces bordering this edge
-    //  * does not include the inverse to the given edge
-    //  * @param __edge
-    //  * @return
-    //  */
-    // std::vector<edge_id_type> edges(int __edge) const { // TODO not return a vector but e.g. pair of spans
-    //     // std::span<const edge_id_type, EDGE_COUNT_PER_FACE> edges(int __edge) const {
-    //     std::vector<edge_id_type> result(2 * EDGE_COUNT_PER_FACE);
-
-    //     int j = 0;
-
-    //     for (int i = 0; i < EDGE_COUNT_PER_FACE; ++i) {
-    //         result[j++] = _M_face_info[_M_adjacent_faces[__edge][0]][i];
-    //     }
-
-    //     if (!is_none(_M_adjacent_faces[__edge][1]))
-    //         for (int i = 0; i < EDGE_COUNT_PER_FACE; ++i) {
-    //             result[j++] = _M_face_info[_M_adjacent_faces[__edge][1]][i];
-    //         }
-
-    //     result.resize(j);
-    //     return result;
-    // };
 
     /**
      * gets edges that belong to the edge_faces bordering this edge

@@ -1,15 +1,10 @@
 
-- basics:
-  - make unidirectional_adjacency_list support multiple columns
-  - update interfaces, allow iteration over outgoing edge_ids
+- add subdivision tables
 
-- steiner graph
-  - implement quadratic function for point placements
-
-- distance computation
-  - fix issues at latitude 180
-  - speed up haversine formula?
+- Problem: routing near coasts slows down search, maybe prefer larger triangles over smaller ones with A*?
 
 - A*:
   - IMPORTANT: compute heuristic value per triangle, not per node
+  - allow push_range for A* queue to support vectorization of distance computation
+
 - don't subdivide edges on obstacles

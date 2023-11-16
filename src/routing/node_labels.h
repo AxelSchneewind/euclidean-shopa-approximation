@@ -20,7 +20,7 @@ private:
 public:
     using label_type = Label;
 
-    static constexpr size_t SIZE_PER_NODE = sizeof(Label);
+    static constexpr size_t SIZE_PER_NODE = sizeof(Label) + 1;
     static constexpr size_t SIZE_PER_EDGE = 0;
 
     explicit node_labels(std::shared_ptr<const G> d);
@@ -30,9 +30,7 @@ public:
 
     bool reached(node_id_type __node) const;
 
-    G::distance_type distance(node_id_type __node) const;
-
-    node_id_type predecessor(node_id_type __node) const;
+    Label get(node_id_type __node) const;
 
     std::span<const node_id_type> all_visited() const;
 
@@ -57,8 +55,8 @@ node_labels<G, N>::all_visited() const {
 template<RoutableGraph G, typename N>
 node_labels<G, N>::node_labels(std::shared_ptr<const G> d)
         : _M_graph(d),
-          _M_labels(_M_graph->node_count()),
-          _M_node_labelled(_M_graph->node_count()){
+          _M_labels(_M_graph->node_count(), none_value<N>()),
+          _M_node_labelled(_M_graph->node_count()) {
 }
 
 template<RoutableGraph G, typename N>
@@ -76,7 +74,8 @@ template<RoutableGraph G, typename N>
 bool
 node_labels<G, N>::reached(node_labels<G, N>::node_id_type node) const {
     assert(node);
-    return !is_none(_M_labels[node].predecessor);
+    return _M_node_labelled[node];
+    // return !is_none(_M_labels[node].predecessor);
 }
 
 template<RoutableGraph G, typename N>

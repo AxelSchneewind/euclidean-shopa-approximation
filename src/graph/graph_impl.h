@@ -12,16 +12,16 @@ subgraph<NodeId, EdgeId>::subgraph(std::vector<NodeId> &&__n, std::vector<EdgeId
         : nodes(std::move(__n)), edges(std::move(__e)) {}
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::subgraph
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::subgraph_type
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph(std::vector<NodeId> &&__nodes,
                                                          std::vector<EdgeId> &&__edges) const {
     return {std::move(__nodes), std::move(__edges)};
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::subgraph
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::subgraph_type
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph(
-        const graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::path &__route) const {
+        const graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::path_type &__route) const {
     std::vector<NodeId> nodes;
     std::vector<EdgeId> edges;
 
@@ -45,7 +45,8 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph(
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 template<RoutableGraph Other>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other &other, const typename Other::subgraph &__subgraph) {
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other &__base_graph,
+                                                      const typename Other::subgraph_type &__subgraph) {
     NodeId node_count = __subgraph.nodes.size();
     EdgeId edge_count = __subgraph.edges.size();
 
@@ -56,7 +57,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other &other, const 
     for (size_t i = 0; i < node_count; i++) {
         auto node_id = __subgraph.nodes[i];
 
-        nodes.push_back((NodeInfo) other.node(node_id));
+        nodes.push_back((NodeInfo) __base_graph.node(node_id));
         new_node_ids[node_id] = (NodeId) i;
     }
 
@@ -65,9 +66,9 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other &other, const 
     for (auto edge: __subgraph.edges) {
         if (is_none(edge)) continue;
 
-        auto src = other.source(edge);
-        auto dest = other.destination(edge);
-        EdgeInfo info = other.edge(edge);
+        auto src = __base_graph.source(edge);
+        auto dest = __base_graph.destination(edge);
+        EdgeInfo info = __base_graph.edge(edge);
 
         forward_builder.add_edge((NodeId) new_node_ids[src], (NodeId) new_node_ids[dest], info);
     }
@@ -170,7 +171,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::topology() const {
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::distance_type
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::path_length(const path &__route) const {
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::path_length(const path_type &__route) const {
     if (__route.nodes.empty()) {
         return infinity<distance_type>();
     }

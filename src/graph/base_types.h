@@ -43,13 +43,16 @@ struct coordinate_t {
 using cost_t = float;
 using distance_t = float;
 
-template <typename T>
+template<typename T>
 constexpr T none_value();
 
-template <>
+template<>
 constexpr int none_value() { return -1; };
 
-template <typename T>
+template<>
+constexpr short none_value() { return -1; };
+
+template<typename T>
 constexpr bool is_none(T val) { return val == none_value<T>(); }
 
 
@@ -62,7 +65,7 @@ constexpr bool is_infinity(T val) { return val == infinity<T>(); }
 template<typename T>
 constexpr T max_cost() { return 10000; }
 
-template <>
+template<>
 constexpr distance_t infinity() {
     return (std::numeric_limits<distance_t>::max() / 2) - max_cost<distance_t>();
 }

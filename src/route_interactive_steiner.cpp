@@ -4,13 +4,11 @@
 #include "file-io/fmi_file_io.h"
 #include "file-io/gl_file_io.h"
 #include "file-io/triangulation_file_io.h"
-#include "graph/graph.h"
-#include "triangulation/steiner_graph_impl.h"
 
 #include "file-io/gl_file_io_impl.h"
 #include "file-io/triangulation_file_io_impl.h"
 
-#include "routing.h"
+#include "steiner_routing.h"
 #include "query.h"
 
 #include <chrono>
@@ -45,6 +43,7 @@ main(int argc, char const *argv[]) {
     // read graph
     std::shared_ptr<const steiner_graph> graph_ptr(
             new steiner_graph(triangulation_file_io::read<steiner_graph>(input)));
+    input.close();
 
     std::cout << "\r\a\tdone, graph has "
               << std::setw(12) << graph_ptr->node_count() << " nodes and "
@@ -56,25 +55,27 @@ main(int argc, char const *argv[]) {
     std::cout << "\tgraph: expected size per node: "
               << std::setw(3) << steiner_graph::SIZE_PER_NODE << " and per edge "
               << std::setw(3) << steiner_graph::SIZE_PER_EDGE << " -> "
-              << graph_ptr->node_count() * steiner_graph::SIZE_PER_NODE / 1024 / 1024 << "MB" << " + "
-              << graph_ptr->edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 / 1024 << "MB" << std::endl;
+              << graph_ptr->base_graph().node_count() * steiner_graph::SIZE_PER_NODE / 1024 / 1024 << "MiB" << " + "
+              << graph_ptr->base_graph().edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 / 1024 << "MiB"
+              << std::endl;
 
     double vm, res;
     process_mem_usage(vm, res);
-    std::cout << "\tactual memory usage with graph loaded: VM " << vm / 1024 << "MB, RES " << res / 1024 << "MB"
+    std::cout << "\tactual memory usage with graph loaded: VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB"
               << std::endl;
 
     // set up routing
     steiner_routing_t router(graph_ptr);
     std::cout << "\trouter: expected size per node: "
               << steiner_routing_t::SIZE_PER_NODE << " and per edge "
-              << steiner_routing_t::SIZE_PER_EDGE
-              << graph_ptr->node_count() * steiner_graph::SIZE_PER_NODE / 1024 / 1024 << "MB" << " + "
-              << graph_ptr->edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 / 1024 << "MB" << std::endl;
+              << steiner_routing_t::SIZE_PER_EDGE << " -> "
+              << graph_ptr->base_graph().node_count() * steiner_routing_t::SIZE_PER_NODE / 1024 / 1024 << "MiB + "
+              << graph_ptr->base_graph().edge_count() * steiner_routing_t::SIZE_PER_EDGE / 1024 / 1024 << "MiB"
+              << std::endl;
     process_mem_usage(vm, res);
     std::cout << "\tactual memory usage with graph loaded and routing set up: VM "
-              << vm / 1024 << "MB, RES "
-              << res / 1024 << "MB" << std::endl;
+              << vm / 1024 << "MiB, RES "
+              << res / 1024 << "MiB" << std::endl;
 
     bool done = false;
     while (!done) {
@@ -140,11 +141,6 @@ main(int argc, char const *argv[]) {
         std_graph_t beeline = std_graph_t::make_graph(std::move(nodes),
                                                       adjacency_list<int, edge_t>::make_bidirectional(edges.get()));
 
-        // write output graphs
-        gl_file_io::write(output_tree, tree_graph, 3, 4);
-        gl_file_io::write(output_route, route_graph, 12, 5);
-        gl_file_io::write(output_beeline, beeline, 12, 5);
-
         // print stats about route computation
         output_info << "path: " << result.route << '\n';
         output_info << "path has cost: " << graph_ptr->path_length(result.route) << '\n';
@@ -156,6 +152,11 @@ main(int argc, char const *argv[]) {
         std::cout << "\tpath has cost: " << graph_ptr->path_length(result.route) << '\n';
         std::cout << "\tsearches visited " << tree_graph.node_count() << " nodes";
         std::cout << "\tand took " << result.duration << '\n';
+
+        // write output graphs
+        gl_file_io::write(output_tree, tree_graph, 3, 4);
+        gl_file_io::write(output_route, route_graph, 12, 5);
+        gl_file_io::write(output_beeline, beeline, 12, 5);
 
         output_route.close();
         output_tree.close();

@@ -11,8 +11,8 @@
 #include <chrono>
 
 
-ch_graph_t::subgraph
-unpack(const ch_graph_t &graph, const ch_graph_t::subgraph &subgraph) {
+ch_graph_t::subgraph_type
+unpack(const ch_graph_t &graph, const ch_graph_t::subgraph_type &subgraph) {
     std::vector<node_id_t> nodes;
     std::vector<edge_id_t> edges;
 
@@ -29,7 +29,7 @@ unpack(const ch_graph_t &graph, const ch_graph_t::subgraph &subgraph) {
             // take halves of shortcut
             auto a = graph.topology().edge(edge).edgeA;
             auto b = graph.topology().edge(edge).edgeB;
-            if (a != NO_EDGE_ID && b != NO_EDGE_ID) {
+            if (!is_none(a) && !is_none(b)) {
                 remaining.push(a);
                 nodes.push_back(graph.topology().destination(a));
                 remaining.push(b);
@@ -98,8 +98,8 @@ main(int argc, char const *argv[]) {
         gl_file_io writer;
 
         //
-        ch_graph_t::path route;
-        ch_graph_t::subgraph tree_subgraph;
+        ch_graph_t::path_type route;
+        ch_graph_t::subgraph_type tree_subgraph;
         std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> before;
         std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> after;
 
@@ -128,7 +128,7 @@ main(int argc, char const *argv[]) {
         auto shortcuts_subgraph = graph_ptr->make_subgraph(route);
         auto shortcuts_graph = std_graph_t::make_graph(*graph_ptr, shortcuts_subgraph);
         auto route_subgraph = unpack(*graph_ptr, shortcuts_subgraph);
-        auto route_graph = std_graph_t ::make_graph(*graph_ptr, route_subgraph);
+        auto route_graph = std_graph_t::make_graph(*graph_ptr, route_subgraph);
 
         // make graph from shortest path tree
         auto tree_graph = std_graph_t::make_graph(*graph_ptr, tree_subgraph);

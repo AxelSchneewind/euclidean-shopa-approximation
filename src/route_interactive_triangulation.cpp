@@ -14,10 +14,11 @@
 
 #include <chrono>
 
-void route_astar(std::shared_ptr<const std_graph_t> graph_ptr, node_id_t src, node_id_t dest, std_graph_t::path &route,
-                 std_graph_t::subgraph &tree_subgraph,
-                 std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> &before,
-                 std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> &after) {
+void
+route_astar(std::shared_ptr<const std_graph_t> graph_ptr, node_id_t src, node_id_t dest, std_graph_t::path_type &route,
+            std_graph_t::subgraph_type &tree_subgraph,
+            std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> &before,
+            std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> &after) {
     a_star_routing_t router(graph_ptr);
     router.init(src, dest);
     before = std::chrono::high_resolution_clock::now();
@@ -30,10 +31,11 @@ void route_astar(std::shared_ptr<const std_graph_t> graph_ptr, node_id_t src, no
     }
 }
 
-void route_std(std::shared_ptr<const std_graph_t> graph_ptr, node_id_t src, node_id_t dest, std_graph_t::path &route,
-               std_graph_t::subgraph &tree_subgraph,
-               std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> &before,
-               std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> &after) {
+void
+route_std(std::shared_ptr<const std_graph_t> graph_ptr, node_id_t src, node_id_t dest, std_graph_t::path_type &route,
+          std_graph_t::subgraph_type &tree_subgraph,
+          std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> &before,
+          std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> &after) {
     std_routing_t router(graph_ptr);
     router.init(src, dest);
     before = std::chrono::high_resolution_clock::now();

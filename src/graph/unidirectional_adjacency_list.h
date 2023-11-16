@@ -65,12 +65,15 @@ struct adjacency_list_edge<NodeId, std::nullptr_t> {
 template<typename NodeId, typename E>
 class unidirectional_adjacency_list {
 public:
+    using edge_index_type = edge_id_t;
+    using node_id_type = NodeId;
+    using edge_info_type = E;
+
     class adjacency_list_builder {
     private:
         size_t _M_node_count;
         size_t _M_edge_count;
 
-        std::vector<edge_id_t> _M_offsets;
         std::vector<adjacency_list_edge<NodeId, E>> _M_edges;
 
     public:
@@ -99,17 +102,17 @@ public:
         unidirectional_adjacency_list<NodeId, E> get();
     };
 
-    static constexpr size_t SIZE_PER_NODE = sizeof(edge_id_t);
+    static constexpr size_t SIZE_PER_NODE = sizeof(edge_index_type);
     static constexpr size_t SIZE_PER_EDGE = sizeof(NodeId) + sizeof(internal_adjacency_list_edge<NodeId, E>);
-
-    using edge_index_type = edge_id_t;
-    using node_id_type = NodeId;
-    using edge_info_type = E;
 
 private:
     size_t _M_node_count;
     size_t _M_edge_count;
-    std::vector<edge_id_t> _M_offsets;
+
+    // per node
+    std::vector<edge_index_type> _M_offsets;
+
+    // per edge
     std::vector<NodeId> _M_sources;
     std::vector<internal_adjacency_list_edge<NodeId, E> > _M_edges;
 

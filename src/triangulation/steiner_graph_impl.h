@@ -330,8 +330,8 @@ steiner_graph::has_edge(steiner_graph::node_id_type __src, steiner_graph::node_i
 }
 
 
-steiner_graph::subgraph steiner_graph::make_subgraph(const path &__route) const {
-    subgraph result;
+steiner_graph::subgraph_type steiner_graph::make_subgraph(const path_type &__route) const {
+    subgraph_type result;
     result.nodes = __route.nodes;
 
     for (size_t i = 1; i < __route.nodes.size(); i++) {
@@ -345,7 +345,7 @@ steiner_graph::subgraph steiner_graph::make_subgraph(const path &__route) const 
     return result;
 }
 
-steiner_graph::distance_type steiner_graph::path_length(const path &__route) const {
+steiner_graph::distance_type steiner_graph::path_length(const path_type &__route) const {
     distance_type result = 0;
 
     for (size_t i = 1; i < __route.nodes.size(); i++) {

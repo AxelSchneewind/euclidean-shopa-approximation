@@ -31,7 +31,7 @@ private:
      * @param node
      * @return
      */
-    distance_t min_route_distance(const typename Graph::node_id_type &__node) const;
+    Graph::distance_type min_route_distance(const typename Graph::node_id_type &__node) const;
 
 public:
     static constexpr size_t SIZE_PER_NODE = 2 * Dijkstra::SIZE_PER_NODE;
@@ -85,13 +85,13 @@ public:
      * returns the nodes of the path from start to target node
      * @return
      */
-    typename Graph::path route() const;
+    typename Graph::path_type route() const;
 
     /**
      * returns the tree of all visited nodes
      * @return
      */
-    typename Graph::subgraph shortest_path_tree() const;
+    typename Graph::subgraph_type shortest_path_tree() const;
 
     /**
      *

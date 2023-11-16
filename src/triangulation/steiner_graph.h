@@ -4,7 +4,9 @@
 #include "../graph/base_types.h"
 #include "../graph/geometry.h"
 #include "polyhedron_impl.h"
+#include "../graph/subgraph.h"
 
+#include <iostream>
 #include <algorithm>
 #include <cassert>
 #include <span>
@@ -109,8 +111,8 @@ public:
 
     using distance_type = distance_t;
 
-    using path = path<node_id_type>;
-    using subgraph = subgraph<node_id_type, edge_id_type>;
+    using path_type = path<node_id_type>;
+    using subgraph_type = subgraph<node_id_type, edge_id_type>;
 
     using topology_type = steiner_graph;
 
@@ -128,6 +130,8 @@ public:
 
         bool operator==(const subdivision_edge_info &__other) const = default;
     };
+
+    static_assert(sizeof(subdivision_edge_info) == 8);
 
     struct node_id_iterator_type {
     private:
@@ -236,9 +240,11 @@ public:
                   std::vector<subdivision_edge_info> &&__steiner_info, float __epsilon);
 
 
-    static constexpr size_t SIZE_PER_NODE = sizeof(node_info_type) + base_topology_type::SIZE_PER_NODE;
+    static constexpr size_t SIZE_PER_NODE =
+            sizeof(node_info_type) + base_topology_type::SIZE_PER_NODE + polyhedron_type::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE =
-            sizeof(subdivision_edge_info) + polyhedron<base_topology_type, 3>::SIZE_PER_EDGE;
+            sizeof(subdivision_edge_info) + base_topology_type::SIZE_PER_EDGE +
+            polyhedron_type::SIZE_PER_EDGE;
 
 private:
     size_t _M_node_count;
@@ -310,9 +316,9 @@ public:
                       float __epsilon);
 
 
-    distance_type path_length(const path &__route) const;;
+    distance_type path_length(const path_type &__route) const;;
 
-    subgraph make_subgraph(const path &__route) const;;
+    subgraph_type make_subgraph(const path_type &__route) const;;
 
     static steiner_graph make_graph(std::vector<steiner_graph::node_info_type> &&__triangulation_nodes,
                                     steiner_graph::base_topology_type &&__triangulation_edges,

@@ -22,8 +22,8 @@ struct Result {
     distance_t distance = infinity<distance_t>();
     distance_t beeline_distance = infinity<distance_t>();
 
-    typename Graph::path route;
-    typename Graph::subgraph trees;
+    typename Graph::path_type route;
+    typename Graph::subgraph_type trees;
 
     size_t nodes_visited = 0;
     typename Graph::node_id_type mid_node = none_value<node_id_t>();
