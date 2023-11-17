@@ -13,25 +13,49 @@ concept Topology =requires {
     t.outgoing_edges(n);
     t.incoming_edges(n);
     { t.edge_id(n, n) } -> std::convertible_to<typename T::edge_id_type>;
+    { t.has_edge(n, n) } -> std::convertible_to<bool>;
+} && requires(T t, typename T::edge_id_type e) {
+    {t.source(e)} -> std::convertible_to<typename T::node_id_type>;
+    {t.destination(e)} -> std::convertible_to<typename T::node_id_type>;
 };
 
+template<typename T>
+concept NodeSet = requires {
+    typename T::node_id_type;
+} && requires (T t) {
+    t.node_ids();
+};
+
+template<typename T>
+concept EdgeSet = requires {
+    typename T::edge_id_type;
+} && requires (T t) {
+    t.edge_ids();
+};
+
+template<typename T>
+concept EdgeInfo = requires {
+    typename T::edge_id_type;
+    typename T::edge_info_type;
+} && requires(T t, typename T::edge_id_type id) {
+    {t.edge(id)} -> std::convertible_to<typename T::edge_info_type>;
+};
+
+template <typename T>
+concept Routable = requires {
+    typename T::node_id_type;
+    typename T::edge_info_type;
+} && requires(T t, typename T::node_id_type src) {
+    {(*t.outgoing_edges(src).begin()).info} -> std::convertible_to<typename T::edge_info_type>;
+    {(*t.outgoing_edges(src).begin()).destination} -> std::convertible_to<typename T::node_id_type>;
+    ++t.outgoing_edges(src).begin();
+    {(*t.incoming_edges(src).begin()).info} -> std::convertible_to<typename T::edge_info_type>;
+    {(*t.incoming_edges(src).begin()).destination} -> std::convertible_to<typename T::node_id_type>;
+    ++t.incoming_edges(src).begin();
+};
 
 template<typename G>
-concept RoutableGraph = std::move_constructible<G> && std::copy_constructible<G> && requires {
-    typename G::node_id_type;
-    typename G::edge_id_type;
-
-    typename G::node_info_type;
-    typename G::edge_info_type;
-
-    typename G::topology_type;
-}
-                        && requires(G g) {
-    { g.topology() } -> std::convertible_to<typename G::topology_type>;           // TODO check that Topology concept is fulfilled
-    { g.inverse_topology() } -> std::convertible_to<typename G::topology_type>;
-} && requires(G g) {
-    g.node_ids();
-};
+concept RoutableGraph = NodeSet<G> && Topology<G> && Routable<G>;
 
 
 template<typename Q, typename G>

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "adjacency_list.h"
+#include "graph_properties.h"
 
 #include <memory>
 
@@ -8,6 +9,8 @@
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>
 adjacency_list<NodeId, E>::make_bidirectional_undirected(unidirectional_adjacency_list<NodeId, E>&&__forward) {
+    assert(graph_properties::is_bidirectional(__forward));
+
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> fwd(
         new unidirectional_adjacency_list<NodeId, E>(std::move(__forward)));
     return make_bidirectional_undirected(fwd);
@@ -17,6 +20,8 @@ template<typename NodeId, typename E>
 adjacency_list<NodeId, E>
 adjacency_list<NodeId, E>::make_bidirectional_undirected(
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __edges) {
+    assert(graph_properties::is_bidirectional(*__edges));
+
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> forward(__edges);
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> backward(__edges);
 
@@ -81,7 +86,13 @@ bool adjacency_list<NodeId, E>::has_edge(NodeId __source, NodeId __destination) 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>::edge_id_type
 adjacency_list<NodeId, E>::edge_id(NodeId __source, NodeId __destination) const {
-    return _M_forward->edge_index(__source, __destination);
+    return _M_forward->edge_id(__source, __destination);
+}
+
+template<typename NodeId, typename E>
+adjacency_list<NodeId, E>::edge_id_type
+adjacency_list<NodeId, E>::edge_id(NodeId __source) const {
+    return _M_forward->edge_id(__source);
 }
 
 
@@ -100,7 +111,12 @@ NodeId adjacency_list<NodeId, E>::source(adjacency_list::edge_id_type __id) cons
 
 template<typename NodeId, typename E>
 counter<NodeId> adjacency_list<NodeId, E>::node_ids() const {
-    return counter((NodeId)node_count());
+    return {(NodeId)node_count()};
+}
+
+template<typename NodeId, typename E>
+counter<typename adjacency_list<NodeId, E>::edge_id_type> adjacency_list<NodeId, E>::edge_ids() const {
+    return {(edge_id_type)edge_count()};
 }
 
 template<typename NodeId, typename E>

@@ -45,8 +45,7 @@ triangulation_file_io::read(std::istream &input) {
     return Graph::make_graph(std::move(nodes), std::move(adj_list));
 }
 
-template<>
-steiner_graph triangulation_file_io::read<steiner_graph>(std::istream &input) {
+steiner_graph triangulation_file_io::read_steiner(std::istream &input, float __epsilon) {
     using f = stream_encoders::encode_text;
     f::skip_comments(input);
 
@@ -77,5 +76,60 @@ steiner_graph triangulation_file_io::read<steiner_graph>(std::istream &input) {
     }
 
     auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional_undirected(builder.get());
-    return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces));
+    return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces), __epsilon);
+}
+
+template<>
+steiner_graph triangulation_file_io::read<steiner_graph>(std::istream &input) {
+    return read_steiner(input, 0.5);
+}
+
+
+template <>
+void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text> (std::ostream &output, const steiner_graph& graph) {
+    stream_encoders::encode_text f;
+
+    f.write(output, graph.node_count());
+    f.write(output, '\n');
+    f.write(output, graph.node_count());
+    f.write(output, '\n');
+
+    for (int i = 0; i < graph.node_count(); ++i) {
+        auto n = graph.node(i);
+
+        f.write(output, n.coordinates.latitude) << ' ';
+        f.write(output, n.coordinates.longitude);
+        f.write(output, '\n');
+    }
+
+    for (int e = 0; e < graph.edge_count(); ++e) {
+        auto triangles = graph.base_polyhedron().edge_faces(e);
+        for (auto triangle : triangles) {
+            if (is_none(triangle)) continue;
+
+            auto edges = graph.base_polyhedron().face_edges(triangle);
+
+            // only insert once (if e is the edge with the smallest id)
+            if (e <= edges[0] && e <= edges[1] && e <= edges[2]) {
+                auto n0 = graph.base_graph().source(edges[0]);
+                auto n1 = graph.base_graph().source(edges[1]);
+                auto n2 = graph.base_graph().source(edges[2]);
+
+                // make sure the lowest node id appears first
+                if (n0 > n1)
+                    std::swap(n0, n1);
+                if (n0 > n2)
+                    std::swap(n0, n2);
+                if (n1 > n2)
+                    std::swap(n1, n2);
+
+                f.write(output, n0);
+                f.write(output, ' ');
+                f.write(output, n1);
+                f.write(output, ' ');
+                f.write(output, n2);
+                f.write(output, '\n');
+            }
+        }
+    }
 }

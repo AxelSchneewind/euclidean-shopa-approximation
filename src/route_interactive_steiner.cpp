@@ -19,16 +19,21 @@ int
 main(int argc, char const *argv[]) {
     std::string graph_file;
     std::string output_directory;
+    float epsilon = 0.5;
 
-    if (argc > 2) {
+    if (argc > 3) {
         graph_file = argv[1];
         output_directory = argv[2];
+        epsilon = std::stof(argv[3]);
     } else {
         std::cout << "graph file: ";
         std::cin >> graph_file;
 
         std::cout << "output directory: ";
         std::cin >> output_directory;
+
+        std::cout << "epsilon: ";
+        std::cin >> epsilon;
     }
 
 
@@ -42,7 +47,7 @@ main(int argc, char const *argv[]) {
 
     // read graph
     std::shared_ptr<const steiner_graph> graph_ptr(
-            new steiner_graph(triangulation_file_io::read<steiner_graph>(input)));
+            new steiner_graph(triangulation_file_io::read_steiner(input, epsilon)));
     input.close();
 
     std::cout << "\r\a\tdone, graph has "
@@ -84,17 +89,22 @@ main(int argc, char const *argv[]) {
         steiner_graph::node_id_type dest(0, 0);
         char mode = 'A';
 
-        if (argc > 6) {
-            src.edge = std::stoi(argv[3]);
-            src.steiner_index = std::stoi(argv[4]);
-            dest.edge = std::stoi(argv[5]);
-            dest.steiner_index = std::stoi(argv[6]);
+        if (argc > 5) {
+            int src_node = std::stoi(argv[4]);
+            int dest_node = std::stoi(argv[5]);
+            src = graph_ptr->from_base_node_id(src_node);
+            dest = graph_ptr->from_base_node_id(dest_node);
             done = true;
         } else {
-            std::cout << "src node (base edge and index): " << std::flush;
-            std::cin >> src.edge >> src.steiner_index;
-            std::cout << "dest node (base edge and index): " << std::flush;
-            std::cin >> dest.edge >> src.steiner_index;
+            int src_node, dest_node;
+            std::cout << "src node: " << std::flush;
+            std::cin >> src_node;
+            std::cout << "dest node: " << std::flush;
+            std::cin >> dest_node;
+
+            src = graph_ptr->from_base_node_id(src_node);
+            dest = graph_ptr->from_base_node_id(dest_node);
+
             std::cout << "mode (B = Bidirectional Dijkstra, A = A*) : A" << std::flush;
             //std::cin >> mode;
             std::cout << std::endl;

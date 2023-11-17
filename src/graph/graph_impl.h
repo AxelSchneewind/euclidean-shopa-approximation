@@ -107,7 +107,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::nodes() const {
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 counter<NodeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::node_ids() const {
-    return {(NodeId) node_count()};
+    return _M_adjacency_list.node_ids();
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>

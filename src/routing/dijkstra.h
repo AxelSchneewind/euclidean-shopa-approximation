@@ -17,16 +17,20 @@
 
 template<RoutableGraph G, DijkstraQueue<G> Q, typename UseEdge, DijkstraLabels L>
 class dijkstra {
-    static_assert(Topology<typename G::topology_type>);
+    static_assert(Routable<typename G::topology_type>);
 public:
     using type = dijkstra<G, Q, UseEdge, L>;
     using node_cost_pair = typename Q::value_type;
-    using edge_info_type = typename G::edge_info_type;
     using node_id_type = typename G::node_id_type;
+
+    using graph_type = G;
+    using use_edge_type = UseEdge;
+    using queue_type = Q;
+    using labels_type = L;
 
     // determines optimality of labels depending on whether the graph allows shortcuts
     // TODO find more elegant way for this
-    static constexpr bool search_symmetric = (typeid(edge_info_type) != typeid(ch_edge_t));
+    static constexpr bool search_symmetric = (typeid(typename G::edge_info_type) != typeid(ch_edge_t));
 
     static constexpr size_t SIZE_PER_NODE = L::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE = L::SIZE_PER_EDGE;
@@ -52,7 +56,12 @@ public:
     dijkstra(const dijkstra &__other) = delete;
 
     // constructs a dijkstra object for the given graph and m_adj_list
-    explicit dijkstra(std::shared_ptr<const G> __graph, const typename G::topology_type &__adj_list);
+    explicit dijkstra(std::shared_ptr<const G> __graph);
+
+    // constructs a dijkstra object for the given graph and m_adj_list
+    explicit dijkstra(std::shared_ptr<const G> __graph, Q &&__queue, UseEdge &&__use_edge, L &&__labels)
+            : _M_graph(__graph), _M_queue(std::move(__queue)), _M_use_edge(std::move(__use_edge)),
+              _M_labels(std::move(__labels)) {};
 
     ~dijkstra() = default;
 
@@ -65,7 +74,12 @@ public:
 
     typename G::node_id_type target() const { return _M_target_node; }
 
-    const L& labels() const { return _M_labels; }
+    const Q &queue() const { return _M_queue; }
+    Q &queue() { return _M_queue; }
+
+    const L &labels() const { return _M_labels; }
+    L &labels() { return _M_labels; }
+
     L::label_type get_label(G::node_id_type __node) const { return _M_labels.get(__node); }
 
     /**

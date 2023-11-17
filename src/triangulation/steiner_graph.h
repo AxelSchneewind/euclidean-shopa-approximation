@@ -12,6 +12,7 @@
 #include <span>
 #include <vector>
 #include <stdfloat>
+#include "subdivision_table.h"
 
 struct steiner_node_id {
     edge_id_t edge;
@@ -116,23 +117,6 @@ public:
 
     using topology_type = steiner_graph;
 
-    struct subdivision_edge_info {
-        // relative position of the points with the highest distance to other edges
-        std::float16_t mid_position;
-        // maximum distance of a point on this edge to other edges, relative to the length of this edge
-        std::float16_t mid_dist;
-
-        // r(v), relative to this edge
-        std::float16_t r;
-
-        // number of steiner points on this edge (counting the source and middle node)
-        short node_count;
-
-        bool operator==(const subdivision_edge_info &__other) const = default;
-    };
-
-    static_assert(sizeof(subdivision_edge_info) == 8);
-
     struct node_id_iterator_type {
     private:
         const steiner_graph *_M_graph_ptr;
@@ -159,7 +143,9 @@ public:
                    _M_current_node.steiner_index != __other._M_current_node.steiner_index;
         }
 
-        node_id_iterator_type &operator++();
+        node_id_iterator_type operator++();
+
+        node_id_iterator_type operator++(int);
 
         node_id_type &operator*() { return _M_current_node; }
     };
@@ -203,7 +189,7 @@ public:
             return it != it.end();
         }
 
-        edges_iterator_type &operator++() {
+        edges_iterator_type operator++() {
             edges_iterator_type &result = *this;
             node_index++;
 
@@ -233,18 +219,16 @@ public:
         }
     };
 
+    steiner_graph(steiner_graph &&other) noexcept;
 
     steiner_graph(std::vector<node_info_type> &&__triangulation_nodes,
                   adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&__triangulation_edges,
                   polyhedron<base_topology_type, 3> &&__triangles,
-                  std::vector<subdivision_edge_info> &&__steiner_info, float __epsilon);
+                  subdivision_table &&__table, float __epsilon);
 
 
-    static constexpr size_t SIZE_PER_NODE =
-            sizeof(node_info_type) + base_topology_type::SIZE_PER_NODE + polyhedron_type::SIZE_PER_NODE;
-    static constexpr size_t SIZE_PER_EDGE =
-            sizeof(subdivision_edge_info) + base_topology_type::SIZE_PER_EDGE +
-            polyhedron_type::SIZE_PER_EDGE;
+    static constexpr size_t SIZE_PER_NODE = sizeof(node_info_type) + base_topology_type::SIZE_PER_NODE + polyhedron_type::SIZE_PER_NODE;
+    static constexpr size_t SIZE_PER_EDGE = base_topology_type::SIZE_PER_EDGE + polyhedron_type::SIZE_PER_EDGE;
 
 private:
     size_t _M_node_count;
@@ -257,8 +241,8 @@ private:
     std::vector<node_info_type> _M_base_nodes;
     base_topology_type _M_base_topology;
 
-    // store subdivision information here
-    std::vector<subdivision_edge_info> _M_steiner_info;
+    // store subdivision table here
+    subdivision_table _M_table;
 
     // for each edge, store the id of the 2 nodes that make up the adjacent triangles
     polyhedron_type _M_polyhedron;
@@ -267,6 +251,11 @@ private:
     coordinate_t node_coordinates(node_id_type __id) const;
 
 public:
+
+    node_id_type from_base_node_id(base_topology_type::node_id_type __node) const {
+        return  {_M_base_topology.edge_id(__node), 0 };
+    }
+
     const base_topology_type &base_graph() const { return _M_base_topology; }
 
     const polyhedron_type &base_polyhedron() const { return _M_polyhedron; }
@@ -289,7 +278,7 @@ public:
 
     edge_info_type edge(edge_id_type __id) const;
 
-    subdivision_edge_info steiner_info(triangle_edge_id_type __id) const;
+    subdivision_table::subdivision_edge_info steiner_info(triangle_edge_id_type __id) const;
 
     edge_id_type edge_id(node_id_type __src, node_id_type __dest) const;
 
@@ -304,25 +293,19 @@ public:
     steiner_graph::edges_iterator_type<polyhedron_type::edges_iterator_type>
     outgoing_edges(node_id_type __node_id) const;
 
+
     // std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     //auto
     steiner_graph::edges_iterator_type<polyhedron_type::edges_iterator_type>
     incoming_edges(node_id_type __node_id) const { return outgoing_edges(__node_id); };
 
-    static std::vector<subdivision_edge_info>
-    make_steiner_info(const adjacency_list<triangle_node_id_type, triangle_edge_info_type> &__triangulation,
-                      const std::vector<triangle_node_info_type> &__nodes,
-                      const polyhedron<base_topology_type, 3> &__polyhedron,
-                      float __epsilon);
+    distance_type path_length(const path_type &__route) const;
 
-
-    distance_type path_length(const path_type &__route) const;;
-
-    subgraph_type make_subgraph(const path_type &__route) const;;
+    subgraph_type make_subgraph(const path_type &__route) const;
 
     static steiner_graph make_graph(std::vector<steiner_graph::node_info_type> &&__triangulation_nodes,
                                     steiner_graph::base_topology_type &&__triangulation_edges,
-                                    std::vector<std::array<triangle_node_id_type, 3>> &&__faces);
+                                    std::vector<std::array<triangle_node_id_type, 3>> &&__faces, float __epsilon);
 
 };
 

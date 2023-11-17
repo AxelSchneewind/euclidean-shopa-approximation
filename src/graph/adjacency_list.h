@@ -79,29 +79,78 @@ public:
      */
     counter<NodeId> node_ids() const;
 
+    /**
+     * returns an iterator over all edge ids
+     * @return
+     */
+    counter<edge_id_type> edge_ids() const;
+
     NodeId source(edge_id_type __id) const;
 
     NodeId destination(edge_id_type __id) const;
 
     E edge(edge_id_type __id) const;
 
+    /**
+     * get the id for the edge (source, destination)
+     * @param __source
+     * @param __destination
+     * @return
+     */
     edge_id_type edge_id(NodeId __source, NodeId __destination) const;
+    /**
+     * get the id for any edge (source, destination)
+     * @param __source
+     * @return
+     */
+    edge_id_type edge_id(NodeId __source) const;
 
+    /**
+     * checks if the edge (source, destination) exists
+     * @param __source
+     * @param __destination
+     * @return
+     */
     bool has_edge(NodeId __source, NodeId __destination) const;
 
     bool operator==(const adjacency_list<NodeId, E> &__other);
 
+    /**
+     * makes a directed bidirectional adjacency list from the given uni-directional one, i.e. generates a uni-directional adjacency list for the backward edges
+     * @param __forward
+     * @return
+     */
     static adjacency_list<NodeId, E>
     make_bidirectional(std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __forward);
 
+    /**
+     * makes a directed bidirectional adjacency list from the given uni-directional one, i.e. generates a uni-directional adjacency list for the backward edges
+     * @param __forward
+     * @return
+     */
     static adjacency_list<NodeId, E> make_bidirectional(unidirectional_adjacency_list<NodeId, E> &&__forward);
 
+    /**
+     * makes an undirected bidirectional adjacency list from the given uni-directional one, i.e. uses it for backward and forward edges
+     * @param __edges
+     * @return
+     */
     static adjacency_list<NodeId, E>
     make_bidirectional_undirected(std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __edges);
 
+    /**
+     * makes an undirected bidirectional adjacency list from the given uni-directional one, i.e. uses it for backward and forward edges
+     * @param __edges
+     * @return
+     */
     static adjacency_list<NodeId, E>
     make_bidirectional_undirected(unidirectional_adjacency_list<NodeId, E> &&__forward);
 
+    /**
+     * inverts this adjacency list
+     * @param __other
+     * @return
+     */
     static adjacency_list<NodeId, E> invert(const adjacency_list<NodeId, E> &__other);
 };
 

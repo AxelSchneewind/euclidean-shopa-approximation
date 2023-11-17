@@ -43,7 +43,7 @@ distance (coordinate_t __c1, coordinate_t __c2)
   return ans;
 };
 
-inline float
+inline double
 angle (coordinate_t __s0, coordinate_t __d0, coordinate_t __s1, coordinate_t __d1) {
     // use dot product
     auto const A = __d0 - __s0;

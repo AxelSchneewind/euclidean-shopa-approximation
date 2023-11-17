@@ -97,7 +97,7 @@ unidirectional_adjacency_list<NodeId, E>::destination(edge_id_t __edge) const {
 
 template<typename NodeId, typename E>
 inline unidirectional_adjacency_list<NodeId, E>::edge_index_type
-unidirectional_adjacency_list<NodeId, E>::edge_index(NodeId __source, NodeId __dest) const {
+unidirectional_adjacency_list<NodeId, E>::edge_id(NodeId __source, NodeId __dest) const {
     assert(contains_node(__source));
     assert(contains_node(__dest));
 
@@ -112,10 +112,20 @@ unidirectional_adjacency_list<NodeId, E>::edge_index(NodeId __source, NodeId __d
     return result;
 }
 
+
+template<typename NodeId, typename E>
+inline unidirectional_adjacency_list<NodeId, E>::edge_index_type
+unidirectional_adjacency_list<NodeId, E>::edge_id(NodeId __source) const {
+    assert(contains_node(__source));
+
+    edge_id_t result = _M_offsets[__source];
+    return result;
+}
+
 template<typename NodeId, typename E>
 inline bool
 unidirectional_adjacency_list<NodeId, E>::has_edge(NodeId __source, NodeId __dest) const {
-    return !is_none(edge_index(__source, __dest));
+    return !is_none(edge_id(__source, __dest));
 }
 
 template<typename NodeId, typename E>

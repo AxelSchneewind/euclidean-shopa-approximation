@@ -89,8 +89,8 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(std::shared_ptr<const Graph> __graph)
         : _M_graph_ptr(__graph),
-          _M_forward_search(_M_graph_ptr, _M_graph_ptr->topology()),
-          _M_backward_search(_M_graph_ptr, _M_graph_ptr->inverse_topology()),
+          _M_forward_search(_M_graph_ptr),
+          _M_backward_search(_M_graph_ptr),
           _M_start_node(none_value<typename Graph::node_id_type>()),
           _M_target_node(none_value<typename Graph::node_id_type>()),
           _M_mid_node(none_value<typename Graph::node_id_type>()) {}
@@ -124,6 +124,7 @@ router<Graph, Dijkstra>::step_backward() {
     assert (!_M_backward_search.queue_empty());
 
     typename Dijkstra::node_cost_pair current = _M_backward_search.current();
+    assert(!is_none(current.node));
 
     _M_backward_search.step();
     assert(!is_none(current.node));
@@ -137,11 +138,6 @@ router<Graph, Dijkstra>::step_backward() {
 template<typename Graph, typename Dijkstra>
 void
 router<Graph, Dijkstra>::compute_route() {
-    // check args
-    // if (_M_start_node >= graph->node_count () || _M_target_node >= graph->node_count () || _M_start_node < 0
-    //     || _M_target_node < 0 || _M_start_node == NO_NODE_ID || _M_target_node == NO_NODE_ID)
-    //   throw;
-
     bool done = false;
     while (!done) {
         auto dist = distance();

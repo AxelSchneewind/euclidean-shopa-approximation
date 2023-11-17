@@ -57,7 +57,9 @@ public:
 
     inline std::span<const NodeInfo> nodes() const;
 
-    inline counter<NodeId> node_ids() const;
+    counter<node_id_type> node_ids() const;
+
+    counter<edge_id_type> edge_ids() const { return {edge_count()}; };
 
     inline size_t node_count() const;
 

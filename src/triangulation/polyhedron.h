@@ -19,18 +19,17 @@ public:
 
     struct [[deprecated]] edges_iterator_type {
     private:
-        char face_index;
-        char edge_index;
-        char face_count;
+        unsigned char face_index;
+        unsigned char edge_index;
+        unsigned char face_count;
         std::array<std::span<const int, EDGE_COUNT_PER_FACE>, 2> faces;
 
     public:
         edges_iterator_type(const polyhedron<BaseGraph, MaxNodesPerFace> &__poly, std::array<face_id_type, 2> __faces)
-                : faces(
-                {std::span(__poly._M_face_info[__faces[0]]), std::span(__poly._M_face_info[__faces[1]])}),
+                : face_index(0),
                   edge_index(0),
-                  face_index(0),
-                  face_count(1 + (!is_none(__faces[1]) ? 1 : 0)) {
+                  face_count(1 + (!is_none(__faces[1]) ? 1 : 0)),
+                  faces({std::span(__poly._M_face_info[__faces[0]]), std::span(__poly._M_face_info[__faces[1]])}){
         };
 
         edges_iterator_type &begin() { return *this; };
@@ -95,9 +94,9 @@ private:
     // for each edge
     std::vector<edge_info_type> _M_edge_info;
 
-    polyhedron(std::vector<std::array<edge_id_t, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
-               std::vector<std::array<edge_id_t, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
-               std::vector<edge_id_t> &&__inverse_edges);
+    polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
+               std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
+               std::vector<edge_id_type> &&__inverse_edges);
 
 public:
 
@@ -138,17 +137,6 @@ public:
     edge_id_type inverse_edge(edge_id_type __edge) const {
         return _M_edge_info[__edge].inverse_edge;
     };
-
-
-    /**
-     * gets edges that belong to the edge_faces bordering this node
-     * @param __node
-     * @return
-     */
-    // TODO get access to offset array
-    std::span<const edge_id_type, std::dynamic_extent> node_edges(node_id_type __node) const {
-        throw;
-        //return std::span(_M_face_info.edge(__node), _M_face_info.edge(__node + 1));
-    };
 };
+
 

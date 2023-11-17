@@ -7,8 +7,8 @@ private:
     T current;
     T max;
 
-    counter(T __current, T __max) : current(__current), max(__max) {}
 public:
+    counter(T __current, T __max) : current(__current), max(__max) {}
     counter(T __count) : current(0), max(__count) {}
 
     counter &begin() { return *this; };

@@ -131,9 +131,9 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
 
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
-        std::vector<std::array<edge_id_t, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
-        std::vector<std::array<edge_id_t, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
-        std::vector<edge_id_t> &&__inverse_edges)
+        std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
+        std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
+        std::vector<edge_id_type> &&__inverse_edges)
         : _M_face_info(std::move(__adjacent_edges)),
           _M_edge_info() {
     int i = 0;

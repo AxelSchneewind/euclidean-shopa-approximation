@@ -57,3 +57,4 @@ install(TARGETS route_interactive_steiner RUNTIME DESTINATION bin)
 include(CPack)
 
 # packagingadd_executable(test_steiner_graph src/test/test_steiner_graph.cpp)
+add_executable(subdivision_stats src/subdivision_stats.cpp)

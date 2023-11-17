@@ -20,6 +20,23 @@ void make_gl(std::istream &input, std::ostream &output, int linewidth, int color
     // write gl file for graph
     f_out::template write<G>(output, graph, linewidth, color);
 }
+template<typename file_io_in, typename file_io_out>
+void make_steiner_gl(std::istream &input, std::ostream &output, int linewidth, int color) {
+    using f_in = file_io_in;
+    using f_out = file_io_out;
+
+    float epsilon = 0.5;
+    std::cout << "epsilon: ";
+    std::cin >> epsilon;
+
+    // read
+    steiner_graph graph = f_in::read_steiner(input, epsilon);
+
+    std::cout << "read graph with " << graph.node_count() << " nodes and " << graph.edge_count() << " edges" << std::endl;
+
+    // write gl file for graph
+    f_out::template write<steiner_graph>(output, graph, linewidth, color);
+}
 
 
 int
@@ -49,7 +66,7 @@ main(int argc, char const *argv[]) {
             std::cout << "output color: " << std::flush;
             std::cin >> color;
 
-            make_gl<steiner_graph, triangulation_file_io, gl_file_io>(input, output, linewidth, color);
+            make_steiner_gl<triangulation_file_io, gl_file_io>(input, output, linewidth, color);
         }
         else if (output_file_ending == ".gl") {
             int color, linewidth;

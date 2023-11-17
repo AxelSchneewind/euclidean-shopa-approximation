@@ -17,8 +17,7 @@
 
 
 template<RoutableGraph G, DijkstraQueue<G> Q, typename U, DijkstraLabels L>
-dijkstra<G, Q, U, L>::dijkstra(std::shared_ptr<const G> __graph,
-                               const typename G::topology_type &__adj_list)
+dijkstra<G, Q, U, L>::dijkstra(std::shared_ptr<const G> __graph)
         : _M_graph(__graph),
           _M_labels(__graph),
           _M_use_edge(__graph),

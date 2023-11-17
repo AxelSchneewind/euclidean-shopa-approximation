@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "../routing/dijkstra_concepts.h"
+#include "../util/counting_iterator.h"
 
 template<typename NodeId, typename E = std::nullptr_t>
 struct internal_adjacency_list_edge {
@@ -120,6 +121,7 @@ private:
 
     inline edge_index_type offset_next(NodeId __node) const;
 
+
 public:
     ~unidirectional_adjacency_list();
 
@@ -147,6 +149,8 @@ public:
 
     inline bool contains_edge(edge_index_type __edge_index) const;
 
+
+
     /**
      * get the number of nodes of this adjacency list
      * @return
@@ -159,6 +163,21 @@ public:
      */
     inline size_t edge_count() const;
 
+    /**
+     * enumerates all edge ids
+     * @return
+     */
+    counter<edge_index_type> edge_ids() const {
+        return {edge_count()};
+    }
+
+    /**
+     * enumerates all node ids
+     * @return
+     */
+    counter<edge_index_type> node_ids() const {
+        return {node_count()};
+    }
     /**
      * get the id of the source node for the edge with given index
      * @param __edge
@@ -181,25 +200,32 @@ public:
     inline E edge(edge_index_type __edge) const;
 
     /**
-     * get the index of the edge with given source and destination ids
+     * get the index of (source, destination)
      * @param __source
      * @param __dest
      * @return the index, or NO_EDGE_ID otherwise
      */
-    inline edge_index_type edge_index(NodeId __source, NodeId __dest) const;
+    inline edge_index_type edge_id(NodeId __source, NodeId __dest) const;
 
     /**
-     * check if an edge from the source to destination node exists
+     * get the index of any edge (source, w) in graph
+     * @param __source
+     * @return
+     */
+    inline edge_index_type edge_id(NodeId __source) const;
+
+    /**
+     * check if (source, destination) in graph
      * @param __source
      * @param __dest
      * @return
      */
-    inline bool has_edge(NodeId __source, const NodeId __dest) const;
+    inline bool has_edge(NodeId __source, NodeId __dest) const;
 
     /**
      * gets the distance info pairs for outgoing edges from the given node
-     * @param __node
-     * @return
+     * @param __node the source node
+     * @return a span over the destination/cost pairs
      */
     inline std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
     outgoing_edges(NodeId __node) const;
