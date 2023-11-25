@@ -6,7 +6,7 @@
 #include "file-io/triangulation_file_io.h"
 #include "graph/graph.h"
 
-#include "routing.h"
+#include "routing_impl.h"
 
 #include <chrono>
 

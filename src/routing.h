@@ -1,82 +1,87 @@
 #pragma once
 
-#include "file-io/fmi_file_io.h"
-#include "file-io/formatters.h"
-#include "file-io/gl_file_io.h"
+#include "query.h"
+#include "triangulation/steiner_graph.h"
 #include "file-io/triangulation_file_io.h"
-#include "graph/adjacency_list.h"
-#include "graph/base_types.h"
-#include "graph/graph.h"
-#include "graph/unidirectional_adjacency_list.h"
-#include "routing/dijkstra.h"
-#include "routing/node_labels.h"
-#include "routing/router.h"
 
-#include "file-io/fmi_file_io_impl.h"
-#include "file-io/formatters_impl.h"
-#include "file-io/gl_file_io_impl.h"
-#include "file-io/triangulation_file_io_impl.h"
-#include "graph/adjacency_list_impl.h"
-#include "graph/base_types_impl.h"
-#include "graph/graph_impl.h"
-#include "graph/unidirectional_adjacency_list_impl.h"
-#include "routing/dijkstra_impl.h"
-#include "routing/router_impl.h"
-#include "triangulation/steiner_graph_impl.h"
-#include "triangulation/steiner_labels.h"
+#include <fstream>
+#include <memory>
 
-using std_graph_t = graph<node_t, edge_t, node_id_t, edge_id_t>;
-using ch_graph_t = graph<ch_node_t, ch_edge_t, node_id_t, edge_id_t>;
+class Client {
+private:
+    class ClientConcept {
+    public:
+        virtual ~ClientConcept() = default;
 
-using default_node_cost_pair = node_cost_pair<std_graph_t, std::nullptr_t>;
+        virtual void write_graph_file(std::ostream &output) const = 0;
+
+        virtual void compute_route(int from, int to) = 0;
+
+        virtual void compute_one_to_all(int from) = 0;
+        virtual void compute_one_to_all(int from, std::ostream& out) = 0;
+
+        virtual void write_route_file(std::ostream &output) const = 0;
+
+        virtual void write_tree_file(std::ostream &output) const = 0;
+
+        virtual void write_info(std::ostream &output) const = 0;
+
+        virtual void write_graph_stats(std::ostream& output) const = 0;
+
+        virtual void write_beeline(std::ostream& output) const = 0;
+    };
+
+    template<typename GraphT, typename RoutingT> requires std::convertible_to<typename RoutingT::graph_type, GraphT>
+    class ClientModel : public ClientConcept {
+    private:
+        GraphT graph;
+        RoutingT router;
+
+        Query<GraphT> query;
+        Result<GraphT> result;
+    public:
+        ClientModel(GraphT &&graph, RoutingT &&router) : graph{std::move(graph)}, router{std::move(router)} {};
+
+        ClientModel(GraphT &&graph) : graph{std::move(graph)}, router(this->graph) {};
+
+        void write_graph_file(std::ostream &output) const override;
+
+        void compute_route(int from, int to) override;
+
+        void compute_one_to_all(int from) override;
+        void compute_one_to_all(int from, std::ostream& output) override;
+
+        void write_route_file(std::ostream &output) const override;
+
+        void write_tree_file(std::ostream &output) const override;
+
+        void write_info(std::ostream &output) const override;
+
+        void write_beeline(std::ostream& output) const override;
+
+        void write_graph_stats(std::ostream& output) const override;
+    };
+
+    std::unique_ptr<ClientConcept> pimpl;
+public:
+    template<typename ...Args>
+    void read_graph_file(std::string path, Args... args);
 
 
-struct a_star_info {
-    // value from a* heuristic (distance + minimal remaining distance)
-    distance_t value;
+    void write_graph_file(std::ostream output) {
+        pimpl->write_graph_file(output);
+    }
+
+    void compute_route(int from, int to) { pimpl->compute_route(from, to); };
+
+    void compute_one_to_all(int from) { pimpl->compute_one_to_all(from); };
+    void compute_one_to_all(int from, std::ostream& output) { pimpl->compute_one_to_all(from, output); };
+
+    void write_route_file(std::ostream &output) const { pimpl->write_route_file(output); };
+
+    void write_tree_file(std::ostream &output) const { pimpl->write_tree_file(output); };
+
+    void write_beeline_file(std::ostream &output) const { pimpl->write_beeline(output); };
+
+    void write_info(std::ostream &output) const { pimpl->write_info(output); };
 };
-using a_star_node_cost_pair = node_cost_pair<std_graph_t, a_star_info>;
-
-// check for struct packing
-static_assert(sizeof(std_graph_t::node_info_type) == 2 * sizeof(distance_t));
-static_assert(sizeof(std_graph_t::edge_info_type) == 1 * sizeof(distance_t));
-static_assert(sizeof(ch_graph_t::node_info_type) == 2 * sizeof(distance_t) + 1 * sizeof(int));
-static_assert(sizeof(ch_graph_t::edge_info_type) == 3 * sizeof(distance_t));
-static_assert(sizeof(default_node_cost_pair) == 3 * sizeof(int));
-static_assert(sizeof(a_star_node_cost_pair) == 4 * sizeof(int));
-
-
-template<RoutableGraph G>
-struct label_type {
-    G::distance_type distance;
-    G::node_id_type predecessor;
-};
-
-template<>
-constexpr label_type<std_graph_t> none_value() {
-    return {infinity<std_graph_t::distance_type>(), none_value<std_graph_t::node_id_type>()};
-}
-
-template<>
-constexpr label_type<ch_graph_t> none_value() {
-    return {infinity<ch_graph_t::distance_type>(), none_value<ch_graph_t::node_id_type>()};
-}
-
-
-using default_queue_t = dijkstra_queue<std_graph_t, default_node_cost_pair, Default<default_node_cost_pair>>;
-
-
-using default_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
-using a_star_queue_t = a_star_queue<std_graph_t, a_star_node_cost_pair>;
-using a_star_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
-
-using std_dijkstra = dijkstra<std_graph_t, default_queue_t, use_all_edges<std_graph_t>, default_labels_t>;
-using a_star_dijkstra = dijkstra<std_graph_t, a_star_queue_t, use_all_edges<std_graph_t>, a_star_labels_t>;
-
-using std_routing_t = router<std_graph_t, std_dijkstra>;
-using a_star_routing_t = router<std_graph_t, a_star_dijkstra>;
-
-using default_ch_labels_t = node_labels<ch_graph_t, default_node_cost_pair>;
-using default_ch_queue_t = dijkstra_queue<ch_graph_t, default_node_cost_pair, Default<default_node_cost_pair>>;
-using ch_routing_t = router<ch_graph_t, dijkstra<ch_graph_t, default_ch_queue_t, use_upward_edges<ch_graph_t>, default_ch_labels_t>>;
-

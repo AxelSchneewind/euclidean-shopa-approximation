@@ -1,6 +1,7 @@
 // taken from
 // https://gist.github.com/thirdwing/da4621eb163a886a03c5
 
+#pragma once
 
 #include <iostream>
 #include <fstream>

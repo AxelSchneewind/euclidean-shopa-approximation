@@ -1,26 +1,18 @@
 #pragma once
 
-#include "../graph/adjacency_list.h"
-#include "../graph/base_types.h"
-#include "../graph/graph.h"
-#include "../graph/unidirectional_adjacency_list.h"
-
 #include "dijkstra_concepts.h"
 
-#include <queue>
-#include <vector>
+template <typename T, typename G>
+concept EdgePredicate = std::predicate<T, typename G::node_id_type, internal_adjacency_list_edge<typename G::node_id_type, typename G::edge_info_type>>;
 
-#include <cmath>
-#include <concepts>
-#include <iostream>
-
-
-template<RoutableGraph G, DijkstraQueue<G> Q, typename UseEdge, DijkstraLabels L>
+template<RoutableGraph G, DijkstraQueue<G> Q,
+        EdgePredicate<G> UseEdge,
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 class dijkstra {
     static_assert(Routable<typename G::topology_type>);
 public:
     using type = dijkstra<G, Q, UseEdge, L>;
-    using node_cost_pair = typename Q::value_type;
+    using node_cost_pair_type = typename Q::value_type;
     using node_id_type = typename G::node_id_type;
 
     using graph_type = G;
@@ -36,7 +28,7 @@ public:
     static constexpr size_t SIZE_PER_EDGE = L::SIZE_PER_EDGE;
 
 private:
-    std::shared_ptr<const G> _M_graph;
+    G const &_M_graph;
 
     node_id_type _M_start_node;
     node_id_type _M_target_node;
@@ -47,7 +39,7 @@ private:
     L _M_labels;
 
     // add reachable (and not settled) nodes to active nodes in queue
-    void expand(node_cost_pair __node);
+    void expand(node_cost_pair_type __node);
 
 public:
 
@@ -55,11 +47,13 @@ public:
 
     dijkstra(const dijkstra &__other) = delete;
 
-    // constructs a dijkstra object for the given graph and m_adj_list
-    explicit dijkstra(std::shared_ptr<const G> __graph);
 
-    // constructs a dijkstra object for the given graph and m_adj_list
-    explicit dijkstra(std::shared_ptr<const G> __graph, Q &&__queue, UseEdge &&__use_edge, L &&__labels)
+
+    // constructs a dijkstra object for the given graph
+    explicit dijkstra(G const &__graph)
+            : _M_graph(__graph), _M_queue{__graph}, _M_use_edge{__graph},
+              _M_labels{__graph} {};
+    explicit dijkstra(G const &__graph, Q &&__queue, UseEdge &&__use_edge, L &&__labels)
             : _M_graph(__graph), _M_queue(std::move(__queue)), _M_use_edge(std::move(__use_edge)),
               _M_labels(std::move(__labels)) {};
 
@@ -75,9 +69,11 @@ public:
     typename G::node_id_type target() const { return _M_target_node; }
 
     const Q &queue() const { return _M_queue; }
+
     Q &queue() { return _M_queue; }
 
     const L &labels() const { return _M_labels; }
+
     L &labels() { return _M_labels; }
 
     L::label_type get_label(G::node_id_type __node) const { return _M_labels.get(__node); }
@@ -88,13 +84,13 @@ public:
      * @param start_node
      * @param target_node
      */
-    void init(node_id_type __start_node, node_id_type __target_node = none_value<node_id_type>());
+    void init(node_id_type __start_node, node_id_type __target_node = none_value<node_id_type>);
 
     /**
      * get the current node without removing from queue
      * @return
      */
-    node_cost_pair current() const;
+    node_cost_pair_type current() const;
 
     /**
      * step to current node in queue, i.e. store label_type and add adjacent nodes

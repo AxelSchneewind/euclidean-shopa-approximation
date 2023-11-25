@@ -1,7 +1,6 @@
 #pragma once
 
-#include "steiner_graph.h"
-#include "../graph/graph.h"
+#include "../routing/dijkstra_concepts.h"
 
 
 template<RoutableGraph G, typename Label>
@@ -13,7 +12,7 @@ private:
     using node_id_type = G::node_id_type;
     using distance_type = G::distance_type;
 
-    std::shared_ptr<const G> _M_graph;
+    G const& _M_graph;
 
     std::vector<typename G::triangle_edge_id_type> _M_touched;
     std::vector<std::unique_ptr<std::vector<Label>>> _M_labels;  // TODO
@@ -22,7 +21,7 @@ public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::unique_ptr<std::vector<Label>>);
 
-    explicit steiner_labels(std::shared_ptr<const G> __graph);
+    steiner_labels(G const& __graph);
 
     // init for given query
     void init(node_id_type __start_node, node_id_type __target_node);

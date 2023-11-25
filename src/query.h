@@ -7,26 +7,26 @@
 
 #include "graph/graph.h"
 
-template<typename Graph>
+template<RoutableGraph Graph>
 struct Query {
     typename Graph::node_id_type from;
     typename Graph::node_id_type to;
 };
 
-template<typename Graph>
+template <RoutableGraph Graph>
 struct Result {
     Query<Graph> query;
 
     bool route_found = false;
 
-    distance_t distance = infinity<distance_t>();
-    distance_t beeline_distance = infinity<distance_t>();
+    distance_t distance = infinity<distance_t>;
+    distance_t beeline_distance = infinity<distance_t>;
 
     typename Graph::path_type route;
     typename Graph::subgraph_type trees;
 
     size_t nodes_visited = 0;
-    typename Graph::node_id_type mid_node = none_value<node_id_t>();
+    typename Graph::node_id_type mid_node = none_value<node_id_t>;
 
     std::chrono::duration<double, std::milli> duration;
 };
@@ -42,13 +42,11 @@ perform_query(const Graph &graph, Router &router, const Query<Graph> &query) {
     router.init(query.from, query.to);
 
     // setup timing
-    auto before
-            = std::chrono::high_resolution_clock::now();
+    auto before = std::chrono::high_resolution_clock::now();
 
     router.compute_route();
 
-    auto after
-            = std::chrono::high_resolution_clock::now();
+    auto after = std::chrono::high_resolution_clock::now();
 
     result.duration = after - before;
     result.route_found = router.route_found();

@@ -15,36 +15,30 @@
 
 template<typename Graph, typename Dijkstra>
 Graph::distance_type
-router<Graph, Dijkstra>::min_route_distance(const Graph::node_id_type &__node) const {
+router<Graph, Dijkstra>::min_route_distance(Dijkstra::node_cost_pair_type __node) const {
     distance_t result = 0;
 
-    // TODO check with CH
-
     if constexpr (Dijkstra::search_symmetric) {
+        result += __node.distance;
+
         // if node is labelled in _M_forward_search search, it already has its minimal distance and routes using it must be longer
-        if (_M_forward_search.reached(__node)) {
-            result += _M_forward_search.labels().get(__node).distance;
-        } else if (!_M_forward_search.queue_empty()) {
-            // otherwise, its distance must be at least the one of the current node
-            result += _M_forward_search.current().distance;
+        if (_M_forward_search.reached(__node.node)) {
+            result += _M_forward_search.labels().get(__node.node).distance;
         }
 
-        if (_M_backward_search.reached(__node)) {
-            result += _M_backward_search.labels().get(__node).distance;
-        } else if (!_M_backward_search.queue_empty()) {
-            result += _M_backward_search.current().distance;
+        if (_M_backward_search.reached(__node.node)) {
+            result += _M_backward_search.labels().get(__node.node).distance;
         }
+
     } else {
-        // if labels are not necessarily optimal, only use distances if the node has been labelled already
-        if (_M_forward_search.reached(__node)) {
-            result += _M_forward_search.labels().get(__node).distance;
-        }
-        if (_M_backward_search.reached(__node)) {
-            result += _M_backward_search.labels().get(__node).distance;
-        }
+        result += __node.distance;
 
-        if (!_M_forward_search.reached(__node) && !_M_backward_search.reached(__node)) {
-            result += std::max(_M_forward_search.current().distance, _M_backward_search.current().distance);
+        // if labels are not necessarily optimal, only use distances if the node has been labelled already
+        if (_M_forward_search.reached(__node.node)) {
+            result += _M_forward_search.labels().get(__node.node).distance;
+        }
+        if (_M_backward_search.reached(__node.node)) {
+            result += _M_backward_search.labels().get(__node.node).distance;
         }
     }
 
@@ -64,7 +58,7 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 
         if (is_none(pred) || pred == node_id) continue;
 
-        typename Graph::edge_id_type edge = _M_graph_ptr->topology().edge_id(pred, node_id);
+        typename Graph::edge_id_type edge = _M_graph_ptr.topology().edge_id(pred, node_id);
         edges.push_back(edge);
     }
 
@@ -76,7 +70,7 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 
         if (is_none(succ)) continue;
 
-        typename Graph::edge_id_type edge = _M_graph_ptr->topology().edge_id(node_id, succ);
+        typename Graph::edge_id_type edge = _M_graph_ptr.topology().edge_id(node_id, succ);
         edges.push_back(edge);
     }
 
@@ -87,13 +81,13 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 }
 
 template<typename Graph, typename Dijkstra>
-router<Graph, Dijkstra>::router(std::shared_ptr<const Graph> __graph)
+router<Graph, Dijkstra>::router(Graph const& __graph)
         : _M_graph_ptr(__graph),
           _M_forward_search(_M_graph_ptr),
           _M_backward_search(_M_graph_ptr),
-          _M_start_node(none_value<typename Graph::node_id_type>()),
-          _M_target_node(none_value<typename Graph::node_id_type>()),
-          _M_mid_node(none_value<typename Graph::node_id_type>()) {}
+          _M_start_node(none_value<typename Graph::node_id_type>),
+          _M_target_node(none_value<typename Graph::node_id_type>),
+          _M_mid_node(none_value<typename Graph::node_id_type>) {}
 
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(router &&__routing) noexcept
@@ -107,7 +101,7 @@ void
 router<Graph, Dijkstra>::step_forward() {
     assert (!_M_forward_search.queue_empty());
 
-    typename Dijkstra::node_cost_pair current = _M_forward_search.current();
+    typename Dijkstra::node_cost_pair_type current = _M_forward_search.current();
     assert(!is_none(current.node));
 
     _M_forward_search.step();
@@ -123,7 +117,7 @@ void
 router<Graph, Dijkstra>::step_backward() {
     assert (!_M_backward_search.queue_empty());
 
-    typename Dijkstra::node_cost_pair current = _M_backward_search.current();
+    typename Dijkstra::node_cost_pair_type current = _M_backward_search.current();
     assert(!is_none(current.node));
 
     _M_backward_search.step();
@@ -141,8 +135,8 @@ router<Graph, Dijkstra>::compute_route() {
     bool done = false;
     while (!done) {
         auto dist = distance();
-        auto min_fwd = min_route_distance(_M_forward_search.current().node);
-        auto min_bwd = min_route_distance(_M_backward_search.current().node);
+        auto min_fwd = _M_forward_search.current().distance;
+        auto min_bwd = _M_backward_search.current().distance;
         bool const fwd_done = _M_forward_search.queue_empty() || min_fwd > dist;
         bool const bwd_done = _M_backward_search.queue_empty() || min_bwd > dist;
 
@@ -165,7 +159,7 @@ Graph::distance_type
 router<Graph, Dijkstra>::distance(const Graph::node_id_type &__node) const {
     if (is_none(__node) || !_M_forward_search.labels().reached(__node) ||
         !_M_backward_search.reached(__node)) {
-        return infinity<typename Graph::distance_type>();
+        return infinity<typename Graph::distance_type>;
     }
     return _M_forward_search.get_label(__node).distance + _M_backward_search.get_label(__node).distance;
 }
@@ -174,7 +168,7 @@ template<typename Graph, typename Dijkstra>
 Graph::distance_type
 router<Graph, Dijkstra>::distance() const {
     if (is_none(_M_mid_node)) {
-        return infinity<typename Graph::distance_type>();
+        return infinity<typename Graph::distance_type>;
     }
     return _M_forward_search.get_label(_M_mid_node).distance + _M_backward_search.get_label(_M_mid_node).distance;
 }
@@ -192,7 +186,7 @@ router<Graph, Dijkstra>::route() const {
     p.push_front(_M_mid_node);
 
     while (!is_none(fwd_node) && fwd_node != _M_start_node) {
-        assert (_M_graph_ptr->topology().has_edge(_M_forward_search.get_label(fwd_node).predecessor, fwd_node));
+        assert (_M_graph_ptr.topology().has_edge(_M_forward_search.get_label(fwd_node).predecessor, fwd_node));
 
         fwd_node = _M_forward_search.get_label(fwd_node).predecessor;
 
@@ -202,9 +196,9 @@ router<Graph, Dijkstra>::route() const {
     }
 
     while (!is_none(bwd_node) && bwd_node != _M_target_node) {
-        assert (_M_graph_ptr->inverse_topology().has_edge(_M_backward_search.get_label(bwd_node).predecessor,
-                                                          bwd_node));
-        assert (_M_graph_ptr->topology().has_edge(bwd_node, _M_backward_search.get_label(bwd_node).predecessor));
+        // assert (_M_graph_ptr.inverse_topology().has_edge(_M_backward_search.get_label(bwd_node).predecessor,
+                                                          //bwd_node));
+        assert (_M_graph_ptr.topology().has_edge(bwd_node, _M_backward_search.get_label(bwd_node).predecessor));
 
         bwd_node = _M_backward_search.get_label(bwd_node).predecessor;
 
@@ -234,15 +228,10 @@ router<Graph, Dijkstra>::route_found() const {
 template<typename Graph, typename Dijkstra>
 void
 router<Graph, Dijkstra>::init(Graph::node_id_type __start_node, Graph::node_id_type __target_node) {
-    // check args
-    //if (__start_node >= graph->node_count () || __target_node >= graph->node_count () || __start_node < 0
-    //  || __target_node < 0 || __start_node == NO_NODE_ID || __target_node == NO_NODE_ID)
-    // throw;
-
     _M_start_node = __start_node;
     _M_target_node = __target_node;
     _M_forward_search.init(_M_start_node, _M_target_node);
     _M_backward_search.init(_M_target_node, _M_start_node);
 
-    _M_mid_node = none_value<typename Graph::node_id_type>();
+    _M_mid_node = none_value<typename Graph::node_id_type>;
 }

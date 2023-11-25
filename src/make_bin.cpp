@@ -5,7 +5,7 @@
 #include "file-io/gl_file_io_impl.h"
 #include "file-io/triangulation_file_io.h"
 #include "file-io/triangulation_file_io_impl.h"
-#include "routing.h"
+#include "routing_impl.h"
 
 int
 main (int argc, char const *argv[])

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../graph/graph_impl.h"
+#include "../graph/graph.h"
 #include "../triangulation/steiner_graph.h"
 #include "formatters.h"
 

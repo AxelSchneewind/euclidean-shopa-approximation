@@ -16,43 +16,46 @@
 #include <iostream>
 
 
-template<RoutableGraph G, DijkstraQueue<G> Q, typename U, DijkstraLabels L>
-dijkstra<G, Q, U, L>::dijkstra(std::shared_ptr<const G> __graph)
-        : _M_graph(__graph),
-          _M_labels(__graph),
-          _M_use_edge(__graph),
-          _M_queue(__graph) {
-}
 
-template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
-dijkstra<G, Queue, U, L>::dijkstra(dijkstra<G, Queue, U, L> &&__other) noexcept
+template<RoutableGraph G, DijkstraQueue<G> Q,
+        EdgePredicate<G> UseEdge,
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
+dijkstra<G, Q, UseEdge, L>::dijkstra(dijkstra<G, Q, UseEdge, L> &&__other) noexcept
         : _M_labels(std::move(__other._M_labels)),
           _M_graph(std::move(__other._M_graph)),
           _M_queue(std::move(__other._M_queue)) {
 }
 
-template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
-dijkstra<G, Queue, U, L>::node_cost_pair
-dijkstra<G, Queue, U, L>::current() const {
+template<RoutableGraph G, DijkstraQueue<G> Q,
+        EdgePredicate<G> UseEdge,
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
+dijkstra<G, Q, UseEdge, L>::node_cost_pair_type
+dijkstra<G, Q, UseEdge, L>::current() const {
     return _M_queue.top();
 }
 
 
-template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
+template<RoutableGraph G, DijkstraQueue<G> Q,
+        EdgePredicate<G> UseEdge,
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 bool
-dijkstra<G, Queue, U, L>::reached(G::node_id_type __node) const {
+dijkstra<G, Q, UseEdge, L>::reached(G::node_id_type __node) const {
     return _M_labels.reached(__node);
 }
 
-template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
+template<RoutableGraph G, DijkstraQueue<G> Q,
+        EdgePredicate<G> UseEdge,
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 bool
-dijkstra<G, Queue, U, L>::queue_empty() const {
+dijkstra<G, Q, UseEdge, L>::queue_empty() const {
     return _M_queue.empty();
 }
 
-template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
+template<RoutableGraph G, DijkstraQueue<G> Q,
+        EdgePredicate<G> UseEdge,
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 void
-dijkstra<G, Queue, U, L>::init(node_id_type __start_node, node_id_type __target_node) {
+dijkstra<G, Q, UseEdge, L>::init(node_id_type __start_node, node_id_type __target_node) {
     _M_target_node = __target_node;
     _M_start_node = __start_node;
 
@@ -65,53 +68,68 @@ dijkstra<G, Queue, U, L>::init(node_id_type __start_node, node_id_type __target_
     }
 }
 
-template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
+template<RoutableGraph G, DijkstraQueue<G> Q,
+        EdgePredicate<G> UseEdge,
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 void
-dijkstra<G, Queue, U, L>::expand(node_cost_pair __node) {
+dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
     assert(!is_none(__node.node));
 
-    auto edges = _M_graph->topology().outgoing_edges(__node.node);
+    static std::vector<node_cost_pair_type> node_cost_pairs;
+
+    auto edges = _M_graph.topology().outgoing_edges(__node.node);
+
     for (auto edge: edges) {
         // ignore certain edges
-        if (edge.destination == __node.node || !_M_use_edge(__node.node, edge)) {
+        if (!_M_use_edge(__node.node, edge)) [[unlikely]] {
             continue;
         }
 
-        assert(!is_none(edge.destination));
-        assert(_M_graph->has_edge(__node.node, edge.destination));
+        assert (_M_graph.has_edge(__node.node, edge.destination));
 
-        const typename G::node_id_type successor = edge.destination;
-        const distance_t successor_cost = _M_labels.get(successor).distance;
-        const distance_t new_cost = __node.distance + edge.info.cost;
+        assert (!is_none(edge.destination));
+        assert (_M_graph.has_edge(__node.node, edge.destination));
 
-        if (new_cost < successor_cost) {
+        const node_id_type successor = edge.destination;
+        const distance_t successor_cost = _M_labels.get(successor).distance; // use preliminary shortest distance
+        const distance_t new_cost = edge.info.cost + __node.distance;
+
+        if (new_cost < successor_cost) [[likely]] {
             // (re-)insert node into the queue with updated priority
-            _M_queue.push(successor, __node.node, new_cost);
+            node_cost_pairs.emplace_back(successor, __node.node, new_cost);
+            // _M_labels.preliminary_label(successor, __node.node, new_cost); // IDEA
         }
     }
+
+    // push all
+    _M_queue.push_range({node_cost_pairs.begin(), node_cost_pairs.end()});
+
+    node_cost_pairs.clear();
 }
 
 
-template<RoutableGraph G, DijkstraQueue<G> Queue, typename U, DijkstraLabels L>
+template<RoutableGraph G, DijkstraQueue<G> Q,
+        EdgePredicate<G> UseEdge,
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 void
-dijkstra<G, Queue, U, L>::step() {
-    // remove already settled nodes
-    while (!_M_queue.empty() && reached(_M_queue.top().node)) [[unlikely]] {
-        _M_queue.pop();
-    }
-
-    if (_M_queue.empty()) [[unlikely]] {
-        return;
-    }
-
-    node_cost_pair ncp = current();
+dijkstra<G, Q, UseEdge, L>::step() {
+   node_cost_pair_type ncp = current();
 
     // label current node
-    _M_labels.label(ncp.node, {ncp.distance, ncp.predecessor});
+    _M_labels.label(ncp.node, ncp);
 
     // expand to adjacent nodes
     expand(ncp);
 
     // remove current node
     _M_queue.pop();
+
+    // remove already settled nodes
+    while (!_M_queue.empty() && reached(_M_queue.top().node)) [[likely]] {
+        _M_queue.pop();
+    }
+
+    if (_M_queue.empty()) [[unlikely]] {
+        return;
+    }
 }

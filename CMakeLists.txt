@@ -34,8 +34,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG -O3 -march=native -ffast-math") #
 
 # compile everything into one library file
-# add_library(routing src/routing.h)
-# link_libraries(routing)
+add_library(routing src/routing.cpp)
+link_libraries(routing)
 
 add_executable(test_route_toy src/test/test_route_toy.cpp)
 add_executable(test_route_stgtregbz src/test/test_route_stgtregbz.cpp)
@@ -48,6 +48,8 @@ add_executable(make_steiner_gl src/make_steiner_gl.cpp)
 add_executable(route_interactive_triangulation src/route_interactive_triangulation.cpp)
 add_executable(route_interactive_steiner src/route_interactive_steiner.cpp)
 add_executable(route_interactive_ch src/route_interactive_ch.cpp)
+add_executable(distance_one_to_all src/distance_one_to_all.cpp)
+add_executable(subdivision_stats src/subdivision_stats.cpp)
 
 
 # installation
@@ -57,4 +59,3 @@ install(TARGETS route_interactive_steiner RUNTIME DESTINATION bin)
 include(CPack)
 
 # packagingadd_executable(test_steiner_graph src/test/test_steiner_graph.cpp)
-add_executable(subdivision_stats src/subdivision_stats.cpp)

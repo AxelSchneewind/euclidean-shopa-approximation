@@ -1,8 +1,5 @@
 #pragma once
 
-#include "../graph/adjacency_list.h"
-#include "../util/list_invert.h"
-
 /**
  * stores the topology of a polyhedron. Provides O(1) access to adjacent edges for given nodes/edges
  */

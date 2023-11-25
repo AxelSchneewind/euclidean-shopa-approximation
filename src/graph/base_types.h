@@ -44,31 +44,33 @@ using cost_t = float;
 using distance_t = float;
 
 template<typename T>
-constexpr T none_value();
+constexpr T none_value;
 
 template<>
-constexpr int none_value() { return -1; };
+constexpr int none_value<int> = -1;
 
 template<>
-constexpr short none_value() { return -1; };
+constexpr short none_value<short> = -1;
 
 template<typename T>
-constexpr bool is_none(T val) { return val == none_value<T>(); }
+constexpr bool is_none(T val) { return val == none_value<T>; }
 
 
 template<typename T>
-constexpr T infinity() { return std::numeric_limits<T>::max(); }
+constexpr T infinity = std::numeric_limits<T>::max();
 
 template<typename T>
-constexpr bool is_infinity(T val) { return val == infinity<T>(); }
+constexpr bool is_infinity(T val) { return val == infinity<T>; }
 
 template<typename T>
-constexpr T max_cost() { return 10000; }
+constexpr T max_cost = 10000;
 
 template<>
-constexpr distance_t infinity() {
-    return (std::numeric_limits<distance_t>::max() / 2) - max_cost<distance_t>();
-}
+constexpr distance_t infinity<distance_t> = (std::numeric_limits<distance_t>::max() / 2) - max_cost<distance_t>;
+
+template<>
+constexpr float none_value<float> = infinity<float>;
+
 
 using triangle = std::array<node_id_t, 3>;
 

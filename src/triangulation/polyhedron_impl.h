@@ -1,8 +1,10 @@
 #pragma once
 
 #include "polyhedron.h"
+
 #include "../util/keep_duplicates.h"
 #include "../util/list_intersection.h"
+#include "../util/list_invert.h"
 #include "../util/remove_duplicates.h"
 
 template<typename T, size_t Cap>
@@ -88,7 +90,7 @@ void make_face_edges(const BaseGraph &__base,
         assert(triangle_count[i] >= 1);
         assert(triangle_count[i] <= 2);
         if (triangle_count[i] < 2)
-            __edge_faces[i][triangle_count[i]++] = none_value<typename BaseGraph::edge_id_type>();
+            __edge_faces[i][triangle_count[i]++] = none_value<typename BaseGraph::edge_id_type>;
     }
 }
 

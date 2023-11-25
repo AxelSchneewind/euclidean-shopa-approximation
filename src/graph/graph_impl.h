@@ -143,7 +143,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(
 
 template<typename NodeId>
 std::ostream &
-operator<<(std::ostream &__stream, path<NodeId> &__r) {
+operator<<(std::ostream &__stream, path<NodeId> const&__r) {
     __stream << "{ ";
 
     int length = __r.nodes.size();
@@ -173,7 +173,7 @@ template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::distance_type
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::path_length(const path_type &__route) const {
     if (__route.nodes.empty()) {
-        return infinity<distance_type>();
+        return infinity<distance_type>;
     }
 
     distance_t result = 0;

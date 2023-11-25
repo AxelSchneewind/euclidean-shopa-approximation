@@ -2,11 +2,13 @@
 
 #include "formatters.h"
 
+#include "../graph/base_types.h"
+#include "../graph/unidirectional_adjacency_list.h"
+#include "../triangulation/steiner_graph.h"
+
 #include <iostream>
 #include <vector>
 #include <span>
-#include "../graph/base_types.h"
-#include "../graph/unidirectional_adjacency_list.h"
 
 namespace stream_encoders {
 
@@ -57,30 +59,61 @@ namespace stream_encoders {
     node_t
     encode_text::read(std::istream &input) {
         node_t result;
-        input >> ignore >> ignore >> result.coordinates.latitude >> result.coordinates.longitude >> ignore;
+        input >> result.coordinates.latitude >> result.coordinates.longitude;
         return result;
     }
 
     template<>
     std::ostream &
     encode_text::write(std::ostream &output, const node_t &node) {
-        output << 0 << ' ' << 0 << ' ' << node.coordinates.latitude << ' ' << node.coordinates.longitude << ' ' << 0;
+        output << node.coordinates.latitude << ' ' << node.coordinates.longitude;
         return output;
     }
+
+
 
     template<>
     adjacency_list_edge<node_id_t, edge_t>
     encode_text::read(std::istream &input) {
         adjacency_list_edge<node_id_t, edge_t> result;
-        input >> result.source >> result.destination >> result.info.cost >> ignore >> ignore;
+        input >> result.source >> result.destination >> result.info.cost;
         return result;
     }
 
     template<>
     std::ostream &
     encode_text::write(std::ostream &output, const adjacency_list_edge<node_id_t, edge_t> &edge) {
-        output << (int) edge.source << ' ' << (int) edge.destination << ' ' << (float) edge.info.cost << ' ' << 0 << ' '
-               << 0 << ' ';
+        output << (int) edge.source << ' ' << (int) edge.destination << ' ' << (float) edge.info.cost;
+        return output;
+    }
+
+    template<>
+    std::ostream &
+    encode_text::write(std::ostream &output, edge_t const&edge) {
+        output << (float) edge.cost;
+        return output;
+    }
+
+    template<>
+    std::ostream &
+    encode_text::write(std::ostream &output, ch_edge_t const&edge) {
+        output << (float) edge.cost << ' ' << edge.edgeA << ' ' << edge.edgeB;
+        return output;
+    }
+
+
+    template<>
+    adjacency_list_edge<node_id_t, ch_edge_t>
+    encode_text::read(std::istream &input) {
+        adjacency_list_edge<node_id_t, ch_edge_t> result;
+        input >> result.source >> result.destination >> result.info.cost;
+        return result;
+    }
+
+    template<>
+    std::ostream &
+    encode_text::write(std::ostream &output, const adjacency_list_edge<node_id_t, ch_edge_t> &edge) {
+        output << (int) edge.source << ' ' << (int) edge.destination << ' ' << (float) edge.info.cost << ' ' << edge.info.edgeA << ' ' << edge.info.edgeB;
         return output;
     }
 
@@ -129,27 +162,11 @@ namespace stream_encoders {
     template<>
     std::ostream &
     encode_text::write(std::ostream &output, const ch_node_t &node) {
-        output << node.coordinates.latitude << ' ' << node.coordinates.longitude << ' ' << 0 << ' ' << node.level
+        output << node.coordinates.latitude << ' ' << node.coordinates.longitude << ' ' << node.level
                << ' ';
         return output;
     }
 
-    template<>
-    adjacency_list_edge<node_id_t, ch_edge_t>
-    encode_text::read(std::istream &input) {
-        adjacency_list_edge<node_id_t, ch_edge_t> result;
-        input >> result.source >> result.destination >> result.info.cost >> ignore >> ignore >> result.info.edgeA
-              >> result.info.edgeB;
-        return result;
-    }
-
-    template<>
-    std::ostream &
-    encode_text::write(std::ostream &output, const adjacency_list_edge<node_id_t, ch_edge_t> &edge) {
-        output << (int) edge.source << ' ' << (int) edge.destination << ' ' << (float) edge.info.cost << ' ' << 0 << ' '
-               << 0 << ' ' << (int) edge.info.edgeA << ' ' << (int) edge.info.edgeB << ' ';
-        return output;
-    }
 
 
 // read/write lists

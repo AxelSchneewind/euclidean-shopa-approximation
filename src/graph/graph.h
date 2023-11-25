@@ -32,7 +32,7 @@ public:
     using topology_type = adjacency_list_type;
 private:
 
-// node data
+    // node data
     std::vector<NodeInfo> _M_node_list;
 
     // topology of _M_forward_search and backward graphs
@@ -108,5 +108,5 @@ static_assert(RoutableGraph<graph<int, int, int, int>>);
 
 template<typename Nid>
 std::ostream &
-operator<<(std::ostream &__stream, path <Nid> &__r);
+operator<<(std::ostream &__stream, path <Nid> const&__r);
 

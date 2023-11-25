@@ -12,15 +12,17 @@
 
 template<typename Graph, typename Dijkstra>
 class router {
+public:
+    using graph_type = Graph;
 private:
-    std::shared_ptr<const Graph> _M_graph_ptr;
+    Graph const& _M_graph_ptr;
 
     Dijkstra _M_forward_search;
     Dijkstra _M_backward_search;
 
-    typename Graph::node_id_type _M_start_node;
-    typename Graph::node_id_type _M_target_node;
-    typename Graph::node_id_type _M_mid_node;
+    graph_type::node_id_type _M_start_node;
+    graph_type::node_id_type _M_target_node;
+    graph_type::node_id_type _M_mid_node;
 
     void step_forward();
 
@@ -31,14 +33,14 @@ private:
      * @param node
      * @return
      */
-    Graph::distance_type min_route_distance(const typename Graph::node_id_type &__node) const;
+    Graph::distance_type min_route_distance(Dijkstra::node_cost_pair_type __node) const;
 
 public:
     static constexpr size_t SIZE_PER_NODE = 2 * Dijkstra::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE = 2 * Dijkstra::SIZE_PER_EDGE;
 
 
-    explicit router(std::shared_ptr<const Graph> __graph);
+    explicit router(Graph const& __graph);
 
     router(const router &__other) = delete;
 

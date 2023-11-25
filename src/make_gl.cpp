@@ -5,7 +5,7 @@
 #include "file-io/gl_file_io_impl.h"
 #include "file-io/triangulation_file_io.h"
 #include "file-io/triangulation_file_io_impl.h"
-#include "routing.h"
+#include "routing_impl.h"
 
 template<RoutableGraph G, typename file_io_in, typename file_io_out>
 void make_gl(std::istream &input, std::ostream &output, int linewidth, int color) {

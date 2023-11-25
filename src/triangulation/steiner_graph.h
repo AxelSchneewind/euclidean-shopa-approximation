@@ -1,24 +1,12 @@
 #pragma once
 
-#include "../graph/adjacency_list.h"
-#include "../graph/base_types.h"
-#include "../graph/geometry.h"
-#include "polyhedron_impl.h"
-#include "../graph/subgraph.h"
-
-#include <iostream>
-#include <algorithm>
-#include <cassert>
-#include <span>
-#include <vector>
-#include <stdfloat>
 #include "subdivision_table.h"
 
 struct steiner_node_id {
     edge_id_t edge;
     int steiner_index;
 
-    steiner_node_id() : edge(none_value<edge_id_t>()), steiner_index(-1) {};
+    steiner_node_id() : edge(none_value<edge_id_t>), steiner_index(-1) {};
 
     constexpr steiner_node_id(edge_id_t __edge, int __steiner_index) : edge(__edge), steiner_index(__steiner_index) {}
 
@@ -37,23 +25,19 @@ struct steiner_node_id {
     }
 };
 
-template<>
-constexpr steiner_node_id none_value() { return {none_value<edge_id_t>(), none_value<int>()}; }
-
-std::ostream &operator<<(std::ostream &output, steiner_node_id id) {
-    return output << id.edge << ':' << id.steiner_index;
-}
 
 template<>
 struct std::hash<steiner_node_id> {
     std::size_t operator()(const steiner_node_id &__s) const noexcept;
 };
 
-std::size_t std::hash<steiner_node_id>::operator()(const steiner_node_id &__s) const noexcept {
-    std::size_t h1 = std::hash<edge_id_t>{}(__s.edge);
-    std::size_t h2 = std::hash<int>{}(__s.steiner_index);
-    return h1 ^ (h2 << 1);
-}
+
+
+template<>
+constexpr steiner_node_id none_value<steiner_node_id> = {none_value<edge_id_t>, -1};
+
+std::ostream &operator<<(std::ostream &output, steiner_node_id id);
+
 
 
 struct steiner_edge_id {
@@ -70,23 +54,16 @@ struct steiner_edge_id {
     }
 };
 
-template<>
-constexpr steiner_edge_id none_value() { return {none_value<steiner_node_id>(), none_value<steiner_node_id>()}; }
 
-std::ostream &operator<<(std::ostream &output, steiner_edge_id id) {
-    return output << '(' << id.source << ',' << id.destination << ')';
-}
+template<>
+constexpr steiner_edge_id none_value<steiner_edge_id> = {none_value<steiner_node_id>, none_value<steiner_node_id>};
+
+std::ostream &operator<<(std::ostream &output, steiner_edge_id id);
 
 template<>
 struct std::hash<steiner_edge_id> {
     std::size_t operator()(const steiner_edge_id &s) const noexcept;
 };
-
-std::size_t std::hash<steiner_edge_id>::operator()(const steiner_edge_id &s) const noexcept {
-    std::size_t h1 = std::hash<steiner_node_id>{}(s.source);
-    std::size_t h2 = std::hash<steiner_node_id>{}(s.destination);
-    return h1 ^ (h2 << 1);
-}
 
 /**
  * provides access to a virtual graph derived from a base graph
@@ -288,16 +265,17 @@ public:
 
     const steiner_graph &inverse_topology() const { return *this; }
 
-    // std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    //auto
-    steiner_graph::edges_iterator_type<polyhedron_type::edges_iterator_type>
+    std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     outgoing_edges(node_id_type __node_id) const;
 
+    std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
+    outgoing_edges(node_id_type __node_id, node_id_type __reached_from) const;
 
-    // std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    //auto
-    steiner_graph::edges_iterator_type<polyhedron_type::edges_iterator_type>
+
+    std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     incoming_edges(node_id_type __node_id) const { return outgoing_edges(__node_id); };
+    std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
+    incoming_edges(node_id_type __node_id, node_id_type __reached_from) const { return outgoing_edges(__node_id, __reached_from); };
 
     distance_type path_length(const path_type &__route) const;
 

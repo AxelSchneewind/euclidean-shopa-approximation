@@ -9,7 +9,7 @@
 #include "file-io/gl_file_io_impl.h"
 #include "file-io/triangulation_file_io_impl.h"
 
-#include "routing.h"
+#include "routing_impl.h"
 #include "query.h"
 
 #include <chrono>

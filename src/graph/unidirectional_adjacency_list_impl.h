@@ -1,13 +1,14 @@
 #pragma once
 
-#include "../util/list_intersection.h"
 #include "unidirectional_adjacency_list.h"
+
+#include "../util/list_intersection.h"
+#include "../util/remove_duplicates.h"
 
 #include <algorithm>
 #include <cassert>
 #include <span>
 #include <vector>
-#include "../util/remove_duplicates.h"
 
 
 template<typename NodeId, typename E>
@@ -101,7 +102,7 @@ unidirectional_adjacency_list<NodeId, E>::edge_id(NodeId __source, NodeId __dest
     assert(contains_node(__source));
     assert(contains_node(__dest));
 
-    edge_id_t result = none_value<edge_index_type>();
+    edge_id_t result = none_value<edge_index_type>;
 
 #pragma GCC ivdep
     for (int idx = _M_offsets[__source]; idx < _M_offsets[__source + 1]; ++idx) {
