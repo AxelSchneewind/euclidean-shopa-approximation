@@ -2,7 +2,7 @@
 
 #include "dijkstra_concepts.h"
 
-template <typename T, typename G>
+template<typename T, typename G>
 concept EdgePredicate = std::predicate<T, typename G::node_id_type, internal_adjacency_list_edge<typename G::node_id_type, typename G::edge_info_type>>;
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
@@ -48,11 +48,11 @@ public:
     dijkstra(const dijkstra &__other) = delete;
 
 
-
     // constructs a dijkstra object for the given graph
     explicit dijkstra(G const &__graph)
             : _M_graph(__graph), _M_queue{__graph}, _M_use_edge{__graph},
               _M_labels{__graph} {};
+
     explicit dijkstra(G const &__graph, Q &&__queue, UseEdge &&__use_edge, L &&__labels)
             : _M_graph(__graph), _M_queue(std::move(__queue)), _M_use_edge(std::move(__use_edge)),
               _M_labels(std::move(__labels)) {};
@@ -63,6 +63,8 @@ public:
 
     dijkstra<G, Q, UseEdge, L> &operator=(const dijkstra<G, Q, UseEdge, L> &__other) = delete;
 
+
+    typename G::distance_type min_path_length() const;
 
     typename G::node_id_type source() const { return _M_start_node; }
 

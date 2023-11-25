@@ -16,7 +16,6 @@
 #include <iostream>
 
 
-
 template<RoutableGraph G, DijkstraQueue<G> Q,
         EdgePredicate<G> UseEdge,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
@@ -113,7 +112,7 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 void
 dijkstra<G, Q, UseEdge, L>::step() {
-   node_cost_pair_type ncp = current();
+    node_cost_pair_type ncp = current();
 
     // label current node
     _M_labels.label(ncp.node, ncp);
@@ -125,11 +124,16 @@ dijkstra<G, Q, UseEdge, L>::step() {
     _M_queue.pop();
 
     // remove already settled nodes
-    while (!_M_queue.empty() && reached(_M_queue.top().node)) [[likely]] {
-        _M_queue.pop();
-    }
+    // while (!_M_queue.empty() && reached(_M_queue.top().node)) [[likely]] {
+    //     _M_queue.pop();
+    // }
 
-    if (_M_queue.empty()) [[unlikely]] {
-        return;
-    }
+    // if (_M_queue.empty()) [[unlikely]] {
+    //     return;
+    // }
+}
+
+template<RoutableGraph G, DijkstraQueue<G> Q, EdgePredicate<G> UseEdge, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
+typename G::distance_type dijkstra<G, Q, UseEdge, L>::min_path_length() const {
+    return current().min_distance();
 }

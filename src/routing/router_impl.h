@@ -19,26 +19,27 @@ router<Graph, Dijkstra>::min_route_distance(Dijkstra::node_cost_pair_type __node
     distance_t result = 0;
 
     if constexpr (Dijkstra::search_symmetric) {
-        result += __node.distance;
+        result += __node.min_distance();
 
         // if node is labelled in _M_forward_search search, it already has its minimal distance and routes using it must be longer
-        if (_M_forward_search.reached(__node.node)) {
-            result += _M_forward_search.labels().get(__node.node).distance;
+        if (!_M_forward_search.reached(__node.node)) {
+            result -= _M_forward_search.current().distance;
         }
 
-        if (_M_backward_search.reached(__node.node)) {
-            result += _M_backward_search.labels().get(__node.node).distance;
+        if (!_M_backward_search.reached(__node.node)) {
+            result -= _M_backward_search.current().distance;
         }
 
     } else {
         result += __node.distance;
 
         // if labels are not necessarily optimal, only use distances if the node has been labelled already
-        if (_M_forward_search.reached(__node.node)) {
+        if (!_M_forward_search.reached(__node.node)) {
             result += _M_forward_search.labels().get(__node.node).distance;
+            result -= _M_forward_search.current().distance;
         }
-        if (_M_backward_search.reached(__node.node)) {
-            result += _M_backward_search.labels().get(__node.node).distance;
+        if (!_M_backward_search.reached(__node.node)) {
+            result -= _M_backward_search.current().distance;
         }
     }
 
@@ -63,16 +64,16 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
     }
 
     // add nodes and edges of backward dijkstra
-    for (auto node_id: _M_backward_search.labels().all_visited()) {
-        nodes.push_back(node_id);
+    // for (auto node_id: _M_backward_search.labels().all_visited()) {
+    //     nodes.push_back(node_id);
 
-        typename Graph::node_id_type succ = _M_backward_search.labels().get(node_id).predecessor;
+    //     typename Graph::node_id_type succ = _M_backward_search.labels().get(node_id).predecessor;
 
-        if (is_none(succ)) continue;
+    //     if (is_none(succ)) continue;
 
-        typename Graph::edge_id_type edge = _M_graph_ptr.topology().edge_id(node_id, succ);
-        edges.push_back(edge);
-    }
+    //     typename Graph::edge_id_type edge = _M_graph_ptr.topology().edge_id(node_id, succ);
+    //     edges.push_back(edge);
+    // }
 
     remove_duplicates(nodes);
     remove_duplicates(edges);
@@ -81,7 +82,7 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 }
 
 template<typename Graph, typename Dijkstra>
-router<Graph, Dijkstra>::router(Graph const& __graph)
+router<Graph, Dijkstra>::router(Graph const &__graph)
         : _M_graph_ptr(__graph),
           _M_forward_search(_M_graph_ptr),
           _M_backward_search(_M_graph_ptr),
@@ -135,10 +136,10 @@ router<Graph, Dijkstra>::compute_route() {
     bool done = false;
     while (!done) {
         auto dist = distance();
-        auto min_fwd = _M_forward_search.current().distance;
-        auto min_bwd = _M_backward_search.current().distance;
-        bool const fwd_done = _M_forward_search.queue_empty() || min_fwd > dist;
-        bool const bwd_done = _M_backward_search.queue_empty() || min_bwd > dist;
+        bool const fwd_done = _M_forward_search.queue_empty() ||
+                              min_route_distance(_M_forward_search.current()) > dist; // TODO allow usage of A* value
+        bool const bwd_done =
+                _M_backward_search.queue_empty() || min_route_distance(_M_forward_search.current()) > dist;
 
         // check if no better route can be found
         if (fwd_done && bwd_done) {
@@ -197,7 +198,7 @@ router<Graph, Dijkstra>::route() const {
 
     while (!is_none(bwd_node) && bwd_node != _M_target_node) {
         // assert (_M_graph_ptr.inverse_topology().has_edge(_M_backward_search.get_label(bwd_node).predecessor,
-                                                          //bwd_node));
+        //bwd_node));
         assert (_M_graph_ptr.topology().has_edge(bwd_node, _M_backward_search.get_label(bwd_node).predecessor));
 
         bwd_node = _M_backward_search.get_label(bwd_node).predecessor;

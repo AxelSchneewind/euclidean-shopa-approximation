@@ -15,7 +15,7 @@ concept DistanceNodeCostPair = HasDistance<T, steiner_graph::distance_type> && H
  * only stores labels for relevant nodes in a graph with steiner points
  * @tparam NodeCostPair
  */
-template<DistanceNodeCostPair NodeCostPair>
+template<DistanceNodeCostPair NodeCostPair, typename Label>
 class frontier_labels {
 private:
     using node_id_type = steiner_graph::node_id_type;
@@ -24,12 +24,10 @@ private:
     using distance_type = steiner_graph::distance_type;
     using node_cost_pair_type = NodeCostPair;
 
-    struct label {
-        steiner_graph::distance_type distance;
-    };
+    using label_type = Label;
 
     struct base_edge_info {
-        std::vector<label> labels;
+        std::vector<label_type> labels;
     };
 
     steiner_graph const &_M_graph;
@@ -37,18 +35,18 @@ private:
     std::unordered_map<base_node_id_type, std::shared_ptr<base_edge_info>> _M_edge_info;
 
 
-    struct active_edge_info {
+    struct aggregate_node_info {
         base_edge_id_type edge;
         steiner_graph::distance_type throwaway_distance;
     };
 
     struct compare_edges {
-        bool operator()(active_edge_info const &e1, active_edge_info const &e2) {
+        bool operator()(aggregate_node_info const &e1, aggregate_node_info const &e2) {
             return e1.throwaway_distance > e2.throwaway_distance;
         }
     };
 
-    std::priority_queue<active_edge_info, std::vector<active_edge_info>, compare_edges> active_edges;
+    std::priority_queue<aggregate_node_info, std::vector<aggregate_node_info>, compare_edges> active_edges;
 
 public:
     using label_type = label;
@@ -64,7 +62,7 @@ public:
     };
 
     // NOT CORRECT
-    bool reached (node_id_type __node) const {
+    bool reached(node_id_type __node) const {
         return _M_edge_info.contains(__node.edge);
     }
 
@@ -87,17 +85,18 @@ public:
         } else {
             // insert into queue of active edges, this edge can be removed as soon as the distance of the current node plus the length of it is reached
             base_node_id_type src = _M_graph.base_graph().source(edge);
-            base_node_id_type  dest = _M_graph.base_graph().destination(edge);
+            base_node_id_type dest = _M_graph.base_graph().destination(edge);
             distance_type edge_length = distance(_M_graph.node(src).coordinates,
                                                  _M_graph.node(dest).coordinates);
             active_edges.push({edge, __node_cost_pair.distance + edge_length});
 
             // setup label information
             auto node_count = _M_graph.steiner_info(edge).node_count;
-            _M_edge_info[edge] = std::make_shared<base_edge_info>(base_edge_info{std::vector<label_type>(node_count, { infinity<distance_type> } )});
+            _M_edge_info[edge] = std::make_shared<base_edge_info>(
+                    base_edge_info{std::vector<label_type>(node_count, {infinity<distance_type>})});
         }
 
-        _M_edge_info[edge]->labels[steiner_index] =  { __node_cost_pair.distance };
+        _M_edge_info[edge]->labels[steiner_index] = {__node_cost_pair.distance};
 
         // clear edge with lowest distance if it is lower than the distance from current ncp
         while (__node_cost_pair.distance > active_edges.top().throwaway_distance) {
@@ -136,4 +135,5 @@ struct distance_label {
 };
 
 template<>
-constexpr distance_label none_value<distance_label> = {infinity<steiner_graph::distance_type>, none_value<steiner_graph::node_id_type>};
+constexpr distance_label none_value<distance_label> = {infinity<steiner_graph::distance_type>,
+                                                       none_value<steiner_graph::node_id_type>};

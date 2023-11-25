@@ -4,6 +4,7 @@
 #include <tuple>
 #include <queue>
 #include <map>
+#include "../triangulation/frontier_labels.h"
 
 
 template<RoutableGraph Graph>
@@ -108,7 +109,6 @@ public:
 
     /**
      * perform sweep along container and remove duplicates (i.e. for node cost pairs with identical node, the one with minimal distance is kept)
-     * TODO test
      */
     void cleanup() {
         auto &container = base_queue_type::c;
@@ -124,13 +124,14 @@ public:
             int child_index = 2 * (from_index - 1) + 1;
             while (from_index < to_index && first_index.contains(node)) [[likely]] {
                 // if current instance has higher distance, move last element of vector here
-                if (ncp.distance >= container[first_index[node]].distance) [[likely]]
-                    // if (child_index < to_index) [[likely]] {
-                    //     container[from_index] = container[2 * (from_index - 1) + 1]; // replace with right child
-                    //     container[2 * (from_index - 1) + 1] = container[--to_index]; // replace right child with end of vector
-                    // }
-                    //else
-                        container[from_index] = container[--to_index];
+                if (ncp.distance >= container[first_index[node]].distance)
+                    [[likely]]
+                            // if (child_index < to_index) [[likely]] {
+                            //     container[from_index] = container[2 * (from_index - 1) + 1]; // replace with right child
+                            //     container[2 * (from_index - 1) + 1] = container[--to_index]; // replace right child with end of vector
+                            // }
+                            //else
+                            container[from_index] = container[--to_index];
                 else // if current instance has lower distance, swap with first occurrence, next iteration will get last element
                     container[first_index[node]] = container[from_index];
 
@@ -151,12 +152,14 @@ public:
 struct a_star_info {
     // value from a* heuristic (distance + minimal remaining distance)
     distance_t value;
+
+    bool operator==(a_star_info const &) const = default;
+
+    distance_t min_distance() { return value; };
 };
 
 template<>
 constexpr a_star_info none_value<a_star_info> = {infinity<distance_t>};
-
-
 
 
 template<typename Graph, typename NodeCostPair, typename Comp = A_Star<NodeCostPair>>
@@ -218,7 +221,9 @@ private:
     struct edge_ncp {
         steiner_graph::base_topology_type::edge_id_type edge;
         steiner_graph::distance_type distance;
-        struct { float value; } info;
+        struct {
+            float value;
+        } info;
     };
 
     struct edge_max_dist {
@@ -240,7 +245,7 @@ private:
 
     // store node cost pairs here
     std::unordered_map<steiner_graph::base_topology_type::edge_id_type, edge_info> active_edge_info;
-    // keep track of maximum distances of each edge (to know when to discard their node info)
+    // keep track of maximum distances of each edge (to know when to discard their node info), does NOT contain
     std::priority_queue<edge_max_dist, std::vector<edge_max_dist>, Default<edge_max_dist>> active_edges;
 
 public:
@@ -252,35 +257,62 @@ public:
 
     void pop() {
         auto current_edge_ncp = edge_queue.top();
-        auto& edge_info = active_edge_info[current_edge_ncp.edge];
 
         // find nodes with minimal and second minimal distance that has not been returned yet
         NodeCostPair result = none_value<NodeCostPair>;
         NodeCostPair second_result = none_value<NodeCostPair>;
-        for(auto node_cost_pair : edge_info.nodes) {
-            if (node_cost_pair.distance >= edge_info.distance && node_cost_pair.distance < result.distance) {
-                second_result = result;
-                result = node_cost_pair;
+
+        while (is_none(result)) {
+            // pop duplicates (why even necessary?)
+            while (!active_edge_info.contains(edge_queue.top().edge))
+                edge_queue.pop();
+            current_edge_ncp = edge_queue.top();
+
+            auto edge_info = active_edge_info[current_edge_ncp.edge];
+
+            // search for minimal and second minimal distance
+            for (auto node_cost_pair: edge_info.nodes) {
+                if (node_cost_pair.distance >= edge_info.distance && node_cost_pair.distance < result.distance) {
+                    second_result = result;
+                    result = node_cost_pair;
+                }
             }
-        }
 
-        // remove edges that are not relevant any more
-        while (active_edges.top().distance < current_edge_ncp.distance) {
-            assert(active_edges.top().edge != edge_queue.top().edge);
-            active_edge_info.erase(active_edges.top().edge);
-            active_edges.pop();
-        }
+            // remove edges that are not relevant any more
+            while (active_edges.top().edge != current_edge_ncp.edge &&
+                   active_edges.top().distance < current_edge_ncp.distance) {
+                assert(active_edge_info.contains(active_edges.top().edge));
+                assert(active_edges.top().edge != edge_queue.top().edge);
+                active_edge_info.erase(active_edges.top().edge);
+                active_edges.pop();
+            }
 
-        //  remove edge
-        edge_queue.pop();
+            //  remove edge
+            edge_queue.pop();
+        }
+        assert(active_edge_info.at(current_edge_ncp.edge).nodes.size() > 0);
 
         // reinsert edge if there are still nodes left to label
-        active_edge_info[current_edge_ncp.edge].distance = second_result.distance;
-        if (!is_none(active_edge_info[current_edge_ncp.edge].distance))
-            edge_queue.push(edge_ncp{current_edge_ncp.edge, second_result.distance, current_edge_ncp.info});
+        if (!is_none(second_result)) {
+            assert(active_edge_info.contains(current_edge_ncp.edge));
+            active_edge_info[current_edge_ncp.edge].distance = second_result.distance;
+            if (!is_none(active_edge_info[current_edge_ncp.edge].distance))
+                edge_queue.push(edge_ncp{current_edge_ncp.edge, second_result.distance, current_edge_ncp.info});
+        } else {    // remove otherwise
+            active_edge_info.erase(current_edge_ncp.edge);
+        }
+
+        // pop duplicates (why even necessary?)
+        while (!active_edge_info.contains(edge_queue.top().edge))
+            edge_queue.pop();
 
         assert(active_edges.empty() || active_edge_info.contains(active_edges.top().edge));
         assert(edge_queue.empty() || active_edge_info.contains(edge_queue.top().edge));
+        assert(active_edge_info.at(edge_queue.top().edge).nodes.size() > 0);
+
+        assert(active_edges.empty() || active_edge_info.contains(active_edges.top().edge));
+        assert(edge_queue.empty() || active_edge_info.contains(edge_queue.top().edge));
+        assert(active_edge_info.at(edge_queue.top().edge).nodes.size() > 0);
     }
 
     void push(NodeCostPair ncp) {
@@ -289,15 +321,17 @@ public:
         // edge has not been seen yet
         if (!active_edge_info.contains(edge)) {
             // allocate list of node cost pairs for this edge
-            active_edge_info.insert(std::make_pair(edge, edge_info{ ncp.distance, std::vector<NodeCostPair>(_M_graph.steiner_info(edge).node_count, none_value<NodeCostPair>)}));
-            assert(is_infinity(active_edge_info.at(edge).nodes[0].distance));
+            active_edge_info.insert(std::make_pair(edge, edge_info{ncp.distance, std::vector<NodeCostPair>(
+                    _M_graph.steiner_info(edge).node_count, none_value<NodeCostPair>)}));
+            assert(is_infinity(active_edge_info.at(edge).nodes.at(0).distance));
+            assert(active_edge_info[edge].nodes.size() >= _M_graph.steiner_info(edge).node_count);
 
 
             // insert edge into active_edges
             auto src = _M_graph.base_graph().source(edge);
             auto dest = _M_graph.base_graph().destination(edge);
             distance_t length = distance(_M_graph.node(src).coordinates, _M_graph.node(dest).coordinates);
-            active_edges.push({edge, ncp.distance + length});
+            active_edges.push({edge, ncp.distance + 100 * length});
         }
 
         // update stored node cost pair
@@ -308,7 +342,7 @@ public:
             }
 
             // insert into queue
-            edge_ncp e_ncp { edge, ncp.distance, {0} };
+            edge_ncp e_ncp{edge, ncp.distance, {0}};
             e_ncp.info.value = ncp.distance + distance(_M_target_coordinates, _M_graph.node(ncp.node).coordinates);
             edge_queue.push(e_ncp);
         }
@@ -317,6 +351,17 @@ public:
         assert(active_edges.empty() || active_edge_info.contains(active_edges.top().edge));
         assert(active_edge_info.contains(ncp.node.edge));
         assert(edge_queue.empty() || active_edge_info.contains(edge_queue.top().edge));
+        assert(active_edge_info[edge].nodes.size() > 0);
+        assert(active_edge_info.at(edge_queue.top().edge).nodes.size() > 0);
+
+        // pop duplicates (why even necessary?)
+        while (!active_edge_info.contains(edge_queue.top().edge))
+            edge_queue.pop();
+
+        assert(active_edges.empty() || active_edge_info.contains(active_edges.top().edge));
+        assert(edge_queue.empty() || active_edge_info.contains(edge_queue.top().edge));
+        assert(active_edge_info[edge].nodes.size() > 0);
+        assert(active_edge_info.at(edge_queue.top().edge).nodes.size() > 0);
     }
 
 
@@ -362,19 +407,22 @@ public:
         assert(edge_queue.empty() || active_edge_info.contains(edge_queue.top().edge));
 
         auto _edge_ncp = edge_queue.top();
+        auto edge_info = active_edge_info.at(_edge_ncp.edge);
 
-        auto const& edge_info = active_edge_info.at(_edge_ncp.edge);
+        assert(edge_info.nodes.size() > 0);
 
         // find node with minimal distance that has not been returned yet
         NodeCostPair result = edge_info.nodes[0];
-        for(auto node_cost_pair : edge_info.nodes) {
+        for (auto node_cost_pair: edge_info.nodes) {
             if (node_cost_pair.distance >= edge_info.distance && node_cost_pair.distance < result.distance) {
                 result = node_cost_pair;
             }
         }
 
+        assert (!is_none(result.node));
         return result;
     }
 };
+
 
 
