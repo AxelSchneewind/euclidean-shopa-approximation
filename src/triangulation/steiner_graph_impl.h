@@ -188,8 +188,8 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
 
     // get triangles that have not been visited yet
     auto triangles = base_polyhedron().edge_faces(__node_id.edge);
-    char triangle_first = 0;
-    char triangle_last = 2;
+    unsigned char triangle_first = 0;
+    unsigned char triangle_last = 2;
 
     // if this node is reached via a face crossing segment, only use edges in next face
     if (__reached_from.edge != __node_id.edge && __reached_from.edge != inv_edge) [[likely]] {
@@ -247,7 +247,7 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
     }
 
     // face-crossing edges
-    for (char triangle_index = triangle_first; triangle_index < triangle_last; triangle_index++) [[unlikely]] {
+    for (unsigned char triangle_index = triangle_first; triangle_index < triangle_last; triangle_index++) [[unlikely]] {
         assert (!is_none(triangles[triangle_index]));
         auto triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
 

@@ -43,7 +43,7 @@ dijkstra<G, Q, UseEdge, L>::reached(G::node_id_type __node) const {
         return _M_labels.get_preliminary(__node).distance < _M_queue.top().distance;
     } else {
         return _M_labels.reached(__node) &&
-               (_M_queue.empty() || _M_labels.get(__node).distance < _M_queue.top().min_distance());
+               (_M_queue.empty() || _M_labels.get(__node).distance < _M_queue.top().value());
     }
 }
 

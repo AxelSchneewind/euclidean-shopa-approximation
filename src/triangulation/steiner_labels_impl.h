@@ -11,8 +11,7 @@ steiner_labels<G, N>::all_visited() const {
     // for (auto edge: _M_touched) {
     //     for (auto node: _M_graph.node_ids(edge)) {
     //         if (!is_none(node.edge) && node.steiner_index != -1 && reached(node)) {
-    //             //result.emplace_back(node);
-    //             co_yield node;
+    //             result.emplace_back(node);
     //         }
     //     }
     // }

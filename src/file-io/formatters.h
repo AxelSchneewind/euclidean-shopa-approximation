@@ -8,35 +8,39 @@
 
 namespace stream_encoders {
 
-static long ignore;
+    class encode_text {
+    public:
+        static std::istream &skip_comments(std::istream &s);
 
-class encode_text
-{
-public:
-  static std::istream &skip_comments (std::istream &s);
+        template<typename T>
+        static T read(std::istream &input);
 
-  template <typename T> static T read (std::istream &input);
+        template<typename T>
+        static std::ostream &write(std::ostream &output, const T &value);
 
-  template <typename T> static std::ostream &write (std::ostream &output, const T &value);
+        // read/write lists
+        template<typename T>
+        static std::vector<T> read(std::istream &input, int count);
 
-  // read/write lists
-  template <typename T> static std::vector<T> read (std::istream &input, int count);
+        template<typename T>
+        static std::ostream &write(std::ostream &output, std::span<const T> &values);
+    };
 
-  template <typename T> static std::ostream &write (std::ostream &output, std::span<const T> &values);
-};
+    class encode_binary {
+    public:
+        std::istream &skip_comments(std::istream &input) { return input; };
 
-class encode_binary
-{
-public:
-  std::istream &skip_comments (std::istream &input){ return input; };
+        template<typename T>
+        static T read(std::istream &input);
 
-  template <typename T> static T read (std::istream &input);
+        template<typename T>
+        static std::ostream &write(std::ostream &output, const T &value);
 
-  template <typename T> static std::ostream &write (std::ostream &output, const T &value);
+        template<typename T>
+        static std::vector<T> read(std::istream &input, int count);
 
-  template <typename T> static std::vector<T> read (std::istream &input, int count);
-
-  template <typename T> static std::ostream &write (std::ostream &output, std::span<const T> &values);
-};
+        template<typename T>
+        static std::ostream &write(std::ostream &output, std::span<const T> &values);
+    };
 
 }

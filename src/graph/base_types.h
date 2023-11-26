@@ -66,7 +66,7 @@ template<typename T>
 constexpr T max_cost = 10000;
 
 template<>
-constexpr distance_t infinity<distance_t> = (std::numeric_limits<distance_t>::max() / 2) - max_cost<distance_t>;
+constexpr distance_t infinity<distance_t> = std::numeric_limits<distance_t>::infinity();
 
 template<>
 constexpr float none_value<float> = infinity<float>;

@@ -28,9 +28,10 @@ else (DOXYGEN_FOUND)
 endif (DOXYGEN_FOUND)
 
 
-# performance options
-set(CMAKE_CXX_FLAGS "-Wall -Wextra") #
+set(CMAKE_CXX_FLAGS "-Wall") # -Wextra
 set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
+
+# performance options
 set(CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG -O3 -march=native") # -ffast-math
 
 # compile everything into one library file

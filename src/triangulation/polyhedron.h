@@ -1,5 +1,8 @@
 #pragma once
 
+#include "../graph/base_types.h"
+#include "../routing/dijkstra_concepts.h"
+
 /**
  * stores the topology of a polyhedron. Provides O(1) access to adjacent edges for given nodes/edges
  */

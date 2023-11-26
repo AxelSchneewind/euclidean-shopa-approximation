@@ -1,13 +1,15 @@
 #pragma once
 
-#include "base_types.h"
 #include "unidirectional_adjacency_list.h"
 #include "adjacency_list.h"
+#include "subgraph.h"
+
+#include "base_types.h"
 #include "../routing/dijkstra_concepts.h"
+#include "../util/counting_iterator.h"
+
 #include <unordered_map>
 #include <vector>
-#include "../util/counting_iterator.h"
-#include "subgraph.h"
 
 
 /**

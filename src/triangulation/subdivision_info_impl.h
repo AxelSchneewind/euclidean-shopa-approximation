@@ -26,7 +26,8 @@ subdivision_table::min_r_per_triangle_class(const std::vector<node_t> &__nodes, 
     return min_r;
 }
 
-std::vector<subdivision_table::edge_class> subdivision_table::precompute(float __epsilon, float __min_relative_r_value) {
+std::vector<subdivision_table::edge_class>
+subdivision_table::precompute(float __epsilon, float __min_relative_r_value) {
     std::vector<edge_class> triangle_classes;
 
     for (int index = 0; index < step_count; ++index) {
@@ -60,7 +61,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
     std::vector<subdivision_edge_info> result;
     result.reserve(__triangulation.edge_count());
 
-    for (int i = 0; i < __triangulation.edge_count(); i++) {
+    for (size_t i = 0; i < __triangulation.edge_count(); i++) {
         auto node1 = __triangulation.source(i);
         auto node2 = __triangulation.destination(i);
 
@@ -97,7 +98,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         angle2 = std::min(angle2, max_angle);
 
         // length of the edge
-        float length = distance(c2, c1);
+        double length = distance(c2, c1);
 
         // relative value where the mid-point (with max distance to other edges) lies between node1 and node2
         float mid_value = 1 / (1 + std::sin(angle1) / std::sin(angle2));
@@ -112,7 +113,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         // assert(r < __epsilon / 5);
 
         // get the class this edge belongs to
-        int index = class_index(angle1);
+        auto index = class_index(angle1);
 
         // get interval in node_positions that is between r and mid_value
         size_t first = 0;
@@ -124,23 +125,29 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         while (last < node_positions.size() && node_positions[last] < mid_value)
             last++;
 
-        auto entry = subdivision_edge_info {static_cast<std::float16_t>(mid_value),
-                                            static_cast<std::float16_t>(mid_dist),
-                                            r,
-                                            static_cast<unsigned char>(index),
-                                            static_cast<unsigned char>(first),
-                                            static_cast<unsigned char>(last),
-                                            static_cast<unsigned char>(last - first + 3)};
+        assert((size_t) std::numeric_limits<unsigned char>::max > first);
+        assert((size_t) std::numeric_limits<unsigned char>::max > last);
+        assert(first < last + 3);
+        assert(last - first >= 0);
+
+        auto entry = subdivision_edge_info{static_cast<std::float16_t>(mid_value),
+                // static_cast<std::float16_t>(mid_dist),
+                                           r,
+                                           static_cast<unsigned char>(last - first + 3UL),
+                                           static_cast<unsigned char>(index),
+                                           static_cast<unsigned char>(first)};
         result.push_back(entry);
     }
 
     return result;
 }
 
-subdivision_table::subdivision_table(subdivision_table &&__other) noexcept: triangle_classes(std::move(__other.triangle_classes)), edges(std::move(__other.edges)) {}
+subdivision_table::subdivision_table(subdivision_table &&__other) noexcept: triangle_classes(
+        std::move(__other.triangle_classes)), edges(std::move(__other.edges)) {}
 
 subdivision_table::subdivision_table(std::vector<edge_class> &&__node_positions,
-                                     std::vector<subdivision_edge_info> &&__edges) : triangle_classes(std::move(__node_positions)), edges(std::move(__edges)) {}
+                                     std::vector<subdivision_edge_info> &&__edges) : triangle_classes(
+        std::move(__node_positions)), edges(std::move(__edges)) {}
 
 float subdivision_table::class_angle(int __index) {
     return min_angle + step_size * (__index);
@@ -161,14 +168,16 @@ subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coord
         return c1;
     if (steiner_index == 1)
         return interpolate_linear(c1, c2, info.r);
-    if (steiner_index >= info.node_count - 1)
-        return interpolate_linear(c1, c2, info.mid_position);
 
     int index = steiner_index - 2 + info.first;
+    assert(index >= 0);
 
-    float relative = info.mid_position;
-    if (index < edge(__edge).last)
+    auto last = info.first - 2 + info.node_count;
+    std::float16_t relative;
+    if (index < last)
         relative = triangle_classes[edge(__edge).edge_class].node_positions[index];
+    else
+        relative = info.mid_position;
 
     return interpolate_linear(c1, c2, relative);
 }

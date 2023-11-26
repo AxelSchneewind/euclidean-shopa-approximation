@@ -122,16 +122,3 @@ public:
      */
     bool reached(typename G::node_id_type __node) const;
 };
-
-
-// template<typename T, typename Distance>
-// concept Frontier = requires(T t, Distance d) { t.set_frontier_distance(d); };
-//
-// template<typename T, typename NodeId, typename Ncp, typename Label, typename Distance>
-// concept FrontierLabels =
-// DijkstraLabels<T, NodeId, Ncp, Label> && requires(T t, Distance d) { t.set_frontier_distance(d); };
-//
-// template<RoutableGraph G, DijkstraQueue<G> Q,
-//         EdgePredicate<G> UseEdge,
-//         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L> requires FrontierLabels<L, typename G::node_id_type, typename Q::value_type, typename Q::value_type, typename G::distance_type>
-// class dijkstra<G, Q, UseEdge, L>;

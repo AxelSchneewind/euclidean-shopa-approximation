@@ -14,6 +14,8 @@ template<typename Graph, typename Dijkstra>
 class router {
 public:
     using graph_type = Graph;
+    using search_type = Dijkstra;
+    using labels_type = search_type::labels_type;
 private:
     Graph const &_M_graph;
 
@@ -80,6 +82,14 @@ public:
     typename Graph::distance_type forward_distance() const { return _M_forward_search.current().distance; };
 
     typename Graph::distance_type backward_distance() const { return _M_backward_search.current().distance; };
+
+    auto &&forward_labels() const { return _M_forward_search.labels(); }
+
+    auto &&backward_labels() const { return _M_backward_search.labels(); }
+
+    auto &&forward_search() const { return _M_forward_search; }
+
+    auto &&backward_search() const { return _M_backward_search; }
 
     /**
      * checks if a valid route has been found

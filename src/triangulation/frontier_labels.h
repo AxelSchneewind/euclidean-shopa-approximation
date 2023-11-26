@@ -99,12 +99,12 @@ public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<aggregate_info>);
 
-    frontier_labels(steiner_graph const &__graph, distance_type frontier_width,
+    frontier_labels(steiner_graph const &__graph, distance_type frontier_width = 10.0,
                     label_type default_value = none_value<label_type>) : _M_graph(
             __graph), _M_expanded_node_aggregates{}, min_value{0.0}, max_distance{0.0}, default_value(default_value),
                                                                          frontier_width(frontier_width) {};
 
-    size_t aggregate_count() {
+    size_t aggregate_count() const {
         return _M_expanded_node_aggregates.size();
     }
 

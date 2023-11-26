@@ -28,25 +28,24 @@ public:
         // relative position of the points with the highest distance to other edges
         std::float16_t mid_position;
         // maximum distance of a point on this edge to other edges, relative to the length of this edge
-        std::float16_t mid_dist;
+        // std::float16_t mid_dist;
 
         // r(v), relative to this edge
         std::float16_t r;
 
+        // number of steiner points on this edge (counting the source and middle node)
+        std::uint16_t node_count;
+
         // to which class of edges this one belongs
         unsigned char edge_class;
 
-        // interval of node positions
+        // interval of node positions (last is first + node_count - 3)
         unsigned char first;
-        unsigned char last;
-
-        // number of steiner points on this edge (counting the source and middle node)
-        unsigned char node_count;
 
         bool operator==(const subdivision_edge_info &__other) const = default;
     };
 
-    static_assert(sizeof(subdivision_edge_info) == 10);
+    static_assert(sizeof(subdivision_edge_info) == 8);
 
 
     std::vector<edge_class> triangle_classes;

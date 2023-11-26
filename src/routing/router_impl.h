@@ -26,21 +26,23 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
     std::vector<typename Graph::edge_id_type> edges;
 
     // add nodes and edges of forward dijkstra
-    for (auto node_id: _M_forward_search.labels().all_visited()) {
+    auto &&visited = _M_forward_search.labels().all_visited();
+    for (auto node_id: visited) {
         if (!_M_forward_search.reached(node_id))
             continue;
 
         nodes.push_back(node_id);
         typename Graph::node_id_type pred = _M_forward_search.labels().get(node_id).predecessor;
 
-        if (is_none(pred) || pred == node_id) continue;
+        if (!_M_forward_search.reached(pred) || is_none(pred) || pred == node_id) continue;
 
         typename Graph::edge_id_type edge = _M_graph.topology().edge_id(pred, node_id);
         edges.push_back(edge);
     }
 
     // add nodes and edges of backward dijkstra
-    for (auto node_id: _M_backward_search.labels().all_visited()) {
+    auto &&bwd_visited = _M_backward_search.labels().all_visited();
+    for (auto node_id: bwd_visited) {
         if (!_M_backward_search.reached(node_id))
             continue;
 
@@ -48,7 +50,7 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 
         typename Graph::node_id_type succ = _M_backward_search.labels().get(node_id).predecessor;
 
-        if (is_none(succ)) continue;
+        if (is_none(succ) || !_M_backward_search.reached(succ)) continue;
 
         typename Graph::edge_id_type edge = _M_graph.topology().edge_id(node_id, succ);
         edges.push_back(edge);
@@ -202,7 +204,11 @@ router<Graph, Dijkstra>::mid_node() const {
 template<typename Graph, typename Dijkstra>
 bool
 router<Graph, Dijkstra>::route_found() const {
-    return !is_none(_M_mid_node) && _M_forward_search.reached(_M_mid_node) && _M_backward_search.reached(_M_mid_node);
+    return !is_none(_M_mid_node) && _M_forward_search.reached(_M_mid_node) && _M_backward_search.reached(_M_mid_node) &&
+           (_M_forward_search.queue_empty()
+            || min_route_distance(_M_forward_search.current()) > distance()) &&
+           (_M_backward_search.queue_empty() ||
+            min_route_distance(_M_backward_search.current()) > distance());
 }
 
 template<typename Graph, typename Dijkstra>

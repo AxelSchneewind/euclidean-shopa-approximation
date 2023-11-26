@@ -141,14 +141,28 @@ template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
     query = std::make_unique<Query<GraphT>>(from, to);
+    auto beeline = distance(graph.node(query->from).coordinates, graph.node(query->to).coordinates);
+
     // create thread to show progress
     std::thread status([&]() -> void {
-        while (is_none(router.mid_node())) {
-            std::cout << "\rdistances: " << std::setw(10) << std::setprecision(5)
-                      << router.forward_distance() << ", "
+        while (!router.route_found()) {
+            double vm, res;
+            process_mem_usage(vm, res);
+            std::cout << "\rdistances: "
+                      << std::setw(10) << std::setprecision(5) << router.forward_distance()
+                      << " (" << router.forward_search().current().value() << "), "
                       << std::setw(10) << std::setprecision(5) << router.backward_distance()
-                      << " of total < " << result->beeline_distance << std::flush;
-            usleep(5000);
+                      << " (" << router.backward_search().current().value() << "), "
+                      << " of total > " << beeline;
+
+            if constexpr (requires(RoutingT&& r) { r.forward_labels().aggregate_count(); }) {
+                std::cout << ", node aggregates currently expanded: " << std::setw(10)
+                          << router.forward_labels().aggregate_count() + router.backward_labels().aggregate_count();
+            }
+
+            std::cout << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024
+                      << "MiB" << std::flush;
+            usleep(50000);
         }
         std::cout << "\rdone                                                                  " << std::flush << "\r";
     });
@@ -170,7 +184,7 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
             *query,
             router.route_found(),
             graph.path_length(route),
-            distance(graph.node(query->from).coordinates, graph.node(query->to).coordinates),
+            beeline,
             tree,
             route,
             tree.node_count(),

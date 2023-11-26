@@ -20,27 +20,18 @@ to_radians(double __degree) {
 // exact distance on earths surface
 inline distance_t
 distance(coordinate_t __c1, coordinate_t __c2) {
-    // for approximated distance (Euclidean distance)
-    // return distance_euclidean(__c1, __c2);
+    // for approximated distance (Euclidean distance), produces better results than haversine (seems to be very unstable)
+    return distance_euclidean(__c1, __c2);
 
-    // for exact distances
-    auto lat1 = to_radians(__c1.latitude);
-    auto long1 = to_radians(__c1.longitude);
-    auto lat2 = to_radians(__c2.latitude);
-    auto long2 = to_radians(__c2.longitude);
+    // // for exact distances
+    // auto dlat = to_radians(__c2.latitude - __c1.latitude);
+    // auto dlong = to_radians(__c2.longitude - __c1.longitude);
 
-    auto dlong = long2 - long1;
-    auto dlat = lat2 - lat1;
+    // // haversine formula
+    // auto ans = std::pow(std::sin(dlat / 2), 2) + std::cos(lat1) * std::cos(lat2) * std::pow(std::sin(dlong / 2), 2);
+    // ans = 2 * std::asin(std::sqrt(ans));
 
-    // haversine formula
-    auto ans = std::pow(std::sin(dlat / 2), 2) + std::cos(lat1) * std::cos(lat2) * std::pow(std::sin(dlong / 2), 2);
-    ans = 2 * std::asin(std::sqrt(ans));
-
-    // multiply with earths radius
-    const int R = 6371;
-    ans = ans * R;
-
-    return ans;
+    // return ans;
 };
 
 inline double
@@ -59,9 +50,9 @@ line_distance(coordinate_t __source, coordinate_t __destination, coordinate_t __
     double phi = angle(__source, __destination, __source, __point);
 
     // approximated distance
-    // return std::sin(phi) * (__point - __source).length();
-    // for exact distance
-    return to_radians(std::sin(phi) * (__point - __source).length()) * 6371;
+    return std::sin(phi) * (__point - __source).length();
+    // // for exact distance
+    // return to_radians(std::sin(phi) * (__point - __source).length()) * 6371;
 }
 
 

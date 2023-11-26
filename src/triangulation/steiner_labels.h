@@ -14,13 +14,10 @@ private:
 public:
 
     nested_iterator(Outer iterator, Outer outer_end, std::function<Inner(typename Outer::value_type)> retriever)
-            : outer{outer},
+            : outer{iterator},
               outer_end{outer_end},
               inner{retriever(*outer)},
-              iterator_retriever{
-                      std::move(
-                              retriever)
-              } {};
+              iterator_retriever{std::move(retriever)} {};
 
 
     nested_iterator operator++() {

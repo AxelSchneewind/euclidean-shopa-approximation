@@ -4,7 +4,7 @@
 
 struct steiner_node_id {
     edge_id_t edge;
-    int steiner_index;
+    short steiner_index;
 
     steiner_node_id() : edge(none_value<edge_id_t>), steiner_index(-1) {};
 
