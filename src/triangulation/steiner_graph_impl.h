@@ -22,7 +22,6 @@ std::size_t std::hash<steiner_edge_id>::operator()(const steiner_edge_id &s) con
 }
 
 
-
 std::ostream &operator<<(std::ostream &output, steiner_node_id id) {
     return output << id.edge << ':' << id.steiner_index;
 }
@@ -33,11 +32,7 @@ std::ostream &operator<<(std::ostream &output, steiner_edge_id id) {
 }
 
 
-
-
-
-
-void make_node_radii (
+void make_node_radii(
         const std::vector<steiner_graph::node_info_type> &__nodes,
         const steiner_graph::base_topology_type &__triangulation,
         const steiner_graph::polyhedron_type &__polyhedron,
@@ -69,7 +64,7 @@ void make_node_radii (
         int edge_count = set_minus_sorted<int>(triangle_edge_ids, adjacent_edge_ids, triangle_edge_ids);
 
         // get minimal value from triangle edges
-        float dist = infinity<std::float16_t>;
+        double dist = infinity<std::float16_t>;
         auto c3 = __nodes[node].coordinates;
         for (int i = 0; i < edge_count; i++) {
             auto edge_id = triangle_edge_ids[i];
@@ -78,7 +73,7 @@ void make_node_radii (
             if (c3 != c2 && c3 != c1 && c2 != c1)
                 dist = std::min(dist, line_distance(c1, c2, c3));
         }
-        dist = std::max(dist, (float) 0.001);
+        dist = std::max(dist, 0.001);
         __out[node] = dist;
 
         adjacent_edge_ids.clear();
@@ -105,7 +100,7 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&__triangu
     auto subdivision_info = subdivision_table::make_subdivision_info(triangulation, triangulation_nodes, poly,
                                                                      table,
                                                                      r_values, __epsilon);
-    subdivision_table s_table {std::move(table), std::move(subdivision_info)};
+    subdivision_table s_table{std::move(table), std::move(subdivision_info)};
     r_values.clear();
 
     return steiner_graph(std::move(triangulation_nodes),
@@ -117,7 +112,7 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&__triangu
 
 steiner_graph::steiner_graph(steiner_graph &&other) noexcept
         : _M_node_count(other._M_node_count),
-          _M_edge_count(other._M_node_count),
+          _M_edge_count(other._M_edge_count),
           _M_epsilon(other._M_epsilon),
           _M_base_nodes(std::move(other._M_base_nodes)),
           _M_base_topology(std::move(other._M_base_topology)),
@@ -147,14 +142,18 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&__tria
             _M_node_count += _M_table.edge(edge_id).node_count;
 
             // count edge x other_edge
-            for (auto other_edge: _M_polyhedron.edges(edge_id)) {
+            for (auto &&other_edge: _M_polyhedron.edges(edge_id)) {
                 if (is_none(other_edge)) continue;
-                if (other_edge == edge_id || other_edge == edge_id_inv) {
+                if (other_edge == edge_id) {
+                    _M_edge_count += _M_table.edge(other_edge).node_count - 1;
+                    continue;
+                }
+                if (other_edge == edge_id_inv) {
                     _M_edge_count += 1;
                     continue;
                 }
 
-                _M_edge_count += _M_table.edge(edge_id).node_count * _M_table.edge(other_edge).node_count;
+                _M_edge_count += (size_t) _M_table.edge(edge_id).node_count * _M_table.edge(other_edge).node_count;
             }
         }
     }
@@ -320,18 +319,16 @@ steiner_graph::has_edge(steiner_graph::node_id_type __src, steiner_graph::node_i
 
 
 steiner_graph::subgraph_type steiner_graph::make_subgraph(const path_type &__route) const {
-    subgraph_type result;
-    result.nodes = __route.nodes;
-
+    std::vector<node_id_type> nodes(__route.nodes);
+    std::vector<edge_id_type> edges;
     for (size_t i = 1; i < __route.nodes.size(); i++) {
         auto src = __route.nodes[i - 1];
         auto dest = __route.nodes[i];
 
         assert(has_edge(src, dest));
-        result.edges.push_back(edge_id(src, dest));
+        edges.push_back(edge_id(src, dest));
     }
-
-    return result;
+    return {*this, std::move(nodes), std::move(edges)};
 }
 
 steiner_graph::distance_type steiner_graph::path_length(const path_type &__route) const {

@@ -152,6 +152,9 @@ polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
         }
     }
 
+    __adjacent_faces.clear();
+    __inverse_edges.clear();
+
     list_invert(_M_edge_info);
 }
 

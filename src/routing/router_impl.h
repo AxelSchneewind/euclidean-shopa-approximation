@@ -16,34 +16,7 @@
 template<typename Graph, typename Dijkstra>
 Graph::distance_type
 router<Graph, Dijkstra>::min_route_distance(Dijkstra::node_cost_pair_type __node) const {
-    distance_t result = 0;
-
-    if constexpr (Dijkstra::search_symmetric) {
-        result += __node.min_distance();
-
-        // if node is labelled in _M_forward_search search, it already has its minimal distance and routes using it must be longer
-        if (!_M_forward_search.reached(__node.node)) {
-            result -= _M_forward_search.current().distance;
-        }
-
-        if (!_M_backward_search.reached(__node.node)) {
-            result -= _M_backward_search.current().distance;
-        }
-
-    } else {
-        result += __node.distance;
-
-        // if labels are not necessarily optimal, only use distances if the node has been labelled already
-        if (!_M_forward_search.reached(__node.node)) {
-            result += _M_forward_search.labels().get(__node.node).distance;
-            result -= _M_forward_search.current().distance;
-        }
-        if (!_M_backward_search.reached(__node.node)) {
-            result -= _M_backward_search.current().distance;
-        }
-    }
-
-    return result;
+    return __node.min_distance();
 }
 
 template<typename Graph, typename Dijkstra>
@@ -54,45 +27,51 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 
     // add nodes and edges of forward dijkstra
     for (auto node_id: _M_forward_search.labels().all_visited()) {
+        if (!_M_forward_search.reached(node_id))
+            continue;
+
         nodes.push_back(node_id);
         typename Graph::node_id_type pred = _M_forward_search.labels().get(node_id).predecessor;
 
         if (is_none(pred) || pred == node_id) continue;
 
-        typename Graph::edge_id_type edge = _M_graph_ptr.topology().edge_id(pred, node_id);
+        typename Graph::edge_id_type edge = _M_graph.topology().edge_id(pred, node_id);
         edges.push_back(edge);
     }
 
     // add nodes and edges of backward dijkstra
-    // for (auto node_id: _M_backward_search.labels().all_visited()) {
-    //     nodes.push_back(node_id);
+    for (auto node_id: _M_backward_search.labels().all_visited()) {
+        if (!_M_backward_search.reached(node_id))
+            continue;
 
-    //     typename Graph::node_id_type succ = _M_backward_search.labels().get(node_id).predecessor;
+        nodes.push_back(node_id);
 
-    //     if (is_none(succ)) continue;
+        typename Graph::node_id_type succ = _M_backward_search.labels().get(node_id).predecessor;
 
-    //     typename Graph::edge_id_type edge = _M_graph_ptr.topology().edge_id(node_id, succ);
-    //     edges.push_back(edge);
-    // }
+        if (is_none(succ)) continue;
+
+        typename Graph::edge_id_type edge = _M_graph.topology().edge_id(node_id, succ);
+        edges.push_back(edge);
+    }
 
     remove_duplicates(nodes);
     remove_duplicates(edges);
 
-    return {std::move(nodes), std::move(edges)};
+    return {_M_graph, std::move(nodes), std::move(edges)};
 }
 
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(Graph const &__graph)
-        : _M_graph_ptr(__graph),
-          _M_forward_search(_M_graph_ptr),
-          _M_backward_search(_M_graph_ptr),
+        : _M_graph(__graph),
+          _M_forward_search(_M_graph),
+          _M_backward_search(_M_graph),
           _M_start_node(none_value<typename Graph::node_id_type>),
           _M_target_node(none_value<typename Graph::node_id_type>),
           _M_mid_node(none_value<typename Graph::node_id_type>) {}
 
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(router &&__routing) noexcept
-        : _M_graph_ptr(__routing._M_graph_ptr), _M_forward_search(std::move(__routing._M_forward_search)),
+        : _M_graph(__routing._M_graph), _M_forward_search(std::move(__routing._M_forward_search)),
           _M_backward_search(std::move(__routing._M_backward_search)),
           _M_start_node(__routing._M_start_node), _M_target_node(__routing._M_target_node),
           _M_mid_node(__routing._M_mid_node) {}
@@ -136,10 +115,10 @@ router<Graph, Dijkstra>::compute_route() {
     bool done = false;
     while (!done) {
         auto dist = distance();
-        bool const fwd_done = _M_forward_search.queue_empty() ||
-                              min_route_distance(_M_forward_search.current()) > dist; // TODO allow usage of A* value
+        bool const fwd_done =
+                _M_forward_search.queue_empty() || min_route_distance(_M_forward_search.current()) > dist;
         bool const bwd_done =
-                _M_backward_search.queue_empty() || min_route_distance(_M_forward_search.current()) > dist;
+                _M_backward_search.queue_empty() || min_route_distance(_M_backward_search.current()) > dist;
 
         // check if no better route can be found
         if (fwd_done && bwd_done) {
@@ -187,7 +166,7 @@ router<Graph, Dijkstra>::route() const {
     p.push_front(_M_mid_node);
 
     while (!is_none(fwd_node) && fwd_node != _M_start_node) {
-        assert (_M_graph_ptr.topology().has_edge(_M_forward_search.get_label(fwd_node).predecessor, fwd_node));
+        assert (_M_graph.topology().has_edge(_M_forward_search.get_label(fwd_node).predecessor, fwd_node));
 
         fwd_node = _M_forward_search.get_label(fwd_node).predecessor;
 
@@ -199,7 +178,7 @@ router<Graph, Dijkstra>::route() const {
     while (!is_none(bwd_node) && bwd_node != _M_target_node) {
         // assert (_M_graph_ptr.inverse_topology().has_edge(_M_backward_search.get_label(bwd_node).predecessor,
         //bwd_node));
-        assert (_M_graph_ptr.topology().has_edge(bwd_node, _M_backward_search.get_label(bwd_node).predecessor));
+        assert (_M_graph.topology().has_edge(bwd_node, _M_backward_search.get_label(bwd_node).predecessor));
 
         bwd_node = _M_backward_search.get_label(bwd_node).predecessor;
 
@@ -211,7 +190,7 @@ router<Graph, Dijkstra>::route() const {
     auto result = std::vector<typename Graph::node_id_type>(p.begin(), p.end());
     remove_duplicates_sorted(result);
 
-    return {result};
+    return {_M_graph, std::move(result)};
 };
 
 template<typename Graph, typename Dijkstra>

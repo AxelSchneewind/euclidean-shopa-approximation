@@ -104,7 +104,6 @@ unidirectional_adjacency_list<NodeId, E>::edge_id(NodeId __source, NodeId __dest
 
     edge_id_t result = none_value<edge_index_type>;
 
-#pragma GCC ivdep
     for (int idx = _M_offsets[__source]; idx < _M_offsets[__source + 1]; ++idx) {
         if (_M_edges[idx].destination == __dest)
             result = idx;

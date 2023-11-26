@@ -13,8 +13,8 @@ using node_level_t = int;
  * a pair of coordinates, consisting of latitude, longitude
  */
 struct coordinate_t {
-    float latitude;
-    float longitude;
+    double latitude;
+    double longitude;
 
     float length() const { return std::sqrt(latitude * latitude + longitude * longitude); }
 
@@ -40,8 +40,8 @@ struct coordinate_t {
 };
 
 
-using cost_t = float;
-using distance_t = float;
+using cost_t = double;
+using distance_t = double;
 
 template<typename T>
 constexpr T none_value;
@@ -70,6 +70,8 @@ constexpr distance_t infinity<distance_t> = (std::numeric_limits<distance_t>::ma
 
 template<>
 constexpr float none_value<float> = infinity<float>;
+template<>
+constexpr double none_value<double> = infinity<double>;
 
 
 using triangle = std::array<node_id_t, 3>;

@@ -33,6 +33,7 @@ main(int argc, char const *argv[]) {
     // read graph
     Client client;
     client.read_graph_file(graph_file, epsilon);
+    client.write_graph_stats(std::cout);
 
     bool done = false;
     while (!done) {
@@ -57,7 +58,8 @@ main(int argc, char const *argv[]) {
         }
 
         // setup writer for graphs to show
-        std::string target_directory = std::format("{}/{}_{}_{}_{}", output_directory, mode, src_node, dest_node, (int)(epsilon * 10));
+        std::string target_directory = std::format("{}/{}_{}_{}_{}", output_directory, mode, src_node, dest_node,
+                                                   (int) (epsilon * 10));
         std::filesystem::create_directory(target_directory);
         std::string beeline_file = std::format("{}/beeline.gl", target_directory);
         std::string route_file = std::format("{}/route.gl", target_directory);

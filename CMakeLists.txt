@@ -30,8 +30,8 @@ endif (DOXYGEN_FOUND)
 
 # performance options
 set(CMAKE_CXX_FLAGS "-Wall -Wextra") #
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O -fbounds-check")
-set(CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG -O3 -march=native -ffast-math") #
+set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
+set(CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG -O3 -march=native") # -ffast-math
 
 # compile everything into one library file
 add_library(routing src/routing.cpp)

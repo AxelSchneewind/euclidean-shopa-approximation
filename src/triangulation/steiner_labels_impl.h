@@ -3,24 +3,33 @@
 #include "steiner_labels.h"
 
 template<RoutableGraph G, typename N>
-std::vector<typename steiner_labels<G, N>::node_id_type>
+// std::vector<typename steiner_labels<G, N>::node_id_type>
+steiner_labels<G, N>::label_iterator_type
 steiner_labels<G, N>::all_visited() const {
-    std::vector<typename steiner_labels<G, N>::node_id_type> result;
+    // std::vector<typename steiner_labels<G, N>::node_id_type> result;
 
-    for (auto edge: _M_touched) {
-        for (auto node: _M_graph.node_ids(edge)) {
-            if (!is_none(node.edge) && node.steiner_index != -1 && reached(node)) {
-                result.emplace_back(node);
-            }
-        }
-    }
+    // for (auto edge: _M_touched) {
+    //     for (auto node: _M_graph.node_ids(edge)) {
+    //         if (!is_none(node.edge) && node.steiner_index != -1 && reached(node)) {
+    //             //result.emplace_back(node);
+    //             co_yield node;
+    //         }
+    //     }
+    // }
 
-    return result;
+    // return result;
+
+    return label_iterator_type(_M_touched.begin(), _M_touched.end(),
+                               std::function<steiner_graph::node_id_iterator_type(
+                                       steiner_graph::triangle_edge_id_type)>(
+                                       [this](steiner_graph::triangle_edge_id_type edge) -> steiner_graph::node_id_iterator_type {
+                                           return _M_graph.node_ids(edge);
+                                       }));
 }
 
 
 template<RoutableGraph G, typename N>
-steiner_labels<G, N>::steiner_labels(G const& __graph)
+steiner_labels<G, N>::steiner_labels(G const &__graph)
         : _M_graph(__graph),
           _M_labels(_M_graph.base_graph().edge_count()) {
     _M_touched.reserve(10000);

@@ -32,12 +32,10 @@ struct std::hash<steiner_node_id> {
 };
 
 
-
 template<>
 constexpr steiner_node_id none_value<steiner_node_id> = {none_value<edge_id_t>, -1};
 
 std::ostream &operator<<(std::ostream &output, steiner_node_id id);
-
 
 
 struct steiner_edge_id {
@@ -89,8 +87,8 @@ public:
 
     using distance_type = distance_t;
 
-    using path_type = path<node_id_type>;
-    using subgraph_type = subgraph<node_id_type, edge_id_type>;
+    using path_type = path<steiner_graph>;
+    using subgraph_type = subgraph<steiner_graph>;
 
     using topology_type = steiner_graph;
 
@@ -204,8 +202,11 @@ public:
                   subdivision_table &&__table, float __epsilon);
 
 
-    static constexpr size_t SIZE_PER_NODE = sizeof(node_info_type) + base_topology_type::SIZE_PER_NODE + polyhedron_type::SIZE_PER_NODE;
-    static constexpr size_t SIZE_PER_EDGE = base_topology_type::SIZE_PER_EDGE + polyhedron_type::SIZE_PER_EDGE;
+    static constexpr size_t SIZE_PER_NODE =
+            sizeof(node_info_type) + base_topology_type::SIZE_PER_NODE + polyhedron_type::SIZE_PER_NODE +
+            subdivision_table::SIZE_PER_NODE;
+    static constexpr size_t SIZE_PER_EDGE =
+            base_topology_type::SIZE_PER_EDGE + polyhedron_type::SIZE_PER_EDGE + subdivision_table::SIZE_PER_EDGE;
 
 private:
     size_t _M_node_count;
@@ -230,7 +231,7 @@ private:
 public:
 
     node_id_type from_base_node_id(base_topology_type::node_id_type __node) const {
-        return  {_M_base_topology.edge_id(__node), 0 };
+        return {_M_base_topology.edge_id(__node), 0};
     }
 
     const base_topology_type &base_graph() const { return _M_base_topology; }
@@ -274,8 +275,11 @@ public:
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     incoming_edges(node_id_type __node_id) const { return outgoing_edges(__node_id); };
+
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    incoming_edges(node_id_type __node_id, node_id_type __reached_from) const { return outgoing_edges(__node_id, __reached_from); };
+    incoming_edges(node_id_type __node_id, node_id_type __reached_from) const {
+        return outgoing_edges(__node_id, __reached_from);
+    };
 
     distance_type path_length(const path_type &__route) const;
 

@@ -15,7 +15,7 @@ class router {
 public:
     using graph_type = Graph;
 private:
-    Graph const& _M_graph_ptr;
+    Graph const &_M_graph;
 
     Dijkstra _M_forward_search;
     Dijkstra _M_backward_search;
@@ -40,7 +40,7 @@ public:
     static constexpr size_t SIZE_PER_EDGE = 2 * Dijkstra::SIZE_PER_EDGE;
 
 
-    explicit router(Graph const& __graph);
+    explicit router(Graph const &__graph);
 
     router(const router &__other) = delete;
 
@@ -76,6 +76,10 @@ public:
      * @return
      */
     typename Graph::distance_type distance(const typename Graph::node_id_type &__node) const;
+
+    typename Graph::distance_type forward_distance() const { return _M_forward_search.current().distance; };
+
+    typename Graph::distance_type backward_distance() const { return _M_backward_search.current().distance; };
 
     /**
      * checks if a valid route has been found

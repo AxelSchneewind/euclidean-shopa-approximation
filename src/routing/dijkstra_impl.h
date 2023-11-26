@@ -39,7 +39,8 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 bool
 dijkstra<G, Q, UseEdge, L>::reached(G::node_id_type __node) const {
-    return _M_labels.reached(__node);
+    return _M_labels.reached(__node) &&
+           (_M_queue.empty() || _M_labels.get(__node).distance < _M_queue.top().min_distance());
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
@@ -96,7 +97,8 @@ dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
         if (new_cost < successor_cost) [[likely]] {
             // (re-)insert node into the queue with updated priority
             node_cost_pairs.emplace_back(successor, __node.node, new_cost);
-            // _M_labels.preliminary_label(successor, __node.node, new_cost); // IDEA
+            // label current node with preliminary value
+            _M_labels.label(successor, node_cost_pairs.back());
         }
     }
 
@@ -124,13 +126,10 @@ dijkstra<G, Q, UseEdge, L>::step() {
     _M_queue.pop();
 
     // remove already settled nodes
-    // while (!_M_queue.empty() && reached(_M_queue.top().node)) [[likely]] {
-    //     _M_queue.pop();
-    // }
-
-    // if (_M_queue.empty()) [[unlikely]] {
-    //     return;
-    // }
+    while (!_M_queue.empty() && reached(_M_queue.top().node) &&
+           _M_queue.top().distance > _M_labels.get(_M_queue.top().node).distance) [[likely]] {
+        _M_queue.pop();
+    }
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q, EdgePredicate<G> UseEdge, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>

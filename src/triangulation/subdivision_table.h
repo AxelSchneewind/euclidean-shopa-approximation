@@ -9,7 +9,6 @@
 #include <cmath>
 
 
-
 class subdivision_table {
 public:
     // in radians
@@ -51,11 +50,14 @@ public:
 
 
     std::vector<edge_class> triangle_classes;
-
     std::vector<subdivision_edge_info> edges;
 
-    subdivision_table(subdivision_table&& __other)  noexcept;;
-    subdivision_table(std::vector<edge_class> &&__node_positions, std::vector<subdivision_edge_info>&& __edges);;
+    static constexpr size_t SIZE_PER_NODE = 0;
+    static constexpr size_t SIZE_PER_EDGE = sizeof(subdivision_edge_info);
+
+    subdivision_table(subdivision_table &&__other) noexcept;;
+
+    subdivision_table(std::vector<edge_class> &&__node_positions, std::vector<subdivision_edge_info> &&__edges);;
 
     static float class_angle(int __index);
 

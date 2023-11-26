@@ -26,7 +26,7 @@ public:
                 : face_index(0),
                   edge_index(0),
                   face_count(1 + (!is_none(__faces[1]) ? 1 : 0)),
-                  faces({std::span(__poly._M_face_info[__faces[0]]), std::span(__poly._M_face_info[__faces[1]])}){
+                  faces({std::span(__poly._M_face_info[__faces[0]]), std::span(__poly._M_face_info[__faces[1]])}) {
         };
 
         edges_iterator_type &begin() { return *this; };
@@ -48,7 +48,7 @@ public:
             return faces != __other.faces;
         }
 
-        bool operator!=(end_type __other) const {
+        bool operator!=(end_type) const {
             return face_index != face_count;
         }
 

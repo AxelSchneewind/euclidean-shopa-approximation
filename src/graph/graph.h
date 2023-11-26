@@ -26,8 +26,8 @@ public:
     using distance_type = distance_t;
     using edge_info_type = EdgeInfo;
     using adjacency_list_type = adjacency_list<NodeId, EdgeInfo>;
-    using path_type = path<NodeId>;
-    using subgraph_type = subgraph<NodeId, EdgeId>;
+    using path_type = path<graph<NodeInfo, EdgeInfo, NodeId, EdgeId>>;
+    using subgraph_type = subgraph<graph<NodeInfo, EdgeInfo, NodeId, EdgeId>>;
 
     using topology_type = adjacency_list_type;
 private:
@@ -108,5 +108,5 @@ static_assert(RoutableGraph<graph<int, int, int, int>>);
 
 template<typename Nid>
 std::ostream &
-operator<<(std::ostream &__stream, path <Nid> const&__r);
+operator<<(std::ostream &__stream, path<Nid> const &__r);
 

@@ -14,6 +14,8 @@ int main(int argc, const char *argv[]) {
     Client client;
     client.read_graph_file(graph_file, epsilon);
 
+    client.write_graph_stats(std::cout);
+
     steiner_graph::triangle_node_id_type src = std::stoi(argv[4]);
 
     output << "node,distance\n";

@@ -18,7 +18,8 @@ private:
         virtual void compute_route(int from, int to) = 0;
 
         virtual void compute_one_to_all(int from) = 0;
-        virtual void compute_one_to_all(int from, std::ostream& out) = 0;
+
+        virtual void compute_one_to_all(int from, std::ostream &out) = 0;
 
         virtual void write_route_file(std::ostream &output) const = 0;
 
@@ -26,9 +27,9 @@ private:
 
         virtual void write_info(std::ostream &output) const = 0;
 
-        virtual void write_graph_stats(std::ostream& output) const = 0;
+        virtual void write_graph_stats(std::ostream &output) const = 0;
 
-        virtual void write_beeline(std::ostream& output) const = 0;
+        virtual void write_beeline(std::ostream &output) const = 0;
     };
 
     template<typename GraphT, typename RoutingT> requires std::convertible_to<typename RoutingT::graph_type, GraphT>
@@ -37,8 +38,8 @@ private:
         GraphT graph;
         RoutingT router;
 
-        Query<GraphT> query;
-        Result<GraphT> result;
+        std::unique_ptr<Query<GraphT>> query;
+        std::unique_ptr<Result<GraphT>> result;
     public:
         ClientModel(GraphT &&graph, RoutingT &&router) : graph{std::move(graph)}, router{std::move(router)} {};
 
@@ -49,7 +50,8 @@ private:
         void compute_route(int from, int to) override;
 
         void compute_one_to_all(int from) override;
-        void compute_one_to_all(int from, std::ostream& output) override;
+
+        void compute_one_to_all(int from, std::ostream &output) override;
 
         void write_route_file(std::ostream &output) const override;
 
@@ -57,9 +59,9 @@ private:
 
         void write_info(std::ostream &output) const override;
 
-        void write_beeline(std::ostream& output) const override;
+        void write_beeline(std::ostream &output) const override;
 
-        void write_graph_stats(std::ostream& output) const override;
+        void write_graph_stats(std::ostream &output) const override;
     };
 
     std::unique_ptr<ClientConcept> pimpl;
@@ -75,7 +77,8 @@ public:
     void compute_route(int from, int to) { pimpl->compute_route(from, to); };
 
     void compute_one_to_all(int from) { pimpl->compute_one_to_all(from); };
-    void compute_one_to_all(int from, std::ostream& output) { pimpl->compute_one_to_all(from, output); };
+
+    void compute_one_to_all(int from, std::ostream &output) { pimpl->compute_one_to_all(from, output); };
 
     void write_route_file(std::ostream &output) const { pimpl->write_route_file(output); };
 
@@ -84,4 +87,6 @@ public:
     void write_beeline_file(std::ostream &output) const { pimpl->write_beeline(output); };
 
     void write_info(std::ostream &output) const { pimpl->write_info(output); };
+
+    void write_graph_stats(std::ostream &output) const { pimpl->write_graph_stats(output); };
 };

@@ -7,9 +7,10 @@
 #include <unordered_map>
 #include <vector>
 
-template<typename NodeId, typename EdgeId>
-subgraph<NodeId, EdgeId>::subgraph(std::vector<NodeId> &&__n, std::vector<EdgeId> &&__e)
-        : nodes(std::move(__n)), edges(std::move(__e)) {}
+template<typename Graph>
+subgraph<Graph>::subgraph(Graph const &base, std::vector<typename Graph::node_id_type> &&__n,
+                          std::vector<typename Graph::edge_id_type> &&__e)
+        : base(base), nodes(std::move(__n)), edges(std::move(__e)) {}
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::subgraph_type
@@ -38,7 +39,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph(
         edges.push_back(_M_adjacency_list.edge_id(id_current, id_next));
     }
 
-    return {std::move(nodes), std::move(edges)};
+    return {*this, std::move(nodes), std::move(edges)};
 }
 
 
@@ -47,8 +48,8 @@ template<RoutableGraph Other>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other &__base_graph,
                                                       const typename Other::subgraph_type &__subgraph) {
-    NodeId node_count = __subgraph.nodes.size();
-    EdgeId edge_count = __subgraph.edges.size();
+    NodeId node_count = __subgraph.node_count();
+    EdgeId edge_count = __subgraph.edge_count();
 
     std::vector<NodeInfo> nodes;
     std::unordered_map<typename Other::node_id_type, size_t> new_node_ids;
@@ -143,7 +144,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(
 
 template<typename NodeId>
 std::ostream &
-operator<<(std::ostream &__stream, path<NodeId> const&__r) {
+operator<<(std::ostream &__stream, path<NodeId> const &__r) {
     __stream << "{ ";
 
     int length = __r.nodes.size();
