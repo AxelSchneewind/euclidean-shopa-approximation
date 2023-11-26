@@ -96,11 +96,12 @@ void Client::ClientModel<GraphT, RoutingT>::compute_one_to_all(int from, std::os
 template<>
 void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(int from, std::ostream &output) {
     query = std::make_unique<Query<steiner_graph>>(from, -1);
-    using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
+    // using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
+    using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>, label_type<steiner_graph>>;
     using distance_dijkstra = dijkstra<steiner_graph, dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>, use_all_edges<steiner_graph>, distance_labels>;
 
     std_graph_t::node_id_type last_node = none_value<std_graph_t::node_id_type>;
-    distance_dijkstra distances(graph, {graph}, {graph}, {graph});
+    distance_dijkstra distances(graph, {graph}, {graph}, {graph, 10.0});
     distances.init(from);
 
     while (!distances.queue_empty()) [[likely]] {
@@ -109,16 +110,23 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
         auto ncp = distances.current();
         if (ncp.node.steiner_index == 0) [[unlikely]] {
             steiner_graph::triangle_node_id_type base_node_id = graph.base_graph().source(ncp.node.edge);
+            steiner_graph::triangle_node_id_type pred_node_id = graph.base_graph().source(ncp.predecessor.edge);
 
             if (base_node_id != last_node) {
                 output << base_node_id << ',' << ncp.distance << '\n';
                 last_node = base_node_id;
 
+                double vm, res;
+                process_mem_usage(vm, res);
                 std::cout << "\rdistance: " << std::setw(10) << std::setprecision(5) << distances.current().distance
-                          << std::flush;
+                          << ", node aggregates currently expanded: " << std::setw(10)
+                          << distances.labels().aggregate_count()
+                          << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB" << std::flush;
             }
         }
     }
+
+    std::cout << std::endl;
 }
 
 

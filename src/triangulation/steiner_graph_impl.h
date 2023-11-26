@@ -218,26 +218,32 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
 
     // for inverse edge
     if (__node_id.steiner_index == _steiner_info.node_count - 1) [[unlikely]] {
-        steiner_graph::node_id_type destination = {inv_edge, steiner_info(inv_edge).node_count - 1};
-        coordinate_t destination_coordinate = node(destination).coordinates;
-        edges.push_back({destination, {}});
-        destination_coordinates.push_back(destination_coordinate);
+        steiner_graph::node_id_type const destination = {inv_edge, steiner_info(inv_edge).node_count - 1};
+        if (destination != __reached_from) {
+            coordinate_t destination_coordinate = node(destination).coordinates;
+            edges.push_back({destination, {}});
+            destination_coordinates.push_back(destination_coordinate);
+        }
     }
 
     // for neighboring node on own edge
     if (__node_id.steiner_index < _steiner_info.node_count - 1) [[likely]] {
-        steiner_graph::node_id_type destination = {__node_id.edge, __node_id.steiner_index + 1};
-        coordinate_t destination_coordinate = node(destination).coordinates;
-        edges.push_back({destination, {}});
-        destination_coordinates.push_back(destination_coordinate);
+        steiner_graph::node_id_type const destination = {__node_id.edge, __node_id.steiner_index + 1};
+        if (destination != __reached_from) {
+            coordinate_t destination_coordinate = node(destination).coordinates;
+            edges.push_back({destination, {}});
+            destination_coordinates.push_back(destination_coordinate);
+        }
     }
 
     // for other neighboring node on own edge
     if (__node_id.steiner_index > 0) [[likely]] {
-        steiner_graph::node_id_type destination = {__node_id.edge, __node_id.steiner_index - 1};
-        coordinate_t destination_coordinate = node(destination).coordinates;
-        edges.push_back({destination, {}});
-        destination_coordinates.push_back(destination_coordinate);
+        steiner_graph::node_id_type const destination = {__node_id.edge, __node_id.steiner_index - 1};
+        if (destination != __reached_from) {
+            coordinate_t destination_coordinate = node(destination).coordinates;
+            edges.push_back({destination, {}});
+            destination_coordinates.push_back(destination_coordinate);
+        }
     }
 
     // face-crossing edges
@@ -261,7 +267,7 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
     }
 
     // compute distances (can be vectorized)
-    for (int e = 0; e < edges.size(); ++e) [[likely]] {
+    for (size_t e = 0; e < edges.size(); ++e) [[likely]] {
         edges[e].info.cost = distance(source_coordinate, destination_coordinates[e]);
     }
 

@@ -49,7 +49,7 @@ constexpr distance_label none_value<distance_label> = {infinity<steiner_graph::d
  * only stores labels for relevant nodes in a graph with steiner points
  * @tparam NodeCostPair
  */
-template<DistanceNodeCostPair NodeCostPair, typename Label= distance_label>
+template<DistanceNodeCostPair NodeCostPair, HasDistance<steiner_graph::distance_type> Label = distance_label>
 class frontier_labels {
 public:
     using node_id_type = steiner_graph::node_id_type;
@@ -61,83 +61,129 @@ public:
     using label_type = Label;
 
 private:
-    struct base_edge_info {
+    struct aggregate_info {
         std::vector<label_type> labels;
     };
 
-    steiner_graph const &_M_graph;
 
-    std::unordered_map<base_node_id_type, std::shared_ptr<base_edge_info>> _M_edge_info;
-
-
-    struct aggregate_node_info {
+    struct aggregate_throwaway_info {
         base_edge_id_type edge;
         steiner_graph::distance_type throwaway_distance;
     };
 
-    struct compare_edges {
-        bool operator()(aggregate_node_info const &e1, aggregate_node_info const &e2) {
+    struct compare_aggregate_throwaway {
+        bool operator()(aggregate_throwaway_info const &e1, aggregate_throwaway_info const &e2) {
             return e1.throwaway_distance > e2.throwaway_distance;
         }
     };
 
-    std::priority_queue<aggregate_node_info, std::vector<aggregate_node_info>, compare_edges> active_edges;
+
+    steiner_graph const &_M_graph;
+
+    // nodes with lower value (minimal path length) will not be labelled again, assuming nodes are labelled with ascending min_distance()
+    distance_type min_value;
+    // nodes with higher distance are preliminarily labelled
+    distance_type max_distance;
+
+    // nodes with value < min_value - frontier_width can be discarded, this value has to be lower than the maximum edge length
+    distance_type frontier_width;
+
+    std::unordered_map<base_node_id_type, std::shared_ptr<aggregate_info>> _M_expanded_node_aggregates;
+
+    label_type default_value;
+
+    std::priority_queue<aggregate_throwaway_info, std::vector<aggregate_throwaway_info>, compare_aggregate_throwaway> _M_active_aggregates;
 
 public:
 
     static constexpr size_t SIZE_PER_NODE = 0;
-    static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<base_edge_info>);
+    static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<aggregate_info>);
 
-    frontier_labels(steiner_graph const &__graph) : _M_graph(__graph), _M_edge_info{} {};
+    frontier_labels(steiner_graph const &__graph, distance_type frontier_width,
+                    label_type default_value = none_value<label_type>) : _M_graph(
+            __graph), _M_expanded_node_aggregates{}, min_value{0.0}, max_distance{0.0}, default_value(default_value),
+                                                                         frontier_width(frontier_width) {};
+
+    size_t aggregate_count() {
+        return _M_expanded_node_aggregates.size();
+    }
 
     // init for given query
     void init(node_id_type __start_node, node_id_type __target_node) {
-        _M_edge_info.clear();
+        _M_expanded_node_aggregates.clear();
+
+        while (!_M_active_aggregates.empty())
+            _M_active_aggregates.pop();
     };
 
-    // NOT CORRECT
     bool reached(node_id_type __node) const {
-        return _M_edge_info.contains(__node.edge);
+        return _M_expanded_node_aggregates.contains(__node.edge) &&
+               _M_expanded_node_aggregates.at(__node.edge)->labels[__node.steiner_index].distance <= max_distance;
     }
 
     label_type get(node_id_type __node) const {
-        if (reached(__node))
-            return _M_edge_info.at(__node.edge)->labels[__node.steiner_index];
+        if (reached(__node)) [[likely]]
+            return get_preliminary(__node);
         else
-            return {infinity<distance_type>};
+            return default_value;
+    }
+
+    label_type get_preliminary(node_id_type __node) const {
+        if (_M_expanded_node_aggregates.contains(__node.edge)) [[likely]]
+            return _M_expanded_node_aggregates.at(__node.edge)->labels[__node.steiner_index];
+        else
+            return default_value;
     }
 
     bool active(base_edge_id_type __edge) const {
-        return _M_edge_info.contains(__edge);
+        return _M_expanded_node_aggregates.contains(__edge);
     };
 
-    void label(steiner_graph::node_id_type __node, node_cost_pair_type __node_cost_pair) {
+    /**
+     * informs the data structure that node information with distance less than the given one can be discarded
+     * @param new_distance
+     */
+    void set_frontier_distance(distance_type new_distance) {
+        min_value = std::max(min_value, new_distance);
+
+        while (_M_active_aggregates.top().throwaway_distance < min_value) {
+            _M_expanded_node_aggregates.erase(_M_active_aggregates.top().edge);
+            _M_active_aggregates.pop();
+        }
+    }
+
+    void label_preliminary(steiner_graph::node_id_type __node, node_cost_pair_type __node_cost_pair) {
         int steiner_index = __node.steiner_index;
         base_edge_id_type edge = __node.edge;
 
-        if (active(edge)) {
+        if (__node_cost_pair.min_distance() < min_value) [[unlikely]] return;
+
+        if (active(edge)) [[likely]] {
+
         } else {
-            // insert into queue of active edges, this edge can be removed as soon as the distance of the current node plus the length of it is reached
+            // insert into queue of active edges, this edge can be removed as soon as its throwaway distance is reached
             base_node_id_type src = _M_graph.base_graph().source(edge);
             base_node_id_type dest = _M_graph.base_graph().destination(edge);
             distance_type edge_length = distance(_M_graph.node(src).coordinates,
                                                  _M_graph.node(dest).coordinates);
-            active_edges.push({edge, __node_cost_pair.distance + 5.0F * edge_length});
+
+            // ensure that aggregate is kept until no shortest paths over its nodes can be found
+            _M_active_aggregates.push({edge, __node_cost_pair.min_distance() + 10.0F * edge_length});
 
             // setup label information
             auto node_count = _M_graph.steiner_info(edge).node_count;
-            _M_edge_info[edge] = std::make_shared<base_edge_info>(
-                    base_edge_info{std::vector<label_type>(node_count, {infinity<distance_type>})});
+            _M_expanded_node_aggregates[edge] = std::make_shared<aggregate_info>(
+                    std::vector<label_type>(node_count, default_value));
         }
 
-        _M_edge_info[edge]->labels[steiner_index] = {__node_cost_pair.distance};
+        if (_M_expanded_node_aggregates[edge]->labels[steiner_index].distance > __node_cost_pair.distance)
+            _M_expanded_node_aggregates[edge]->labels[steiner_index] = __node_cost_pair;
+    }
 
-        // clear edge with lowest distance if it is lower than the distance from current ncp
-        while (__node_cost_pair.distance > active_edges.top().throwaway_distance) {
-            base_edge_id_type edge = active_edges.top().edge;
-            _M_edge_info.erase(edge);
-            active_edges.pop();
-        }
+    void label(steiner_graph::node_id_type __node, node_cost_pair_type __node_cost_pair) {
+        label_preliminary(__node, __node_cost_pair);
+        max_distance = std::max(max_distance, __node_cost_pair.distance);
+        set_frontier_distance(__node_cost_pair.min_distance() - frontier_width);
     };
 };
 

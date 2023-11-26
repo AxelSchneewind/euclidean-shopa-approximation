@@ -5,6 +5,14 @@
 template<typename T, typename G>
 concept EdgePredicate = std::predicate<T, typename G::node_id_type, internal_adjacency_list_edge<typename G::node_id_type, typename G::edge_info_type>>;
 
+
+template<typename L, typename NodeId, typename NodeCostPair, typename Label>
+concept PreliminaryLabels = requires(L l, NodeId id, NodeCostPair ncp) {
+    l.label_preliminary(id, ncp);
+    { l.get_preliminary(id) } -> std::convertible_to<Label>;
+};
+
+
 template<RoutableGraph G, DijkstraQueue<G> Q,
         EdgePredicate<G> UseEdge,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
@@ -19,6 +27,8 @@ public:
     using use_edge_type = UseEdge;
     using queue_type = Q;
     using labels_type = L;
+
+    static constexpr bool preliminary_labels = PreliminaryLabels<L, node_id_type, node_cost_pair_type, typename labels_type::label_type>;
 
     // determines optimality of labels depending on whether the graph allows shortcuts
     // TODO find more elegant way for this
@@ -112,3 +122,16 @@ public:
      */
     bool reached(typename G::node_id_type __node) const;
 };
+
+
+// template<typename T, typename Distance>
+// concept Frontier = requires(T t, Distance d) { t.set_frontier_distance(d); };
+//
+// template<typename T, typename NodeId, typename Ncp, typename Label, typename Distance>
+// concept FrontierLabels =
+// DijkstraLabels<T, NodeId, Ncp, Label> && requires(T t, Distance d) { t.set_frontier_distance(d); };
+//
+// template<RoutableGraph G, DijkstraQueue<G> Q,
+//         EdgePredicate<G> UseEdge,
+//         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L> requires FrontierLabels<L, typename G::node_id_type, typename Q::value_type, typename Q::value_type, typename G::distance_type>
+// class dijkstra<G, Q, UseEdge, L>;

@@ -8,7 +8,7 @@
 double
 distance_euclidean(coordinate_t c1, coordinate_t c2) {
     coordinate_t delta{c2.latitude - c1.latitude, c2.longitude - c1.longitude};
-    return std::sqrt(delta.latitude * delta.latitude + delta.longitude * delta.longitude);
+    return std::sqrt(std::pow(delta.latitude, 2) + std::pow(delta.longitude, 2));
 }
 
 inline double

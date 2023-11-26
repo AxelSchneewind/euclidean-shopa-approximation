@@ -39,8 +39,12 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 bool
 dijkstra<G, Q, UseEdge, L>::reached(G::node_id_type __node) const {
-    return _M_labels.reached(__node) &&
-           (_M_queue.empty() || _M_labels.get(__node).distance < _M_queue.top().min_distance());
+    if constexpr (preliminary_labels) {
+        return _M_labels.get_preliminary(__node).distance < _M_queue.top().distance;
+    } else {
+        return _M_labels.reached(__node) &&
+               (_M_queue.empty() || _M_labels.get(__node).distance < _M_queue.top().min_distance());
+    }
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
@@ -77,28 +81,39 @@ dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
 
     static std::vector<node_cost_pair_type> node_cost_pairs;
 
-    auto edges = _M_graph.topology().outgoing_edges(__node.node);
-
+    auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor);
     for (auto edge: edges) {
         // ignore certain edges
-        if (!_M_use_edge(__node.node, edge)) [[unlikely]] {
+        if (reached(edge.destination) || !_M_use_edge(__node.node, edge)) [[unlikely]] {
             continue;
         }
 
-        assert (_M_graph.has_edge(__node.node, edge.destination));
-
+        assert(!reached(edge.destination));
         assert (!is_none(edge.destination));
         assert (_M_graph.has_edge(__node.node, edge.destination));
 
         const node_id_type successor = edge.destination;
-        const distance_t successor_cost = _M_labels.get(successor).distance; // use preliminary shortest distance
+
+        distance_t successor_cost;
+        if constexpr (preliminary_labels) {
+            successor_cost = _M_labels.get_preliminary(successor).distance; // use preliminary shortest distance
+        } else {
+            successor_cost = _M_labels.get(successor).distance; // use shortest distance
+        }
+
         const distance_t new_cost = edge.info.cost + __node.distance;
 
+        // assert(new_cost > __node.distance);
         if (new_cost < successor_cost) [[likely]] {
+            assert (edge.destination != __node.predecessor);
+
             // (re-)insert node into the queue with updated priority
             node_cost_pairs.emplace_back(successor, __node.node, new_cost);
+
             // label current node with preliminary value
-            _M_labels.label(successor, node_cost_pairs.back());
+            if constexpr (preliminary_labels) {
+                _M_labels.label_preliminary(successor, node_cost_pairs.back());
+            }
         }
     }
 
@@ -131,6 +146,7 @@ dijkstra<G, Q, UseEdge, L>::step() {
         _M_queue.pop();
     }
 }
+
 
 template<RoutableGraph G, DijkstraQueue<G> Q, EdgePredicate<G> UseEdge, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 typename G::distance_type dijkstra<G, Q, UseEdge, L>::min_path_length() const {

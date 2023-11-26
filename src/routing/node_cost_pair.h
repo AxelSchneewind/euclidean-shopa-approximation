@@ -9,7 +9,7 @@ struct node_cost_pair {
 
     bool operator==(node_cost_pair<NodeId, Distance, Info> const &) const = default;
 
-    distance_t min_distance() const { return info.min_distance(); };
+    Distance min_distance() const { return info.min_distance(); };
 };
 
 template<typename NodeId, typename Distance>

@@ -8,18 +8,18 @@
 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>
-adjacency_list<NodeId, E>::make_bidirectional_undirected(unidirectional_adjacency_list<NodeId, E>&&__forward) {
+adjacency_list<NodeId, E>::make_bidirectional_undirected(unidirectional_adjacency_list<NodeId, E> &&__forward) {
     assert(graph_properties::is_bidirectional(__forward));
 
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> fwd(
-        new unidirectional_adjacency_list<NodeId, E>(std::move(__forward)));
+            new unidirectional_adjacency_list<NodeId, E>(std::move(__forward)));
     return make_bidirectional_undirected(fwd);
 }
 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>
 adjacency_list<NodeId, E>::make_bidirectional_undirected(
-    std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __edges) {
+        std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __edges) {
     assert(graph_properties::is_bidirectional(*__edges));
 
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> forward(__edges);
@@ -30,19 +30,19 @@ adjacency_list<NodeId, E>::make_bidirectional_undirected(
 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>
-adjacency_list<NodeId, E>::make_bidirectional(unidirectional_adjacency_list<NodeId, E>&&__forward) {
+adjacency_list<NodeId, E>::make_bidirectional(unidirectional_adjacency_list<NodeId, E> &&__forward) {
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> fwd(
-        new unidirectional_adjacency_list<NodeId, E>(std::move(__forward)));
+            new unidirectional_adjacency_list<NodeId, E>(std::move(__forward)));
     return make_bidirectional(fwd);
 }
 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>
 adjacency_list<NodeId, E>::make_bidirectional(
-    std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __forward) {
+        std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __forward) {
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> forward(__forward);
     std::shared_ptr<unidirectional_adjacency_list<NodeId, E>> backward(
-        new unidirectional_adjacency_list<NodeId, E>(__forward->inverse()));
+            new unidirectional_adjacency_list<NodeId, E>(__forward->inverse()));
 
     return adjacency_list<NodeId, E>(forward, backward);
 }
@@ -50,12 +50,12 @@ adjacency_list<NodeId, E>::make_bidirectional(
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>::adjacency_list(std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __forward,
                                           std::shared_ptr<unidirectional_adjacency_list<NodeId, E>> __backward)
-    : _M_forward(__forward), _M_backward(__backward) {
+        : _M_forward(__forward), _M_backward(__backward) {
 }
 
 template<typename NodeId, typename E>
 bool
-adjacency_list<NodeId, E>::operator==(const adjacency_list<NodeId, E>&__other) {
+adjacency_list<NodeId, E>::operator==(const adjacency_list<NodeId, E> &__other) {
     return _M_forward == __other._M_forward;
 }
 
@@ -73,7 +73,7 @@ adjacency_list<NodeId, E>::edge_count() const {
 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>
-adjacency_list<NodeId, E>::invert(const adjacency_list<NodeId, E>&__other) {
+adjacency_list<NodeId, E>::invert(const adjacency_list<NodeId, E> &__other) {
     return adjacency_list<NodeId, E>(__other._M_backward, __other._M_forward);
 }
 
@@ -111,12 +111,18 @@ NodeId adjacency_list<NodeId, E>::source(adjacency_list::edge_id_type __id) cons
 
 template<typename NodeId, typename E>
 counter<NodeId> adjacency_list<NodeId, E>::node_ids() const {
-    return {(NodeId)node_count()};
+    return {(NodeId) node_count()};
 }
 
 template<typename NodeId, typename E>
 counter<typename adjacency_list<NodeId, E>::edge_id_type> adjacency_list<NodeId, E>::edge_ids() const {
-    return {(edge_id_type)edge_count()};
+    return {(edge_id_type) edge_count()};
+}
+
+template<typename NodeId, typename E>
+std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+adjacency_list<NodeId, E>::incoming_edges(NodeId __destination, NodeId __from) const {
+    return _M_backward->outgoing_edges(__destination);
 }
 
 template<typename NodeId, typename E>
@@ -127,23 +133,29 @@ adjacency_list<NodeId, E>::incoming_edges(NodeId __destination) const {
 
 template<typename NodeId, typename E>
 std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+adjacency_list<NodeId, E>::outgoing_edges(NodeId __source, NodeId __from) const {
+    return _M_forward->outgoing_edges(__source);
+}
+
+template<typename NodeId, typename E>
+std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
 adjacency_list<NodeId, E>::outgoing_edges(NodeId __source) const {
     return _M_forward->outgoing_edges(__source);
 }
 
 template<typename NodeId, typename E>
-adjacency_list<NodeId, E>::adjacency_list(adjacency_list<NodeId, E>&&__other) noexcept
-    : _M_forward(std::move(__other._M_forward)), _M_backward(std::move(__other._M_backward)) {
+adjacency_list<NodeId, E>::adjacency_list(adjacency_list<NodeId, E> &&__other) noexcept
+        : _M_forward(std::move(__other._M_forward)), _M_backward(std::move(__other._M_backward)) {
 }
 
 template<typename NodeId, typename E>
-adjacency_list<NodeId, E>::adjacency_list(const adjacency_list<NodeId, E>&__other) noexcept
-    : _M_forward(__other._M_forward), _M_backward(__other._M_backward) {
+adjacency_list<NodeId, E>::adjacency_list(const adjacency_list<NodeId, E> &__other) noexcept
+        : _M_forward(__other._M_forward), _M_backward(__other._M_backward) {
 }
 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>::adjacency_list(
-    const std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>>&__forward,
-    const std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>>&__backward)
-    : _M_forward(__forward), _M_backward(__backward) {
+        const std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> &__forward,
+        const std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> &__backward)
+        : _M_forward(__forward), _M_backward(__backward) {
 }

@@ -61,15 +61,24 @@ public:
     /**
      * returns a span with the destination/info pairs for the given source node
      * @param __source
+     * @param __from the node from where destination is reached (can be filtered out)
      * @return
      */
+    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    outgoing_edges(NodeId __source, NodeId __from) const;
+
     std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent> outgoing_edges(NodeId __source) const;
+
 
     /**
      * returns a span with the source/info pairs for the given destination node
      * @param __destination
+     * @param __from the node from where destination is reached (can be filtered out)
      * @return
      */
+    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    incoming_edges(NodeId __destination, NodeId __from) const;
+
     std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
     incoming_edges(NodeId __destination) const;
 
@@ -98,6 +107,7 @@ public:
      * @return
      */
     edge_id_type edge_id(NodeId __source, NodeId __destination) const;
+
     /**
      * get the id for any edge (source, destination)
      * @param __source
