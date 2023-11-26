@@ -182,7 +182,7 @@ IndentCaseLabels: false
 NamespaceIndentation: None
 PenaltyBreakBeforeFirstCallParameter: 100
 PointerAlignment: Right
-SortIncludes: true
+SortIncludes: false
 SpaceAfterCStyleCast: true
 SpaceBeforeParens: Always
 SpacesBeforeTrailingComments: 1
