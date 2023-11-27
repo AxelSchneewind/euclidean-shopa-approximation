@@ -12,6 +12,8 @@
 
 namespace stream_encoders {
 
+	static long ignore;
+
     std::istream &
     encode_text::skip_comments(std::istream &s) {
         s >> std::ws;
