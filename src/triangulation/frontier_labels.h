@@ -80,7 +80,7 @@ private:
 
     steiner_graph const &_M_graph;
 
-    // nodes with lower value (minimal path length) will not be labelled again, assuming nodes are labelled with ascending min_distance()
+    // nodes with lower value (minimal path length) will not be labelled again, assuming nodes are labelled with ascending value()
     distance_type min_value;
     // nodes with higher distance are preliminarily labelled
     distance_type max_distance;
@@ -99,7 +99,7 @@ public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<aggregate_info>);
 
-    frontier_labels(steiner_graph const &__graph, distance_type frontier_width = 4.0,
+    frontier_labels(steiner_graph const &__graph, distance_type frontier_width = 0.1,
                     label_type default_value = none_value<label_type>) : _M_graph(
             __graph), _M_expanded_node_aggregates{}, min_value{0.0}, max_distance{0.0}, default_value(default_value),
                                                                          frontier_width(frontier_width) {};
@@ -168,7 +168,7 @@ public:
                                                  _M_graph.node(dest).coordinates);
 
             // ensure that aggregate is kept until no shortest paths over its nodes can be found
-            _M_active_aggregates.push({edge, __node_cost_pair.min_distance() + 10.0F * edge_length});
+            _M_active_aggregates.push({edge, __node_cost_pair.value() + 10.0F * edge_length});  // use node radii
 
             // setup label information
             auto node_count = _M_graph.steiner_info(edge).node_count;
@@ -183,7 +183,7 @@ public:
     void label(steiner_graph::node_id_type __node, node_cost_pair_type __node_cost_pair) {
         label_preliminary(__node, __node_cost_pair);
         max_distance = std::max(max_distance, __node_cost_pair.distance);
-        set_frontier_distance(__node_cost_pair.min_distance() - frontier_width);
+        set_frontier_distance(__node_cost_pair.value() - frontier_width);
     };
 };
 
