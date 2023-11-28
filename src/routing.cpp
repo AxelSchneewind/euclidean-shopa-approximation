@@ -101,8 +101,20 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
     using distance_dijkstra = dijkstra<steiner_graph, dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>, use_all_edges<steiner_graph>, distance_labels>;
 
     std_graph_t::node_id_type last_node = none_value<std_graph_t::node_id_type>;
-    distance_dijkstra distances(graph, {graph}, {graph}, {graph, 10.0});
+    distance_dijkstra distances(graph, {graph}, {graph}, {graph, 0.5});
     distances.init(from);
+
+    std::thread status([&] () -> void {
+        double vm, res;
+        while(!distances.queue_empty()) {
+            process_mem_usage(vm, res);
+            std::cout << "\rdistance: " << std::setw(10) << std::setprecision(5) << distances.current().distance
+                      << ", node aggregates currently expanded (in labels): " << std::setw(10)
+                      << distances.labels().aggregate_count()
+                      << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB" << std::flush;
+            usleep(50000);
+        }
+    });
 
     while (!distances.queue_empty()) [[likely]] {
         distances.step();
@@ -115,16 +127,11 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
             if (base_node_id != last_node) {
                 output << base_node_id << ',' << ncp.distance << '\n';
                 last_node = base_node_id;
-
-                double vm, res;
-                process_mem_usage(vm, res);
-                std::cout << "\rdistance: " << std::setw(10) << std::setprecision(5) << distances.current().distance
-                          << ", node aggregates currently expanded: " << std::setw(10)
-                          << distances.labels().aggregate_count()
-                          << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB" << std::flush;
             }
         }
     }
+
+    status.join();
 
     std::cout << std::endl;
 }
@@ -155,14 +162,14 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
                       << " (" << router.backward_search().current().value() << "), "
                       << " of total > " << beeline;
 
-            if constexpr (requires(RoutingT&& r) { r.forward_labels().aggregate_count(); }) {
+            if constexpr (requires(RoutingT::labels_type&& l) { l.aggregate_count(); }) {
                 std::cout << ", node aggregates currently expanded: " << std::setw(10)
                           << router.forward_labels().aggregate_count() + router.backward_labels().aggregate_count();
             }
 
             std::cout << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024
                       << "MiB" << std::flush;
-            usleep(50000);
+            usleep(100000);
         }
         std::cout << "\rdone                                                                  " << std::flush << "\r";
     });
@@ -246,5 +253,48 @@ Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_stats(std::os
     process_mem_usage(vm, res);
     output << "\tactual memory usage with graph loaded: VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB"
            << std::endl;
+}
+
+
+
+
+template<typename GraphT, typename RoutingT>
+requires std::convertible_to<typename RoutingT::graph_type, GraphT>void
+Client::ClientModel<GraphT, RoutingT>::write_subgraph_file(std::ostream &output, coordinate_t bottom_left,
+                                                           coordinate_t top_right) const {
+    throw std::exception();
+}
+
+bool is_in_rectangle(coordinate_t point, coordinate_t bottom_left, coordinate_t top_right) {
+    return bottom_left.latitude <= point.latitude && point.latitude <= top_right.latitude
+        && bottom_left.longitude <= point.longitude && point.longitude <= top_right.longitude;
+}
+
+template<>
+void Client::ClientModel<steiner_graph, steiner_routing_t>::write_subgraph_file(std::ostream &output, coordinate_t bottom_left,
+                                                           coordinate_t top_right) const {
+    auto&& all_nodes = graph.node_ids();
+    std::vector<steiner_graph::node_id_type > nodes;
+    std::vector<steiner_graph::edge_id_type > edges;
+
+    for (auto node_id : all_nodes) {
+        if (!is_in_rectangle(graph.node(node_id).coordinates, bottom_left, top_right))
+            continue;
+
+        nodes.push_back(node_id);
+
+        for (auto edge : graph.outgoing_edges(node_id)) {
+            if (!is_in_rectangle(graph.node(edge.destination).coordinates, bottom_left, top_right))
+                continue;
+
+            edges.push_back({node_id, edge.destination});
+        }
+    }
+
+    steiner_graph::subgraph_type subgraph(graph, std::move(nodes), std::move(edges));
+
+    std_graph_t result = std_graph_t::make_graph(graph, subgraph);
+
+    gl_file_io::write(output, result, 1, 1);
 }
 

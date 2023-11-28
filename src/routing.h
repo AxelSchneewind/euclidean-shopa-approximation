@@ -15,6 +15,8 @@ private:
 
         virtual void write_graph_file(std::ostream &output) const = 0;
 
+        virtual void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const = 0;
+
         virtual void compute_route(int from, int to) = 0;
 
         virtual void compute_one_to_all(int from) = 0;
@@ -44,6 +46,8 @@ private:
         ClientModel(GraphT &&graph, RoutingT &&router) : graph{std::move(graph)}, router{std::move(router)} {};
 
         ClientModel(GraphT &&graph) : graph{std::move(graph)}, router(this->graph) {};
+
+        void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const override;
 
         void write_graph_file(std::ostream &output) const override;
 
@@ -89,4 +93,7 @@ public:
     void write_info(std::ostream &output) const { pimpl->write_info(output); };
 
     void write_graph_stats(std::ostream &output) const { pimpl->write_graph_stats(output); };
+
+    void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const { pimpl->write_subgraph_file(output, bottom_left, top_right); };
 };
+

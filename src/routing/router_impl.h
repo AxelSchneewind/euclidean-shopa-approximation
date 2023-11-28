@@ -168,23 +168,22 @@ router<Graph, Dijkstra>::route() const {
     p.push_front(_M_mid_node);
 
     while (!is_none(fwd_node) && fwd_node != _M_start_node) {
-        assert (_M_graph.topology().has_edge(_M_forward_search.get_label(fwd_node).predecessor, fwd_node));
+        if (!_M_graph.topology().has_edge(_M_forward_search.get_label(fwd_node).predecessor, fwd_node)) break;
 
         fwd_node = _M_forward_search.get_label(fwd_node).predecessor;
 
-        assert(!is_none(fwd_node));
+        if(is_none(fwd_node)) continue;
 
         p.push_front(fwd_node);
     }
 
     while (!is_none(bwd_node) && bwd_node != _M_target_node) {
-        // assert (_M_graph_ptr.inverse_topology().has_edge(_M_backward_search.get_label(bwd_node).predecessor,
-        //bwd_node));
-        assert (_M_graph.topology().has_edge(bwd_node, _M_backward_search.get_label(bwd_node).predecessor));
+        if (!_M_graph.inverse_topology().has_edge(_M_backward_search.get_label(bwd_node).predecessor, bwd_node) || !_M_graph.topology().has_edge(bwd_node, _M_backward_search.get_label(bwd_node).predecessor))
+            break;
 
         bwd_node = _M_backward_search.get_label(bwd_node).predecessor;
 
-        assert(!is_none(bwd_node));
+        if(!is_none(bwd_node)) break;
 
         p.push_back(bwd_node);
     }
