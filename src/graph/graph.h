@@ -95,8 +95,8 @@ public:
 
     subgraph_type make_subgraph(std::vector<NodeId> &&__nodes, std::vector<EdgeId> &&__edges) const;
 
-    template<RoutableGraph Other>
-    static graph make_graph(const Other &__base_graph, const Other::subgraph_type &__subgraph);
+    template<RoutableGraph Other, typename Subgraph>
+    static graph make_graph(const Other &__base_graph, const Subgraph &__subgraph);
 
     static graph make_graph(std::vector<NodeInfo> &&__nodes, adjacency_list<NodeId, EdgeInfo> &&__forward);
 

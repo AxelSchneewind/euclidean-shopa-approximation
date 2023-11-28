@@ -44,10 +44,10 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph(
 
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
-template<RoutableGraph Other>
+template<RoutableGraph Other, typename Subgraph>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other &__base_graph,
-                                                      const typename Other::subgraph_type &__subgraph) {
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other & __base_graph,
+                                                      const Subgraph& __subgraph) {
     NodeId node_count = __subgraph.node_count();
     EdgeId edge_count = __subgraph.edge_count();
 
