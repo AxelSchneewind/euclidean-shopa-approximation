@@ -30,7 +30,7 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 dijkstra<G, Q, UseEdge, L>::node_cost_pair_type
 dijkstra<G, Q, UseEdge, L>::current() const {
-    return _M_queue.top();
+    return _M_queue.empty() ? none_value<dijkstra<G, Q, UseEdge, L>::node_cost_pair_type> : _M_queue.top();
 }
 
 
@@ -39,12 +39,7 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 bool
 dijkstra<G, Q, UseEdge, L>::reached(G::node_id_type __node) const {
-    if constexpr (preliminary_labels) {
-        return _M_labels.get_preliminary(__node).distance < _M_queue.top().distance;
-    } else {
-        return _M_labels.reached(__node) &&
-               (_M_queue.empty() || _M_labels.get(__node).distance < _M_queue.top().value());
-    }
+    return _M_labels.reached(__node);
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
@@ -84,22 +79,17 @@ dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
     auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor);
     for (auto edge: edges) {
         // ignore certain edges
-        if (reached(edge.destination) || !_M_use_edge(__node.node, edge)) [[unlikely]] {
+        if (!_M_use_edge(__node.node, edge)) [[unlikely]] {
             continue;
         }
 
-        assert(!reached(edge.destination));
         assert (!is_none(edge.destination));
         assert (_M_graph.has_edge(__node.node, edge.destination));
 
         const node_id_type successor = edge.destination;
 
         distance_t successor_cost;
-        if constexpr (preliminary_labels) {
-            successor_cost = _M_labels.get_preliminary(successor).distance; // use preliminary shortest distance
-        } else {
-            successor_cost = _M_labels.get(successor).distance; // use shortest distance
-        }
+        successor_cost = _M_labels.get(successor).distance; // use shortest distance
 
         const distance_t new_cost = edge.info.cost + __node.distance;
 
@@ -111,9 +101,7 @@ dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
             node_cost_pairs.emplace_back(successor, __node.node, new_cost);
 
             // label current node with preliminary value
-            if constexpr (preliminary_labels) {
-                _M_labels.label_preliminary(successor, node_cost_pairs.back());
-            }
+            _M_labels.label(successor, node_cost_pairs.back());
         }
     }
 

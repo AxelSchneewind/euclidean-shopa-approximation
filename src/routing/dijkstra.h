@@ -22,13 +22,12 @@ public:
     using type = dijkstra<G, Q, UseEdge, L>;
     using node_cost_pair_type = typename Q::value_type;
     using node_id_type = typename G::node_id_type;
+    using distance_type = typename G::distance_type;
 
     using graph_type = G;
     using use_edge_type = UseEdge;
     using queue_type = Q;
     using labels_type = L;
-
-    static constexpr bool preliminary_labels = PreliminaryLabels<L, node_id_type, node_cost_pair_type, typename labels_type::label_type>;
 
     // determines optimality of labels depending on whether the graph allows shortcuts
     // TODO find more elegant way for this
@@ -42,6 +41,8 @@ private:
 
     node_id_type _M_start_node;
     node_id_type _M_target_node;
+
+    distance_type _M_min_distance;
 
     Q _M_queue;
     UseEdge _M_use_edge;
