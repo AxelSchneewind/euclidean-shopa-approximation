@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../routing/dijkstra_concepts.h"
+#include "node_info_array.h"
+#include "compact_node_info_container.h"
 
 #include <functional>
 
@@ -69,7 +71,8 @@ private:
     G const &_M_graph;
 
     std::vector<typename G::triangle_edge_id_type> _M_touched;
-    std::vector<std::unique_ptr<std::vector<Label>>> _M_labels;  // TODO
+    node_info_array<typename G::triangle_edge_id_type, unsigned short, label_type> _M_labels;
+    // compact_node_info_container<typename G::triangle_edge_id_type, unsigned short, char, label_type> _M_labels;
 
 public:
     static constexpr size_t SIZE_PER_NODE = 0;

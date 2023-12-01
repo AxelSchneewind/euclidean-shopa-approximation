@@ -1,9 +1,11 @@
 #pragma once
 
+#include "node_info_container.h"
 #include <vector>
 
-template <typename EdgeId, typename IntraEdgeId, typename Info, typename Derived>
-class node_info_container {
+template <typename EdgeId, typename IntraEdgeId, typename Info>
+class node_info_array
+        : public node_info_container<EdgeId, IntraEdgeId, Info, node_info_array<EdgeId, IntraEdgeId, Info>>{
 public:
     using edge_id_type = EdgeId;
     using intra_edge_id_type = IntraEdgeId;
@@ -13,7 +15,16 @@ public:
 private:
     using index_type = unsigned int;
 
+    std::vector<Info> node_info_list;
+    std::vector<index_type> offsets;
+    Info default_value;
+
+    index_type offset(edge_id_type edge_id) const;
+    index_type offset_next(edge_id_type edge_id) const;
+
 public:
+    node_info_array(std::vector<index_type> && offsets, Info default_value);
+    node_info_array(std::vector<index_type> const& offsets, Info default_value);
 
     info_type& node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id);
 
