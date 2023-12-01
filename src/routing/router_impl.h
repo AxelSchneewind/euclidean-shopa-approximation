@@ -34,7 +34,7 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
         nodes.push_back(node_id);
         typename Graph::node_id_type pred = _M_forward_search.labels().get(node_id).predecessor;
 
-        if (!_M_forward_search.reached(pred) || is_none(pred) || pred == node_id) continue;
+        if (is_none(pred) || !_M_forward_search.reached(pred) || pred == node_id) continue;
 
         typename Graph::edge_id_type edge = _M_graph.topology().edge_id(pred, node_id);
         edges.push_back(edge);
@@ -50,7 +50,7 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 
         typename Graph::node_id_type succ = _M_backward_search.labels().get(node_id).predecessor;
 
-        if (is_none(succ) || !_M_backward_search.reached(succ)) continue;
+        if (is_none(succ) || !_M_backward_search.reached(succ) || succ == node_id) continue;
 
         typename Graph::edge_id_type edge = _M_graph.topology().edge_id(node_id, succ);
         edges.push_back(edge);
@@ -183,7 +183,7 @@ router<Graph, Dijkstra>::route() const {
 
         bwd_node = _M_backward_search.get_label(bwd_node).predecessor;
 
-        if(!is_none(bwd_node)) break;
+        if(is_none(bwd_node)) break;
 
         p.push_back(bwd_node);
     }
