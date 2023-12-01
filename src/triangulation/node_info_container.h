@@ -9,12 +9,6 @@ public:
     using intra_edge_id_type = IntraEdgeId;
     using info_type = Info;
 
-
-private:
-    using index_type = unsigned int;
-
-public:
-
     info_type& node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id);
 
     info_type node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id) const;
@@ -26,4 +20,9 @@ public:
     void reset(edge_id_type edge_id, intra_edge_id_type intra_edge_id);
 
     void reset(edge_id_type edge_id);
+
+    void reset();
+
+    size_t edge_count() const;
+    size_t node_count(edge_id_type edge_id) const;
 };

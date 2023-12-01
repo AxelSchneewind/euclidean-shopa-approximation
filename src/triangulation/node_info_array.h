@@ -37,4 +37,8 @@ public:
     void reset(edge_id_type edge_id, intra_edge_id_type intra_edge_id);
 
     void reset(edge_id_type edge_id);
+    void reset();
+
+    size_t node_count(edge_id_type edge_id) const;
+    size_t edge_count() const;
 };

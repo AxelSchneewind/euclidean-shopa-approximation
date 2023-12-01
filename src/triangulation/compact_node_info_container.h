@@ -32,7 +32,8 @@ private:
     std::unordered_map<AggregateId, std::unique_ptr<aggregate>> aggregate_info_ptr;
     std::vector<unsigned int> offsets;
 
-    size_t edge_count;
+    size_t _edge_count;
+    size_t _node_count;
 
     AggregateInfo default_aggregate_info;
     Info default_info;
@@ -49,20 +50,13 @@ public:
     size_t aggregate_count() const;
 
 private:
-    // FIXME
-    void expand(AggregateId agg_id, IntraAggregateId count);
-
-    // FIXME
-    void erase(AggregateId agg_id);
-
-    bool is_expanded(AggregateId agg_id) const;
-
     void put(AggregateId agg_id, IntraAggregateId intra_id, Info info);
 
     void put_aggregate_info(AggregateId agg_id, AggregateInfo info);
 
 
     std::span<Info, std::dynamic_extent> get(AggregateId agg_id);
+    std::span<const Info, std::dynamic_extent> get(AggregateId agg_id) const;
 
     Info get(AggregateId agg_id, IntraAggregateId intra_id) const;
     Info& get(AggregateId agg_id, IntraAggregateId intra_id);
@@ -72,6 +66,12 @@ private:
     void clear();
 
 public:
+    void expand(AggregateId agg_id, IntraAggregateId count);
+
+    void erase(AggregateId agg_id);
+
+    bool is_expanded(AggregateId agg_id) const;
+
 
     info_type& node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id);
 
@@ -84,4 +84,9 @@ public:
     void reset(edge_id_type edge_id, intra_edge_id_type intra_edge_id);
 
     void reset(edge_id_type edge_id);
+
+    void reset();
+
+    size_t node_count(edge_id_type edge_id) const;
+    size_t edge_count() const;
 };

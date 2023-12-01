@@ -93,7 +93,7 @@ dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
 
         const distance_t new_cost = edge.info.cost + __node.distance;
 
-        // assert(new_cost > __node.distance);
+        assert(new_cost >= __node.distance);
         if (new_cost < successor_cost) [[likely]] {
             assert (edge.destination != __node.predecessor);
 

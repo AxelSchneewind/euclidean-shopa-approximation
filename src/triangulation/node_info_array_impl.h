@@ -61,3 +61,16 @@ node_info_array<EdgeId, IntraEdgeId, Info>::index_type node_info_array<EdgeId, I
     assert(edge_id < offsets.size() - 1);
     return offsets[edge_id];
 }
+
+template<typename AggregateId, typename IntraAggregateId, typename Info>
+void node_info_array<AggregateId, IntraAggregateId, Info>::reset() {
+    for (int i = 0; i < node_info_list.size(); ++i) {
+        node_info_list[i] = default_value;
+    }
+}
+
+template<typename EdgeId, typename IntraEdgeId, typename Info>
+size_t node_info_array<EdgeId, IntraEdgeId, Info>::edge_count() const { return offsets.back(); }
+
+template<typename EdgeId, typename IntraEdgeId, typename Info>
+size_t node_info_array<EdgeId, IntraEdgeId, Info>::node_count(edge_id_type edge_id) const { return offsets[edge_id + 1] - offsets[edge_id]; }
