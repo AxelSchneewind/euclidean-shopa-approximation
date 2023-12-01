@@ -111,7 +111,7 @@ void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text> (
 
             // only insert once (if e is the edge with the smallest id)
             if (e <= edges[0] && e <= edges[1] && e <= edges[2]) {
-                auto n0 = graph.base_graph().source(edges[0]);
+                auto n0 =  graph.base_graph().source(edges[0]);
                 auto n1 = graph.base_graph().source(edges[1]);
                 auto n2 = graph.base_graph().source(edges[2]);
 

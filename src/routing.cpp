@@ -115,9 +115,9 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
             usleep(50000);
         }
         std::cout << std::endl;
-        std::cout << "queue was pulled from " << router.forward_search().queue().pull_count() << " times, "
-                  << "pushed to " << router.forward_search().queue().push_count() << " times "
-                  << "and had maximum size of " << router.forward_search().queue().max_size() << std::endl;
+        std::cout << "queue was pulled from " << distances.queue().pull_count() << " times, "
+                  << "pushed to " << distances.queue().push_count() << " times "
+                  << "and had a maximum size of " << distances.queue().max_size() << std::endl;
     });
 
     while (!distances.queue_empty()) [[likely]] {
@@ -178,7 +178,7 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
         std::cout << std::endl;
         std::cout << "queue was pulled from " << router.forward_search().queue().pull_count() << " times, "
                   << "pushed to " << router.forward_search().queue().push_count() << " times "
-                  << "and had maximum size of " << router.forward_search().queue().max_size() << std::endl;
+                  << "and had a maximum size of " << router.forward_search().queue().max_size() << std::endl;
     });
 
     router.init(query->from, query->to);

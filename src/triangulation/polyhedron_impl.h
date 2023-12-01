@@ -41,7 +41,7 @@ public:
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 void make_face_edges(const BaseGraph &__base,
                      const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &__faces,
-                     std::vector<std::array<typename BaseGraph::edge_id_type, 2 * (MaxNodesPerFace)>> &__face_edges,
+                     std::vector<std::array<typename BaseGraph::edge_id_type, MaxNodesPerFace>> &__face_edges,
                      std::vector<std::array<int, 2>> &__edge_faces) {
     constexpr size_t edges_per_face = 6;
 
@@ -70,12 +70,14 @@ void make_face_edges(const BaseGraph &__base,
         remove_duplicates_sorted(adjacent_edges);
         assert(adjacent_edges.size() == edges_per_face);
 
-        // add edges array
+        // add edges array to face
         __face_edges.emplace_back();
         int index = 0;
         for (auto e: adjacent_edges) {
+            if (__base.source(e) >= __base.destination(e)) continue;
             __face_edges.back().at(index++) = e;
         }
+        assert(index <= MaxNodesPerFace);
 
         // add triangle to edges
         for (auto e: adjacent_edges) {

@@ -126,6 +126,7 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&__tria
                              float __epsilon)
         :
         _M_node_count(0),
+        _M_node_duplicate_count(0),
         _M_edge_count(0),
         _M_epsilon(__epsilon),
         _M_base_nodes(std::move(__triangulation_nodes)),
@@ -135,10 +136,14 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&__tria
 
     // count nodes and edges by iterating over edges in steiner info
     for (auto base_node_id: _M_base_topology.node_ids()) {
+        int out_degree = 0;
         for (auto edge: _M_base_topology.outgoing_edges(base_node_id)) {
+            if (edge.destination > base_node_id) continue;
+
             auto edge_id = _M_base_topology.edge_id(base_node_id, edge.destination);
             auto edge_id_inv = _M_base_topology.edge_id(edge.destination, base_node_id);
 
+            out_degree++;
             _M_node_count += _M_table.edge(edge_id).node_count;
 
             // count edge x other_edge
@@ -156,6 +161,7 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&__tria
                 _M_edge_count += (size_t) _M_table.edge(edge_id).node_count * _M_table.edge(other_edge).node_count;
             }
         }
+        _M_node_duplicate_count += out_degree;
     }
 }
 

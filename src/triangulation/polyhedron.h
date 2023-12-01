@@ -14,7 +14,7 @@ public:
     using face_id_type = int;
 
     // edges that are part of a face
-    static constexpr std::size_t EDGE_COUNT_PER_FACE = MaxNodesPerFace * 2;
+    static constexpr std::size_t EDGE_COUNT_PER_FACE = MaxNodesPerFace;
     static constexpr std::size_t FACE_COUNT_PER_EDGE = 2;
 
     struct [[deprecated]] edges_iterator_type {

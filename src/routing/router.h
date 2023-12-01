@@ -79,9 +79,9 @@ public:
      */
     typename Graph::distance_type distance(const typename Graph::node_id_type &__node) const;
 
-    typename Graph::distance_type forward_distance() const { return _M_forward_search.current().distance; };
+    typename Graph::distance_type forward_distance() const { return _M_forward_search.queue_empty() ? infinity<typename Graph::distance_type> : _M_forward_search.current().distance; };
 
-    typename Graph::distance_type backward_distance() const { return _M_backward_search.current().distance; };
+    typename Graph::distance_type backward_distance() const { return _M_backward_search.queue_empty() ? infinity<typename Graph::distance_type> : _M_backward_search.current().distance; };
 
     auto &&forward_labels() const { return _M_forward_search.labels(); }
 

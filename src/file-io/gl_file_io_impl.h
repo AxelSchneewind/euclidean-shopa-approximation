@@ -67,13 +67,13 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
             auto dest = edge.destination;
 
             // avoid inserting an edge twice
-            if (indices[node] >= indices[dest] && graph.has_edge(dest, node))
+            if (indices[node] >= indices[dest] || !graph.has_edge(dest, node))
                 continue;
 
             f::write(output, indices[node]) << ' ';
             f::write(output, indices[dest]) << ' ';
 
-            // set line width and color depending on whether the edge is a base node or not
+            // set line width and color depending on whether the edge is a base edge or not
             if (node.edge == dest.edge)
                 output << 2 * line_width << ' ' << '2';
             else

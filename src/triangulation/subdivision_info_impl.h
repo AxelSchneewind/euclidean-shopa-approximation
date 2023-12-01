@@ -64,7 +64,6 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
     for (size_t i = 0; i < __triangulation.edge_count(); i++) {
         auto node1 = __triangulation.source(i);
         auto node2 = __triangulation.destination(i);
-
         auto inv_edge = __triangulation.edge_id(node2, node1);
 
         // get coordinates
@@ -108,34 +107,58 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         float mid_dist = mid_value * std::sin(angle1);
 
         // distance values have been computed already, convert to r(v) relative to this edges length
-        std::float16_t r = (__epsilon / 5) * __r_values[node1] / (mid_value * length);
-        assert(r >= 0);
+        std::float16_t r_first = (__epsilon / 5) * __r_values[node1] / length;
+        std::float16_t r_second = (__epsilon / 5) * __r_values[node2] / length;
+        assert(r_first >= 0 && r_second >= 0);
         // assert(r < __epsilon / 5);
 
         // get the class this edge belongs to
         auto index = class_index(angle1);
+        auto index_second = class_index(angle2);
 
-        // get interval in node_positions that is between r and mid_value
-        size_t first = 0;
+        // get interval in first half that is between r and mid_value
         auto &node_positions = __table[index].node_positions;
-        while (first < node_positions.size() && node_positions[first] < r)
-            first++;
+        size_t first_start_index = 0;
+        while (first_start_index < node_positions.size() && node_positions[first_start_index] < r_first)
+            first_start_index++;
 
-        size_t last = first;
-        while (last < node_positions.size() && node_positions[last] < mid_value)
-            last++;
+        size_t first_last_index = first_start_index;
+        while (first_last_index < node_positions.size() && node_positions[first_last_index] < mid_value)
+            first_last_index++;
 
-        assert((size_t) std::numeric_limits<unsigned char>::max > first);
-        assert((size_t) std::numeric_limits<unsigned char>::max > last);
-        assert(first < last + 3);
-        assert(last - first >= 0);
+        assert((size_t) std::numeric_limits<unsigned char>::max > first_start_index);
+        assert((size_t) std::numeric_limits<unsigned char>::max > first_last_index);
+        assert(first_start_index < first_last_index + 3);
+        assert(first_last_index - first_start_index >= 0);
 
-        auto entry = subdivision_edge_info{static_cast<std::float16_t>(mid_value),
-                // static_cast<std::float16_t>(mid_dist),
-                                           r,
-                                           static_cast<unsigned char>(last - first + 3UL),
-                                           static_cast<unsigned char>(index),
-                                           static_cast<unsigned char>(first)};
+        // get interval in second edge half that is between r and mid_value
+        auto &node_positions_second = __table[index].node_positions;
+        size_t second_start_index = 0;
+        while (second_start_index < node_positions_second.size() && node_positions_second[second_start_index] < r_second)
+            second_start_index++;
+
+        size_t second_last_index = second_start_index;
+        while (second_last_index < node_positions_second.size() && node_positions_second[second_last_index] < (1 - mid_value))
+            second_last_index++;
+        assert((size_t) std::numeric_limits<unsigned char>::max > second_start_index);
+        assert((size_t) std::numeric_limits<unsigned char>::max > second_last_index);
+        assert(second_start_index < second_last_index + 3);
+        assert(second_last_index - second_start_index >= 0);
+
+        // number of points on first half of edge
+        auto mid_index = (first_last_index - first_start_index) + 2;
+        auto count = mid_index + (second_last_index - second_start_index) + 2 + 1;
+
+        auto entry = subdivision_edge_info{};
+        entry.mid_position = static_cast<std::float16_t>(mid_value);
+        entry.mid_index = static_cast<unsigned char>(mid_index);
+        entry.node_count = static_cast<unsigned char>(count);
+        entry.r_first = r_first;
+        entry.r_second = r_second;
+        entry.edge_class_first = static_cast<unsigned char>(index);
+        entry.edge_class_second = static_cast<unsigned char>(index_second);
+        entry.first_start_index = static_cast<unsigned char>(first_start_index);
+        entry.second_start_index = static_cast<unsigned char>(second_start_index);
         result.push_back(entry);
     }
 
@@ -164,20 +187,39 @@ coordinate_t
 subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coordinate_t c1, coordinate_t c2) const {
     const auto info = edge(__edge);
 
+    assert(steiner_index < info.node_count);
+    assert(steiner_index >= 0);
+
     if (steiner_index == 0)
         return c1;
     if (steiner_index == 1)
-        return interpolate_linear(c1, c2, info.r);
+        return interpolate_linear(c1, c2, info.r_first);
 
-    int index = steiner_index - 2 + info.first;
-    assert(index >= 0);
+    if (steiner_index == info.mid_index)
+        return interpolate_linear(c1, c2, info.mid_position);
 
-    auto last = info.first - 2 + info.node_count;
-    std::float16_t relative;
-    if (index < last)
-        relative = triangle_classes[edge(__edge).edge_class].node_positions[index];
-    else
-        relative = info.mid_position;
+    if (steiner_index == info.node_count - 1)
+        return c2;
+    if (steiner_index == info.node_count - 2)
+        return interpolate_linear(c2, c1, info.r_second);
 
-    return interpolate_linear(c1, c2, relative);
+    if (steiner_index < info.mid_index) {
+        int index = steiner_index - 2 + info.first_start_index;
+        assert(index >= 0);
+
+        auto relative = triangle_classes[edge(__edge).edge_class_first].node_positions[index];
+        return interpolate_linear(c1, c2, relative);
+   }
+
+    if (steiner_index > info.mid_index) {
+        int index = info.node_count - 1 - steiner_index;
+        index = index - 2 + info.second_start_index;
+        assert(index >= 0);
+        assert(index < info.node_count - info.mid_index - 2);
+
+        auto relative = triangle_classes[edge(__edge).edge_class_second].node_positions[index];
+        return interpolate_linear(c2, c1, relative);
+    }
+
+    assert(false);
 }

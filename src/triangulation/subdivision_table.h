@@ -2,11 +2,11 @@
 
 #include "../graph/adjacency_list.h"
 #include "polyhedron.h"
-#include "steiner_graph.h"
 
 #include <vector>
 #include <stdfloat>
 #include <cmath>
+#include <cstdint>
 
 
 class subdivision_table {
@@ -30,22 +30,27 @@ public:
         // maximum distance of a point on this edge to other edges, relative to the length of this edge
         // std::float16_t mid_dist;
 
-        // r(v), relative to this edge
-        std::float16_t r;
-
         // number of steiner points on this edge (counting the source and middle node)
         std::uint16_t node_count;
 
-        // to which class of edges this one belongs
-        unsigned char edge_class;
+        // r(v), relative to this edge
+        std::float16_t r_first;
+        std::float16_t r_second;
 
-        // interval of node positions (last is first + node_count - 3)
-        unsigned char first;
+        // which classes of edges this one belongs to (first and second half)
+        unsigned char edge_class_first;
+        // interval of node positions
+        unsigned char first_start_index;
+
+        unsigned char mid_index;
+
+        unsigned char second_start_index;
+        unsigned char edge_class_second;
 
         bool operator==(const subdivision_edge_info &__other) const = default;
     };
 
-    static_assert(sizeof(subdivision_edge_info) == 8);
+    static_assert(sizeof(subdivision_edge_info) == 14);
 
 
     std::vector<edge_class> triangle_classes;
@@ -67,6 +72,19 @@ public:
     subdivision_edge_info edge(int __edge) const;
 
     static std::vector<subdivision_table::edge_class> precompute(float __epsilon, float __min_relative_r_value);
+
+    std::vector<unsigned int> offsets() const {
+        std::vector<unsigned int> results;
+
+        unsigned int index = 0;
+        for (auto edge_info : edges) {
+            results.push_back(index);
+            index += edge_info.node_count;
+        }
+        results.push_back(index);
+
+        return results;
+    }
 
     static std::vector<float>
     min_r_per_triangle_class(const std::vector<node_t> &__nodes, const std::vector<float> &r_values,

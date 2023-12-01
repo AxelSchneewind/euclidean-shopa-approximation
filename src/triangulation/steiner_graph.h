@@ -211,6 +211,7 @@ public:
 private:
     size_t _M_node_count;
     size_t _M_edge_count;
+    size_t _M_node_duplicate_count;
 
     // the epsilon value used for discretization
     float _M_epsilon;
@@ -233,6 +234,8 @@ public:
     node_id_type from_base_node_id(base_topology_type::node_id_type __node) const {
         return {_M_base_topology.edge_id(__node), 0};
     }
+
+    const subdivision_table& subdivision_info() const { return _M_table; }
 
     const base_topology_type &base_graph() const { return _M_base_topology; }
 
