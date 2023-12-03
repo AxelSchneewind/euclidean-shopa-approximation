@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <stdfloat>
+#include <cstdint>
 #include <cmath>
 #include <cstdint>
 
@@ -77,7 +78,7 @@ public:
         std::vector<unsigned int> results;
 
         unsigned int index = 0;
-        for (auto edge_info : edges) {
+        for (auto edge_info: edges) {
             results.push_back(index);
             index += edge_info.node_count;
         }

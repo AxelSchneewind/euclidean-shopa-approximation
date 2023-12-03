@@ -102,7 +102,12 @@ public:
         node_id_iterator_type(const steiner_graph *__graph, node_id_type __current, node_id_type __max)
                 : _M_graph_ptr(__graph),
                   _M_current_node(__current),
-                  _M_last_node(__max) {}
+                  _M_last_node(__max) {
+            while (_M_current_node.edge < _M_graph_ptr->base_graph().edge_count() &&
+                   _M_graph_ptr->base_graph().source(_M_current_node.edge) >=
+                   _M_graph_ptr->base_graph().destination(_M_current_node.edge))
+                _M_current_node.edge++;
+        }
 
         node_id_iterator_type &begin() { return *this; };
 
@@ -211,7 +216,6 @@ public:
 private:
     size_t _M_node_count;
     size_t _M_edge_count;
-    size_t _M_node_duplicate_count;
 
     // the epsilon value used for discretization
     float _M_epsilon;
@@ -235,7 +239,7 @@ public:
         return {_M_base_topology.edge_id(__node), 0};
     }
 
-    const subdivision_table& subdivision_info() const { return _M_table; }
+    const subdivision_table &subdivision_info() const { return _M_table; }
 
     const base_topology_type &base_graph() const { return _M_base_topology; }
 
@@ -252,6 +256,10 @@ public:
     node_info_type node(node_id_type __id) const;
 
     node_info_type node(triangle_node_id_type __id) const;
+
+    bool is_base_node(node_id_type __id) const;
+
+    triangle_node_id_type base_node_id(node_id_type __id) const;
 
     static node_id_type source(edge_id_type __id);
 
@@ -275,6 +283,8 @@ public:
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     outgoing_edges(node_id_type __node_id, node_id_type __reached_from) const;
 
+    std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
+    outgoing_edges(triangle_node_id_type __base_node_id, node_id_type __reached_from) const;
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     incoming_edges(node_id_type __node_id) const { return outgoing_edges(__node_id); };

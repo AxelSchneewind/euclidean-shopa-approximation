@@ -77,7 +77,7 @@ void make_face_edges(const BaseGraph &__base,
             if (__base.source(e) >= __base.destination(e)) continue;
             __face_edges.back().at(index++) = e;
         }
-        assert(index <= MaxNodesPerFace);
+        assert(index == MaxNodesPerFace);
 
         // add triangle to edges
         for (auto e: adjacent_edges) {
@@ -129,17 +129,62 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
     std::vector<edge_id_type> inverse_edges;
     make_inverse_edges(__base, inverse_edges);
 
+
+    std::vector<edge_id_type> node_edges;
+    std::vector<int> node_edge_offsets;
+    {
+        std::vector<steiner_graph::triangle_edge_id_type> adjacent_edge_ids;
+        std::vector<steiner_graph::triangle_edge_id_type> triangle_edge_ids;
+        for (int node = 0; node < __base.node_count(); ++node) {
+            // get edges and triangles adjacent to node
+            for (auto edge: __base.outgoing_edges(node)) {
+                auto edge_id = __base.edge_id(node, edge.destination);
+                auto inv_edge_id = __base.edge_id(edge.destination, node);
+                adjacent_edge_ids.push_back(edge_id);
+                adjacent_edge_ids.push_back(inv_edge_id);
+
+                for (auto triangle: edge_triangles[edge_id]) {
+                    if (is_none(triangle)) continue;
+                    for (auto other_edge: triangle_edges[triangle])
+                        triangle_edge_ids.push_back(other_edge);
+                }
+            }
+
+            std::sort(triangle_edge_ids.begin(), triangle_edge_ids.end());
+            std::sort(adjacent_edge_ids.begin(), adjacent_edge_ids.end());
+
+            // get edges that are only reachable via a triangle
+            remove_duplicates_sorted(triangle_edge_ids);
+            remove_duplicates_sorted(adjacent_edge_ids);
+            int edge_count = set_minus_sorted<int>(triangle_edge_ids, adjacent_edge_ids, triangle_edge_ids);
+
+            node_edge_offsets.push_back(node_edges.size());
+            for (auto e: triangle_edge_ids)
+                node_edges.emplace_back(e);
+
+            adjacent_edge_ids.clear();
+            triangle_edge_ids.clear();
+        }
+        node_edge_offsets.push_back(node_edges.size());
+    }
+
     return polyhedron<BaseGraph, MaxNodesPerFace>(std::move(triangle_edges), std::move(edge_triangles),
-                                                  std::move(inverse_edges));
+                                                  std::move(inverse_edges), std::move(node_edges),
+                                                  std::move(node_edge_offsets));
 }
 
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
         std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
         std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
-        std::vector<edge_id_type> &&__inverse_edges)
+        std::vector<edge_id_type> &&__inverse_edges,
+        std::vector<face_id_type> &&__node_faces,
+        std::vector<int> &&__node_face_offsets)
         : _M_face_info(std::move(__adjacent_edges)),
-          _M_edge_info() {
+          _M_edge_info(),
+          _M_node_edges_offsets(std::move(__node_face_offsets)),
+          _M_node_edges(std::move(__node_faces)) {
+
     int i = 0;
     while (!__adjacent_faces.empty()) {
         edge_info_type info = {__adjacent_faces.back(), __inverse_edges.back()};

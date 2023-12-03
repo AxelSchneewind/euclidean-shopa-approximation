@@ -3,6 +3,9 @@
 #include "../graph/base_types.h"
 #include "../routing/dijkstra_concepts.h"
 
+#include "../util/set_minus.h"
+#include "../util/remove_duplicates.h"
+
 /**
  * stores the topology of a polyhedron. Provides O(1) access to adjacent edges for given nodes/edges
  */
@@ -94,9 +97,16 @@ private:
     // for each edge
     std::vector<edge_info_type> _M_edge_info;
 
+    // for each node, store edges that are reachable by crossing a face
+    std::vector<face_id_type> _M_node_edges;
+    std::vector<int> _M_node_edges_offsets;
+
     polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
                std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
-               std::vector<edge_id_type> &&__inverse_edges);
+               std::vector<edge_id_type> &&__inverse_edges,
+               std::vector<face_id_type> &&__node_faces,
+               std::vector<int> &&__node_face_offsets
+    );
 
 public:
 
@@ -111,12 +121,18 @@ public:
     static polyhedron<BaseGraph, MaxNodesPerFace> make_polyhedron(const BaseGraph &__base,
                                                                   const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &__faces);
 
-    std::span<const int, FACE_COUNT_PER_EDGE> edge_faces(int __edge) const {
+    std::span<const face_id_type, FACE_COUNT_PER_EDGE> edge_faces(edge_id_type __edge) const {
         return {_M_edge_info[__edge].adjacent_faces};
     }
 
-    std::span<const int, EDGE_COUNT_PER_FACE> face_edges(int __face) const {
+    std::span<const edge_id_type, EDGE_COUNT_PER_FACE> face_edges(face_id_type __face) const {
         return {_M_face_info[__face]};
+    }
+
+    std::span<const edge_id_type, std::dynamic_extent> node_edges(node_id_type __node) const {
+        return {_M_node_edges.begin() + _M_node_edges_offsets[__node],
+                _M_node_edges.begin() + _M_node_edges_offsets[__node + 1]};
+
     }
 
     /**
