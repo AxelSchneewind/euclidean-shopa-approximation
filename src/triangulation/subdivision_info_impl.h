@@ -79,6 +79,9 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
             if (is_none(edge)) continue;
 
             auto node3 = __triangulation.destination(edge);
+            if (node3 == node1 || node3 == node2)
+                node3 = __triangulation.source(edge);
+
             if (node3 == node1 || node3 == node2) continue;
 
             auto c3 = __nodes[node3].coordinates;
