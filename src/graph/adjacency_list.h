@@ -50,13 +50,13 @@ public:
      * number of nodes
      * @return
      */
-    inline size_t node_count() const;
+    size_t node_count() const;
 
     /**
      * number of edges
      * @return
      */
-    inline size_t edge_count() const;
+    size_t edge_count() const;
 
     /**
      * returns a span with the destination/info pairs for the given source node

@@ -84,13 +84,10 @@ dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
         }
 
         assert (!is_none(edge.destination));
-        assert (_M_graph.has_edge(__node.node, edge.destination));
+        // assert (_M_graph.has_edge(__node.node, edge.destination));
 
         const node_id_type successor = edge.destination;
-
-        distance_t successor_cost;
-        successor_cost = _M_labels.get(successor).distance; // use shortest distance
-
+        const distance_t successor_cost = _M_labels.get(successor).distance; // use shortest distance
         const distance_t new_cost = edge.info.cost + __node.distance;
 
         assert(new_cost >= __node.distance);

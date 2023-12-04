@@ -10,14 +10,14 @@
 #include "../routing/dijkstra_concepts.h"
 #include "../util/counting_iterator.h"
 
-template<typename NodeId, typename E = std::nullptr_t>
+template<typename NodeId, typename E = void>
 struct internal_adjacency_list_edge {
     NodeId destination;
     E info;
 };
 
 
-template<typename NodeId, typename E = std::nullptr_t>
+template<typename NodeId, typename E = void>
 struct adjacency_list_edge {
     NodeId source;
     NodeId destination;
@@ -31,17 +31,16 @@ struct adjacency_list_edge {
 };
 
 template<typename NodeId>
-struct internal_adjacency_list_edge<NodeId, std::nullptr_t> {
+struct internal_adjacency_list_edge<NodeId, void> {
     NodeId destination;
-    static constexpr std::nullptr_t info = nullptr;
 
     internal_adjacency_list_edge() = default;
 
-    internal_adjacency_list_edge(NodeId destination, std::nullptr_t info) : destination(destination) {}
+    internal_adjacency_list_edge(NodeId destination) : destination(destination) {}
 };
 
 template<typename NodeId>
-struct adjacency_list_edge<NodeId, std::nullptr_t> {
+struct adjacency_list_edge<NodeId, void> {
     NodeId source;
     NodeId destination;
     static constexpr std::nullptr_t info = nullptr;

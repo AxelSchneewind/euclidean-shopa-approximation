@@ -139,11 +139,17 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
             // get edges and triangles adjacent to node
             for (auto edge: __base.outgoing_edges(node)) {
                 auto edge_id = __base.edge_id(node, edge.destination);
-                auto inv_edge_id = __base.edge_id(edge.destination, node);
+                auto inv_edge_id = inverse_edges[edge_id];
                 adjacent_edge_ids.push_back(edge_id);
                 adjacent_edge_ids.push_back(inv_edge_id);
 
                 for (auto triangle: edge_triangles[edge_id]) {
+                    if (is_none(triangle)) continue;
+                    for (auto other_edge: triangle_edges[triangle])
+                        triangle_edge_ids.push_back(other_edge);
+                }
+
+                for (auto triangle: edge_triangles[inv_edge_id]) {
                     if (is_none(triangle)) continue;
                     for (auto other_edge: triangle_edges[triangle])
                         triangle_edge_ids.push_back(other_edge);

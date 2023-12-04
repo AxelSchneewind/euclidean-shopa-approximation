@@ -1,74 +1,71 @@
 #include "routing.h"
+#include "routing_impl.h"
+#include "triangulation/subdivision_table.h"
 #include <string>
-#include <vector>
 #include <iostream>
 #include <fstream>
-#include <ios>
 #include <iomanip>
-#include "util/memory_usage.h"
-#include "triangulation/subdivision_table.h"
+
+
+static_assert(steiner_graph::SIZE_PER_NODE == 20);
+static_assert(steiner_graph::SIZE_PER_EDGE == 60);
+
+
+static_assert(std_graph_t::SIZE_PER_NODE == 20);
+static_assert(std_graph_t::SIZE_PER_EDGE == 20);
+
 
 
 int
 main(int argc, char const *argv[]) {
-
     float epsilon = 0.50F;
+    std::string mode("table");
+    std::string graph_path;
 
-    if (argc > 1)
-	epsilon = std::stof(argv[1]);
+    if (argc > 2) {
+        mode = std::string(argv[1]);
+        graph_path = std::string(argv[2]);
+    } else {
+        std::cout << "mode (table, graph): " << std::flush;
+        std::cin >> mode;
+        if (mode != "table" && mode != "graph")
+            return 1;
+        std::cout << "graph file: " << std::flush;
+        std::cin >> graph_path;
+    }
+
+    if (argc > 3)
+	epsilon = std::stof(argv[3]);
     else {
     	std::cout << "epsilon: " << std::flush;
     	std::cin >> epsilon;
     }
 
-    auto table = subdivision_table::precompute(epsilon, 0.05);
+    auto table = subdivision_table::precompute(epsilon, 0.02);
 
-    std::cout << "epsilon, angle, number of points, points\n";
-    int index = 0;
-    for (auto triangle_class : table) {
-        std::cout << epsilon << "," << std::setw(10) << subdivision_table::class_angle(index) << "," << triangle_class.node_positions.size() << ",";
+    if (mode == "table") {
+        std::cout << "epsilon, angle, number of points, points\n";
+        int index = 0;
+        for (auto triangle_class: table) {
+            std::cout << epsilon << "," << std::setw(10) << subdivision_table::class_angle(index) << ","
+                      << triangle_class.node_positions.size() << ",";
 
-	for (auto point : triangle_class.node_positions) {
-		std::cout << point << " ";
-	}
-        std::cout << '\n';
+            for (auto point: triangle_class.node_positions) {
+                std::cout << point << " ";
+            }
+            std::cout << '\n';
 
-        index++;
-    }
-    std::cout << std::flush;
-
-    // read graph
-    std::string filename;
-    std::string filename_out;
-
-
-    if (argc > 2) {
-	filename = argv[2];
+            index++;
+        }
+        std::cout << std::flush;
     } else {
-	return 0;
-    // std::cout << "input filename: " << std::flush;
-    // std::cin >> filename;
-
-    // std::cout << "output filename (N if no output should be generated): " << std::flush;
-    // std::cin >> filename_out;
-    }
-
-    if (argc > 3) {
-	filename_out = argv[3];
-    }
-
-    std::ifstream input(filename);
-
-    auto graph = triangulation_file_io::read_steiner(input, epsilon);
-    input.close();
-    std::cout << "graph has " << graph.node_count()<<  " nodes and " << graph.edge_count() << " edges" << std::endl;
-
-
-    // write gl file for graph
-    if (!filename_out.empty() && (filename != "N" || filename != "n")) {
-    	std::ofstream output(filename_out);
-        std::cout << "writing, expected file size: " << graph.node_count() * 42 + graph.edge_count() * 8 << " bytes" << std::endl;
-        gl_file_io::write<steiner_graph>(output, graph, 1, 1);
-        output.close();
+        std::ifstream input(graph_path);
+        auto graph = triangulation_file_io::read_steiner(input, epsilon);
+        input.close();
+        std::cout << "epsilon, stored node count, stored edge count, node count, edge count\n";
+        std::cout << epsilon << ',' << graph.base_graph().node_count()
+                  << ',' << graph.base_graph().edge_count() / 2
+                  << ',' << graph.node_count()
+                  << ',' << graph.edge_count() / 2 << '\n';
     }
 }

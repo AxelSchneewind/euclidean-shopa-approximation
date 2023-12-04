@@ -4,17 +4,34 @@
 
 #include "util/memory_usage.h"
 
+constexpr bool output_csv = true;
+
+
 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) const {
-    output << "path: " << result->path << '\n';
     auto path_length = graph.path_length(result->path);
     auto beeline_distance = result->beeline_distance;
-    output << "path has cost: " << path_length << " with beeline distance "
-           << beeline_distance << ", satisfying e >= " << ((path_length / beeline_distance) - 1) << '\n';
-    output << "searches visited " << result->trees.node_count() << " nodes ";
-    output << "and took " << result->duration << '\n';
+
+    if constexpr (output_csv) {
+        output << "cost,beeline,epsilon satisfied,tree size,time\n"
+               << path_length << ","
+               << beeline_distance << ",";
+        output << ((path_length / beeline_distance) - 1)
+               << result->trees.node_count() << ","
+               << result->duration << '\n';
+    } else {
+        output << "path: " << result->path << '\n';
+        output << "has cost"
+               << path_length << ","
+               << " with beeline distance "
+               << beeline_distance << ", satisfying epsilon >= ";
+        output << ((path_length / beeline_distance) - 1) << ", search visited "
+               << result->trees.node_count() << " nodes and took "
+               << result->duration << '\n';
+    }
+
 }
 
 template<typename GraphT, typename RoutingT>
@@ -107,17 +124,22 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
     std::thread status([&] () -> void {
         double vm, res;
         while(!distances.queue_empty()) {
-            process_mem_usage(vm, res);
-            std::cout << "\rdistance: " << std::setw(10) << std::setprecision(5) << distances.current().distance
-                      << ", node aggregates currently expanded (in labels): " << std::setw(10)
-                      << distances.labels().aggregate_count()
-                      << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB" << std::flush;
+            if constexpr (output_csv) {
+
+            } else {
+                process_mem_usage(vm, res);
+                std::cout << "\rdistance: " << std::setw(10) << std::setprecision(5) << distances.current().distance
+                          << ", node aggregates currently expanded (in labels): " << std::setw(10)
+                          << distances.labels().aggregate_count()
+                          << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB" << std::flush;
+            }
+
             usleep(50000);
         }
-        std::cout << std::endl;
-        std::cout << "queue was pulled from " << distances.queue().pull_count() << " times, "
-                  << "pushed to " << distances.queue().push_count() << " times "
-                  << "and had a maximum size of " << distances.queue().max_size() << std::endl;
+        std::cout << "pull count,push count,max size\n"
+                  << distances.queue().pull_count() << ","
+                  << distances.queue().push_count() << ","
+                  << distances.queue().max_size() << std::endl;
     });
 
     while (!distances.queue_empty()) [[likely]] {
@@ -136,8 +158,6 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
     }
 
     status.join();
-
-    std::cout << std::endl;
 }
 
 
@@ -157,28 +177,32 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
     // create thread to show progress
     std::thread status([&]() -> void {
         while (!router.route_found()) {
-            double vm, res;
-            process_mem_usage(vm, res);
-            std::cout << "\rdistances: "
-                      << std::setw(10) << std::setprecision(5) << router.forward_distance()
-                      << " (" << router.forward_search().current().value() << "), "
-                      << std::setw(10) << std::setprecision(5) << router.backward_distance()
-                      << " (" << router.backward_search().current().value() << "), "
-                      << " of total > " << beeline;
+            if constexpr (output_csv) {
 
-            if constexpr (requires(RoutingT::labels_type&& l) { l.aggregate_count(); }) {
-                std::cout << ", node aggregates currently expanded: " << std::setw(10)
-                          << router.forward_labels().aggregate_count() + router.backward_labels().aggregate_count();
+            } else {
+                double vm, res;
+                process_mem_usage(vm, res);
+                std::cout << "\rdistances: "
+                          << std::setw(10) << std::setprecision(5) << router.forward_distance()
+                          << " (" << router.forward_search().current().value() << "), "
+                          << std::setw(10) << std::setprecision(5) << router.backward_distance()
+                          << " (" << router.backward_search().current().value() << "), "
+                          << " of total > " << beeline;
+
+                if constexpr (requires(RoutingT::labels_type&& l) { l.aggregate_count(); }) {
+                    std::cout << ", node aggregates currently expanded: " << std::setw(10)
+                              << router.forward_labels().aggregate_count() + router.backward_labels().aggregate_count();
+                }
+
+                std::cout << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024
+                          << "MiB" << std::flush;
             }
-
-            std::cout << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024
-                      << "MiB" << std::flush;
             usleep(100000);
         }
-        std::cout << std::endl;
-        std::cout << "queue was pulled from " << router.forward_search().queue().pull_count() << " times, "
-                  << "pushed to " << router.forward_search().queue().push_count() << " times "
-                  << "and had a maximum size of " << router.forward_search().queue().max_size() << std::endl;
+        std::cout << "pull count(forward),push count(forward),max size\n"
+                  << router.forward_search().queue().pull_count() << ","
+                  << router.forward_search().queue().push_count() << ","
+                  << router.forward_search().queue().max_size() << std::endl;
     });
 
     router.init(query->from, query->to);
@@ -227,39 +251,61 @@ template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void
 Client::ClientModel<GraphT, RoutingT>::write_graph_stats(std::ostream &output) const {
-    output << "\r\a\tdone, graph has "
-           << std::setw(12) << graph.node_count() << " nodes and "
-           << std::setw(12) << graph.edge_count() << " edges";
+    if constexpr (output_csv) {
+        std::cout << "epsilon, stored node count, stored edge count, node count, edge count\n";
+        if constexpr(requires(GraphT graph) {graph.epsilon(); graph.base_graph();}) {
+            std::cout << graph.epsilon() << ',' << graph.base_graph().node_count()
+                      << ',' << graph.base_graph().edge_count() / 2;
+        } else {
+            std::cout << 0.0 << ',' << graph.node_count() << ','
+                      << graph.edge_count() / 2;
+        }
+        std::cout << ',' << graph.node_count()
+                  << ',' << graph.edge_count() / 2 << '\n';
+    } else {
+        output << "\r\a\tgraph has "
+               << std::setw(12) << graph.node_count() << " nodes and "
+               << std::setw(12) << graph.edge_count() / 2 << " edges";
 
-    double vm, res;
-    process_mem_usage(vm, res);
-    output << "Memory usage with graph loaded and routing set up: VM " << vm / 1024 << "MiB, RES " << res / 1024
-           << "MiB"
-           << std::endl;
+        double vm, res;
+        process_mem_usage(vm, res);
+        output << "Memory usage with graph loaded and routing set up: VM " << vm / 1024 << "MiB, RES " << res / 1024
+               << "MiB"
+               << std::endl;
+    }
 }
 
 
 template<>
 void
 Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_stats(std::ostream &output) const {
-    output << "\r\a\tdone, graph has "
-           << std::setw(12) << graph.node_count() << " nodes and "
-           << std::setw(12) << graph.edge_count() << " edges"
-           << "\n\t           with "
-           << std::setw(12) << graph.base_graph().node_count() << " nodes and "
-           << std::setw(12) << graph.base_graph().edge_count() << " edges stored explicitly" << std::endl;
+    if constexpr(output_csv) {
+        std::cout << "epsilon, stored node count, stored edge count, node count, edge count\n";
+        std::cout << graph.epsilon() << ','
+                  << graph.base_graph().node_count()
+                  << ',' << graph.base_graph().edge_count() / 2;
+        std::cout << ',' << graph.node_count()
+                  << ',' << graph.edge_count() / 2 << '\n';
+    } else {
+        output << "\r\a\tdone, graph has "
+               << std::setw(12) << graph.node_count() << " nodes and "
+               << std::setw(12) << graph.edge_count() / 2 << " edges"
+               << "\n\t           with "
+               << std::setw(12) << graph.base_graph().node_count() << " nodes and "
+               << std::setw(12) << graph.base_graph().edge_count() / 2 << " edges stored explicitly" << std::endl;
 
-    output << "\tgraph: expected size per node: "
-           << std::setw(3) << steiner_graph::SIZE_PER_NODE << " and per edge "
-           << std::setw(3) << steiner_graph::SIZE_PER_EDGE << " -> "
-           << graph.base_graph().node_count() * steiner_graph::SIZE_PER_NODE / 1024 / 1024 << "MiB" << " + "
-           << graph.base_graph().edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 / 1024 << "MiB"
-           << std::endl;
+        output << "\tgraph: expected size per node: "
+               << std::setw(3) << steiner_graph::SIZE_PER_NODE << " and per edge "
+               << std::setw(3) << steiner_graph::SIZE_PER_EDGE << " -> "
+               << graph.base_graph().node_count() * steiner_graph::SIZE_PER_NODE / 1024 / 1024 << "MiB" << " + "
+               << graph.base_graph().edge_count() * steiner_graph::SIZE_PER_EDGE / 1024 / 1024 << "MiB"
+               << std::endl;
 
-    double vm, res;
-    process_mem_usage(vm, res);
-    output << "\tactual memory usage with graph loaded: VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB"
-           << std::endl;
+        double vm, res;
+        process_mem_usage(vm, res);
+        output << "\tactual memory usage with graph loaded: VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB"
+               << std::endl;
+    }
 }
 
 

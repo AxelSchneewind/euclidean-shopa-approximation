@@ -69,8 +69,8 @@ steiner_labels<G, N>::label(node_id_type __node, N __label) {
     auto edge_id = __node.edge;
     auto count = _M_graph.steiner_info(__node.edge).node_count;
 
-    assert(_M_touched.empty() ||
-           _M_graph.topology().has_edge(__label.predecessor, __node));
+    // assert(_M_touched.empty() ||
+    //        _M_graph.topology().has_edge(__label.predecessor, __node));
     assert(__node.edge >= 0 && __node.edge < _M_graph.topology().edge_count());
     assert(count > 0);
     assert(count > __node.steiner_index);

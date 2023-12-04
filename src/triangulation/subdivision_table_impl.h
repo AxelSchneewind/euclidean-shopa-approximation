@@ -5,6 +5,18 @@
 #include <vector>
 
 
+/**
+ * checks min <= val < max
+ * @tparam Min
+ * @tparam Max
+ * @tparam Value
+ * @return
+ */
+template <typename Min, typename Max, typename Value>
+bool is_between(Value val, Min min, Max max) {
+    return min <= val && min < max;
+}
+
 std::vector<float>
 subdivision_table::min_r_per_triangle_class(const std::vector<node_t> &__nodes, const std::vector<float> &r_values,
                                             const std::vector<triangle> &__faces) {
@@ -55,7 +67,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
                                          const std::vector<node_t> &__nodes,
                                          const polyhedron<adjacency_list<int, std::nullptr_t>, 3> &__polyhedron,
                                          const std::vector<edge_class> &__table,
-                                         const std::vector<std::float16_t> &__r_values, float __epsilon) {
+                                         const std::vector<float> &__r_values, float __epsilon) {
 
     // store subdivision information here
     std::vector<subdivision_edge_info> result;
@@ -131,8 +143,6 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         while (first_last_index < node_positions.size() && node_positions[first_last_index] < mid_value)
             first_last_index++;
 
-        assert((size_t) std::numeric_limits<unsigned char>::max > first_start_index);
-        assert((size_t) std::numeric_limits<unsigned char>::max > first_last_index);
         assert(first_start_index < first_last_index + 3);
         assert(first_last_index - first_start_index >= 0);
 
@@ -147,34 +157,54 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         while (second_last_index < node_positions_second.size() &&
                node_positions_second[second_last_index] < (1 - mid_value))
             second_last_index++;
-        assert((size_t) std::numeric_limits<unsigned char>::max > second_start_index);
-        assert((size_t) std::numeric_limits<unsigned char>::max > second_last_index);
         assert(second_start_index < second_last_index + 3);
         assert(second_last_index - second_start_index >= 0);
 
         // number of points on first half of edge
         auto mid_index = (first_last_index - first_start_index) + 2;
-        if (r_first > mid_value) {
+        // remove point at r(v) if already over on other half of the edge
+        if (r_first >= mid_value) {
             r_first = mid_value;
             mid_index--;
         }
+
+        // number of points (points on first half + mid_node + points on second half + c2 + (c2 + r(c2)))
         auto count = mid_index + (second_last_index - second_start_index) + 2 + 1;
-        if (r_second > 1 - mid_value) {
+        // remove point at r(v) if already over on other half of the edge
+        if (r_second >= 1 - mid_value) {
             r_second = 1 - mid_value;
             count--;
         }
+        assert(count >= 2);
+
+        // check that values are in bounds
+        if (!is_between(count, 2, std::numeric_limits<unsigned short>::max())
+         || !is_between(mid_value, 0, 1)
+         || !is_between(mid_index, 1, count)
+         || !is_between(r_first, 0, 1)
+         || !is_between(r_second, 0, 1)
+         || !is_between(index, 0, std::numeric_limits<unsigned char>::max())
+         || !is_between(index, 0, node_positions.size())
+         || !is_between(index_second, 0, std::numeric_limits<unsigned char>::max())
+         || !is_between(index_second, 0, node_positions.size())
+         || !is_between(first_start_index, 0, std::numeric_limits<unsigned short>::max())
+         || !is_between(first_start_index, 0, node_positions.size())
+         || !is_between(second_start_index, 0, std::numeric_limits<unsigned short>::max())
+         || !is_between(second_start_index, 0, node_positions.size()))
+            throw std::invalid_argument("some value does not fit");
 
         auto entry = subdivision_edge_info{};
-        entry.mid_position = static_cast<std::float16_t>(mid_value);
-        entry.mid_index = static_cast<unsigned char>(mid_index);
-        entry.node_count = static_cast<unsigned char>(count);
+        entry.mid_position = static_cast<float>(mid_value);
+        entry.mid_index = static_cast<unsigned short>(mid_index);
+        entry.node_count = static_cast<unsigned short>(count);
         entry.r_first = r_first;
         entry.r_second = r_second;
         entry.edge_class_first = static_cast<unsigned char>(index);
         entry.edge_class_second = static_cast<unsigned char>(index_second);
-        entry.first_start_index = static_cast<unsigned char>(first_start_index);
-        entry.second_start_index = static_cast<unsigned char>(second_start_index);
+        entry.first_start_index = static_cast<unsigned short>(first_start_index);
+        entry.second_start_index = static_cast<unsigned short>(second_start_index);
         result.push_back(entry);
+
     }
 
     return result;
@@ -207,16 +237,17 @@ subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coord
 
     if (steiner_index == 0)
         return c1;
-    if (steiner_index == 1)
-        return interpolate_linear(c1, c2, info.r_first);
+    if (steiner_index == info.node_count - 1)
+        return c2;
 
     if (steiner_index == info.mid_index)
         return interpolate_linear(c1, c2, info.mid_position);
 
-    if (steiner_index == info.node_count - 1)
-        return c2;
+    if (steiner_index == 1)
+        return interpolate_linear(c1, c2, info.r_first);
     if (steiner_index == info.node_count - 2)
         return interpolate_linear(c2, c1, info.r_second);
+
 
     if (steiner_index < info.mid_index) {
         int index = steiner_index - 2 + info.first_start_index;
@@ -224,8 +255,8 @@ subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coord
         assert(index < triangle_classes[info.edge_class_first].node_positions.size());
 
         auto relative = triangle_classes[info.edge_class_first].node_positions[index];
-        assert(relative > info.r_first);
-        assert(relative < info.mid_position);
+        assert(relative >= info.r_first - 0.002F);
+        assert(relative <= info.mid_position + 0.002F);
         return interpolate_linear(c1, c2, relative);
     }
 
@@ -236,8 +267,8 @@ subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coord
         assert(index < triangle_classes[info.edge_class_second].node_positions.size());
 
         auto relative = triangle_classes[info.edge_class_second].node_positions[index];
-        assert(relative > info.r_second);
-        assert(relative < 1 - info.mid_position);
+        assert(relative >= info.r_second - 0.002F);
+        assert(relative <= 1.0F - info.mid_position + 0.002F);
         return interpolate_linear(c2, c1, relative);
     }
 

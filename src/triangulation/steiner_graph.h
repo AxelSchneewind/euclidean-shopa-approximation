@@ -103,7 +103,8 @@ public:
                 : _M_graph_ptr(__graph),
                   _M_current_node(__current),
                   _M_last_node(__max) {
-            while (_M_current_node.edge < _M_graph_ptr->base_graph().edge_count() &&
+
+            while (_M_current_node.edge < _M_last_node.edge &&
                    _M_graph_ptr->base_graph().source(_M_current_node.edge) >=
                    _M_graph_ptr->base_graph().destination(_M_current_node.edge))
                 _M_current_node.edge++;
@@ -111,16 +112,25 @@ public:
 
         node_id_iterator_type &begin() { return *this; };
 
-        node_id_iterator_type end() { return {_M_graph_ptr, _M_last_node, _M_last_node}; };
+        struct end_type {};
+        end_type end() { return {}; };
 
         bool operator==(node_id_iterator_type __other) const {
             return _M_current_node.edge == __other._M_current_node.edge &&
                    _M_current_node.steiner_index == __other._M_current_node.steiner_index;
         }
 
+        bool operator==(end_type __other) const {
+            return _M_current_node.edge >= _M_last_node.edge;
+        }
+
         bool operator!=(node_id_iterator_type __other) const {
             return _M_current_node.edge != __other._M_current_node.edge ||
                    _M_current_node.steiner_index != __other._M_current_node.steiner_index;
+        }
+
+        bool operator!=(end_type __other) const {
+            return !operator==(__other);
         }
 
         node_id_iterator_type operator++();
@@ -236,7 +246,15 @@ private:
 public:
 
     node_id_type from_base_node_id(base_topology_type::node_id_type __node) const {
-        return {_M_base_topology.edge_id(__node), 0};
+        for (auto edge : _M_base_topology.outgoing_edges(__node)) {
+            auto e_id = _M_base_topology.edge_id(edge.destination, __node);
+            if (__node < edge.destination) {
+                return {e_id, 0};
+            } else {
+                e_id = _M_polyhedron.inverse_edge(e_id);
+                return {e_id, steiner_info(e_id).node_count - 1};
+            }
+        }
     }
 
     const subdivision_table &subdivision_info() const { return _M_table; }
@@ -248,6 +266,8 @@ public:
     size_t node_count() const { return _M_node_count; }
 
     size_t edge_count() const { return _M_edge_count; }
+
+    float epsilon() const {return _M_epsilon;}
 
     node_id_iterator_type node_ids() const;
 
@@ -279,6 +299,9 @@ public:
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     outgoing_edges(node_id_type __node_id) const;
+
+    std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
+    outgoing_edges(triangle_node_id_type __node_id) const;
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     outgoing_edges(node_id_type __node_id, node_id_type __reached_from) const;

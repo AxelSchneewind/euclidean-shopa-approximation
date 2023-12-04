@@ -75,4 +75,3 @@ using steiner_queue_t = a_star_queue<steiner_graph, steiner_a_star_node_cost_pai
 using steiner_labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
 using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, use_all_edges<steiner_graph>, steiner_labels_t>;
 using steiner_routing_t = router<steiner_graph, steiner_dijkstra>;
-

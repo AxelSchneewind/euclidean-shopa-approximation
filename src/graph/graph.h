@@ -43,6 +43,11 @@ private:
     graph(std::vector<NodeInfo> &&__nodes, adjacency_list<NodeId, EdgeInfo> &&__list);
 
 public:
+    static constexpr size_t SIZE_PER_NODE = sizeof(NodeInfo) + adjacency_list_type::SIZE_PER_NODE;
+    static constexpr size_t SIZE_PER_EDGE = adjacency_list_type::SIZE_PER_EDGE;
+
+
+
     // move constructor
     graph(graph &&__graph) noexcept;
 

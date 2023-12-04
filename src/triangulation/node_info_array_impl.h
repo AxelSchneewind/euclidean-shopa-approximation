@@ -58,7 +58,7 @@ node_info_array<EdgeId, IntraEdgeId, Info>::node_info_array(std::vector<index_ty
 
 template<typename EdgeId, typename IntraEdgeId, typename Info>
 node_info_array<EdgeId, IntraEdgeId, Info>::index_type node_info_array<EdgeId, IntraEdgeId, Info>::offset(edge_id_type edge_id) const {
-    assert(edge_id < offsets.size() - 1);
+    assert(edge_id < offsets.size());
     return offsets[edge_id];
 }
 

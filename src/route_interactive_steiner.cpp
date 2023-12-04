@@ -28,7 +28,7 @@ main(int argc, char const *argv[]) {
 
 
     // read triangulation
-    std::cout << "reading graph from " << graph_file << "... \n" << std::flush;
+    // std::cout << "reading graph from " << graph_file << "... \n" << std::flush;
 
     // read graph
     Client client;
@@ -71,13 +71,10 @@ main(int argc, char const *argv[]) {
         std::ofstream output_info(info_file);
 
 
-        std::cout << "computing route..." << std::flush;
-
         client.compute_route(src_node, dest_node);
 
         client.write_info(std::cout);
-
-        std::cout << "saving results to " << target_directory << std::flush;
+        std::cout << std::endl;
 
         client.write_beeline_file(output_beeline);
         client.write_route_file(output_route);

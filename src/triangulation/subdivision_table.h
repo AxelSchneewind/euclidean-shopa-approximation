@@ -16,8 +16,8 @@ public:
     static constexpr int step_count = 127;
 
     // assume that each angle is at least 10 degrees
-    static constexpr float min_angle = (M_PI / 180) * 10;
-    static constexpr float max_angle = (M_PI / 180) * 170;
+    static constexpr float min_angle = (M_PI / 180) * 5;
+    static constexpr float max_angle = (M_PI / 180) * 175;
 
     static constexpr float step_size = (max_angle - min_angle) / (step_count - 1);
 
@@ -27,7 +27,7 @@ public:
 
     struct subdivision_edge_info {
         // relative position of the points with the highest distance to other edges
-        std::float16_t mid_position;
+        float mid_position;
         // maximum distance of a point on this edge to other edges, relative to the length of this edge
         // std::float16_t mid_dist;
 
@@ -35,23 +35,23 @@ public:
         std::uint16_t node_count;
 
         // r(v), relative to this edge
-        std::float16_t r_first;
-        std::float16_t r_second;
+        float r_first;
+        float r_second;
 
         // which classes of edges this one belongs to (first and second half)
         unsigned char edge_class_first;
         // interval of node positions
-        unsigned char first_start_index;
+        unsigned short first_start_index;
 
-        unsigned char mid_index;
+        unsigned short mid_index;
 
-        unsigned char second_start_index;
+        unsigned short second_start_index;
         unsigned char edge_class_second;
 
         bool operator==(const subdivision_edge_info &__other) const = default;
     };
 
-    static_assert(sizeof(subdivision_edge_info) == 14);
+    static_assert(sizeof(subdivision_edge_info) == 28);
 
 
     std::vector<edge_class> triangle_classes;
@@ -83,6 +83,7 @@ public:
             index += edge_info.node_count;
         }
         results.push_back(index);
+        results.push_back(index);
 
         return results;
     }
@@ -97,6 +98,6 @@ public:
             const std::vector<node_t> &__nodes,
             const polyhedron<adjacency_list<int, std::nullptr_t>, 3> &__polyhedron,
             const std::vector<edge_class> &__table,
-            const std::vector<std::float16_t> &__r_values,
+            const std::vector<float> &__r_values,
             float __epsilon);
 };
