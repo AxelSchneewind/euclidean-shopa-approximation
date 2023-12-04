@@ -31,7 +31,7 @@ void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) con
                << result->trees.node_count() << " nodes and took "
                << result->duration << '\n';
     }
-
+    output << std::flush;
 }
 
 template<typename GraphT, typename RoutingT>
@@ -261,7 +261,7 @@ Client::ClientModel<GraphT, RoutingT>::write_graph_stats(std::ostream &output) c
                       << graph.edge_count() / 2;
         }
         std::cout << ',' << graph.node_count()
-                  << ',' << graph.edge_count() / 2 << '\n';
+                  << ',' << graph.edge_count() / 2 << std::endl;
     } else {
         output << "\r\a\tgraph has "
                << std::setw(12) << graph.node_count() << " nodes and "
@@ -285,7 +285,7 @@ Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_stats(std::os
                   << graph.base_graph().node_count()
                   << ',' << graph.base_graph().edge_count() / 2;
         std::cout << ',' << graph.node_count()
-                  << ',' << graph.edge_count() / 2 << '\n';
+                  << ',' << graph.edge_count() / 2 << std::endl;
     } else {
         output << "\r\a\tdone, graph has "
                << std::setw(12) << graph.node_count() << " nodes and "

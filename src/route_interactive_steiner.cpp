@@ -71,14 +71,18 @@ main(int argc, char const *argv[]) {
         std::ofstream output_info(info_file);
 
 
-        client.compute_route(src_node, dest_node);
+        if (client.edge_count() < std::numeric_limits<int>::max()) {
+            client.compute_route(src_node, dest_node);
 
-        client.write_info(std::cout);
-        std::cout << std::endl;
+            client.write_info(std::cout);
+            std::cout << std::endl;
 
-        client.write_beeline_file(output_beeline);
-        client.write_route_file(output_route);
-        client.write_tree_file(output_tree);
+            client.write_beeline_file(output_beeline);
+            client.write_route_file(output_route);
+            client.write_tree_file(output_tree);
+        } else {
+            std::cout << "edges can't be identified by an integer anymore" << std::endl;
+        }
 
         output_route.close();
         output_beeline.close();
