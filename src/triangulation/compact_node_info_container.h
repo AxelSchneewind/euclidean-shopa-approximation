@@ -30,7 +30,7 @@ private:
     // std::vector<aggregate> aggregate_info;
     // std::unordered_map<AggregateId, info_index_type> aggregate_info_index;
     std::unordered_map<AggregateId, std::unique_ptr<aggregate>> aggregate_info_ptr;
-    std::vector<unsigned int> offsets;
+    std::vector<size_t> offsets;
 
     size_t _edge_count;
     size_t _node_count;
@@ -40,9 +40,9 @@ private:
     std::array<Info, 1> default_span;
 
 public:
-    compact_node_info_container(std::vector<unsigned int> const& offsets, AggregateInfo default_aggregate_info = none_value<AggregateInfo>, Info default_info = none_value<Info>);;
+    compact_node_info_container(std::vector<size_t> const& offsets, AggregateInfo default_aggregate_info = none_value<AggregateInfo>, Info default_info = none_value<Info>);;
 
-    compact_node_info_container(std::vector<unsigned int>&& offsets, AggregateInfo default_aggregate_info = none_value<AggregateInfo>,
+    compact_node_info_container(std::vector<size_t>&& offsets, AggregateInfo default_aggregate_info = none_value<AggregateInfo>,
                                 Info default_info = none_value<Info>);;
 
     size_t aggregate_size(AggregateId agg_id) const;

@@ -40,12 +40,14 @@ private:
         GraphT graph;
         RoutingT router;
 
+        bool output_csv;
+
         std::unique_ptr<Query<GraphT>> query;
         std::unique_ptr<Result<GraphT>> result;
     public:
-        ClientModel(GraphT &&graph, RoutingT &&router) : graph{std::move(graph)}, router{std::move(router)} {};
+        ClientModel(GraphT &&graph, RoutingT &&router, bool output_csv = false) : graph{std::move(graph)}, router{std::move(router)}, output_csv(output_csv) {};
 
-        ClientModel(GraphT &&graph) : graph{std::move(graph)}, router(this->graph) {};
+        ClientModel(GraphT &&graph, bool output_csv = false) : graph{std::move(graph)}, router(this->graph), output_csv(output_csv) {};
 
         void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const override;
 

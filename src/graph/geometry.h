@@ -34,6 +34,14 @@ distance(coordinate_t __c1, coordinate_t __c2) {
     // return ans;
 };
 
+/**
+ * angle in radians
+ * @param __s0
+ * @param __d0
+ * @param __s1
+ * @param __d1
+ * @return
+ */
 inline double
 angle(coordinate_t __s0, coordinate_t __d0, coordinate_t __s1, coordinate_t __d1) {
     // use dot product

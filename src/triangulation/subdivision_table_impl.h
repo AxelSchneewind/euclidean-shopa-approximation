@@ -232,7 +232,12 @@ coordinate_t
 subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coordinate_t c1, coordinate_t c2) const {
     const auto info = edge(__edge);
 
+    assert(steiner_index >= -info.node_count);
     assert(steiner_index < info.node_count);
+
+    // accept values larger than -node_count
+    steiner_index = (steiner_index + info.node_count) % info.node_count;
+
     assert(steiner_index >= 0);
 
     if (steiner_index == 0)

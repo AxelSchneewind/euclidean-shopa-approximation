@@ -74,8 +74,8 @@ public:
 
     static std::vector<subdivision_table::edge_class> precompute(float __epsilon, float __min_relative_r_value);
 
-    std::vector<unsigned int> offsets() const {
-        std::vector<unsigned int> results;
+    std::vector<size_t> offsets() const {
+        std::vector<size_t> results;
 
         unsigned int index = 0;
         for (auto edge_info: edges) {

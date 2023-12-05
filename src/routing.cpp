@@ -4,32 +4,28 @@
 
 #include "util/memory_usage.h"
 
-constexpr bool output_csv = true;
-
-
-
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) const {
     auto path_length = graph.path_length(result->path);
     auto beeline_distance = result->beeline_distance;
 
-    if constexpr (output_csv) {
+    if (output_csv) {
         output << "cost,beeline,epsilon satisfied,tree size,time\n"
                << path_length << ","
                << beeline_distance << ",";
         output << ((path_length / beeline_distance) - 1)
                << result->trees.node_count() << ","
-               << result->duration << '\n';
+               << result->duration << std::endl;
     } else {
         output << "path: " << result->path << '\n';
-        output << "has cost"
+        output << "has cost "
                << path_length << ","
                << " with beeline distance "
                << beeline_distance << ", satisfying epsilon >= ";
         output << ((path_length / beeline_distance) - 1) << ", search visited "
                << result->trees.node_count() << " nodes and took "
-               << result->duration << '\n';
+               << result->duration << std::endl;
     }
 
 }
@@ -124,22 +120,30 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
     std::thread status([&] () -> void {
         double vm, res;
         while(!distances.queue_empty()) {
-            if constexpr (output_csv) {
+            if (output_csv) {
 
             } else {
                 process_mem_usage(vm, res);
                 std::cout << "\rdistance: " << std::setw(10) << std::setprecision(5) << distances.current().distance
                           << ", node aggregates currently expanded (in labels): " << std::setw(10)
                           << distances.labels().aggregate_count()
-                          << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB" << std::flush;
+                          << ", memory usage : VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB" << std::endl;
             }
 
             usleep(50000);
         }
-        std::cout << "pull count,push count,max size\n"
-                  << distances.queue().pull_count() << ","
-                  << distances.queue().push_count() << ","
-                  << distances.queue().max_size() << std::endl;
+
+        if (output_csv) {
+            std::cout << "pull count,push count,max size\n"
+                      << distances.queue().pull_count() << ","
+                      << distances.queue().push_count() << ","
+                      << distances.queue().max_size() << std::endl;
+        } else {
+            std::cout << "queue was pulled from "
+                      << distances.queue().pull_count() << " times, pushed to "
+                      << distances.queue().push_count() << " times, and had a maximum size of "
+                      << distances.queue().max_size() << " elements" << std::endl;
+        }
     });
 
     while (!distances.queue_empty()) [[likely]] {
@@ -175,9 +179,10 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
     auto beeline = distance(graph.node(query->from).coordinates, graph.node(query->to).coordinates);
 
     // create thread to show progress
+    bool done = false;
     std::thread status([&]() -> void {
-        while (!router.route_found()) {
-            if constexpr (output_csv) {
+        while (!done) {
+            if (output_csv) {
 
             } else {
                 double vm, res;
@@ -199,10 +204,23 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
             }
             usleep(100000);
         }
-        std::cout << "pull count(forward),push count(forward),max size\n"
-                  << router.forward_search().queue().pull_count() << ","
-                  << router.forward_search().queue().push_count() << ","
-                  << router.forward_search().queue().max_size() << std::endl;
+
+
+        if (output_csv) {
+            std::cout << "\npull count(forward),push count(forward),max size\n"
+                      << router.forward_search().queue().pull_count() << ","
+                      << router.forward_search().queue().push_count() << ","
+                      << router.forward_search().queue().max_size() << std::endl;
+            double vm, res;
+            process_mem_usage(vm, res);
+            std::cout << "memory usage(MiB)\n" << vm / 1024 << std::endl;
+        } else {
+            std::cout << "\nqueue was pulled from "
+                      << router.forward_search().queue().pull_count() << " times, pushed to "
+                      << router.forward_search().queue().push_count() << " times, and had a maximum size of "
+                      << router.forward_search().queue().max_size() << " elements" << std::endl;
+        }
+
     });
 
     router.init(query->from, query->to);
@@ -214,6 +232,7 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
 
     auto after = std::chrono::high_resolution_clock::now();
 
+    done = true;
     status.join();
 
     auto route = router.route();
@@ -251,7 +270,7 @@ template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void
 Client::ClientModel<GraphT, RoutingT>::write_graph_stats(std::ostream &output) const {
-    if constexpr (output_csv) {
+    if (output_csv) {
         std::cout << "epsilon, stored node count, stored edge count, node count, edge count\n";
         if constexpr(requires(GraphT graph) {graph.epsilon(); graph.base_graph();}) {
             std::cout << graph.epsilon() << ',' << graph.base_graph().node_count()
@@ -279,7 +298,7 @@ Client::ClientModel<GraphT, RoutingT>::write_graph_stats(std::ostream &output) c
 template<>
 void
 Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_stats(std::ostream &output) const {
-    if constexpr(output_csv) {
+    if (output_csv) {
         std::cout << "epsilon, stored node count, stored edge count, node count, edge count\n";
         std::cout << graph.epsilon() << ','
                   << graph.base_graph().node_count()

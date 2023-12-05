@@ -54,9 +54,9 @@ protected:
     // count the number of push operations since last cleanup (bounds the number of duplicates currently present)
     int counter;
 
-    // when to perform cleanup
-    static const int max_queue_size = 32000000;
-    static const int max_allowed_duplicates = max_queue_size;
+    // when to perform cleanup (0 means no cleanup)
+    static constexpr size_t max_queue_size = 0;//3200000;
+    static constexpr size_t max_allowed_duplicates = max_queue_size;
 
     size_t pull_counter;
     size_t push_counter;
@@ -66,12 +66,8 @@ public:
     using value_type = NodeCostPair;
 
     dijkstra_queue(Graph const &__graph, Comp __comp = Comp{})
-            : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(__comp)
-            , counter(0)
-            , pull_counter(0)
-            , push_counter(0)
-            , _max_size(0)
-            {}
+            : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(__comp), counter(0), pull_counter(0),
+              push_counter(0), _max_size(0) {}
 
     void init(Graph::node_id_type __start_node, Graph::node_id_type __target_node) {
         while (!empty())
@@ -84,12 +80,15 @@ public:
         assert(ncp.distance != infinity<decltype(ncp.distance)>);
         base_queue_type::push(ncp);
 
-        counter++;
         push_counter++;
-        // assumes that counter is the number of duplicates currently inserted
-        if (counter >= max_allowed_duplicates) {
-            cleanup();
-            counter = 0;
+
+        if constexpr (max_allowed_duplicates > 0) {
+            // assumes that counter is the number of duplicates currently inserted
+            counter++;
+            if (counter >= max_allowed_duplicates) {
+                cleanup();
+                counter = 0;
+            }
         }
     }
 
@@ -111,7 +110,7 @@ public:
         return base_queue_type::pop();
     }
 
-    const NodeCostPair &top() const {
+    const NodeCostPair top() const {
         return base_queue_type::top();
     }
 
@@ -120,7 +119,7 @@ public:
      */
     void cleanup() {
         auto &container = base_queue_type::c;
-        static std::unordered_map<typename Graph::node_id_type, short> first_index;
+        static std::unordered_map<typename Graph::node_id_type, unsigned int> first_index;
 
         size_t from_index = 0;
         size_t to_index = container.size();
@@ -150,7 +149,9 @@ public:
     }
 
     size_t push_count() const { return push_counter; }
+
     size_t pull_count() const { return pull_counter; }
+
     size_t max_size() const { return _max_size; }
 };
 

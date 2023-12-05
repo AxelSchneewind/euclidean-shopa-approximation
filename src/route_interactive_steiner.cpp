@@ -59,7 +59,7 @@ main(int argc, char const *argv[]) {
 
         // setup writer for graphs to show
         std::string target_directory = std::format("{}/{}_{}_{}_{}", output_directory, mode, src_node, dest_node,
-                                                   (int) (epsilon * 10));
+                                                   (int) (epsilon * 100));
         std::filesystem::create_directory(target_directory);
         std::string beeline_file = std::format("{}/beeline.gl", target_directory);
         std::string route_file = std::format("{}/route.gl", target_directory);
@@ -69,7 +69,6 @@ main(int argc, char const *argv[]) {
         std::ofstream output_route(route_file);
         std::ofstream output_tree(tree_file);
         std::ofstream output_info(info_file);
-
 
         client.compute_route(src_node, dest_node);
 

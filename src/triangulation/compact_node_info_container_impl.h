@@ -236,7 +236,7 @@ compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>:
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
 compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::compact_node_info_container(
-        std::vector<unsigned int> &&offsets, AggregateInfo default_aggregate_info, Info default_info)
+        std::vector<size_t> &&offsets, AggregateInfo default_aggregate_info, Info default_info)
         : default_aggregate_info(default_aggregate_info)
         , offsets(std::move(offsets))
         , default_info(default_info)
@@ -246,7 +246,7 @@ compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>:
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
 compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::compact_node_info_container(
-        const std::vector<unsigned int> &offsets, AggregateInfo default_aggregate_info, Info default_info)
+        const std::vector<size_t> &offsets, AggregateInfo default_aggregate_info, Info default_info)
         : default_aggregate_info(default_aggregate_info), offsets(offsets), default_info(default_info),
           default_span{default_info} {}
 

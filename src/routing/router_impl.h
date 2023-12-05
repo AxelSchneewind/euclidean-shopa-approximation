@@ -34,7 +34,7 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
         nodes.push_back(node_id);
         typename Graph::node_id_type pred = _M_forward_search.labels().get(node_id).predecessor;
 
-        if (is_none(pred) || !_M_forward_search.reached(pred) || pred == node_id) continue;
+        if (is_none(pred) || pred == node_id || !_M_forward_search.reached(pred)) continue;
 
         typename Graph::edge_id_type edge = _M_graph.topology().edge_id(pred, node_id);
         edges.push_back(edge);
@@ -50,7 +50,7 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 
         typename Graph::node_id_type succ = _M_backward_search.labels().get(node_id).predecessor;
 
-        if (is_none(succ) || !_M_backward_search.reached(succ) || succ == node_id) continue;
+        if (is_none(succ) || succ == node_id || !_M_backward_search.reached(succ)) continue;
 
         typename Graph::edge_id_type edge = _M_graph.topology().edge_id(node_id, succ);
         edges.push_back(edge);
@@ -73,10 +73,13 @@ router<Graph, Dijkstra>::router(Graph const &__graph)
 
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(router &&__routing) noexcept
-        : _M_graph(__routing._M_graph), _M_forward_search(std::move(__routing._M_forward_search)),
+        : _M_graph(__routing._M_graph),
+          _M_forward_search(std::move(__routing._M_forward_search)),
           _M_backward_search(std::move(__routing._M_backward_search)),
           _M_start_node(__routing._M_start_node), _M_target_node(__routing._M_target_node),
-          _M_mid_node(__routing._M_mid_node) {}
+          _M_mid_node(__routing._M_mid_node) {
+    __routing._M_mid_node = none_value<typename Graph::node_id_type>;
+}
 
 template<typename Graph, typename Dijkstra>
 void
@@ -103,7 +106,6 @@ router<Graph, Dijkstra>::step_backward() {
     assert(!is_none(current.node));
 
     _M_backward_search.step();
-    assert(!is_none(current.node));
 
     // check if searches met and provide best result yet
     if (_M_forward_search.reached(current.node) && distance(current.node) < distance()) {
@@ -173,7 +175,7 @@ router<Graph, Dijkstra>::route() const {
 
         fwd_node = _M_forward_search.get_label(fwd_node).predecessor;
 
-        if(is_none(fwd_node)) continue;
+        if(is_none(fwd_node)) break;
 
         p.push_front(fwd_node);
     }

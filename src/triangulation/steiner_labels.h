@@ -26,8 +26,9 @@ public:
         auto result = *this;
         ++inner;
         if (inner == inner.end()) {
-            outer++;
-            inner = iterator_retriever(*outer);
+            ++outer;
+            if (outer != outer_end)
+                inner = iterator_retriever(*outer);
         }
         return result;
     }
@@ -35,8 +36,9 @@ public:
     nested_iterator &operator++(int) {
         ++inner;
         if (inner == inner.end()) {
-            outer++;
-            inner = iterator_retriever(*outer);
+            ++outer;
+            if (outer != outer_end)
+                inner = iterator_retriever(*outer);
         }
         return *this;
     }
@@ -48,7 +50,7 @@ public:
 
     end_type end() { return {}; }
 
-    bool operator==(const end_type &) const { return outer == outer_end; }
+    bool operator==(const end_type &) const { return outer == outer_end || outer >= outer_end; }
 
     auto operator*() {
         return *inner;
@@ -71,8 +73,10 @@ private:
     G const &_M_graph;
 
     std::vector<typename G::triangle_edge_id_type> _M_touched;
-    node_info_array<typename G::triangle_edge_id_type, unsigned short, label_type> _M_labels;
-    // compact_node_info_container<typename G::triangle_edge_id_type, unsigned short, char, label_type> _M_labels;
+    std::vector<label_type> _M_base_labels;
+    // node_info_array<typename G::triangle_edge_id_type, unsigned short, label_type> _M_labels;
+
+    compact_node_info_container<typename G::triangle_edge_id_type, unsigned short, char, label_type> _M_labels;
 
 public:
     static constexpr size_t SIZE_PER_NODE = 0;
