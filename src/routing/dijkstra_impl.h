@@ -72,15 +72,11 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
 void
 dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
-    assert(!is_none(__node.node));
-
     static std::vector<node_cost_pair_type> node_cost_pairs;
 
+    assert(!is_none(__node.node));
 
-    if constexpr (
-            requires(G &&t, node_cost_pair_type n) { t.outgoing_edges(n.node, n.predecessor, 1.0F); }
-            ) {
-
+    if constexpr (requires(G &&t, node_cost_pair_type n) { t.outgoing_edges(n.node, n.predecessor, 1.0F); } ) {
         auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor, M_PI / 6);
         for (auto edge: edges) {
             // ignore certain edges
