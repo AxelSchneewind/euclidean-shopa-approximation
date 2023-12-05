@@ -9,7 +9,6 @@ struct path {
     std::vector<node_id_type> nodes;
 
     path(path &other) = default;
-
     path &operator=(path &other) = default;
 
     path(BaseGraph const &base_graph, std::vector<node_id_type> &&__n) : base{base_graph}, nodes{__n} {};
@@ -21,22 +20,22 @@ struct subgraph {
     using edge_id_type = typename BaseGraph::edge_id_type;
 
 // private:
-    BaseGraph const &base;
+    const BaseGraph &base;
     std::vector<node_id_type> nodes;
     std::vector<edge_id_type> edges;
 public:
+    subgraph(BaseGraph const& base, std::vector<node_id_type>&& n, std::vector<edge_id_type>&& e) : base{base}, nodes(std::move(n)), edges(std::move(e)) {};
+    subgraph(BaseGraph const& base) : base{base} {};
+
+    subgraph(subgraph&& other) noexcept : base{other.base}, nodes(std::move(other.nodes)), edges(std::move(other.edges)) {};
+    subgraph(subgraph const& other) : base{other.base}, nodes(other.nodes), edges(other.edges) {};
+
+    subgraph& operator=(subgraph const& other) { nodes = other.nodes; edges = other.edges; return *this; };
+    subgraph& operator=(subgraph && other)  noexcept { nodes = std::move(other.nodes); edges = std::move(other.edges); return *this; };
 
     size_t node_count() const { return nodes.size(); }
 
     size_t edge_count() const { return edges.size(); }
-
-    subgraph(subgraph const &other) = default;
-
-    subgraph &operator=(subgraph const &other) = default;
-
-    subgraph(BaseGraph const &base_graph) : base(base_graph) {};
-
-    subgraph(BaseGraph const &base_graph, std::vector<node_id_type> &&__n, std::vector<edge_id_type> &&__e);
 };
 
 template<typename Graph, std::predicate<typename Graph::node_id_type> NodePredicate>
