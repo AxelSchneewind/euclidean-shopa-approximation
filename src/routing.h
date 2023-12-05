@@ -15,7 +15,8 @@ private:
 
         virtual void write_graph_file(std::ostream &output) const = 0;
 
-        virtual void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const = 0;
+        virtual void
+        write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const = 0;
 
         virtual void compute_route(int from, int to) = 0;
 
@@ -32,6 +33,8 @@ private:
         virtual void write_graph_stats(std::ostream &output) const = 0;
 
         virtual void write_beeline(std::ostream &output) const = 0;
+
+        virtual int edge_count() const = 0;
     };
 
     template<typename GraphT, typename RoutingT> requires std::convertible_to<typename RoutingT::graph_type, GraphT>
@@ -68,6 +71,8 @@ private:
         void write_beeline(std::ostream &output) const override;
 
         void write_graph_stats(std::ostream &output) const override;
+
+        int edge_count() const override { return graph.edge_count(); };
     };
 
     std::unique_ptr<ClientConcept> pimpl;
@@ -96,6 +101,11 @@ public:
 
     void write_graph_stats(std::ostream &output) const { pimpl->write_graph_stats(output); };
 
-    void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const { pimpl->write_subgraph_file(output, bottom_left, top_right); };
+    void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const {
+        pimpl->write_subgraph_file(output, bottom_left, top_right);
+    };
+
+    int edge_count() const { return pimpl->edge_count(); }
 };
+
 
