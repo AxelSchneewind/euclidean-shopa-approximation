@@ -304,7 +304,7 @@ public:
     outgoing_edges(triangle_node_id_type __node_id) const;
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    outgoing_edges(node_id_type __node_id, node_id_type __reached_from) const;
+    outgoing_edges(node_id_type __node_id, node_id_type __reached_from, float __max_angle) const;
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     outgoing_edges(triangle_node_id_type __base_node_id, node_id_type __reached_from) const;
@@ -313,8 +313,8 @@ public:
     incoming_edges(node_id_type __node_id) const { return outgoing_edges(__node_id); };
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    incoming_edges(node_id_type __node_id, node_id_type __reached_from) const {
-        return outgoing_edges(__node_id, __reached_from);
+    incoming_edges(node_id_type __node_id, node_id_type __reached_from, float __max_angle) const {
+        return outgoing_edges(__node_id, __reached_from, __max_angle);
     };
 
     distance_type path_length(const path_type &__route) const;

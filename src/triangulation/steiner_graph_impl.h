@@ -222,7 +222,7 @@ std::span<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_grap
 steiner_graph::outgoing_edges(node_id_type __node_id) const {
     if (is_base_node(__node_id))
         return outgoing_edges(base_node_id(__node_id), __node_id);
-    return outgoing_edges(__node_id, __node_id);
+    return outgoing_edges(__node_id, __node_id, M_PI);
 }
 
 std::span<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>>
@@ -286,7 +286,7 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type __base_node_i
 }
 
 std::span<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>>
-steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_from) const {
+steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_from, float __max_angle) const {
     static std::vector<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>> edges;
     static std::vector<coordinate_t> destination_coordinates;
 
@@ -329,6 +329,7 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
 
     // make list of edges (i.e. destination/cost pairs)
     coordinate_t source_coordinate = node(__node_id).coordinates;
+    coordinate_t from_coordinate = node(__reached_from).coordinates;
     auto _steiner_info = steiner_info(__node_id.edge);
 
     // for neighboring node on own edge
@@ -365,6 +366,10 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
             for (int i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
                 steiner_graph::node_id_type destination = {base_edge_id, i};
                 coordinate_t destination_coordinate = node(destination).coordinates;
+
+                if (angle(from_coordinate, source_coordinate, source_coordinate, destination_coordinate) > __max_angle)
+                    continue;
+
                 edges.push_back({destination, {}});
                 destination_coordinates.push_back(destination_coordinate);
             }
@@ -413,6 +418,17 @@ steiner_graph::edge_id(steiner_graph::node_id_type __src, steiner_graph::node_id
 // FIXME
 bool
 steiner_graph::has_edge(steiner_graph::node_id_type __src, steiner_graph::node_id_type __dest) const {
+    if (_M_base_topology.source(__src.edge) >= _M_base_topology.destination(__src.edge)) {
+        __src.edge = _M_polyhedron.inverse_edge(__src.edge);
+        __src.steiner_index = steiner_info(__src.edge).node_count - 1 - __src.steiner_index;
+    }
+
+    if (_M_base_topology.source(__dest.edge) >= _M_base_topology.destination(__dest.edge)) {
+        __dest.edge = _M_polyhedron.inverse_edge(__dest.edge);
+        __dest.steiner_index = steiner_info(__dest.edge).node_count - 1 - __dest.steiner_index;
+    }
+
+
     if (__dest == __src)
         return false;
 
@@ -451,7 +467,7 @@ steiner_graph::has_edge(steiner_graph::node_id_type __src, steiner_graph::node_i
 
     // search the edge in the base graph that destination belongs to
     for (auto adjacent_edge: _M_polyhedron.edges(__src.edge)) {
-        if (adjacent_edge == __dest.edge && __dest.steiner_index < steiner_info(adjacent_edge).node_count) {
+        if (adjacent_edge == __dest.edge) {
             return true;
         }
     }
@@ -467,8 +483,8 @@ steiner_graph::subgraph_type steiner_graph::make_subgraph(const path_type &__rou
         auto src = __route.nodes[i - 1];
         auto dest = __route.nodes[i];
 
-        assert(has_edge(src, dest));
-        edges.push_back(edge_id(src, dest));
+        // assert(has_edge(src, dest));
+        edges.emplace_back(src, dest);
     }
     return {*this, std::move(nodes), std::move(edges)};
 }

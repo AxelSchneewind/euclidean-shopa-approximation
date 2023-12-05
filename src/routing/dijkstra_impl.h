@@ -76,29 +76,61 @@ dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
 
     static std::vector<node_cost_pair_type> node_cost_pairs;
 
-    auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor);
-    for (auto edge: edges) {
-        // ignore certain edges
-        if (!_M_use_edge(__node.node, edge)) [[unlikely]] {
-            continue;
+
+    if constexpr (
+            requires(G &&t, node_cost_pair_type n) { t.outgoing_edges(n.node, n.predecessor, 1.0F); }
+            ) {
+
+        auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor, M_PI / 6);
+        for (auto edge: edges) {
+            // ignore certain edges
+            if (!_M_use_edge(__node.node, edge)) [[unlikely]] {
+                continue;
+            }
+
+            assert (!is_none(edge.destination));
+            // assert (_M_graph.has_edge(__node.node, edge.destination));
+
+            const node_id_type successor = edge.destination;
+            const distance_t successor_cost = _M_labels.get(successor).distance; // use shortest distance
+            const distance_t new_cost = edge.info.cost + __node.distance;
+
+            assert(new_cost >= __node.distance);
+            if (new_cost < successor_cost) [[likely]] {
+                assert (edge.destination != __node.predecessor);
+
+                // (re-)insert node into the queue with updated priority
+                node_cost_pairs.emplace_back(successor, __node.node, new_cost);
+
+                // label current node with preliminary value
+                _M_labels.label(successor, node_cost_pairs.back());
+            }
         }
+    } else {
+        auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor);
+        for (auto edge: edges) {
+            // ignore certain edges
+            if (!_M_use_edge(__node.node, edge)) [[unlikely]] {
+                continue;
+            }
 
-        assert (!is_none(edge.destination));
-        // assert (_M_graph.has_edge(__node.node, edge.destination));
+            assert (!is_none(edge.destination));
+            // assert (_M_graph.has_edge(__node.node, edge.destination));
 
-        const node_id_type successor = edge.destination;
-        const distance_t successor_cost = _M_labels.get(successor).distance; // use shortest distance
-        const distance_t new_cost = edge.info.cost + __node.distance;
+            const node_id_type successor = edge.destination;
+            const distance_t successor_cost = _M_labels.get(successor).distance; // use shortest distance
+            const distance_t new_cost = edge.info.cost + __node.distance;
 
-        assert(new_cost >= __node.distance);
-        if (new_cost < successor_cost) [[likely]] {
-            assert (edge.destination != __node.predecessor);
+            assert(new_cost >= __node.distance);
+            if (new_cost < successor_cost) [[likely]] {
+                assert (edge.destination != __node.predecessor);
 
-            // (re-)insert node into the queue with updated priority
-            node_cost_pairs.emplace_back(successor, __node.node, new_cost);
+                // (re-)insert node into the queue with updated priority
+                node_cost_pairs.emplace_back(successor, __node.node, new_cost);
 
-            // label current node with preliminary value
-            _M_labels.label(successor, node_cost_pairs.back());
+                // label current node with preliminary value
+                _M_labels.label(successor, node_cost_pairs.back());
+            }
         }
     }
 
