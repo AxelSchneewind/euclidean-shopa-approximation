@@ -12,7 +12,7 @@ int main(int argc, const char *argv[]) {
     std::ofstream output(output_file);
     float epsilon = std::stof(argv[3]);
     Client client;
-    client.read_graph_file(graph_file, epsilon);
+    client.read_graph_file(graph_file, epsilon, false);
 
     client.write_graph_stats(std::cout);
 
