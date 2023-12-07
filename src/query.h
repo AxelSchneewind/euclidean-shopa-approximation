@@ -50,10 +50,10 @@ perform_query(const Graph &graph, Router &router, const Query<Graph> &query) {
     result.duration = after - before;
     result.route_found = router.route_found();
     if (router.route_found()) {
-        result.route = router.route();
-        result.distance = graph.path_length(result.route);
+        // result.path = router.route();
+        result.distance = graph.path_length(result.path);
         result.trees = router.shortest_path_tree();
-        result.mid_node = router.mid_node();
+	// result.mid_node = router.mid_node();
     }
 
     return result;
@@ -74,13 +74,13 @@ compare_results(Result<Graph> result1, Result<Graph> result2, output info, std::
         out << "\tdistance:         " << result1.distance << "\t" << result2.distance
             << "\t\t\t\t" << (result2.distance - result1.distance) / std::max(result1.distance, result2.distance)
             << '\n';
-    if (info.mid_node)
-        out << "\tsearches met in:  " << result1.mid_node << '\t' << result2.mid_node << '\n';
+    //if (info.mid_node)
+    //    out << "\tsearches met in:  " << result1.mid_node << '\t' << result2.mid_node << '\n';
     if (info.route)
-        out << "\tpath:             " << result1.route << "\n"
-            << "\tpath:             " << result2.route << '\n';
+        out << "\tpath:             " << result1.path << "\n"
+            << "\tpath:             " << result2.path << '\n';
     if (info.route_size)
-        out << "\tpath size:        " << result1.route.nodes.size() << "\t" << result2.route.nodes.size() << '\n';
+        out << "\tpath size:        " << result1.path.nodes.size() << "\t" << result2.path.nodes.size() << '\n';
     if (info.tree_size)
         out << "\ttree size:        " << result1.trees.nodes.size() << '\t' << result2.trees.nodes.size() << '\n';
     if (info.timing)
@@ -96,12 +96,12 @@ print_result(Result<Graph> result, output info, std::ostream &out = std::cout) {
     if (result.route_found) {
         if (info.distance)
             out << "\tdistance:  " << result.distance << "\n";
-        if (info.mid_node)
-            out << "\tsearches met in:  " << result.mid_node << '\n';
+        // if (info.mid_node)
+        //     out << "\tsearches met in:  " << result.mid_node << '\n';
         if (info.route)
-            out << "\tpath:      " << result.route << "\n";
+            out << "\tpath:      " << result.path << "\n";
         if (info.route_size)
-            out << "\tpath size: " << result.route.nodes.size() << "\n";
+            out << "\tpath size: " << result.path.nodes.size() << "\n";
         if (info.tree_size)
             out << "\ttree size: " << result.trees.nodes.size() << '\n';
         if (info.timing)
