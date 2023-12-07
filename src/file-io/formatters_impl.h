@@ -73,7 +73,6 @@ namespace stream_encoders {
     }
 
 
-
     template<>
     adjacency_list_edge<node_id_t, edge_t>
     encode_text::read(std::istream &input) {
@@ -91,14 +90,14 @@ namespace stream_encoders {
 
     template<>
     std::ostream &
-    encode_text::write(std::ostream &output, edge_t const&edge) {
+    encode_text::write(std::ostream &output, edge_t const &edge) {
         output << (float) edge.cost;
         return output;
     }
 
     template<>
     std::ostream &
-    encode_text::write(std::ostream &output, ch_edge_t const&edge) {
+    encode_text::write(std::ostream &output, ch_edge_t const &edge) {
         output << (float) edge.cost << ' ' << edge.edgeA << ' ' << edge.edgeB;
         return output;
     }
@@ -115,7 +114,8 @@ namespace stream_encoders {
     template<>
     std::ostream &
     encode_text::write(std::ostream &output, const adjacency_list_edge<node_id_t, ch_edge_t> &edge) {
-        output << (int) edge.source << ' ' << (int) edge.destination << ' ' << (float) edge.info.cost << ' ' << edge.info.edgeA << ' ' << edge.info.edgeB;
+        output << (int) edge.source << ' ' << (int) edge.destination << ' ' << (float) edge.info.cost << ' '
+               << edge.info.edgeA << ' ' << edge.info.edgeB;
         return output;
     }
 
@@ -168,7 +168,6 @@ namespace stream_encoders {
                << ' ';
         return output;
     }
-
 
 
 // read/write lists
