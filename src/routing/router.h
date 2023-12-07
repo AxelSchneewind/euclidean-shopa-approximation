@@ -16,6 +16,7 @@ public:
     using graph_type = Graph;
     using search_type = Dijkstra;
     using labels_type = search_type::labels_type;
+    using distance_type  = Graph::distance_type;
 private:
     Graph const &_M_graph;
 
@@ -70,18 +71,18 @@ public:
      * returns the distance of the calculated route
      * @return
      */
-    typename Graph::distance_type distance() const;
+    distance_type distance() const;
 
     /**
      * returns the distance of the given node (or infinity if it has not been found by both searches)
      * @param node
      * @return
      */
-    typename Graph::distance_type distance(const typename Graph::node_id_type &__node) const;
+    distance_type distance(const typename Graph::node_id_type &__node) const;
 
-    typename Graph::distance_type forward_distance() const { return _M_forward_search.queue_empty() ? infinity<typename Graph::distance_type> : _M_forward_search.current().distance; };
+    distance_type forward_distance() const { return _M_forward_search.queue_empty() ? infinity<typename Graph::distance_type> : _M_forward_search.current().distance; };
 
-    typename Graph::distance_type backward_distance() const { return _M_backward_search.queue_empty() ? infinity<typename Graph::distance_type> : _M_backward_search.current().distance; };
+    distance_type backward_distance() const { return _M_backward_search.queue_empty() ? infinity<typename Graph::distance_type> : _M_backward_search.current().distance; };
 
     auto &&forward_labels() const { return _M_forward_search.labels(); }
 
@@ -101,13 +102,13 @@ public:
      * returns the nodes of the path from start to target node
      * @return
      */
-    typename Graph::path_type route() const;
+    typename Graph::path_type route() const; // TODO move implementation to dijkstra
 
     /**
      * returns the tree of all visited nodes
      * @return
      */
-    typename Graph::subgraph_type shortest_path_tree() const;
+    typename Graph::subgraph_type shortest_path_tree() const; // TODO move implementation to dijkstra
 
     /**
      *
