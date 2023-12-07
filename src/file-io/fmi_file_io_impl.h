@@ -7,25 +7,44 @@
 #include <span>
 #include <vector>
 
+
+template<typename NodeInfo, typename formatter>
+std::vector<NodeInfo>
+fmi_file_io::read_nodes(std::istream &input, std::size_t count) {
+    std::vector<NodeInfo> nodes;
+    for (int i = 0; i < count; ++i) {
+        NodeInfo n;
+        n.coordinates = formatter::template read<coordinate_t>(input);
+        nodes.push_back(n);
+    }
+    return nodes;
+}
+
+template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
+auto
+fmi_file_io::read_edges(std::istream &input, std::vector<NodeInfo> const& nodes, std::size_t count) {
+    typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
+
+    for (edge_id_t edge_index = 0; edge_index < count; edge_index++)
+        builder.add_edge(formatter::template read<adjacency_list_edge<NodeId, EdgeInfo>>(input));
+
+    return builder;
+}
+
+
 template<typename Graph, typename Formatter>
 Graph
-fmi_file_io::read(std::istream &__input) {
+fmi_file_io::read(std::istream &input_size, std::istream &input_nodes, std::istream &input_edges) {
     using f = Formatter;
-    f::skip_comments(__input);
+    f::skip_comments(input_size);
 
-    node_id_t node_count(f::template read<node_id_t>(__input));
-    edge_id_t edge_count(f::template read<edge_id_t>(__input));
+    size_t node_count(f::template read<size_t>(input_size));
+    size_t edge_count(f::template read<size_t>(input_size));
 
-    std::vector<typename Graph::node_info_type> nodes(
-            f::template read<typename Graph::node_info_type>(__input, node_count));
+    std::vector<typename Graph::node_info_type> nodes = read_nodes<typename Graph::node_info_type, f>(input_nodes, node_count);
+    auto edges = read_edges<typename Graph::node_info_type, typename Graph::node_id_type, typename Graph::edge_info_type, f>(input_edges, nodes, edge_count);
 
-    typename unidirectional_adjacency_list<typename Graph::node_id_type, typename Graph::edge_info_type>::adjacency_list_builder builder(node_count);
-
-    for (edge_id_t edge_index = 0; edge_index < edge_count; edge_index++)
-        builder.add_edge(f::template read<adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type>>(__input));
-
-    auto unidirectional = std::move(builder).get();
-    auto list = Graph::adjacency_list_type::make_bidirectional(std::move(unidirectional));
+    auto list = Graph::adjacency_list_type::make_bidirectional(std::move(edges.get()));
     auto adj_list = typename Graph::adjacency_list_type(std::move(list));
     return Graph::make_graph(std::move(nodes), std::move(adj_list));
 }

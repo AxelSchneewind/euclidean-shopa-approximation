@@ -2,80 +2,88 @@
 
 #include "triangulation_file_io.h"
 
-#include "../graph/graph_impl.h"
-#include "../graph/adjacency_list_impl.h"
+#include "../graph/graph.h"
+#include "../graph/adjacency_list.h"
 #include "../graph/geometry.h"
 
-#include "formatters_impl.h"
+#include "formatters.h"
+#include "fmi_file_io.h"
 
-template<Topology Graph, typename formatter>
-Graph
-triangulation_file_io::read(std::istream &input) {
-    using f = formatter;
-    f::skip_comments(input);
 
-    size_t node_count(f::template read<node_id_t>(input));
-    size_t triangle_count(f::template read<edge_id_t>(input));
-
-    // read nodes
-    std::vector<typename Graph::node_info_type> nodes;
-    for (int i = 0; i < node_count; ++i) {
-        node_t n;
-        n.coordinates = f::template read<coordinate_t>(input);
-        nodes.push_back(n);
-    }
-
-    // build adjacency list
-    typename unidirectional_adjacency_list<node_id_t, edge_t>::adjacency_list_builder builder(node_count);
-
-    // read triangles and generate edges from them
-    for (int t = 0; t < triangle_count; t++) {
-        triangle tri = f::template read<triangle>(input);
+template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
+auto
+triangulation_file_io::read_triangles(std::istream &input,
+               std::vector<NodeInfo> const& nodes,
+               std::size_t count,
+               std::vector<std::array<NodeId, 3>>& faces) {
+    typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
+    for (int t = 0; t < count; t++) {
+        triangle tri = formatter::template read<triangle>(input);
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;
-            edge_t edge;
-            edge.cost = (float) distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
+            EdgeInfo edge;
+            if constexpr(requires (EdgeInfo e) { e.cost; })
+                edge.cost = (float) distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
 
             builder.add_edge(tri[i], tri[next], edge);
             builder.add_edge(tri[next], tri[i], edge);
         }
+        faces.push_back(tri);
     }
+    return builder;
+}
 
-    auto adj_list = Graph::adjacency_list_type::make_bidirectional_undirected(builder.get());
+template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
+auto
+triangulation_file_io::read_triangles(std::istream &input,
+               std::vector<NodeInfo> const& nodes, std::size_t count) {
+    typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
+    for (int t = 0; t < count; t++) {
+        triangle tri = formatter::template read<triangle>(input);
+        for (int i = 0; i < 3; ++i) {
+            auto next = (i + 1) % 3;
+
+            EdgeInfo edge;
+            if constexpr (requires (EdgeInfo e) {e.cost;}) {
+                edge.cost = (float) distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
+            }
+            builder.add_edge(tri[i], tri[next], edge);
+            builder.add_edge(tri[next], tri[i], edge);
+        }
+    }
+    return builder;
+}
+
+
+
+template<Topology Graph, typename formatter>
+Graph
+triangulation_file_io::read(std::istream &input_size, std::istream& input_nodes, std::istream& input_edges) {
+    using f = formatter;
+    f::skip_comments(input_size);
+
+    size_t node_count(f::template read<node_id_t>(input_size));
+    size_t triangle_count(f::template read<edge_id_t>(input_size));
+
+    auto nodes = fmi_file_io::read_nodes<typename Graph::node_info_type, f>(input_nodes, node_count);
+    auto edges = read_triangles<typename Graph::node_info_type, typename Graph::node_id_type, typename Graph::edge_info_type, f>(input_edges, nodes, triangle_count);
+
+    auto adj_list = Graph::adjacency_list_type::make_bidirectional_undirected(edges.get());
     return Graph::make_graph(std::move(nodes), std::move(adj_list));
 }
 
-steiner_graph triangulation_file_io::read_steiner(std::istream &input, float __epsilon) {
+steiner_graph triangulation_file_io::read_steiner(std::istream &input_size, std::istream& input_nodes, std::istream& input_triangles, float __epsilon) {
     using f = stream_encoders::encode_text;
-    f::skip_comments(input);
+    f::skip_comments(input_size);
 
-    size_t node_count(f::template read<size_t>(input));
-    size_t triangle_count(f::template read<size_t>(input));
+    std::size_t node_count(f::template read<size_t>(input_size));
+    std::size_t triangle_count(f::template read<size_t>(input_size));
 
-    // read nodes
-    std::vector<steiner_graph::triangle_node_info_type> nodes;
-    for (int i = 0; i < node_count; ++i) {
-        node_t n{};
-        n.coordinates = f::template read<coordinate_t>(input);
-        nodes.push_back(n);
-    }
+    std::vector<std::array<steiner_graph::base_topology_type::node_id_type, 3>> faces;
+    auto nodes = fmi_file_io::read_nodes<steiner_graph::node_info_type, f>(input_nodes, node_count);
+    auto edges = read_triangles<steiner_graph::node_info_type, steiner_graph::base_topology_type::node_id_type, steiner_graph::base_topology_type::edge_info_type, f>(input_triangles, nodes, triangle_count, faces);
 
-    // build adjacency list
-    typename unidirectional_adjacency_list<node_id_t, std::nullptr_t>::adjacency_list_builder builder(node_count);
-
-    // read triangles and generate edges from them
-    std::vector<std::array<node_id_t, 3>> faces;
-    for (int t = 0; t < triangle_count; t++) {
-        triangle tri = f::template read<triangle>(input);
-        for (int i = 0; i < 3; ++i) {
-            auto next = (i + 1) % 3;
-            builder.add_edge(tri[i], tri[next], 0);
-            builder.add_edge(tri[next], tri[i], 0);
-        }
-        faces.push_back(tri);
-    }
-
-    auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional_undirected(builder.get());
+    auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional_undirected(edges.get());
     return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces), __epsilon);
 }
 
