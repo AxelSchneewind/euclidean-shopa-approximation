@@ -48,7 +48,7 @@ add_executable(make_pruned_gl src/make_pruned_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)
 add_executable(route_interactive_triangulation src/route_interactive_triangulation.cpp)
 add_executable(route_interactive_steiner src/route_interactive_steiner.cpp)
-add_executable(route_interactive_ch src/route_interactive_ch.cpp)
+add_executable(route_interactive_visibility src/route_interactive_visibility.cpp)
 add_executable(distance_one_to_all src/distance_one_to_all.cpp)
 add_executable(subdivision_stats src/subdivision_stats.cpp)
 
