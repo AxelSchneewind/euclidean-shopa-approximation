@@ -18,7 +18,7 @@ triangulation_file_io::read_triangles(std::istream &input,
                std::vector<std::array<NodeId, 3>>& faces) {
     typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
     for (int t = 0; t < count; t++) {
-        triangle tri = formatter::template read<triangle>(input);
+        triangle tri = {formatter::template read<size_t>(input), formatter::template read<size_t>(input), formatter::template read<size_t>(input) };
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;
             EdgeInfo edge;
