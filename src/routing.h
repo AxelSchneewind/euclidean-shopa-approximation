@@ -80,6 +80,8 @@ public:
     template<typename ...Args>
     void read_graph_file(std::string path, Args... args);
 
+    template<typename Graph>
+    void set_graph(Graph&& graph);
 
     void write_graph_file(std::ostream output) {
         pimpl->write_graph_file(output);
@@ -107,5 +109,4 @@ public:
 
     int edge_count() const { return pimpl->edge_count(); }
 };
-
 

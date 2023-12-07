@@ -27,7 +27,7 @@ main(int argc, char const *argv[]) {
     }
 
     Client client;
-    client.read_visibility_graph(graph_file, visibility_file);
+    client.read_graph_file(graph_file, visibility_file);
     client.write_graph_stats(std::cout);
 
     bool done = false;

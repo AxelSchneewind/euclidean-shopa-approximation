@@ -89,6 +89,43 @@ void Client::read_graph_file(std::string path, float epsilon) {
 };
 
 
+template<>
+void Client::set_graph(steiner_graph&& graph) {
+    pimpl = std::make_unique<ClientModel<steiner_graph, steiner_routing_t>>(std::move(graph));
+};
+
+template<>
+void Client::set_graph(std_graph_t&& graph) {
+    pimpl = std::make_unique<ClientModel<std_graph_t, std_routing_t>>(std::move(graph));
+};
+
+template<>
+void Client::set_graph(ch_graph_t&& graph) {
+    pimpl = std::make_unique<ClientModel<ch_graph_t, ch_routing_t>>(std::move(graph));
+};
+
+
+template <>
+void Client::read_graph_file(std::string node_path, std::string edge_path) {
+    std::ifstream graph_input(node_path);
+    std::ifstream visibility_input(edge_path);
+
+    char sink[100];
+    graph_input.getline(sink, 100);
+    graph_input.getline(sink, 100);
+
+    using std_graph_t = graph<node_t, edge_t, node_id_t, edge_id_t>;
+    std_graph_t graph = fmi_file_io::read<std_graph_t>(visibility_input, graph_input, visibility_input);
+
+    graph_input.close();
+    visibility_input.close();
+
+    set_graph(std::move(graph));
+};
+
+
+
+
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::write_route_file(std::ostream &output) const {
