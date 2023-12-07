@@ -30,7 +30,7 @@ main(int argc, char const *argv[]) {
     // read graph
     Client client;
     if (graph_file.ends_with(".graph"))
-        client.read_graph_file(graph_file, epsilon);
+    	client.read_graph_file(graph_file, epsilon, true);
     else
         client.read_graph_file(graph_file);
 

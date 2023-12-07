@@ -74,13 +74,15 @@ void Client::read_graph_file(std::string path) {
 };
 
 template<>
-void Client::read_graph_file(std::string path, float epsilon) {
+void Client::read_graph_file(std::string path, float epsilon, bool csv) {
     std::ifstream input(path);
-    std::cout << "reading graph file from..." << path << std::endl;
+
+    if (!csv)
+    	std::cout << "reading graph file from..." << path << std::endl;
 
     if (path.ends_with(".graph"))
         pimpl = std::make_unique<ClientModel<steiner_graph, steiner_routing_t>>(
-                triangulation_file_io::read_steiner(input, epsilon));
+                triangulation_file_io::read_steiner(input, epsilon), csv);
     else
         throw std::invalid_argument("unrecognized file ending");
     // ...
