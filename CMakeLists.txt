@@ -28,7 +28,7 @@ else (DOXYGEN_FOUND)
 endif (DOXYGEN_FOUND)
 
 
-set(CMAKE_CXX_FLAGS "-Wall") # -Wextra
+set(CMAKE_CXX_FLAGS "") # -Wall -Wextra
 set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
 
 # performance options
@@ -38,11 +38,6 @@ set(CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG -O3 -march=native") # -ffast-math
 add_library(routing src/routing.cpp)
 link_libraries(routing)
 
-add_executable(test_route_toy src/test/test_route_toy.cpp)
-add_executable(test_route_stgtregbz src/test/test_route_stgtregbz.cpp)
-add_executable(test_read src/test/test_read.cpp)
-add_executable(test_read_triangulation src/test/test_read_aegaeis.cpp)
-add_executable(test_route_triangulation src/test/test_route_aegaeis.cpp)
 add_executable(make_gl src/make_gl.cpp)
 add_executable(make_pruned_gl src/make_pruned_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)
