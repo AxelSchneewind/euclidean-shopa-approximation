@@ -14,7 +14,7 @@ void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) con
         output << "cost,beeline,epsilon satisfied,tree size,time\n"
                << path_length << ","
                << beeline_distance << ",";
-        output << ((path_length / beeline_distance) - 1)
+        output << ((path_length / beeline_distance) - 1) << ','
                << result->trees.node_count() << ","
                << result->duration << std::endl;
     } else {
@@ -53,18 +53,23 @@ void Client::ClientModel<GraphT, RoutingT>::write_tree_file(std::ostream &output
 
 
 template<>
-void Client::read_graph_file(std::string path) {
+void Client::read_graph_file(std::string path, bool output_csv) {
     std::ifstream input(path);
 
-    std::cout << "reading graph file from..." << path << std::endl;
+    if (!output_csv)
+        std::cout << "reading graph file from..." << path << std::endl;
+
+    // remove current implementation
+    if (pimpl)
+        pimpl.reset();
 
     if (path.ends_with(".graph"))
         pimpl = std::make_unique<ClientModel<steiner_graph, steiner_routing_t>>(
-                triangulation_file_io::read_steiner(input, 0.5F));
-    if (path.ends_with(".fmi"))
-        pimpl = std::make_unique<ClientModel<std_graph_t, std_routing_t>>(fmi_file_io::read<std_graph_t>(input));
-    if (path.ends_with(".sch"))
-        pimpl = std::make_unique<ClientModel<ch_graph_t, ch_routing_t>>(fmi_file_io::read<ch_graph_t>(input));
+                triangulation_file_io::read_steiner(input, 0.5F), output_csv);
+    else if (path.ends_with(".fmi"))
+        pimpl = std::make_unique<ClientModel<std_graph_t, std_routing_t>>(fmi_file_io::read<std_graph_t>(input), output_csv);
+    else if (path.ends_with(".sch"))
+        pimpl = std::make_unique<ClientModel<ch_graph_t, ch_routing_t>>(fmi_file_io::read<ch_graph_t>(input), output_csv);
     else
         throw std::invalid_argument("unrecognized file ending");
 
@@ -107,27 +112,6 @@ void Client::set_graph(ch_graph_t&& graph) {
 };
 
 
-template <>
-void Client::read_graph_file(std::string node_path, std::string edge_path) {
-    std::ifstream graph_input(node_path);
-    std::ifstream visibility_input(edge_path);
-
-    char sink[100];
-    graph_input.getline(sink, 100);
-    graph_input.getline(sink, 100);
-
-    using std_graph_t = graph<node_t, edge_t, node_id_t, edge_id_t>;
-    std_graph_t graph = fmi_file_io::read<std_graph_t>(visibility_input, graph_input, visibility_input);
-
-    graph_input.close();
-    visibility_input.close();
-
-    set_graph(std::move(graph));
-};
-
-
-
-
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::write_route_file(std::ostream &output) const {
@@ -152,14 +136,15 @@ void Client::ClientModel<GraphT, RoutingT>::compute_one_to_all(int from, std::os
 
 template<>
 void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(int from, std::ostream &output) {
-    query = std::make_unique<Query<steiner_graph>>(from, -1);
+    query = std::make_unique<Query<steiner_graph>>(graph.from_base_node_id(from), none_value<steiner_graph::node_id_type>);
     // using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
     using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>, label_type<steiner_graph>>;
     using distance_dijkstra = dijkstra<steiner_graph, dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>, use_all_edges<steiner_graph>, distance_labels>;
 
     std_graph_t::node_id_type last_node = none_value<std_graph_t::node_id_type>;
     distance_dijkstra distances(graph, {graph}, {graph}, {graph, 0.5});
-    distances.init(from);
+
+    distances.init(query->from);
 
     std::thread status([&] () -> void {
         double vm, res;
@@ -176,7 +161,6 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
 
             usleep(50000);
         }
-	std::cout << '\n';
 
         if (output_csv) {
             std::cout << "pull count,push count,max size\n"
@@ -184,7 +168,7 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
                       << distances.queue().push_count() << ","
                       << distances.queue().max_size() << std::endl;
         } else {
-            std::cout << "queue was pulled from "
+            std::cout << "\nqueue was pulled from "
                       << distances.queue().pull_count() << " times, pushed to "
                       << distances.queue().push_count() << " times, and had a maximum size of "
                       << distances.queue().max_size() << " elements" << std::endl;
@@ -210,9 +194,28 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
 }
 
 
+template<typename GraphT>
+Query<GraphT> make_query(GraphT const& graph, int from, int to = -1) {
+    return {from, to};
+}
+
+template<>
+Query<steiner_graph> make_query(steiner_graph const& graph, int from, int to) {
+    return {graph.from_base_node_id(from), graph.from_base_node_id(to)};
+}
+
+template<typename GraphT, typename RoutingT>
+requires std::convertible_to<typename RoutingT::graph_type, GraphT>
+void Client::ClientModel<GraphT, RoutingT>::write_query(std::ostream& output) const {
+    typename GraphT::node_id_type from = query->from;
+    typename GraphT::node_id_type to = query->to;
+    output << "from,to\n" << from << ',' << to << std::endl;
+}
+
+
 template<>
 void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(int from) {
-    query = std::make_unique<Query<steiner_graph>>(from, -1);
+    query = std::make_unique<Query<steiner_graph>>(make_query<steiner_graph>(graph, from));
     std::ofstream out(nullptr);
     compute_one_to_all(from, out);
 }
@@ -220,7 +223,9 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
-    query = std::make_unique<Query<GraphT>>(from, to);
+    query = std::make_unique<Query<GraphT>>(make_query<GraphT>(graph, from, to));
+    result.reset();
+
     auto beeline = distance(graph.node(query->from).coordinates, graph.node(query->to).coordinates);
 
     // create thread to show progress
@@ -353,7 +358,7 @@ template<>
 void
 Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_stats(std::ostream &output) const {
     if (output_csv) {
-        std::cout << "epsilon, stored node count, stored edge count, node count, edge count\n";
+        std::cout << "epsilon,stored node count,stored edge count,node count,edge count\n";
         std::cout << graph.epsilon() << ','
                   << graph.base_graph().node_count()
                   << ',' << graph.base_graph().edge_count() / 2;
