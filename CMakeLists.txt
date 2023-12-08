@@ -27,31 +27,25 @@ else (DOXYGEN_FOUND)
     message("Doxygen need to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
 
-
 set(CMAKE_CXX_FLAGS "") # -Wall -Wextra
 set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
 
 # performance options
 set(CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG -O3 -march=native") # -ffast-math
 
-# compile everything into one library file
+# compile implementation into one library file
 add_library(routing src/routing.cpp)
 link_libraries(routing)
 
 add_executable(make_gl src/make_gl.cpp)
 add_executable(make_pruned_gl src/make_pruned_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)
-add_executable(route_interactive_triangulation src/route_interactive_triangulation.cpp)
-add_executable(route_interactive_steiner src/route_interactive_steiner.cpp)
-add_executable(route_interactive_visibility src/route_interactive_visibility.cpp)
+add_executable(route src/route.cpp src/cli/cmdline_route_interactive.c)
 add_executable(distance_one_to_all src/distance_one_to_all.cpp)
 add_executable(subdivision_stats src/subdivision_stats.cpp)
 
 
 # installation
-install(TARGETS route_interactive_triangulation RUNTIME DESTINATION bin)
-install(TARGETS route_interactive_steiner RUNTIME DESTINATION bin)
+install(TARGETS route RUNTIME DESTINATION bin)
 
 include(CPack)
-
-# packagingadd_executable(test_steiner_graph src/test/test_steiner_graph.cpp)add_executable(make_pruned_gl src/make_pruned_gl.cpp)
