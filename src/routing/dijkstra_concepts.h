@@ -5,23 +5,23 @@
 
 
 template<typename T, typename DistanceType>
-concept HasDistance =requires (T t){
+concept HasDistance =requires(T t){
     { t.distance } -> std::convertible_to<DistanceType>;
 };
 
 template<typename T, typename NodeIdType>
-concept HasPredecessor =requires (T t){
+concept HasPredecessor =requires(T t){
     { t.predecessor } -> std::convertible_to<NodeIdType>;
 };
 
 template<typename T, typename NodeIdType>
-concept HasNode = requires (T t){
+concept HasNode = requires(T t){
     { t.node } -> std::convertible_to<NodeIdType>;
 };
 
 
 template<typename T>
-concept Topology =requires {
+concept Topology = requires {
     typename T::node_id_type;
     typename T::edge_id_type;
 } && requires(T t, typename T::node_id_type n) {
@@ -72,14 +72,13 @@ concept Routable = requires {
 template<typename G>
 concept RoutableGraph = NodeSet<G> && Topology<G> && Routable<G>;
 
-
 template<typename Q, typename G>
 concept DijkstraQueue = std::move_constructible<Q> && std::copy_constructible<Q>
-&& requires {
+                        && requires {
     typename Q::value_type;
 } && requires(Q q, typename G::node_id_type n) {
-      q.init(n, n);
-  } && requires(Q q) {
+    q.init(n, n);
+} && requires(Q q) {
     q.pop();
     { q.top() } -> std::convertible_to<typename Q::value_type>;
     { q.empty() } -> std::convertible_to<bool>;
@@ -88,6 +87,7 @@ concept DijkstraQueue = std::move_constructible<Q> && std::copy_constructible<Q>
 };
 
 template<typename L, typename NodeId, typename NodeCostPair, typename Label>
-concept DijkstraLabels =  requires(L l, NodeId node, NodeCostPair ncp, Label label) {
-     l.get(node) ;
+concept DijkstraLabels = requires(L l, NodeId node, NodeCostPair ncp, Label label) {
+    l.get(node);
+    l.label(node, label);
 };
