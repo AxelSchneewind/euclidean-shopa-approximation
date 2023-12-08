@@ -10,7 +10,7 @@ struct steiner_node_id {
 
     constexpr steiner_node_id(edge_id_t __edge, int __steiner_index) : edge(__edge), steiner_index(__steiner_index) {}
 
-    constexpr steiner_node_id(edge_id_t __edge) : edge(__edge), steiner_index(0) {}
+    constexpr explicit steiner_node_id(edge_id_t __edge) : edge(__edge), steiner_index(0) {}
 
     bool operator>=(const steiner_node_id &__other) const {
         return edge >= __other.edge || steiner_index >= __other.steiner_index;
@@ -112,7 +112,9 @@ public:
 
         node_id_iterator_type &begin() { return *this; };
 
-        struct end_type {};
+        struct end_type {
+        };
+
         end_type end() { return {}; };
 
         bool operator==(node_id_iterator_type __other) const {
@@ -244,10 +246,12 @@ private:
     coordinate_t node_coordinates(node_id_type __id) const;
 
 public:
-
     node_id_type from_base_node_id(base_topology_type::node_id_type __node) const {
-        for (auto edge : _M_base_topology.outgoing_edges(__node)) {
-            auto e_id = _M_base_topology.edge_id(edge.destination, __node);
+        if (is_none(__node))
+            return none_value<node_id_type>;
+
+        for (auto edge: _M_base_topology.outgoing_edges(__node)) {
+            auto e_id = _M_base_topology.edge_id(__node, edge.destination);
             if (__node < edge.destination) {
                 return {e_id, 0};
             } else {
@@ -267,7 +271,7 @@ public:
 
     size_t edge_count() const { return _M_edge_count; }
 
-    float epsilon() const {return _M_epsilon;}
+    float epsilon() const { return _M_epsilon; }
 
     node_id_iterator_type node_ids() const;
 
