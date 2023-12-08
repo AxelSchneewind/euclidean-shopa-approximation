@@ -15,7 +15,7 @@ public:
     // in radians
     static constexpr int step_count = 127;
 
-    // assume that each angle is at least 10 degrees
+    // assume that each angle is at least 5 degrees
     static constexpr float min_angle = (M_PI / 180) * 5;
     static constexpr float max_angle = (M_PI / 180) * 175;
 
@@ -32,7 +32,7 @@ public:
         // std::float16_t mid_dist;
 
         // number of steiner points on this edge (counting the source and middle node)
-        std::uint16_t node_count;
+        unsigned short node_count;
 
         // r(v), relative to this edge
         float r_first;
