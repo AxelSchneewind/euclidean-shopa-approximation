@@ -5,6 +5,7 @@
 #include <span>
 #include "../graph/base_types.h"
 #include "../graph/unidirectional_adjacency_list.h"
+#include "../triangulation/steiner_graph.h"
 
 namespace stream_encoders {
 
@@ -17,6 +18,13 @@ namespace stream_encoders {
 
         template<typename T>
         static std::ostream &write(std::ostream &output, const T &value);
+
+
+        template<typename E, typename I>
+        std::ostream &write(std::ostream &output, const steiner_node_id<E, I> &value);
+
+        template<typename N>
+        std::ostream &write(std::ostream &output, const steiner_edge_id<N> &value);
 
         // read/write lists
         template<typename T>

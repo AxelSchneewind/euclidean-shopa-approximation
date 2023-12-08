@@ -136,16 +136,16 @@ namespace stream_encoders {
     }
 
 // steiner node and edge ids
-    template<>
+    template<typename E, typename I>
     std::ostream &
-    encode_text::write(std::ostream &output, const steiner_node_id &value) {
-        output << (int) value.edge << ':' << (int) value.steiner_index << ' ';
+    encode_text::write(std::ostream &output, const steiner_node_id<E, I> &value) {
+        output << value.edge << ':' << value.steiner_index << ' ';
         return output;
     }
 
-    template<>
+    template<typename N>
     std::ostream &
-    encode_text::write(std::ostream &output, const steiner_edge_id &value) {
+    encode_text::write(std::ostream &output, const steiner_edge_id<N> &value) {
         output << value.source << ':' << value.source << ' ';
         return output;
     }
