@@ -99,6 +99,8 @@ public:
 
         void add_edge(NodeId __source, NodeId __destination, E __info);
 
+        void insert_backward_edges();
+
         unidirectional_adjacency_list<NodeId, E> get();
     };
 
@@ -149,7 +151,6 @@ public:
     inline bool contains_edge(edge_index_type __edge_index) const;
 
 
-
     /**
      * get the number of nodes of this adjacency list
      * @return
@@ -177,6 +178,7 @@ public:
     counter<edge_index_type> node_ids() const {
         return {node_count()};
     }
+
     /**
      * get the id of the source node for the edge with given index
      * @param __edge

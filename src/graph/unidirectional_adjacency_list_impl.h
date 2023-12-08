@@ -33,6 +33,19 @@ unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edge(NodeI
 }
 
 template<typename NodeId, typename E>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::insert_backward_edges() {
+    std::size_t edge_count = _M_edges.size();
+
+    for (std::size_t i = 0; i < edge_count; ++i) {
+        auto edge = _M_edges[i];
+        std::swap(edge.source, edge.destination);
+        _M_edges.push_back(edge);
+    }
+
+    _M_edge_count *= 2;
+}
+
+template<typename NodeId, typename E>
 unidirectional_adjacency_list<NodeId, E>
 unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::get() {
     // order by source id
@@ -243,6 +256,7 @@ unidirectional_adjacency_list<NodeId, E>::inverse() const {
 
     return builder.get();
 }
+
 
 template<typename NodeId, typename E>
 bool
