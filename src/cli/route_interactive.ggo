@@ -1,0 +1,35 @@
+package "Routing"
+version "1.0"
+purpose ""
+usage "route /path/to/graph-file /path/to/results-directory epsilon src0 dest0..."
+description "computes the shortest path for each given pair of source and destination node."
+versiontext "1.0"
+
+args ""
+
+
+section "input/output files"
+option "graph-file" g "path to graph file (of type .fmi or .graph)" string required
+option "output-directory" o "path to output directory (where the subdirectory with the output files should be created)" string default="."
+
+section "triangulation"
+option "epsilon" e "ε value to use for discretizing the triangulation (if a .graph file is given)" double default="0.5" dependon="graph-file"
+
+section "output" sectiondesc="options for the command line output"
+option "csv-format" c "indicates that routing information should be printed in the csv format" flag off
+
+
+# option <long> <short> "<desc>"
+# 	{details="<detailed description>"}
+# 	{argtype} {typestr="<type descr>"}
+# 	{values="<value1>","<value2>",...}
+# 	{default="<default value>"}
+# 	{dependon="<other option>"}
+# 	{required} {argoptional} {multiple}
+# 	{hidden}
+
+# option <long> <short> "<desc>" flag <on/off>
+
+# section "section" {sectiondesc="optional section description"}
+
+# text "a textual sentence"
