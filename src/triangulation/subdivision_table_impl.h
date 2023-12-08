@@ -12,7 +12,7 @@
  * @tparam Value
  * @return
  */
-template <typename Min, typename Max, typename Value>
+template<typename Min, typename Max, typename Value>
 bool is_between(Value val, Min min, Max max) {
     return min <= val && min < max;
 }
@@ -179,18 +179,18 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
 
         // check that values are in bounds
         if (!is_between(count, 2, std::numeric_limits<unsigned short>::max())
-         || !is_between(mid_value, 0, 1)
-         || !is_between(mid_index, 1, count)
-         || !is_between(r_first, 0, 1)
-         || !is_between(r_second, 0, 1)
-         || !is_between(index, 0, std::numeric_limits<unsigned char>::max())
-         || !is_between(index, 0, node_positions.size())
-         || !is_between(index_second, 0, std::numeric_limits<unsigned char>::max())
-         || !is_between(index_second, 0, node_positions.size())
-         || !is_between(first_start_index, 0, std::numeric_limits<unsigned short>::max())
-         || !is_between(first_start_index, 0, node_positions.size())
-         || !is_between(second_start_index, 0, std::numeric_limits<unsigned short>::max())
-         || !is_between(second_start_index, 0, node_positions.size()))
+            || !is_between(mid_value, 0, 1)
+            || !is_between(mid_index, 1, count)
+            || !is_between(r_first, 0, 1)
+            || !is_between(r_second, 0, 1)
+            || !is_between(index, 0, std::numeric_limits<unsigned char>::max())
+            || !is_between(index, 0, node_positions.size())
+            || !is_between(index_second, 0, std::numeric_limits<unsigned char>::max())
+            || !is_between(index_second, 0, node_positions.size())
+            || !is_between(first_start_index, 0, std::numeric_limits<unsigned short>::max())
+            || !is_between(first_start_index, 0, node_positions.size())
+            || !is_between(second_start_index, 0, std::numeric_limits<unsigned short>::max())
+            || !is_between(second_start_index, 0, node_positions.size()))
             throw std::invalid_argument("some value does not fit");
 
         auto entry = subdivision_edge_info{};
@@ -240,22 +240,22 @@ subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coord
 
     assert(steiner_index >= 0);
 
-    if (steiner_index == 0)
+    if (steiner_index == 0) [[unlikely]]
         return c1;
-    if (steiner_index == info.node_count - 1)
+    if (steiner_index == info.node_count - 1) [[unlikely]]
         return c2;
 
-    if (steiner_index == info.mid_index)
+    if (steiner_index == info.mid_index) [[unlikely]]
         return interpolate_linear(c1, c2, info.mid_position);
 
-    if (steiner_index == 1)
+    if (steiner_index == 1) [[unlikely]]
         return interpolate_linear(c1, c2, info.r_first);
-    if (steiner_index == info.node_count - 2)
+    if (steiner_index == info.node_count - 2) [[unlikely]]
         return interpolate_linear(c2, c1, info.r_second);
 
 
     if (steiner_index < info.mid_index) {
-        int index = steiner_index - 2 + info.first_start_index;
+        auto index = steiner_index - 2 + info.first_start_index;
         assert(index >= 0);
         assert(index < triangle_classes[info.edge_class_first].node_positions.size());
 
@@ -263,10 +263,8 @@ subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coord
         assert(relative >= info.r_first - 0.002F);
         assert(relative <= info.mid_position + 0.002F);
         return interpolate_linear(c1, c2, relative);
-    }
-
-    if (steiner_index > info.mid_index) {
-        int index = info.node_count - 1 - steiner_index;
+    } else {
+        auto index = info.node_count - 1 - steiner_index;
         index = index - 2 + info.second_start_index;
         assert(index >= 0);
         assert(index < triangle_classes[info.edge_class_second].node_positions.size());
@@ -276,6 +274,4 @@ subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coord
         assert(relative <= 1.0F - info.mid_position + 0.002F);
         return interpolate_linear(c2, c1, relative);
     }
-
-    assert(false);
 }
