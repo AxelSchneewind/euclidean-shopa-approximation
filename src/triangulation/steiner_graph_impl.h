@@ -365,12 +365,23 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
 
             auto destination_steiner_info = steiner_info(base_edge_id);
 
-            for (int i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+            // linear search
+            int i = 1;
+            for (; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+                steiner_graph::node_id_type const destination = {base_edge_id, i};
+                coordinate_t const destination_coordinate = node(destination).coordinates;
+                if (angle(from_coordinate, source_coordinate, source_coordinate, destination_coordinate) <
+                    __max_angle) [[unlikely]]
+                    break;
+            }
+
+            for (; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
                 steiner_graph::node_id_type destination = {base_edge_id, i};
                 coordinate_t destination_coordinate = node(destination).coordinates;
 
-                if (angle(from_coordinate, source_coordinate, source_coordinate, destination_coordinate) > __max_angle)
-                    continue;
+                if (angle(from_coordinate, source_coordinate, source_coordinate, destination_coordinate) >
+                    __max_angle) [[likely]]
+                    break;
 
                 edges.push_back({destination, {}});
                 destination_coordinates.push_back(destination_coordinate);
