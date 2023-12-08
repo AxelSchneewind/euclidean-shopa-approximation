@@ -7,11 +7,16 @@
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) const {
+    if (!result) {
+    	output << "No route found" << std::endl;
+        return;
+    }
+
     auto path_length = graph.path_length(result->path);
     auto beeline_distance = result->beeline_distance;
 
     if (output_csv) {
-        output << "cost,beeline,epsilon satisfied,tree size,time\n"
+        output << "cost,beeline,epsilon satisfied,tree size,time,\n"
                << path_length << ","
                << beeline_distance << ",";
         output << ((path_length / beeline_distance) - 1) << ','
@@ -47,6 +52,9 @@ void Client::ClientModel<GraphT, RoutingT>::write_beeline(std::ostream &output) 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::write_tree_file(std::ostream &output) const {
+    if (!result)
+        return;
+
     auto tree_graph = std_graph_t::make_graph(graph, result->trees);
     gl_file_io::write(output, tree_graph, 1, 4);
 }
@@ -58,6 +66,8 @@ void Client::read_graph_file(std::string path, bool output_csv) {
 
     if (!output_csv)
         std::cout << "reading graph file from..." << path << std::endl;
+    else
+	std::cout << "graph file,\n" << path << ',' << std::endl;;
 
     // remove current implementation
     if (pimpl)
@@ -84,6 +94,8 @@ void Client::read_graph_file(std::string path, float epsilon, bool csv) {
 
     if (!csv)
     	std::cout << "reading graph file from..." << path << std::endl;
+    else
+	    std::cout << "graph file,\n" << path << ',' << std::endl;
 
     if (path.ends_with(".graph"))
         pimpl = std::make_unique<ClientModel<steiner_graph, steiner_routing_t>>(
@@ -115,6 +127,9 @@ void Client::set_graph(ch_graph_t&& graph) {
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::write_route_file(std::ostream &output) const {
+    if (!result)
+        return;
+
     auto route_subgraph = graph.make_subgraph(result->path);
     auto route_graph = std_graph_t::make_graph(graph, route_subgraph);
     gl_file_io::write(output, route_graph, 6, 5);
@@ -153,7 +168,7 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
 
             } else {
                 process_mem_usage(vm, res);
-                std::cout << "\rdistance: " << std::setw(10) << std::setprecision(5) << distances.current().distance
+                std::cout << "\rdistance: " << std::setw(10) << std::setprecision(3) << distances.current().distance
                           << ", node aggregates currently expanded (in labels): " << std::setw(10)
                           << distances.labels().aggregate_count();
                 std::cout << ", memory usage : VM "<< std::setw(9) << std::setprecision(2) << vm / 1024 << "MiB, RES "<< std::setw(9) << std::setprecision(2) << res / 1024 << std::flush;
@@ -163,10 +178,10 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
         }
 
         if (output_csv) {
-            std::cout << "pull count,push count,max size\n"
-                      << distances.queue().pull_count() << ","
-                      << distances.queue().push_count() << ","
-                      << distances.queue().max_size() << std::endl;
+            std::cout << "pull count,push count,max size,\n"
+                      << distances.queue().pull_count() << ','
+                      << distances.queue().push_count() << ','
+                      << distances.queue().max_size() << ',' << std::endl;
         } else {
             std::cout << "\nqueue was pulled from "
                       << distances.queue().pull_count() << " times, pushed to "
@@ -224,6 +239,7 @@ template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
     query = std::make_unique<Query<GraphT>>(make_query<GraphT>(graph, from, to));
+    write_query(std::cout);
     result.reset();
 
     auto beeline = distance(graph.node(query->from).coordinates, graph.node(query->to).coordinates);
@@ -233,15 +249,15 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
     std::thread status([&]() -> void {
         while (!done) {
             if (output_csv) {
-
+		        usleep(1000000);
             } else {
                 double vm, res;
                 process_mem_usage(vm, res);
                 std::cout << "\rdistances: "
-                          << std::setw(10) << std::setprecision(5) << router.forward_distance()
-                          << " (" << std::setw(6) << std::setprecision(3) << router.forward_search().current().value() << "), "
-                          << std::setw(10) << std::setprecision(5) << router.backward_distance()
-                          << " (" << std::setw(6) << std::setprecision(3) << router.backward_search().current().value() << "), "
+                                  << std::setw(12) /*<< std::setprecision(3)*/ << router.forward_distance()
+                          << " (" << std::setw(12) /*<< std::setprecision(3)*/ << router.forward_search().current().value() << "), "
+                                  << std::setw(12) /*<< std::setprecision(3)*/ << router.backward_distance()
+                          << " (" << std::setw(12) /*<< std::setprecision(3)*/ << router.backward_search().current().value() << "), "
                           << " of total > " << beeline;
 
                 if constexpr (requires(RoutingT::labels_type&& l) { l.aggregate_count(); }) {
@@ -251,19 +267,19 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
 
                 std::cout << ", memory usage : VM "<< std::setw(9) << vm / 1024 << "MiB, RES "<< std::setw(9) << res / 1024
                           << "MiB" << std::flush;
+            	usleep(100000);
             }
-            usleep(100000);
         }
 
 
         if (output_csv) {
-            std::cout << "\npull count(forward),push count(forward),max size\n"
-                      << router.forward_search().queue().pull_count() << ","
-                      << router.forward_search().queue().push_count() << ","
-                      << router.forward_search().queue().max_size() << std::endl;
+            std::cout << "\npull count(forward),push count(forward),max size,\n"
+                      << router.forward_search().queue().pull_count() << ','
+                      << router.forward_search().queue().push_count() << ','
+                      << router.forward_search().queue().max_size() << ',' << std::endl;
             double vm, res;
             process_mem_usage(vm, res);
-            std::cout << "memory usage(MiB)\n" << vm / 1024 << std::endl;
+            std::cout << "memory usage(MiB),\n" << vm / 1024 << ',' << std::endl;
         } else {
             std::cout << "\nqueue was pulled from "
                       << router.forward_search().queue().pull_count() << " times, pushed to "
@@ -284,28 +300,29 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
     done = true;
     status.join();
 
-    auto route = router.route();
+    if (router.route_found()) {
+        auto route = router.route();
 
-    using subtree = decltype(router.shortest_path_tree());
-    subtree tree{graph};
+        using subtree = decltype(router.shortest_path_tree());
+        subtree tree{graph};
 
-    if constexpr (requires (GraphT g) { g.epsilon(); }) {
-        if (graph.epsilon() >= 0.5)
+        if constexpr (requires(GraphT g) { g.epsilon(); }) {
+            if (graph.epsilon() >= 0.5)
+                tree = router.shortest_path_tree();
+        } else {
             tree = router.shortest_path_tree();
-    } else {
-        tree = router.shortest_path_tree();
+        }
+
+        result = std::make_unique<Result<GraphT>>(
+                *query,
+                router.route_found(),
+                graph.path_length(route),
+                beeline,
+                tree,
+                route,
+                tree.node_count(),
+                after - before);
     }
-
-    result = std::make_unique<Result<GraphT>>(
-            *query,
-            router.route_found(),
-            graph.path_length(route),
-            beeline,
-            tree,
-            route,
-            tree.node_count(),
-            after - before);
-
 }
 
 template<typename GraphT, typename RoutingT>
@@ -330,7 +347,7 @@ requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void
 Client::ClientModel<GraphT, RoutingT>::write_graph_stats(std::ostream &output) const {
     if (output_csv) {
-        std::cout << "epsilon, stored node count, stored edge count, node count, edge count\n";
+        std::cout << "epsilon,stored node count,stored edge count,node count,edge count,\n";
         if constexpr(requires(GraphT graph) {graph.epsilon(); graph.base_graph();}) {
             std::cout << graph.epsilon() << ',' << graph.base_graph().node_count()
                       << ',' << graph.base_graph().edge_count() / 2;
@@ -339,7 +356,7 @@ Client::ClientModel<GraphT, RoutingT>::write_graph_stats(std::ostream &output) c
                       << graph.edge_count() / 2;
         }
         std::cout << ',' << graph.node_count()
-                  << ',' << graph.edge_count() / 2 << std::endl;
+                  << ',' << graph.edge_count() / 2 << ',' << std::endl;
     } else {
         output << "\r\a\tgraph has "
                << std::setw(12) << graph.node_count() << " nodes and "
@@ -358,12 +375,12 @@ template<>
 void
 Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_stats(std::ostream &output) const {
     if (output_csv) {
-        std::cout << "epsilon,stored node count,stored edge count,node count,edge count\n";
+        std::cout << "epsilon,stored node count,stored edge count,node count,edge count,\n";
         std::cout << graph.epsilon() << ','
                   << graph.base_graph().node_count()
                   << ',' << graph.base_graph().edge_count() / 2;
         std::cout << ',' << graph.node_count()
-                  << ',' << graph.edge_count() / 2 << std::endl;
+                  << ',' << graph.edge_count() / 2 << ',' << std::endl;
     } else {
         output << "\r\a    done, graph has "
                << std::setw(12) << graph.node_count() << " nodes and "
@@ -401,7 +418,7 @@ template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>void
 Client::ClientModel<GraphT, RoutingT>::write_subgraph_file(std::ostream &output, coordinate_t bottom_left,
                                                            coordinate_t top_right) const {
-    throw std::exception();
+    throw std::runtime_error("write_subgraph_file not implemented");
 }
 
 bool is_in_rectangle(coordinate_t point, coordinate_t bottom_left, coordinate_t top_right) {

@@ -34,14 +34,14 @@ main(int argc, char const *argv[]) {
     // read graph
     Client client;
     if (graph_file.ends_with(".graph"))
-        client.read_graph_file(graph_file, epsilon, (bool) arguments.csv_format_flag);
+        client.read_graph_file(graph_file, epsilon, arguments.csv_format_flag != 0);
     else
-        client.read_graph_file(graph_file, (bool) arguments.csv_format_flag);
+        client.read_graph_file(graph_file, arguments.csv_format_flag != 0);
 
     client.write_graph_stats(std::cout);
 
     bool done = false;
-    bool from_stdin = (arguments.query_given / 2 < 1) || arguments.stdin_flag;
+    bool from_stdin = (arguments.query_given / 2 < 1) || (arguments.stdin_flag != 0);
     int query_index = 0;
 
     while (!done) {
