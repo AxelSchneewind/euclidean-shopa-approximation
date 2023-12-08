@@ -19,7 +19,7 @@ node_labels<G, N>::all_visited() const {
 
 
 template<RoutableGraph G, typename N>
-node_labels<G, N>::node_labels(G const& d)
+node_labels<G, N>::node_labels(G const &d)
         : _M_graph(d),
           _M_labels(_M_graph.node_count(), none_value<N>),
           _M_node_labelled(_M_graph.node_count()) {
@@ -39,7 +39,7 @@ node_labels<G, N>::init(node_labels<G, N>::node_id_type __start_node, node_label
 template<RoutableGraph G, typename N>
 bool
 node_labels<G, N>::reached(node_labels<G, N>::node_id_type node) const {
-    assert(node);
+    assert(!is_none(node));
     return _M_node_labelled[node];
     // return !is_none(_M_labels[node].predecessor);
 }
