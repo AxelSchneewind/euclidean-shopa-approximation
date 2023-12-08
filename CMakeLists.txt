@@ -33,6 +33,13 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
 # performance options
 set(CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG -O3 -march=native") # -ffast-math
 
+# gengetopt target
+configure_file(src/cli/route.ggo src/cli/cmdline_route.c @ONLY)
+add_custom_target(cmdline ALL
+        COMMAND gengetopt -i src/cli/route.ggo -F cmdline_route --output-dir src/cli
+        SOURCES src/cli/route.ggo
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 # compile implementation into one library file
 add_library(routing src/routing.cpp)
 link_libraries(routing)
@@ -40,7 +47,10 @@ link_libraries(routing)
 add_executable(make_gl src/make_gl.cpp)
 add_executable(make_pruned_gl src/make_pruned_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)
-add_executable(route src/route.cpp src/cli/cmdline_route_interactive.c)
+
+add_executable(route src/route.cpp src/cli/cmdline_route.c)
+add_dependencies(route cmdline)
+
 add_executable(distance_one_to_all src/distance_one_to_all.cpp)
 add_executable(subdivision_stats src/subdivision_stats.cpp)
 
