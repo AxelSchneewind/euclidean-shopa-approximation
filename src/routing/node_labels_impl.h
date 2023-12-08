@@ -31,6 +31,7 @@ node_labels<G, N>::init(node_labels<G, N>::node_id_type __start_node, node_label
     for (size_t index = 0; index < _M_touched.size(); ++index) {
         node_id_type node = _M_touched[index];
         _M_labels[node] = none_value<N>;
+        _M_node_labelled[node] = false;
     }
 
     _M_touched.clear();

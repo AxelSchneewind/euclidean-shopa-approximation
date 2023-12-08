@@ -74,6 +74,10 @@ public:
             pop();
 
         counter = 0;
+
+        pull_counter = 0;
+        push_counter = 0;
+        _max_size = 0;
     };
 
     void push(base_queue_type::value_type ncp) {

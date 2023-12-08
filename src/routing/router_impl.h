@@ -48,11 +48,11 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 
         nodes.push_back(node_id);
 
-        typename Graph::node_id_type succ = _M_backward_search.labels().get(node_id).predecessor;
+        typename Graph::node_id_type successor = _M_backward_search.labels().get(node_id).predecessor;
 
-        if (is_none(succ) || succ == node_id || !_M_backward_search.reached(succ)) continue;
+        if (is_none(successor) || successor == node_id || !_M_backward_search.reached(successor)) continue;
 
-        typename Graph::edge_id_type edge = _M_graph.topology().edge_id(node_id, succ);
+        typename Graph::edge_id_type edge = _M_graph.topology().edge_id(node_id, successor);
         edges.push_back(edge);
     }
 
@@ -161,7 +161,7 @@ template<typename Graph, typename Dijkstra>
 Graph::path_type
 router<Graph, Dijkstra>::route() const {
     if (is_none(_M_mid_node))
-        throw std::exception();
+        throw std::runtime_error("No route found");
 
     typename Graph::node_id_type fwd_node = _M_mid_node;
     typename Graph::node_id_type bwd_node = _M_mid_node;
@@ -170,23 +170,17 @@ router<Graph, Dijkstra>::route() const {
     p.push_front(_M_mid_node);
 
     while (!is_none(fwd_node) && fwd_node != _M_start_node) {
-        // if (!_M_graph.topology().has_edge(_M_forward_search.get_label(fwd_node).predecessor, fwd_node
-        //  && !_M_graph.topology().has_edge(fwd_node, _M_forward_search.get_label(fwd_node).predecessor)) break;
-
         fwd_node = _M_forward_search.get_label(fwd_node).predecessor;
 
-        if(is_none(fwd_node)) break;
+        if (is_none(fwd_node)) break;
 
         p.push_front(fwd_node);
     }
 
     while (!is_none(bwd_node) && bwd_node != _M_target_node) {
-        // if (!_M_graph.inverse_topology().has_edge(_M_backward_search.get_label(bwd_node).predecessor, bwd_node) || !_M_graph.topology().has_edge(bwd_node, _M_backward_search.get_label(bwd_node).predecessor))
-        //     break;
-
         bwd_node = _M_backward_search.get_label(bwd_node).predecessor;
 
-        if(is_none(bwd_node)) break;
+        if (is_none(bwd_node)) break;
 
         p.push_back(bwd_node);
     }
