@@ -24,7 +24,7 @@ if (DOXYGEN_FOUND)
             COMMENT "Generating API documentation with Doxygen"
             VERBATIM)
 else (DOXYGEN_FOUND)
-    message("Doxygen need to be installed to generate the doxygen documentation")
+    message("Doxygen needs to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
 
 set(CMAKE_CXX_FLAGS "") # -Wall -Wextra
@@ -34,11 +34,17 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
 set(CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG -O3 -march=native") # -ffast-math
 
 # gengetopt target
-configure_file(src/cli/route.ggo src/cli/cmdline_route.c @ONLY)
-add_custom_target(cmdline ALL
-        COMMAND gengetopt -i src/cli/route.ggo -F cmdline_route --output-dir src/cli
-        SOURCES src/cli/route.ggo
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+find_program(GENGETOPT gengetopt)
+if (GENGETOPT)
+    configure_file(src/cli/route.ggo src/cli/cmdline_route.c @ONLY)
+    add_custom_target(cmdline ALL
+            COMMAND ${GENGETOPT} -i src/cli/route.ggo -F cmdline_route --output-dir src/cli
+            SOURCES src/cli/route.ggo
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+else (GENGETOPT)
+    message("gengetopt needs to be installed to generate the command line argument parser")
+endif (GENGETOPT)
+
 
 # compile implementation into one library file
 add_library(routing src/routing.cpp)
