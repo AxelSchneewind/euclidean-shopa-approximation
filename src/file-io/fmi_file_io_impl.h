@@ -20,6 +20,34 @@ fmi_file_io::read_nodes(std::istream &input, std::size_t count) {
     return nodes;
 }
 
+template<typename NodeInfo, typename formatter>
+std::vector<NodeInfo>
+fmi_file_io::read_nodes(std::istream &input, std::size_t count, float coordinate_factor) {
+    std::vector<NodeInfo> nodes;
+    for (int i = 0; i < count; ++i) {
+        NodeInfo n;
+        n.coordinates = formatter::template read<coordinate_t>(input);
+        n.coordinates.latitude *= coordinate_factor;
+        n.coordinates.longitude *= coordinate_factor;
+        nodes.push_back(n);
+    }
+    return nodes;
+}
+
+template<typename NodeInfo, typename formatter, typename NodeTransform>
+std::vector<NodeInfo>
+fmi_file_io::read_nodes(std::istream &input, std::size_t count, NodeTransform &transform) {
+    std::vector<NodeInfo> nodes;
+    for (int i = 0; i < count; ++i) {
+        NodeInfo n;
+        n.coordinates = formatter::template read<coordinate_t>(input);
+        n = transform(n);
+        nodes.push_back(n);
+    }
+    return nodes;
+}
+
+
 template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
 auto
 fmi_file_io::read_edges(std::istream &input, std::vector<NodeInfo> const &nodes, std::size_t count) {
@@ -27,6 +55,36 @@ fmi_file_io::read_edges(std::istream &input, std::vector<NodeInfo> const &nodes,
 
     for (edge_id_t edge_index = 0; edge_index < count; edge_index++)
         builder.add_edge(formatter::template read<adjacency_list_edge<NodeId, EdgeInfo>>(input));
+
+    return builder;
+}
+
+template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter, typename EdgeTransform>
+auto
+fmi_file_io::read_edges(std::istream &input, std::vector<NodeInfo> const &nodes, std::size_t count,
+                        EdgeTransform &transform) {
+    typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
+
+    for (edge_id_t edge_index = 0; edge_index < count; edge_index++) {
+        auto edge = formatter::template read<adjacency_list_edge<NodeId, EdgeInfo>>(input);
+        edge = transform(nodes, edge);
+        builder.add_edge(edge);
+    }
+
+    return builder;
+}
+
+template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
+auto
+fmi_file_io::read_edges(std::istream &input, std::vector<NodeInfo> const &nodes, std::size_t count,
+                        float cost_factor) {
+    typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
+
+    for (edge_id_t edge_index = 0; edge_index < count; edge_index++) {
+        auto edge = formatter::template read<adjacency_list_edge<NodeId, EdgeInfo>>(input);
+        edge.info.cost *= cost_factor;
+        builder.add_edge(edge);
+    }
 
     return builder;
 }

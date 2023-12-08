@@ -53,7 +53,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
     f::write(output, '\n');
 
     size_t index = 0;
-    std::unordered_map<steiner_graph::node_id_type, size_t> base_indices;
+    std::unordered_map<steiner_graph::base_topology_type::node_id_type, size_t> base_indices;
     for (auto node: graph.base_graph().node_ids()) {
         base_indices[node] = index++;
         auto n = graph.node(node);
@@ -79,7 +79,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
 
     // write all outgoing edges of base nodes
     for (auto node: graph.base_graph().node_ids()) {
-        auto&& edges = graph.outgoing_edges(node);
+        auto &&edges = graph.outgoing_edges(node);
         for (auto edge: edges) {
             auto dest = edge.destination;
             assert(!graph.is_base_node(edge.destination));
@@ -99,7 +99,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
     }
 
     for (auto node: graph.node_ids()) {
-        auto&& edges = graph.outgoing_edges(node);
+        auto &&edges = graph.outgoing_edges(node);
         for (auto edge: edges) {
             auto dest = edge.destination;
 
