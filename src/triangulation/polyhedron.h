@@ -20,7 +20,7 @@ public:
     static constexpr std::size_t EDGE_COUNT_PER_FACE = MaxNodesPerFace;
     static constexpr std::size_t FACE_COUNT_PER_EDGE = 2;
 
-    struct [[deprecated]] edges_iterator_type {
+    struct edges_iterator_type {
     private:
         unsigned char face_index;
         unsigned char edge_index;
@@ -136,7 +136,7 @@ public:
     }
 
     /**
-     * gets edges that belong to the edge_faces bordering this edge
+     * gets edges that belong to the faces bordering this edge
      * does not include the inverse to the given edge
      * @param __edge
      * @return

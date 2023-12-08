@@ -43,7 +43,7 @@ void make_face_edges(const BaseGraph &__base,
                      const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &__faces,
                      std::vector<std::array<typename BaseGraph::edge_id_type, MaxNodesPerFace>> &__face_edges,
                      std::vector<std::array<int, 2>> &__edge_faces) {
-    constexpr size_t edges_per_face = 6;
+    constexpr size_t edges_per_face = 3;
 
     __face_edges.clear();
     __face_edges.reserve(__faces.size());
@@ -62,8 +62,10 @@ void make_face_edges(const BaseGraph &__base,
             auto node_id = face[i % MaxNodesPerFace];
             auto node_id_n = face[(i + 1) % MaxNodesPerFace];
 
+            if (node_id > node_id_n)
+                std::swap(node_id, node_id_n);
+
             adjacent_edges.push_back(__base.edge_id(node_id, node_id_n));
-            adjacent_edges.push_back(__base.edge_id(node_id_n, node_id));
         }
 
         std::sort(adjacent_edges.begin(), adjacent_edges.end());
@@ -139,9 +141,9 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
             // get edges and triangles adjacent to node
             for (auto edge: __base.outgoing_edges(node)) {
                 auto edge_id = __base.edge_id(node, edge.destination);
-                auto inv_edge_id = inverse_edges[edge_id];
+                // auto inv_edge_id = inverse_edges[edge_id];
                 adjacent_edge_ids.push_back(edge_id);
-                adjacent_edge_ids.push_back(inv_edge_id);
+                // adjacent_edge_ids.push_back(inv_edge_id);
 
                 for (auto triangle: edge_triangles[edge_id]) {
                     if (is_none(triangle)) continue;
@@ -149,11 +151,11 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
                         triangle_edge_ids.push_back(other_edge);
                 }
 
-                for (auto triangle: edge_triangles[inv_edge_id]) {
-                    if (is_none(triangle)) continue;
-                    for (auto other_edge: triangle_edges[triangle])
-                        triangle_edge_ids.push_back(other_edge);
-                }
+                //for (auto triangle: edge_triangles[inv_edge_id]) {
+                //    if (is_none(triangle)) continue;
+                //    for (auto other_edge: triangle_edges[triangle])
+                //        triangle_edge_ids.push_back(other_edge);
+                //}
             }
 
             std::sort(triangle_edge_ids.begin(), triangle_edge_ids.end());

@@ -9,25 +9,29 @@
 #include "../util/set_minus.h"
 
 
-std::size_t std::hash<steiner_node_id>::operator()(const steiner_node_id &__s) const noexcept {
-    std::size_t h1 = std::hash<edge_id_t>{}(__s.edge);
-    std::size_t h2 = std::hash<int>{}(__s.steiner_index);
+template<typename E, typename I>
+std::size_t std::hash<steiner_node_id<E, I>>::operator()(const steiner_node_id<E, I> &__s) const noexcept {
+    std::size_t h1 = std::hash<E>{}(__s.edge);
+    std::size_t h2 = std::hash<I>{}(__s.steiner_index);
     return h1 ^ (h2 << 1);
 }
 
-std::size_t std::hash<steiner_edge_id>::operator()(const steiner_edge_id &s) const noexcept {
-    std::size_t h1 = std::hash<steiner_node_id>{}(s.source);
-    std::size_t h2 = std::hash<steiner_node_id>{}(s.destination);
+template<typename N>
+std::size_t std::hash<steiner_edge_id<N>>::operator()(const steiner_edge_id<N> &s) const noexcept {
+    std::size_t h1 = std::hash<N>{}(s.source);
+    std::size_t h2 = std::hash<N>{}(s.destination);
     return h1 ^ (h2 << 1);
 }
 
 
-std::ostream &operator<<(std::ostream &output, steiner_node_id id) {
+template<typename E, typename I>
+std::ostream &operator<<(std::ostream &output, steiner_node_id<E, I> id) {
     return output << id.edge << ':' << id.steiner_index;
 }
 
 
-std::ostream &operator<<(std::ostream &output, steiner_edge_id id) {
+template<typename N>
+std::ostream &operator<<(std::ostream &output, steiner_edge_id<N> id) {
     return output << '(' << id.source << ',' << id.destination << ')';
 }
 
@@ -213,7 +217,6 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&__tria
 coordinate_t steiner_graph::node_coordinates(steiner_graph::node_id_type __id) const {
     const coordinate_t c1 = _M_base_nodes[_M_base_topology.source(__id.edge)].coordinates;
     const coordinate_t c2 = _M_base_nodes[_M_base_topology.destination(__id.edge)].coordinates;
-    const auto info = _M_table.edge(__id.edge);
 
     return _M_table.node_coordinates(__id.edge, __id.steiner_index, c1, c2);
 }
@@ -240,7 +243,7 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type __base_node_i
     edges.clear();
     destination_coordinates.clear();
 
-    // NOTE: paper does not requires these edges
+    // NOTE: paper does not require these edges
     // auto &&reachable_edges = _M_polyhedron.node_edges(__base_node_id);
     // for (auto &&e: reachable_edges) [[likely]] {
     //     // if (std::ranges::contains(_M_polyhedron.edge_faces(e).begin(), _M_polyhedron.edge_faces(e).end(),
@@ -258,7 +261,7 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type __base_node_i
     // }
 
     for (auto &&e: _M_base_topology.outgoing_edges(__base_node_id)) [[likely]] {
-        if (e.destination <= __base_node_id) continue;
+        assert (e.destination > __base_node_id);
 
         auto e_id = _M_base_topology.edge_id(__base_node_id, e.destination);
         steiner_graph::node_id_type destination = {e_id, 1};
@@ -267,11 +270,10 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type __base_node_i
         destination_coordinates.push_back(destination_coordinate);
     }
     for (auto &&e: _M_base_topology.incoming_edges(__base_node_id)) [[likely]] {
-        if (__base_node_id <= e.destination) continue;
+        assert (__base_node_id > e.destination);
 
         auto e_id = _M_base_topology.edge_id(e.destination, __base_node_id);
-        steiner_graph::node_id_type destination = {e_id,
-                                                   steiner_info(e_id).node_count - 2};
+        steiner_graph::node_id_type destination = {e_id, steiner_info(e_id).node_count - 2U};
         coordinate_t destination_coordinate = node(destination).coordinates;
         edges.push_back({destination, {}});
         destination_coordinates.push_back(destination_coordinate);
@@ -300,16 +302,13 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
     if (is_base_node(__node_id)) [[unlikely]]
         return outgoing_edges(base_node_id(__node_id), __reached_from);
 
-    // get inverse edge for current base edge
-    auto inv_edge = base_polyhedron().inverse_edge(__node_id.edge);
-
     // get triangles that have not been visited yet
     auto &&triangles = base_polyhedron().edge_faces(__node_id.edge);
     unsigned char triangle_first = 0;
     unsigned char triangle_last = 2;
 
     // if this node is reached via a face crossing segment, only use edges in next face
-    if (__reached_from.edge != __node_id.edge && __reached_from.edge != inv_edge) [[likely]] {
+    if (__reached_from.edge != __node_id.edge) [[likely]] {
         auto visited_triangles = base_polyhedron().edge_faces(__reached_from.edge);
 
         if (is_none(triangles[0]) || triangles[0] == visited_triangles[0] || triangles[0] == visited_triangles[1])
@@ -336,7 +335,7 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
 
     // for neighboring node on own edge
     if (__node_id.steiner_index < _steiner_info.node_count - 1) [[likely]] {
-        steiner_graph::node_id_type const destination = {__node_id.edge, __node_id.steiner_index + 1};
+        steiner_graph::node_id_type const destination(__node_id.edge, __node_id.steiner_index + 1);
         if (destination != __reached_from) {
             coordinate_t destination_coordinate = node(destination).coordinates;
             edges.push_back({destination, {}});
@@ -346,7 +345,7 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
 
     // for other neighboring node on own edge
     if (__node_id.steiner_index > 0) [[likely]] {
-        steiner_graph::node_id_type const destination = {__node_id.edge, __node_id.steiner_index - 1};
+        steiner_graph::node_id_type const destination(__node_id.edge, __node_id.steiner_index - 1);
         if (destination != __reached_from) {
             coordinate_t destination_coordinate = node(destination).coordinates;
             edges.push_back({destination, {}});
@@ -360,13 +359,13 @@ steiner_graph::outgoing_edges(node_id_type __node_id, node_id_type __reached_fro
         auto triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
 
         for (auto base_edge_id: triangle_edges) [[likely]] {
-            if (base_edge_id == __node_id.edge || base_edge_id == inv_edge) [[unlikely]]
+            if (base_edge_id == __node_id.edge) [[unlikely]]
                 continue;
 
             auto destination_steiner_info = steiner_info(base_edge_id);
 
             // linear search
-            int i = 1;
+            short i = 1;
             for (; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
                 steiner_graph::node_id_type const destination = {base_edge_id, i};
                 coordinate_t const destination_coordinate = node(destination).coordinates;
@@ -428,19 +427,10 @@ steiner_graph::edge_id(steiner_graph::node_id_type __src, steiner_graph::node_id
     return has_edge(__src, __dest) ? edge_id_type{__src, __dest} : none_value<edge_id_type>;
 }
 
-// FIXME
 bool
 steiner_graph::has_edge(steiner_graph::node_id_type __src, steiner_graph::node_id_type __dest) const {
-    if (_M_base_topology.source(__src.edge) >= _M_base_topology.destination(__src.edge)) {
-        __src.edge = _M_polyhedron.inverse_edge(__src.edge);
-        __src.steiner_index = steiner_info(__src.edge).node_count - 1 - __src.steiner_index;
-    }
-
-    if (_M_base_topology.source(__dest.edge) >= _M_base_topology.destination(__dest.edge)) {
-        __dest.edge = _M_polyhedron.inverse_edge(__dest.edge);
-        __dest.steiner_index = steiner_info(__dest.edge).node_count - 1 - __dest.steiner_index;
-    }
-
+    assert (_M_base_topology.source(__src.edge) < _M_base_topology.destination(__src.edge));
+    assert(_M_base_topology.source(__dest.edge) < _M_base_topology.destination(__dest.edge));
 
     if (__dest == __src)
         return false;
@@ -453,11 +443,18 @@ steiner_graph::has_edge(steiner_graph::node_id_type __src, steiner_graph::node_i
         auto base_src = base_node_id(__src);
         for (auto edge: _M_base_topology.outgoing_edges(base_src)) {
             auto edge_id = _M_base_topology.edge_id(base_src, edge.destination);
-            if (base_src >= edge.destination) edge_id = _M_polyhedron.inverse_edge(edge_id);
 
-            if (__dest.edge == edge_id)
+            if (__dest.edge == edge_id && __dest.steiner_index == 1)
                 return true;
         }
+
+        for (auto edge: _M_base_topology.incoming_edges(base_src)) {
+            auto edge_id = _M_base_topology.edge_id(edge.destination, base_src);
+
+            if (__dest.edge == edge_id && __dest.steiner_index == steiner_info(edge_id).node_count)
+                return true;
+        }
+
         for (auto edge: _M_polyhedron.node_edges(base_src)) {
             if (__dest.edge == edge)
                 return true;
@@ -467,23 +464,23 @@ steiner_graph::has_edge(steiner_graph::node_id_type __src, steiner_graph::node_i
     if (is_base_node(__dest) &&
         (__src.steiner_index == 1 || __src.steiner_index == steiner_info(__src.edge).node_count - 1)) {
         auto base_dest = base_node_id(__dest);
-        for (auto edge: _M_base_topology.incoming_edges(base_dest)) {
-            auto edge_id = _M_base_topology.edge_id(edge.destination, base_dest);
-            if (base_dest <= edge.destination) edge_id = _M_polyhedron.inverse_edge(edge_id);
+        for (auto edge: _M_base_topology.outgoing_edges(base_dest)) {
+            auto edge_id = _M_base_topology.edge_id(base_dest, edge.destination);
 
-            if (__src.edge == edge_id)
+            if (__src.edge == edge_id && __src.steiner_index == 1)
                 return true;
         }
+
+        for (auto edge: _M_base_topology.incoming_edges(base_dest)) {
+            auto edge_id = _M_base_topology.edge_id(edge.destination, base_dest);
+
+            if (__src.edge == edge_id && __src.steiner_index == steiner_info(edge_id).node_count)
+                return true;
+        }
+
         for (auto edge: _M_polyhedron.node_edges(base_dest)) {
             if (__src.edge == edge)
                 return true;
-        }
-    }
-
-    // search the edge in the base graph that destination belongs to
-    for (auto adjacent_edge: _M_polyhedron.edges(__src.edge)) {
-        if (adjacent_edge == __dest.edge) {
-            return true;
         }
     }
 
@@ -541,6 +538,24 @@ bool steiner_graph::is_base_node(steiner_graph::node_id_type __id) const {
 steiner_graph::triangle_node_id_type steiner_graph::base_node_id(steiner_graph::node_id_type __id) const {
     assert(is_base_node(__id));
     return __id.steiner_index == 0 ? base_graph().source(__id.edge) : base_graph().destination(__id.edge);
+}
+
+steiner_graph::node_id_type steiner_graph::from_base_node_id(int __node) const {
+    if (is_none(__node)) [[unlikely]]
+        return none_value<node_id_type>;
+
+    for (auto edge: _M_base_topology.outgoing_edges(__node)) {
+        auto e_id = _M_base_topology.edge_id(__node, edge.destination);
+        return {e_id, 0};
+    }
+
+    for (auto edge: _M_base_topology.incoming_edges(__node)) {
+        auto e_id = _M_base_topology.edge_id(edge.destination, __node);
+        return {e_id, steiner_info(e_id).node_count - 1U};
+    }
+
+    [[unlikely]]
+            throw std::runtime_error("node has no incident edges");
 }
 
 steiner_graph::node_id_iterator_type steiner_graph::node_id_iterator_type::operator++() {

@@ -2,15 +2,25 @@
 
 #include "subdivision_table.h"
 
+template<typename EdgeId, typename IntraEdgeId>
 struct steiner_node_id {
-    edge_id_t edge;
-    short steiner_index;
+    using edge_id_type = EdgeId;
+    using intra_edge_id_type = IntraEdgeId;
 
-    steiner_node_id() : edge(none_value<edge_id_t>), steiner_index(-1) {};
+    edge_id_type edge;
+    intra_edge_id_type steiner_index;
 
-    constexpr steiner_node_id(edge_id_t __edge, int __steiner_index) : edge(__edge), steiner_index(__steiner_index) {}
+    steiner_node_id() : edge(none_value<edge_id_type>), steiner_index(none_value<intra_edge_id_type>) {};
 
-    constexpr explicit steiner_node_id(edge_id_t __edge) : edge(__edge), steiner_index(0) {}
+    constexpr steiner_node_id(EdgeId __edge, IntraEdgeId __steiner_index) : edge(__edge),
+                                                                            steiner_index(__steiner_index) {}
+
+    constexpr steiner_node_id(EdgeId __edge, IntraEdgeId __steiner_index, IntraEdgeId __node_count)
+            : edge(__edge),
+              steiner_index(
+                      __steiner_index > __node_count / 2 ? __steiner_index - __node_count / 2 : __steiner_index) {}
+
+    constexpr explicit steiner_node_id(EdgeId __edge) : edge(__edge), steiner_index(0) {}
 
     bool operator>=(const steiner_node_id &__other) const {
         return edge >= __other.edge || steiner_index >= __other.steiner_index;
@@ -26,22 +36,22 @@ struct steiner_node_id {
 };
 
 
-template<>
-struct std::hash<steiner_node_id> {
-    std::size_t operator()(const steiner_node_id &__s) const noexcept;
+template<typename E, typename I>
+struct std::hash<steiner_node_id<E, I>> {
+    std::size_t operator()(const steiner_node_id<E, I> &__s) const noexcept;
 };
 
 
-template<>
-constexpr steiner_node_id none_value<steiner_node_id> = {none_value<edge_id_t>, -1};
+template<typename E, typename I>
+constexpr steiner_node_id none_value<steiner_node_id<E, I>> = {none_value<E>, none_value<I>};
 
-std::ostream &operator<<(std::ostream &output, steiner_node_id id);
+template<typename E, typename I>
+std::ostream &operator<<(std::ostream &output, steiner_node_id<E, I> id);
 
-
+template<typename NodeId>
 struct steiner_edge_id {
-    steiner_node_id source;
-    steiner_node_id destination;
-
+    NodeId source;
+    NodeId destination;
 
     bool operator>=(const steiner_edge_id &other) const {
         return source > other.source || (source == other.source && destination >= other.destination);
@@ -53,14 +63,16 @@ struct steiner_edge_id {
 };
 
 
-template<>
-constexpr steiner_edge_id none_value<steiner_edge_id> = {none_value<steiner_node_id>, none_value<steiner_node_id>};
+template<typename N>
+constexpr steiner_edge_id<N> none_value<steiner_edge_id<N>> = {none_value<N>,
+                                                               none_value<N>};
 
-std::ostream &operator<<(std::ostream &output, steiner_edge_id id);
+template<typename N>
+std::ostream &operator<<(std::ostream &output, steiner_edge_id<N> id);
 
-template<>
-struct std::hash<steiner_edge_id> {
-    std::size_t operator()(const steiner_edge_id &s) const noexcept;
+template<typename N>
+struct std::hash<steiner_edge_id<N>> {
+    std::size_t operator()(const steiner_edge_id<N> &s) const noexcept;
 };
 
 /**
@@ -68,14 +80,16 @@ struct std::hash<steiner_edge_id> {
  */
 class steiner_graph {
 public:
-    using node_id_type = steiner_node_id;
-    using edge_id_type = steiner_edge_id;
+    using triangle_node_id_type = node_id_t;
+    using triangle_edge_id_type = edge_id_t;
+
+    using intra_edge_id_type = short int;
+
+    using node_id_type = steiner_node_id<triangle_edge_id_type, intra_edge_id_type>;
+    using edge_id_type = steiner_edge_id<node_id_type>;
 
     using node_info_type = node_t;
     using edge_info_type = edge_t;
-
-    using triangle_node_id_type = node_id_t;
-    using triangle_edge_id_type = edge_id_t;
 
     using triangle_node_info_type = node_t;
     using triangle_edge_info_type = std::nullptr_t;
@@ -142,75 +156,6 @@ public:
         node_id_type &operator*() { return _M_current_node; }
     };
 
-    template<typename BaseEdgesIterator>
-    struct [[deprecated]] edges_iterator_type {
-    private:
-        const steiner_graph *_M_graph_ptr;
-        node_id_type src;
-        short node_index;
-        BaseEdgesIterator it;
-
-    public:
-        edges_iterator_type(const steiner_graph *__graph, node_id_type src,
-                            BaseEdgesIterator it)
-                : _M_graph_ptr(__graph),
-                  src(src),
-                  node_index(0),
-                  it(it) {}
-
-        edges_iterator_type &begin() { return *this; };
-
-        struct end_type {
-        };
-
-        end_type end() const { return end_type{}; };
-
-        bool operator==(edges_iterator_type __other) const {
-            return it == __other.it && node_index == __other.node_index;
-        }
-
-        bool operator==(end_type __other) const {
-            return it == it.end();
-        }
-
-        bool operator!=(edges_iterator_type __other) const {
-            return it != __other.it || node_index != __other.node_index;
-        }
-
-        bool operator!=(end_type __other) const {
-            return it != it.end();
-        }
-
-        edges_iterator_type operator++() {
-            edges_iterator_type &result = *this;
-            node_index++;
-
-            if (node_index >= _M_graph_ptr->steiner_info(*it).node_count) {
-                ++it;
-                node_index = 0;
-            }
-
-            return result;
-        };
-
-        edges_iterator_type &operator++(int) {
-            node_index++;
-
-            if (node_index >= _M_graph_ptr->steiner_info(*it).node_count) {
-                ++it;
-                node_index = 0;
-            }
-
-            return *this;
-        };
-
-        internal_adjacency_list_edge<node_id_type, edge_info_type> operator*() {
-            node_id_type dest_id = {*it, node_index};
-            edge_id_type id = {src, dest_id};
-            return {dest_id, _M_graph_ptr->edge(id)};
-        }
-    };
-
     steiner_graph(steiner_graph &&other) noexcept;
 
     steiner_graph(std::vector<node_info_type> &&__triangulation_nodes,
@@ -246,20 +191,7 @@ private:
     coordinate_t node_coordinates(node_id_type __id) const;
 
 public:
-    node_id_type from_base_node_id(base_topology_type::node_id_type __node) const {
-        if (is_none(__node))
-            return none_value<node_id_type>;
-
-        for (auto edge: _M_base_topology.outgoing_edges(__node)) {
-            auto e_id = _M_base_topology.edge_id(__node, edge.destination);
-            if (__node < edge.destination) {
-                return {e_id, 0};
-            } else {
-                e_id = _M_polyhedron.inverse_edge(e_id);
-                return {e_id, steiner_info(e_id).node_count - 1};
-            }
-        }
-    }
+    node_id_type from_base_node_id(base_topology_type::node_id_type __node) const;
 
     const subdivision_table &subdivision_info() const { return _M_table; }
 
