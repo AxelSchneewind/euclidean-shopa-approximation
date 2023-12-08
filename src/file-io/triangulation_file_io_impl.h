@@ -13,20 +13,23 @@
 template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
 auto
 triangulation_file_io::read_triangles(std::istream &input,
-               std::vector<NodeInfo> const& nodes,
-               std::size_t count,
-               std::vector<std::array<NodeId, 3>>& faces) {
+                                      std::vector<NodeInfo> const &nodes,
+                                      std::size_t count,
+                                      std::vector<std::array<NodeId, 3>> &faces) {
     typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
     for (int t = 0; t < count; t++) {
-        triangle tri = {formatter::template read<size_t>(input), formatter::template read<size_t>(input), formatter::template read<size_t>(input) };
+        triangle tri = {formatter::template read<int>(input), formatter::template read<int>(input),
+                        formatter::template read<int>(input)};
         for (int i = 0; i < 3; ++i) {
             auto next = (i + 1) % 3;
             EdgeInfo edge;
-            if constexpr(requires (EdgeInfo e) { e.cost; })
+            if constexpr (requires(EdgeInfo e) { e.cost; })
                 edge.cost = (float) distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
 
-            builder.add_edge(tri[i], tri[next], edge);
-            builder.add_edge(tri[next], tri[i], edge);
+            if (tri[i] < tri[next])
+                builder.add_edge(tri[i], tri[next], edge);
+            else
+                builder.add_edge(tri[next], tri[i], edge);
         }
         faces.push_back(tri);
     }
@@ -36,7 +39,7 @@ triangulation_file_io::read_triangles(std::istream &input,
 template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
 auto
 triangulation_file_io::read_triangles(std::istream &input,
-               std::vector<NodeInfo> const& nodes, std::size_t count) {
+                                      std::vector<NodeInfo> const &nodes, std::size_t count) {
     typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
     for (int t = 0; t < count; t++) {
         triangle tri = formatter::template read<triangle>(input);
@@ -44,21 +47,23 @@ triangulation_file_io::read_triangles(std::istream &input,
             auto next = (i + 1) % 3;
 
             EdgeInfo edge;
-            if constexpr (requires (EdgeInfo e) {e.cost;}) {
+            if constexpr (requires(EdgeInfo e) { e.cost; }) {
                 edge.cost = (float) distance(nodes[tri[i]].coordinates, nodes[tri[next]].coordinates);
             }
-            builder.add_edge(tri[i], tri[next], edge);
-            builder.add_edge(tri[next], tri[i], edge);
+
+            if (tri[i] < tri[next])
+                builder.add_edge(tri[i], tri[next], edge);
+            else
+                builder.add_edge(tri[next], tri[i], edge);
         }
     }
     return builder;
 }
 
 
-
 template<Topology Graph, typename formatter>
 Graph
-triangulation_file_io::read(std::istream &input_size, std::istream& input_nodes, std::istream& input_edges) {
+triangulation_file_io::read(std::istream &input_size, std::istream &input_nodes, std::istream &input_edges) {
     using f = formatter;
     f::skip_comments(input_size);
 
@@ -66,13 +71,16 @@ triangulation_file_io::read(std::istream &input_size, std::istream& input_nodes,
     size_t triangle_count(f::template read<edge_id_t>(input_size));
 
     auto nodes = fmi_file_io::read_nodes<typename Graph::node_info_type, f>(input_nodes, node_count);
-    auto edges = read_triangles<typename Graph::node_info_type, typename Graph::node_id_type, typename Graph::edge_info_type, f>(input_edges, nodes, triangle_count);
+    auto edges = read_triangles<typename Graph::node_info_type, typename Graph::node_id_type, typename Graph::edge_info_type, f>(
+            input_edges, nodes, triangle_count);
 
     auto adj_list = Graph::adjacency_list_type::make_bidirectional_undirected(edges.get());
     return Graph::make_graph(std::move(nodes), std::move(adj_list));
 }
 
-steiner_graph triangulation_file_io::read_steiner(std::istream &input_size, std::istream& input_nodes, std::istream& input_triangles, float __epsilon) {
+steiner_graph
+triangulation_file_io::read_steiner(std::istream &input_size, std::istream &input_nodes, std::istream &input_triangles,
+                                    float __epsilon) {
     using f = stream_encoders::encode_text;
     f::skip_comments(input_size);
 
@@ -81,9 +89,11 @@ steiner_graph triangulation_file_io::read_steiner(std::istream &input_size, std:
 
     std::vector<std::array<steiner_graph::base_topology_type::node_id_type, 3>> faces;
     auto nodes = fmi_file_io::read_nodes<steiner_graph::node_info_type, f>(input_nodes, node_count);
-    auto edges = read_triangles<steiner_graph::node_info_type, steiner_graph::base_topology_type::node_id_type, steiner_graph::base_topology_type::edge_info_type, f>(input_triangles, nodes, triangle_count, faces);
+    auto edges = read_triangles<steiner_graph::node_info_type, steiner_graph::base_topology_type::node_id_type, steiner_graph::base_topology_type::edge_info_type, f>(
+            input_triangles, nodes, triangle_count, faces);
 
-    auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional_undirected(edges.get());
+    // TODO test directed adjacencylist (reduces subdivision table size)
+    auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional(edges.get());
     return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces), __epsilon);
 }
 
@@ -93,8 +103,9 @@ steiner_graph triangulation_file_io::read<steiner_graph>(std::istream &input) {
 }
 
 
-template <>
-void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text> (std::ostream &output, const steiner_graph& graph) {
+template<>
+void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &output,
+                                                                               const steiner_graph &graph) {
     stream_encoders::encode_text f;
 
     f.write(output, graph.node_count());
@@ -112,14 +123,14 @@ void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text> (
 
     for (int e = 0; e < graph.edge_count(); ++e) {
         auto triangles = graph.base_polyhedron().edge_faces(e);
-        for (auto triangle : triangles) {
+        for (auto triangle: triangles) {
             if (is_none(triangle)) continue;
 
             auto edges = graph.base_polyhedron().face_edges(triangle);
 
             // only insert once (if e is the edge with the smallest id)
             if (e <= edges[0] && e <= edges[1] && e <= edges[2]) {
-                auto n0 =  graph.base_graph().source(edges[0]);
+                auto n0 = graph.base_graph().source(edges[0]);
                 auto n1 = graph.base_graph().source(edges[1]);
                 auto n2 = graph.base_graph().source(edges[2]);
 
