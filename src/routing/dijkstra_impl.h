@@ -76,8 +76,9 @@ dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
 
     assert(!is_none(__node.node));
 
-    if constexpr (requires(G &&t, node_cost_pair_type n) { t.outgoing_edges(n.node, n.predecessor, 1.0F); } ) {
-        auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor, M_PI / 6);
+    if constexpr (requires(G &&t, node_cost_pair_type n) { t.outgoing_edges(n.node, n.predecessor, 1.0F); }) {
+        float const angle_coefficient = std::atan(2 * _M_graph.epsilon());
+        auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor, angle_coefficient);
         for (auto edge: edges) {
             // ignore certain edges
             if (!_M_use_edge(__node.node, edge)) [[unlikely]] {
