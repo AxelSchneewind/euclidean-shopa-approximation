@@ -27,13 +27,7 @@ else (DOXYGEN_FOUND)
     message("Doxygen needs to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
 
-set(CMAKE_CXX_FLAGS "") # -Wall -Wextra
-set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
-
-# performance options
-set(CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG -O3 -march=native") # -ffast-math
-
-# gengetopt target
+# gengetopt
 find_program(GENGETOPT gengetopt)
 if (GENGETOPT)
     configure_file(src/cli/route.ggo src/cli/cmdline_route.c @ONLY)
@@ -44,6 +38,13 @@ if (GENGETOPT)
 else (GENGETOPT)
     message("gengetopt needs to be installed to generate the command line argument parser")
 endif (GENGETOPT)
+
+
+set(CMAKE_CXX_FLAGS "") # -Wall -Wextra
+set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
+
+# performance options
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native") # -ffast-math
 
 
 # compile implementation into one library file
