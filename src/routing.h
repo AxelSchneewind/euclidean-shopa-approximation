@@ -33,6 +33,8 @@ private:
 
         virtual void write_csv(std::ostream &output) const = 0;
 
+        virtual void write_csv_header(std::ostream &output) const = 0;
+
         virtual void write_graph_stats(std::ostream &output) const = 0;
 
         virtual void write_beeline(std::ostream &output) const = 0;
@@ -55,6 +57,8 @@ private:
 
         std::unique_ptr<Query<GraphT>> query;
         std::unique_ptr<Result<GraphT>> result;
+
+	Query<GraphT> make_query(int from, int to = -1);
     public:
         ClientModel(GraphT &&graph, RoutingT &&router, bool output_csv = false);;
 
@@ -77,6 +81,7 @@ private:
         void write_info(std::ostream &output) const override;
 
         void write_csv(std::ostream &output) const override;
+        void write_csv_header(std::ostream &output) const override;
 
         void write_beeline(std::ostream &output) const override;
 
@@ -112,6 +117,7 @@ public:
     void write_beeline_file(std::ostream &output) const { pimpl->write_beeline(output); };
 
     void write_csv(std::ostream &output) const { pimpl->write_csv(output); };
+    void write_csv_header(std::ostream &output) const { pimpl->write_csv_header(output); };
 
     void write_info(std::ostream &output) const { pimpl->write_info(output); };
 

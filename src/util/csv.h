@@ -12,6 +12,7 @@ private:
 
     std::size_t column_index(std::string_view c);
 
+
 public:
     template<typename Columns>
     table(Columns columns) {
@@ -34,6 +35,15 @@ public:
     std::size_t row_count() const;
 };
 
+template<typename Columns>
+void format_header(table const &values, std::ostream &out, Columns &&columns);
+
+void format_header(table const& values, std::ostream &out); 
+
+void format_csv_line(table const &values, std::ostream &out, int row);
+
+template<typename Columns>
+void format_csv_line(table const &values, std::ostream &out, Columns &&columns, int row);
 
 void format_csv(table const &values, std::ostream &out);
 

@@ -38,6 +38,7 @@ main(int argc, char const *argv[]) {
     else
         client.read_graph_file(graph_file, arguments.csv_format_flag != 0);
 
+    client.write_csv_header(std::cout);
     client.write_graph_stats(std::cout);
 
     bool done = false;
@@ -83,7 +84,9 @@ main(int argc, char const *argv[]) {
         client.write_info(std::cout);
 
 	client.write_csv(std::cout);
-	client.write_csv(output_info);
+
+    	client.write_csv_header(output_info);
+    	client.write_csv(output_info);
         client.write_beeline_file(output_beeline);
         client.write_route_file(output_route);
         client.write_tree_file(output_tree);
@@ -93,6 +96,7 @@ main(int argc, char const *argv[]) {
         output_tree.close();
         output_info.close();
     }
+
 
     return 0;
 }

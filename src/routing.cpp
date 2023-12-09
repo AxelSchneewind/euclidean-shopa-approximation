@@ -31,24 +31,24 @@ enum Statistics {
 };
 
 const std::array<std::string, NUM_COLUMNS> COLUMNS {
-        "NODE_COUNT"         ,
-        "EDGE_COUNT"         ,
-        "STORED_NODE_COUNT"  ,
-        "STORED_EDGE_COUNT"  ,
+        "NODE COUNT"         ,
+        "EDGE COUNT"         ,
+        "STORED NODE COUNT"  ,
+        "STORED EDGE COUNT"  ,
         "EPSILON"            ,
-        "MEMORY_USAGE_GRAPH" ,
-        "MEMORY_USAGE_FINAL" ,
+        "MEMORY USAGE GRAPH" ,
+        "MEMORY USAGE FINAL" ,
         "FROM"               ,
         "TO"                 ,
-    	"FROM_INTERNAL"      ,
-    	"TO_INTERNAL"        ,
+    	"FROM INTERNAL"      ,
+    	"TO INTERNAL"        ,
         "COST"               ,
-        "BEELINE_DISTANCE"   ,
-        "EPSILON_SATISFIED"  ,
-        "TREE_SIZE"          ,
-        "QUEUE_PULL_COUNT"   ,
-        "QUEUE_PUSH_COUNT"   ,
-        "QUEUE_MAX_SIZE"     ,
+        "BEELINE DISTANCE"   ,
+        "EPSILON SATISFIED"  ,
+        "TREE SIZE"          ,
+        "QUEUE PULL COUNT"   ,
+        "QUEUE PUSH COUNT"   ,
+        "QUEUE MAX SIZE"     ,
         "TIME"               ,
         "PATH"
 };
@@ -68,11 +68,11 @@ Client::ClientModel<GraphT, RoutingT>::ClientModel(GraphT &&__graph, bool output
     if constexpr (requires(GraphT graph) { graph.epsilon(); graph.base_graph(); }) {
         statistics.put(Statistics::EPSILON, graph.epsilon());
         statistics.put(Statistics::STORED_NODE_COUNT, graph.base_graph().node_count());
-        statistics.put(Statistics::STORED_EDGE_COUNT, graph.base_graph().edge_count() / 2);
+        statistics.put(Statistics::STORED_EDGE_COUNT, graph.base_graph().edge_count());
     }
 
     statistics.put(Statistics::NODE_COUNT, graph.node_count());
-    statistics.put(Statistics::EDGE_COUNT, graph.edge_count() / 2);
+    statistics.put(Statistics::EDGE_COUNT, graph.edge_count());
 
     double vm, res;
     process_mem_usage(vm, res);
@@ -91,65 +91,17 @@ Client::ClientModel<GraphT, RoutingT>::ClientModel(GraphT &&graph, RoutingT &&ro
     if constexpr (requires(GraphT graph) { graph.epsilon(); graph.base_graph(); }) {
         statistics.put(Statistics::EPSILON, graph.epsilon());
         statistics.put(Statistics::STORED_NODE_COUNT, graph.base_graph().node_count());
-        statistics.put(Statistics::STORED_EDGE_COUNT, graph.base_graph().edge_count() / 2);
+        statistics.put(Statistics::STORED_EDGE_COUNT, graph.base_graph().edge_count());
     }
 
     statistics.put(Statistics::NODE_COUNT, graph.node_count());
-    statistics.put(Statistics::EDGE_COUNT, graph.edge_count() / 2);
+    statistics.put(Statistics::EDGE_COUNT, graph.edge_count());
 
     double vm, res;
     process_mem_usage(vm, res);
     statistics.put(Statistics::MEMORY_USAGE_GRAPH, vm / 1024);
 }
 
-
-
-
-template<typename GraphT, typename RoutingT>
-requires std::convertible_to<typename RoutingT::graph_type, GraphT>void
-Client::ClientModel<GraphT, RoutingT>::write_csv(std::ostream &output) const {
-    format_csv(statistics, output);
-}
-
-template<typename GraphT, typename RoutingT>
-requires std::convertible_to<typename RoutingT::graph_type, GraphT>
-void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) const {
-    if (result) {
-         if (!output_csv) {
-            output << "path: " << statistics.get(Statistics::PATH) << '\n'
-                   << "has cost " << statistics.get(Statistics::COST) << ","
-                   << " with beeline distance "
-                   << statistics.get(Statistics::BEELINE_DISTANCE) << ", satisfying epsilon >= "
-                   << statistics.get(Statistics::EPSILON_SATISFIED) << ", search visited "
-                   << statistics.get(Statistics::TREE_SIZE) << " nodes and took "
-                   << statistics.get(Statistics::TIME) << std::endl;
-        }
-    }
-}
-
-template<typename GraphT, typename RoutingT>
-requires std::convertible_to<typename RoutingT::graph_type, GraphT>
-void Client::ClientModel<GraphT, RoutingT>::write_beeline(std::ostream &output) const {
-    std::vector<node_t> nodes = {graph.node(query->from), graph.node(query->to)};
-    unidirectional_adjacency_list<int, edge_t>::adjacency_list_builder edges(2);
-    edges.add_edge(0, 1, {distance(nodes[0].coordinates, nodes[1].coordinates)});
-    edges.add_edge(1, 0, {distance(nodes[0].coordinates, nodes[1].coordinates)});
-    std_graph_t beeline = std_graph_t::make_graph(std::move(nodes),
-                                                  adjacency_list<int, edge_t>::make_bidirectional(edges.get()));
-
-    gl_file_io::write(output, beeline, 2, 5);
-}
-
-
-template<typename GraphT, typename RoutingT>
-requires std::convertible_to<typename RoutingT::graph_type, GraphT>
-void Client::ClientModel<GraphT, RoutingT>::write_tree_file(std::ostream &output) const {
-    if (!result)
-        return;
-
-    auto tree_graph = std_graph_t::make_graph(graph, result->trees);
-    gl_file_io::write(output, tree_graph, 1, 4);
-}
 
 
 template<>
@@ -210,36 +162,44 @@ void Client::set_graph(ch_graph_t &&graph) {
 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
-void Client::ClientModel<GraphT, RoutingT>::write_route_file(std::ostream &output) const {
-    if (!result)
-        return;
-
-    auto route_subgraph = graph.make_subgraph(result->path);
-    auto route_graph = std_graph_t::make_graph(graph, route_subgraph);
-    gl_file_io::write(output, route_graph, 6, 5);
+Query<GraphT> Client::ClientModel<GraphT, RoutingT>::make_query(int from, int to) {
+    Query<GraphT> query = {from, to};
+    statistics.put(Statistics::FROM_INTERNAL, query.from);
+    statistics.put(Statistics::TO_INTERNAL, query.to);
+    statistics.put(Statistics::FROM, from);
+    statistics.put(Statistics::TO, to);
+    return query;
 }
+
+template<>
+Query<steiner_graph> Client::ClientModel<steiner_graph, steiner_routing_t>::make_query(int from, int to) {
+    Query<steiner_graph> query = {graph.from_base_node_id(from), is_none(to) ? none_value<steiner_graph::node_id_type> :  graph.from_base_node_id(to)};
+    statistics.put(Statistics::FROM_INTERNAL, query.from);
+    statistics.put(Statistics::TO_INTERNAL, query.to);
+    statistics.put(Statistics::FROM, from);
+    statistics.put(Statistics::TO, to);
+    return query;
+}
+
+
 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::compute_one_to_all(int from) {
-    query = std::make_unique<Query<GraphT>>(from, -1);
-    statistics.new_line();
+    query = std::make_unique<Query<GraphT>>(make_query(from, -1));
 }
 
 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::compute_one_to_all(int from, std::ostream &output) {
-    query = std::make_unique<Query<GraphT>>(from, -1);
-    statistics.new_line();
+    query = std::make_unique<Query<GraphT>>(make_query(from, -1));
     throw std::exception();
 }
 
 template<>
 void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(int from, std::ostream &output) {
-    query = std::make_unique<Query<steiner_graph>>(graph.from_base_node_id(from),
-                                                   none_value<steiner_graph::node_id_type>);
-    statistics.new_line();
+    query = std::make_unique<Query<steiner_graph>>(make_query(from));
     using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>, label_type<steiner_graph>>;
     using distance_dijkstra = dijkstra<steiner_graph, dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>, use_all_edges<steiner_graph>, distance_labels>;
 
@@ -247,8 +207,6 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
     distance_dijkstra distances(graph, {graph}, {graph}, {graph, 0.5});
 
     distances.init(query->from);
-    statistics.put(Statistics::FROM, from);
-    statistics.put(Statistics::FROM_INTERNAL, query->from);
 
     std::thread status([&]() -> void {
         double vm, res;
@@ -296,18 +254,6 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
 
     status.join();
 }
-
-
-template<typename GraphT>
-Query<GraphT> make_query(GraphT const &graph, int from, int to = -1) {
-    return {from, to};
-}
-
-template<>
-Query<steiner_graph> make_query(steiner_graph const &graph, int from, int to) {
-    return {graph.from_base_node_id(from), graph.from_base_node_id(to)};
-}
-
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::write_query(std::ostream &output) const {
@@ -320,10 +266,7 @@ void Client::ClientModel<GraphT, RoutingT>::write_query(std::ostream &output) co
 
 template<>
 void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(int from) {
-    query = std::make_unique<Query<steiner_graph>>(make_query<steiner_graph>(graph, from));
-    statistics.new_line();
-    statistics.put(Statistics::FROM_INTERNAL, query->from);
-    statistics.put(Statistics::FROM, from);
+    query = std::make_unique<Query<steiner_graph>>(make_query(from));
     std::ofstream out(nullptr);
     compute_one_to_all(from, out);
 }
@@ -331,12 +274,7 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
-    query = std::make_unique<Query<GraphT>>(make_query<GraphT>(graph, from, to));
-    statistics.new_line();
-    statistics.put(Statistics::FROM_INTERNAL, query->from);
-    statistics.put(Statistics::TO_INTERNAL, -1);
-    statistics.put(Statistics::FROM, from);
-    statistics.put(Statistics::TO, -1);
+    query = std::make_unique<Query<GraphT>>(make_query(from, to));
     result.reset();
 
     auto beeline = distance(graph.node(query->from).coordinates, graph.node(query->to).coordinates);
@@ -539,3 +477,70 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::write_subgraph_file(
     gl_file_io::write(output, result, 1, 1);
 }
 
+
+template<typename GraphT, typename RoutingT>
+requires std::convertible_to<typename RoutingT::graph_type, GraphT>void
+Client::ClientModel<GraphT, RoutingT>::write_csv_header(std::ostream &output) const {
+    format_header(statistics, output);
+}
+
+
+template<typename GraphT, typename RoutingT>
+requires std::convertible_to<typename RoutingT::graph_type, GraphT>void
+Client::ClientModel<GraphT, RoutingT>::write_csv(std::ostream &output) const {
+    format_csv_line(statistics, output, statistics.row_count() - 1);
+}
+
+template<typename GraphT, typename RoutingT>
+requires std::convertible_to<typename RoutingT::graph_type, GraphT>
+void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) const {
+    if (result) {
+         if (!output_csv) {
+            output << "path: " << statistics.get(Statistics::PATH) << '\n'
+                   << "has cost " << statistics.get(Statistics::COST) << ","
+                   << " with beeline distance "
+                   << statistics.get(Statistics::BEELINE_DISTANCE) << ", satisfying epsilon >= "
+                   << statistics.get(Statistics::EPSILON_SATISFIED) << ", search visited "
+                   << statistics.get(Statistics::TREE_SIZE) << " nodes and took "
+                   << statistics.get(Statistics::TIME) << std::endl;
+        }
+    }
+}
+
+template<typename GraphT, typename RoutingT>
+requires std::convertible_to<typename RoutingT::graph_type, GraphT>
+void Client::ClientModel<GraphT, RoutingT>::write_beeline(std::ostream &output) const {
+    std::vector<node_t> nodes = {graph.node(query->from), graph.node(query->to)};
+    unidirectional_adjacency_list<int, edge_t>::adjacency_list_builder edges(2);
+    edges.add_edge(0, 1, {distance(nodes[0].coordinates, nodes[1].coordinates)});
+    edges.add_edge(1, 0, {distance(nodes[0].coordinates, nodes[1].coordinates)});
+    std_graph_t beeline = std_graph_t::make_graph(std::move(nodes),
+                                                  adjacency_list<int, edge_t>::make_bidirectional(edges.get()));
+
+    gl_file_io::write(output, beeline, 2, 5);
+}
+
+
+template<typename GraphT, typename RoutingT>
+requires std::convertible_to<typename RoutingT::graph_type, GraphT>
+void Client::ClientModel<GraphT, RoutingT>::write_tree_file(std::ostream &output) const {
+    if (!result)
+        return;
+
+    auto tree_graph = std_graph_t::make_graph(graph, result->trees);
+    gl_file_io::write(output, tree_graph, 1, 4);
+}
+
+
+
+
+template<typename GraphT, typename RoutingT>
+requires std::convertible_to<typename RoutingT::graph_type, GraphT>
+void Client::ClientModel<GraphT, RoutingT>::write_route_file(std::ostream &output) const {
+    if (!result)
+        return;
+
+    auto route_subgraph = graph.make_subgraph(result->path);
+    auto route_graph = std_graph_t::make_graph(graph, route_subgraph);
+    gl_file_io::write(output, route_graph, 2, 5);
+}

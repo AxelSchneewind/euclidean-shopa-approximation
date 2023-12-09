@@ -37,12 +37,23 @@ void table::put(int column, T &&value) {
     values.back()[column] = std::format("{}", value);
 }
 
+
 template<typename Columns>
-void format_csv(table const &values, std::ostream &out, Columns &&columns) {
+void format_header(table const &values, std::ostream &out, Columns &&columns) {
     for (auto column: columns)
         out << ',' << column;
-    out << '\n';
+    out << '\n' << std::flush;
+}
 
+void format_header(table const &values, std::ostream &out) {
+    for (auto column: values.columns())
+    	out << ',' << column;
+    out << '\n' << std::flush;
+}
+
+
+template<typename Columns>
+void format_csv(table const &values, std::ostream &out, Columns &&columns) {
     for (std::size_t i = 0; i < values.row_count(); i++) {
     	out << i;
         for (std::size_t j = 0; j < columns.size(); j++)
@@ -54,18 +65,26 @@ void format_csv(table const &values, std::ostream &out, Columns &&columns) {
 }
 
 void format_csv(table const &values, std::ostream &out) {
-    if (values.row_count() == 1){ 
-	for (auto column: values.columns())
-    	    out << ',' << column;
-    	out << '\n';
-    }
-
     for (std::size_t i = 0; i < values.row_count(); i++) {
     	out << i;
         for (std::size_t j = 0; j < values.columns().size(); j++)
             out << ',' << values.get(i, j);
         out << '\n';
     }
-
     out << std::flush;
+}
+
+template<typename Columns>
+void format_csv_line(table const &values, std::ostream &out, Columns &&columns, int row) {
+    	out << row << ',';
+        for (std::size_t j = 0; j < columns.size(); j++)
+		out << ',' << values.get(row, columns[j]);
+    out << '\n' << std::flush;
+}
+
+void format_csv_line(table const &values, std::ostream &out, int row) {
+   	out << row;
+        for (std::size_t j = 0; j < values.columns().size(); j++)
+		out << ',' << values.get(row, j);
+    out << '\n' << std::flush;
 }
