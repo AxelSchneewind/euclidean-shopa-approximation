@@ -65,13 +65,21 @@ steiner_labels<G, N>::label(node_id_type __node, N __label) {
 
     assert(!is_none(__node));
 
-    if (!_M_labels.is_expanded(edge_id)) [[unlikely]] {
-        auto count = _M_graph.steiner_info(__node.edge).node_count - 2;
-        assert(count >= 0);
-        assert(count > __node.steiner_index - 1);
+    if constexpr (requires(typename steiner_labels<G, N>::labels_type l, typename labels_type::edge_id_type e) {
+        l.expand(e); l.is_expanded(e);
+    }) {
+        if (!_M_labels.is_expanded(edge_id)) [[unlikely]] {
+            auto count = _M_graph.steiner_info(__node.edge).node_count - 2;
+            assert(count >= 0);
+            assert(count > __node.steiner_index - 1);
 
-        _M_touched.push_back(edge_id);
-        _M_labels.expand(edge_id, count);
+            _M_touched.push_back(edge_id);
+            _M_labels.expand(edge_id, count);
+        }
+    } else {
+        if (!reached(__node)) [[unlikely]] {
+            _M_touched.push_back(edge_id);
+        }
     }
 
     if (_M_graph.is_base_node(__node))

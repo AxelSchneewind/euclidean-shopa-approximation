@@ -70,13 +70,14 @@ private:
     using node_id_type = G::node_id_type;
     using distance_type = G::distance_type;
 
+    using labels_type = compact_node_info_container<typename G::triangle_edge_id_type, unsigned short, char, label_type>;
+
     G const &_M_graph;
 
     std::vector<typename G::triangle_edge_id_type> _M_touched;
-    std::vector<label_type> _M_base_labels;
-    // node_info_array<typename G::triangle_edge_id_type, unsigned short, label_type> _M_labels;
 
-    compact_node_info_container<typename G::triangle_edge_id_type, unsigned short, char, label_type> _M_labels;
+    std::vector<label_type> _M_base_labels;
+    labels_type _M_labels;
 
 public:
     static constexpr size_t SIZE_PER_NODE = 0;
