@@ -1,6 +1,7 @@
 #pragma once
 
 #include "subdivision_table.h"
+#include <format>
 
 template<typename EdgeId, typename IntraEdgeId>
 struct steiner_node_id {
@@ -35,6 +36,12 @@ struct steiner_node_id {
     }
 };
 
+template<typename E, typename I>
+struct std::formatter<steiner_node_id<E, I>> : std::formatter<std::string> {
+    auto format(steiner_node_id<E, I> p, format_context &ctx) const {
+        return formatter<string>::format(std::format("{}:{}", p.edge, p.steiner_index), ctx);
+    }
+};
 
 template<typename E, typename I>
 struct std::hash<steiner_node_id<E, I>> {
@@ -73,6 +80,14 @@ std::ostream &operator<<(std::ostream &output, steiner_edge_id<N> id);
 template<typename N>
 struct std::hash<steiner_edge_id<N>> {
     std::size_t operator()(const steiner_edge_id<N> &s) const noexcept;
+};
+
+
+template<typename N>
+struct std::formatter<steiner_edge_id<N>> : std::formatter<std::string> {
+    auto format(steiner_edge_id<N> p, format_context &ctx) const {
+        return formatter<string>::format(std::format("({},{})", p.source, p.destination), ctx);
+    }
 };
 
 /**
