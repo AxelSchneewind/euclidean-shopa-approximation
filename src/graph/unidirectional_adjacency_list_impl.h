@@ -281,9 +281,6 @@ unidirectional_adjacency_list<NodeId, E>::operator==(const unidirectional_adjace
 }
 
 
-template<template<typename> class A, typename E>
-struct std::hash<A<E>>;
-
 template<typename NodeId, typename E>
 struct std::hash<adjacency_list_edge<NodeId, E>> {
     std::size_t operator()(const adjacency_list_edge<NodeId, E> &__s) const noexcept {

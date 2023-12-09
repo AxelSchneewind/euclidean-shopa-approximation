@@ -44,8 +44,9 @@ void format_csv(table const &values, std::ostream &out, Columns &&columns) {
     out << '\n';
 
     for (std::size_t i = 0; i < values.row_count(); i++) {
+    	out << i;
         for (std::size_t j = 0; j < columns.size(); j++)
-            out << i << ',' << values.get(i, j);
+            out << ',' << values.get(i, j);
         out << '\n';
     }
 

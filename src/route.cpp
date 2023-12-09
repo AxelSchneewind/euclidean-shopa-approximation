@@ -80,11 +80,10 @@ main(int argc, char const *argv[]) {
         client.compute_route(src_node, dest_node);
 
         client.write_query(std::cout);
-        client.write_query(output_info);
-
         client.write_info(std::cout);
-        client.write_info(output_info);
 
+	client.write_csv(std::cout);
+	client.write_csv(output_info);
         client.write_beeline_file(output_beeline);
         client.write_route_file(output_route);
         client.write_tree_file(output_tree);
