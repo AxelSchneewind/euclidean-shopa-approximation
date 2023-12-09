@@ -3,6 +3,7 @@
 #include "query.h"
 #include "triangulation/steiner_graph.h"
 #include "file-io/triangulation_file_io.h"
+#include "util/csv.h"
 
 #include <fstream>
 #include <memory>
@@ -30,6 +31,8 @@ private:
 
         virtual void write_info(std::ostream &output) const = 0;
 
+        virtual void write_csv(std::ostream &output) const = 0;
+
         virtual void write_graph_stats(std::ostream &output) const = 0;
 
         virtual void write_beeline(std::ostream &output) const = 0;
@@ -48,16 +51,14 @@ private:
         RoutingT router;
 
         bool output_csv;
+        table statistics;
 
         std::unique_ptr<Query<GraphT>> query;
         std::unique_ptr<Result<GraphT>> result;
     public:
-        ClientModel(GraphT &&graph, RoutingT &&router, bool output_csv = false) : graph{std::move(graph)},
-                                                                                  router{std::move(router)},
-                                                                                  output_csv(output_csv) {};
+        ClientModel(GraphT &&graph, RoutingT &&router, bool output_csv = false);;
 
-        ClientModel(GraphT &&graph, bool output_csv = false) : graph{std::move(graph)}, router(this->graph),
-                                                               output_csv(output_csv) {};
+        ClientModel(GraphT &&graph, bool output_csv = false);;
 
         void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const override;
 
@@ -74,6 +75,8 @@ private:
         void write_tree_file(std::ostream &output) const override;
 
         void write_info(std::ostream &output) const override;
+
+        void write_csv(std::ostream &output) const override;
 
         void write_beeline(std::ostream &output) const override;
 
@@ -107,6 +110,8 @@ public:
     void write_tree_file(std::ostream &output) const { pimpl->write_tree_file(output); };
 
     void write_beeline_file(std::ostream &output) const { pimpl->write_beeline(output); };
+
+    void write_csv(std::ostream &output) const { pimpl->write_csv(output); };
 
     void write_info(std::ostream &output) const { pimpl->write_info(output); };
 
