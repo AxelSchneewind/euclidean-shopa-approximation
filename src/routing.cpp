@@ -16,6 +16,8 @@ enum Statistics {
     MEMORY_USAGE_FINAL,
     FROM,
     TO,
+    FROM_INTERNAL,
+    TO_INTERNAL,
     COST,
     BEELINE_DISTANCE,
     EPSILON_SATISFIED,
@@ -38,6 +40,8 @@ const std::array<std::string, NUM_COLUMNS> COLUMNS {
         "MEMORY_USAGE_FINAL" ,
         "FROM"               ,
         "TO"                 ,
+    	"FROM_INTERNAL"      ,
+    	"TO_INTERNAL"        ,
         "COST"               ,
         "BEELINE_DISTANCE"   ,
         "EPSILON_SATISFIED"  ,
@@ -219,6 +223,7 @@ template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::compute_one_to_all(int from) {
     query = std::make_unique<Query<GraphT>>(from, -1);
+    statistics.new_line();
 }
 
 
@@ -226,6 +231,7 @@ template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::compute_one_to_all(int from, std::ostream &output) {
     query = std::make_unique<Query<GraphT>>(from, -1);
+    statistics.new_line();
     throw std::exception();
 }
 
@@ -233,6 +239,7 @@ template<>
 void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(int from, std::ostream &output) {
     query = std::make_unique<Query<steiner_graph>>(graph.from_base_node_id(from),
                                                    none_value<steiner_graph::node_id_type>);
+    statistics.new_line();
     using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>, label_type<steiner_graph>>;
     using distance_dijkstra = dijkstra<steiner_graph, dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>, use_all_edges<steiner_graph>, distance_labels>;
 
@@ -240,6 +247,8 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
     distance_dijkstra distances(graph, {graph}, {graph}, {graph, 0.5});
 
     distances.init(query->from);
+    statistics.put(Statistics::FROM, from);
+    statistics.put(Statistics::FROM_INTERNAL, query->from);
 
     std::thread status([&]() -> void {
         double vm, res;
@@ -312,8 +321,9 @@ void Client::ClientModel<GraphT, RoutingT>::write_query(std::ostream &output) co
 template<>
 void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(int from) {
     query = std::make_unique<Query<steiner_graph>>(make_query<steiner_graph>(graph, from));
-    statistics.put(Statistics::FROM, query->from);
-    statistics.put(Statistics::TO, -1);
+    statistics.new_line();
+    statistics.put(Statistics::FROM_INTERNAL, query->from);
+    statistics.put(Statistics::FROM, from);
     std::ofstream out(nullptr);
     compute_one_to_all(from, out);
 }
@@ -322,7 +332,10 @@ template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
     query = std::make_unique<Query<GraphT>>(make_query<GraphT>(graph, from, to));
-    statistics.put(Statistics::FROM, query->from);
+    statistics.new_line();
+    statistics.put(Statistics::FROM_INTERNAL, query->from);
+    statistics.put(Statistics::TO_INTERNAL, -1);
+    statistics.put(Statistics::FROM, from);
     statistics.put(Statistics::TO, -1);
     result.reset();
 

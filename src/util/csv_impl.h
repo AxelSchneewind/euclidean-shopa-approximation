@@ -54,5 +54,18 @@ void format_csv(table const &values, std::ostream &out, Columns &&columns) {
 }
 
 void format_csv(table const &values, std::ostream &out) {
-    format_csv(values, out, values.columns());
+    if (values.row_count() == 1){ 
+	for (auto column: values.columns())
+    	    out << ',' << column;
+    	out << '\n';
+    }
+
+    for (std::size_t i = 0; i < values.row_count(); i++) {
+    	out << i;
+        for (std::size_t j = 0; j < values.columns().size(); j++)
+            out << ',' << values.get(i, j);
+        out << '\n';
+    }
+
+    out << std::flush;
 }
