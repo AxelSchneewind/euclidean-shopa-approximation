@@ -22,7 +22,8 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
 dijkstra<G, Q, UseEdge, L>::dijkstra(dijkstra<G, Q, UseEdge, L> &&__other) noexcept
         : _M_labels(std::move(__other._M_labels)),
           _M_graph(std::move(__other._M_graph)),
-          _M_queue(std::move(__other._M_queue)) {
+          _M_queue(std::move(__other._M_queue)),
+          _M_use_edge(std::move(__other._M_use_edge)) {
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
@@ -77,7 +78,7 @@ dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
     assert(!is_none(__node.node));
 
     if constexpr (requires(G &&t, node_cost_pair_type n) { t.outgoing_edges(n.node, n.predecessor, 1.0F); }) {
-        float const angle_coefficient = std::atan(2 * _M_graph.epsilon());
+        float const angle_coefficient = std::atan(_M_graph.epsilon());
         auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor, angle_coefficient);
         for (auto edge: edges) {
             // ignore certain edges

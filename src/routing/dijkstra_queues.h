@@ -16,6 +16,10 @@ struct use_all_edges {
 public:
     use_all_edges(Graph const &g) {}
 
+    use_all_edges() = default;
+
+    use_all_edges(use_all_edges &&) = default;
+
     constexpr bool operator()(Graph::node_id_type /*node*/,
                               internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> /*via*/) {
         return true;
@@ -29,6 +33,8 @@ protected:
 
 public:
     use_upward_edges(Graph const &g) : g(g) {}
+
+    use_upward_edges(use_upward_edges &&) = default;
 
     constexpr bool operator()(Graph::node_id_type node,
                               internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> via) {
