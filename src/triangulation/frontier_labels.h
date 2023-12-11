@@ -103,10 +103,9 @@ public:
 
     frontier_labels(steiner_graph const &__graph, distance_type frontier_width = 0.2,
                     label_type default_value = none_value<label_type>)
-            : _M_graph(__graph)
-            , _M_expanded_node_aggregates{__graph.subdivision_info().offsets(), nullptr, default_value}
-            , min_value{0.0}, max_distance{0.0}, default_value(default_value)
-            , frontier_width(frontier_width) {};
+            : _M_graph(__graph),
+              _M_expanded_node_aggregates{__graph.subdivision_info().offsets(), nullptr, default_value}, min_value{0.0},
+              max_distance{0.0}, default_value(default_value), frontier_width(frontier_width) {};
 
     size_t aggregate_count() const {
         return _M_expanded_node_aggregates.edge_count();
@@ -121,7 +120,8 @@ public:
     };
 
     bool reached(node_id_type __node) const {
-        return _M_expanded_node_aggregates.node_count(__node.edge) > 0 && !is_infinity(_M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index).distance);
+        return _M_expanded_node_aggregates.node_count(__node.edge) > 0 &&
+               !is_infinity(_M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index).distance);
     }
 
     label_type get(node_id_type __node) const {
@@ -145,8 +145,13 @@ public:
         }
     }
 
+    void set_frontier_width(distance_type new_width) {
+        frontier_width = new_width;
+    }
+
     void label_preliminary(steiner_graph::node_id_type __node, node_cost_pair_type __node_cost_pair) {
-        if (_M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index).distance > __node_cost_pair.distance)
+        if (_M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index).distance >
+            __node_cost_pair.distance)
             _M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index) = __node_cost_pair;
     }
 

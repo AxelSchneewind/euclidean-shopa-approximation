@@ -201,10 +201,12 @@ template<>
 void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(int from, std::ostream &output) {
     query = std::make_unique<Query<steiner_graph>>(make_query(from));
     using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>, label_type<steiner_graph>>;
-    using distance_dijkstra = dijkstra<steiner_graph, dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>, use_all_edges<steiner_graph>, distance_labels>;
+    using distance_queue = dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
+    using distance_dijkstra = dijkstra<steiner_graph, distance_queue, distance_labels, default_neighbors<steiner_graph, distance_labels>, use_all_edges<steiner_graph>>;
 
     std_graph_t::node_id_type last_node = none_value<std_graph_t::node_id_type>;
-    distance_dijkstra distances(graph, {graph}, {graph}, {graph, 0.5});
+    distance_dijkstra distances(graph);
+    distances.labels().set_frontier_width(0.5);
 
     distances.init(query->from);
 
@@ -347,7 +349,7 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
         subtree tree{graph};
 
         if constexpr (requires(GraphT g) { g.epsilon(); }) {
-            if (graph.epsilon() >= 0.5)
+            if (graph.epsilon() >= 0.1)
                 tree = router.shortest_path_tree();
         } else {
             tree = router.shortest_path_tree();
@@ -389,13 +391,13 @@ requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void
 Client::ClientModel<GraphT, RoutingT>::write_graph_stats(std::ostream &output) const {
     if (!output_csv) {
-        output << "\r\a\tgraph has "
+        output << "\r\a    graph has "
                << std::setw(12) << graph.node_count() << " nodes and "
                << std::setw(12) << graph.edge_count() / 2 << " edges";
 
         double vm, res;
         process_mem_usage(vm, res);
-        output << "Memory usage with graph loaded and routing set up: VM " << vm / 1024 << "MiB, RES " << res / 1024
+        output << "    memory usage with graph loaded and routing set up: VM " << vm / 1024 << "MiB, RES " << res / 1024
                << "MiB"
                << std::endl;
     }
@@ -409,7 +411,7 @@ Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_stats(std::os
         output << "\r\a    done, graph has "
                << std::setw(12) << graph.node_count() << " nodes and "
                << std::setw(12) << graph.edge_count() / 2 << " edges"
-               << "\n    with "
+               << "\n                 with "
                << std::setw(12) << graph.base_graph().node_count() << " nodes and "
                << std::setw(12) << graph.base_graph().edge_count() / 2 << " edges stored explicitly (ε = "
                << graph.epsilon() << ")" << std::endl;
@@ -430,7 +432,7 @@ Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_stats(std::os
 
         double vm, res;
         process_mem_usage(vm, res);
-        output << "\tactual memory usage with graph loaded: VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB"
+        output << "    actual memory usage with graph loaded: VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB"
                << std::endl;
     }
 }

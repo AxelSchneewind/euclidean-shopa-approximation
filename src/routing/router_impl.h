@@ -32,11 +32,13 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
             continue;
 
         nodes.push_back(node_id);
-        typename Graph::node_id_type pred = _M_forward_search.labels().get(node_id).predecessor;
+        typename Graph::node_id_type predecessor = _M_forward_search.labels().get(node_id).predecessor;
 
-        if (is_none(pred) || pred == node_id || !_M_forward_search.reached(pred)) continue;
+        if (is_none(predecessor) || predecessor == node_id || !_M_forward_search.reached(predecessor) ||
+            _M_forward_search.labels().get(predecessor).distance > distance())
+            continue;
 
-        typename Graph::edge_id_type edge = _M_graph.topology().edge_id(pred, node_id);
+        typename Graph::edge_id_type edge = _M_graph.topology().edge_id(predecessor, node_id);
         edges.push_back(edge);
     }
 
@@ -50,7 +52,9 @@ router<Graph, Dijkstra>::shortest_path_tree() const {
 
         typename Graph::node_id_type successor = _M_backward_search.labels().get(node_id).predecessor;
 
-        if (is_none(successor) || successor == node_id || !_M_backward_search.reached(successor)) continue;
+        if (is_none(successor) || successor == node_id || !_M_backward_search.reached(successor) ||
+            _M_forward_search.labels().get(successor).distance > distance())
+            continue;
 
         typename Graph::edge_id_type edge = _M_graph.topology().edge_id(node_id, successor);
         edges.push_back(edge);

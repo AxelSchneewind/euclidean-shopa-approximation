@@ -17,9 +17,9 @@
 
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
-        EdgePredicate<G> UseEdge,
-        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
-dijkstra<G, Q, UseEdge, L>::dijkstra(dijkstra<G, Q, UseEdge, L> &&__other) noexcept
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
+        NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
+dijkstra<G, Q, L, N, UseEdge>::dijkstra(dijkstra<G, Q, L, N, UseEdge> &&__other) noexcept
         : _M_labels(std::move(__other._M_labels)),
           _M_graph(std::move(__other._M_graph)),
           _M_queue(std::move(__other._M_queue)),
@@ -27,35 +27,35 @@ dijkstra<G, Q, UseEdge, L>::dijkstra(dijkstra<G, Q, UseEdge, L> &&__other) noexc
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
-        EdgePredicate<G> UseEdge,
-        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
-dijkstra<G, Q, UseEdge, L>::node_cost_pair_type
-dijkstra<G, Q, UseEdge, L>::current() const {
-    return _M_queue.empty() ? none_value<dijkstra<G, Q, UseEdge, L>::node_cost_pair_type> : _M_queue.top();
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
+        NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
+dijkstra<G, Q, L, N, UseEdge>::node_cost_pair_type
+dijkstra<G, Q, L, N, UseEdge>::current() const {
+    return _M_queue.empty() ? none_value<dijkstra<G, Q, L, N, UseEdge>::node_cost_pair_type> : _M_queue.top();
 }
 
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
-        EdgePredicate<G> UseEdge,
-        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
+        NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
 bool
-dijkstra<G, Q, UseEdge, L>::reached(G::node_id_type __node) const {
+dijkstra<G, Q, L, N, UseEdge>::reached(G::node_id_type __node) const {
     return _M_labels.reached(__node);
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
-        EdgePredicate<G> UseEdge,
-        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
+        NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
 bool
-dijkstra<G, Q, UseEdge, L>::queue_empty() const {
+dijkstra<G, Q, L, N, UseEdge>::queue_empty() const {
     return _M_queue.empty();
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
-        EdgePredicate<G> UseEdge,
-        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
+        NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
 void
-dijkstra<G, Q, UseEdge, L>::init(node_id_type __start_node, node_id_type __target_node) {
+dijkstra<G, Q, L, N, UseEdge>::init(node_id_type __start_node, node_id_type __target_node) {
     _M_target_node = __target_node;
     _M_start_node = __start_node;
 
@@ -69,68 +69,14 @@ dijkstra<G, Q, UseEdge, L>::init(node_id_type __start_node, node_id_type __targe
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
-        EdgePredicate<G> UseEdge,
-        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
+        NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
 void
-dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
+dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type __node) {
     static std::vector<node_cost_pair_type> node_cost_pairs;
 
     assert(!is_none(__node.node));
-
-    if constexpr (requires(G &&t, node_cost_pair_type n) { t.outgoing_edges(n.node, n.predecessor, 1.0F); }) {
-        float const angle_coefficient = std::atan(_M_graph.epsilon());
-        auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor, angle_coefficient);
-        for (auto edge: edges) {
-            // ignore certain edges
-            if (!_M_use_edge(__node.node, edge)) [[unlikely]] {
-                continue;
-            }
-
-            assert (!is_none(edge.destination));
-            // assert (_M_graph.has_edge(__node.node, edge.destination));
-
-            const node_id_type successor = edge.destination;
-            const distance_t successor_cost = _M_labels.get(successor).distance; // use shortest distance
-            const distance_t new_cost = edge.info.cost + __node.distance;
-
-            assert(new_cost >= __node.distance);
-            if (new_cost < successor_cost) [[likely]] {
-                assert (edge.destination != __node.predecessor);
-
-                // (re-)insert node into the queue with updated priority
-                node_cost_pairs.emplace_back(successor, __node.node, new_cost);
-
-                // label current node with preliminary value
-                _M_labels.label(successor, node_cost_pairs.back());
-            }
-        }
-    } else {
-        auto &&edges = _M_graph.topology().outgoing_edges(__node.node, __node.predecessor);
-        for (auto edge: edges) {
-            // ignore certain edges
-            if (!_M_use_edge(__node.node, edge)) [[unlikely]] {
-                continue;
-            }
-
-            assert (!is_none(edge.destination));
-            // assert (_M_graph.has_edge(__node.node, edge.destination));
-
-            const node_id_type successor = edge.destination;
-            const distance_t successor_cost = _M_labels.get(successor).distance; // use shortest distance
-            const distance_t new_cost = edge.info.cost + __node.distance;
-
-            assert(new_cost >= __node.distance);
-            if (new_cost < successor_cost) [[likely]] {
-                assert (edge.destination != __node.predecessor);
-
-                // (re-)insert node into the queue with updated priority
-                node_cost_pairs.emplace_back(successor, __node.node, new_cost);
-
-                // label current node with preliminary value
-                _M_labels.label(successor, node_cost_pairs.back());
-            }
-        }
-    }
+    _M_neighbors(__node, node_cost_pairs);
 
     // push all
     _M_queue.push_range({node_cost_pairs.begin(), node_cost_pairs.end()});
@@ -140,10 +86,10 @@ dijkstra<G, Q, UseEdge, L>::expand(node_cost_pair_type __node) {
 
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
-        EdgePredicate<G> UseEdge,
-        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
+        NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
 void
-dijkstra<G, Q, UseEdge, L>::step() {
+dijkstra<G, Q, L, N, UseEdge>::step() {
     node_cost_pair_type ncp = current();
 
     // label current node
@@ -163,7 +109,9 @@ dijkstra<G, Q, UseEdge, L>::step() {
 }
 
 
-template<RoutableGraph G, DijkstraQueue<G> Q, EdgePredicate<G> UseEdge, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L>
-typename G::distance_type dijkstra<G, Q, UseEdge, L>::min_path_length() const {
+template<RoutableGraph G, DijkstraQueue<G> Q,
+        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
+        NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
+typename G::distance_type dijkstra<G, Q, L, N, UseEdge>::min_path_length() const {
     return current().min_distance();
 }

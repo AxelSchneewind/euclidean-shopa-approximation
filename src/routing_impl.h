@@ -12,7 +12,9 @@
 #include "routing/dijkstra_queues.h"
 #include "routing/a_star_queue.h"
 #include "routing/dijkstra_impl.h"
+#include "routing/default_neighbors_impl.h"
 #include "routing/router_impl.h"
+#include "triangulation/steiner_neighbors_impl.h"
 #include "triangulation/node_info_container_impl.h"
 #include "triangulation/node_info_array_impl.h"
 #include "triangulation/compact_node_info_container_impl.h"
@@ -58,20 +60,21 @@ using default_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
 using a_star_queue_t = a_star_queue<std_graph_t, a_star_node_cost_pair>;
 using a_star_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
 
-using std_dijkstra = dijkstra<std_graph_t, default_queue_t, use_all_edges<std_graph_t>, default_labels_t>;
-using a_star_dijkstra = dijkstra<std_graph_t, a_star_queue_t, use_all_edges<std_graph_t>, a_star_labels_t>;
+using std_dijkstra = dijkstra<std_graph_t, default_queue_t, default_labels_t, default_neighbors<std_graph_t, default_labels_t>, use_all_edges<std_graph_t>>;
+using a_star_dijkstra = dijkstra<std_graph_t, a_star_queue_t, a_star_labels_t, default_neighbors<std_graph_t, default_labels_t>, use_all_edges<std_graph_t>>;
 
 using std_routing_t = router<std_graph_t, std_dijkstra>;
 using a_star_routing_t = router<std_graph_t, a_star_dijkstra>;
 
 using default_ch_labels_t = node_labels<ch_graph_t, label_type<ch_graph_t>>;
 using default_ch_queue_t = dijkstra_queue<ch_graph_t, default_node_cost_pair, Default>;
-using ch_routing_t = router<ch_graph_t, dijkstra<ch_graph_t, default_ch_queue_t, use_upward_edges<ch_graph_t>, default_ch_labels_t>>;
+using ch_dijkstra = dijkstra<ch_graph_t, default_ch_queue_t, default_ch_labels_t, default_neighbors<ch_graph_t, default_ch_labels_t>, use_upward_edges<ch_graph_t>>;
+using ch_routing_t = router<ch_graph_t, ch_dijkstra>;
 
 
 using steiner_a_star_node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, a_star_info>;
 
 using steiner_queue_t = a_star_queue<steiner_graph, steiner_a_star_node_cost_pair>;
 using steiner_labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
-using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, use_all_edges<steiner_graph>, steiner_labels_t>;
+using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, steiner_labels_t, default_neighbors<steiner_graph, steiner_labels_t>, use_all_edges<steiner_graph>>;
 using steiner_routing_t = router<steiner_graph, steiner_dijkstra>;

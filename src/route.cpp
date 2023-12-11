@@ -26,6 +26,7 @@ main(int argc, char const *argv[]) {
     std::string graph_file;
     std::string output_directory;
     float epsilon = 0.5;
+    bool output_csv = arguments.csv_format_flag != 0;
 
     graph_file = arguments.graph_file_arg;
     output_directory = arguments.output_directory_arg;
@@ -34,11 +35,14 @@ main(int argc, char const *argv[]) {
     // read graph
     Client client;
     if (graph_file.ends_with(".graph"))
-        client.read_graph_file(graph_file, epsilon, arguments.csv_format_flag != 0);
+        client.read_graph_file(graph_file, epsilon, output_csv);
     else
-        client.read_graph_file(graph_file, arguments.csv_format_flag != 0);
+        client.read_graph_file(graph_file, output_csv);
 
-    client.write_csv_header(std::cout);
+
+    if (!output_csv) {
+        client.write_csv_header(std::cout);
+    }
     client.write_graph_stats(std::cout);
 
     bool done = false;
@@ -64,7 +68,7 @@ main(int argc, char const *argv[]) {
         }
 
         // setup writer for graphs to show
-        std::string eps_string = epsilon == 0 ? "exact" : std::format("{:_>5d}", (int) epsilon * 1000);
+        std::string eps_string = epsilon == 0 ? "exact" : std::format("{:_>5d}", (int) (epsilon * 10000));
         std::string target_directory = std::format("{}/{}_{}_{}", output_directory, src_node, dest_node, eps_string);
         std::filesystem::create_directory(target_directory);
         std::string beeline_file = std::format("{}/beeline.gl", target_directory);
@@ -83,10 +87,11 @@ main(int argc, char const *argv[]) {
         client.write_query(std::cout);
         client.write_info(std::cout);
 
-	client.write_csv(std::cout);
+        if (output_csv)
+            client.write_csv(std::cout);
 
-    	client.write_csv_header(output_info);
-    	client.write_csv(output_info);
+        client.write_csv_header(output_info);
+        client.write_csv(output_info);
         client.write_beeline_file(output_beeline);
         client.write_route_file(output_route);
         client.write_tree_file(output_tree);

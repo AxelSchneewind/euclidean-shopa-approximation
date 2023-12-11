@@ -45,7 +45,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
     using f = stream_encoders::encode_text;
 
     size_t node_count = graph.node_count();
-    size_t edge_count = graph.edge_count() / 2; // as edges are only drawn once
+    size_t edge_count = graph.edge_count();
 
     f::write(output, node_count);
     f::write(output, '\n');
