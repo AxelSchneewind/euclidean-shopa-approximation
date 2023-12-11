@@ -41,10 +41,10 @@ private:
     distance_type _M_min_distance;
 
     Q _M_queue;
+    L _M_labels;
+
     N _M_neighbors;
     UseEdge _M_use_edge;
-
-    L _M_labels;
 
     // add reachable (and not settled) nodes to active nodes in queue
     void expand(node_cost_pair_type __node);
@@ -59,7 +59,7 @@ public:
     // constructs a dijkstra object for the given graph
     explicit dijkstra(G const &__graph)
             : _M_graph(__graph), _M_queue{__graph},
-              _M_labels{__graph}, _M_neighbors{__graph}, _M_use_edge{__graph} {};
+              _M_labels{__graph}, _M_neighbors{__graph, _M_labels}, _M_use_edge{__graph} {};
 
     explicit dijkstra(G const &__graph, Q &&__queue, L &&__labels, N &&__neighbors, UseEdge &&__use_edge)
             : _M_graph(__graph), _M_queue(std::move(__queue)),

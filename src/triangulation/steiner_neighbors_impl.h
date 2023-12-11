@@ -12,8 +12,9 @@ private:
     template<typename NodeCostPair>
     void from_base_node(NodeCostPair const &node, std::vector<NodeCostPair> &out) {
         auto const& __base_node_id = graph.base_node_id(node.node);
-        static std::vector<coordinate_t> destination_coordinates;
 
+        // buffer for coordinates
+        static std::vector<coordinate_t> destination_coordinates;
         destination_coordinates.clear();
 
         // NOTE: paper does not require these edges, but as bending only occurs at base nodes
@@ -30,21 +31,19 @@ private:
         }
 
         for (auto &&e: graph.base_graph().outgoing_edges(__base_node_id)) [[likely]] {
-            assert (e.destination > __base_node_id);
-
             auto e_id = graph.base_graph().edge_id(__base_node_id, e.destination);
             steiner_graph::node_id_type destination = {e_id, 1};
-            coordinate_t destination_coordinate = graph.node(destination).coordinates;
-            out.emplace_back(destination, node.node, 0);
-            destination_coordinates.emplace_back(destination_coordinate);
-        }
-        for (auto &&e: graph.base_graph().incoming_edges(__base_node_id)) [[likely]] {
-            assert (__base_node_id > e.destination);
-
-            auto e_id = graph.base_graph().edge_id(e.destination, __base_node_id);
-            steiner_graph::node_id_type destination = {e_id, graph.steiner_info(e_id).node_count - 2U};
             out.emplace_back(destination, node.node, 0);
             destination_coordinates.emplace_back(graph.node(destination).coordinates);
+        }
+
+        for (auto &&e: graph.base_graph().incoming_edges(__base_node_id)) [[likely]] {
+            auto e_id = graph.base_graph().edge_id(e.destination, __base_node_id);          // TODO optimize
+            steiner_graph::node_id_type destination = {e_id, graph.steiner_info(e_id).node_count - 2U};
+            if (destination != node.predecessor) [[likely]] {
+                out.emplace_back(destination, node.node, 0);
+                destination_coordinates.emplace_back(graph.node(destination).coordinates);
+            }
         }
 
         // compute distances (can be vectorized)
@@ -69,8 +68,6 @@ public:
         float const __max_angle = std::atan(3.0 * graph.epsilon());
 
         static std::vector<coordinate_t> destination_coordinates;
-
-        out.clear();
         destination_coordinates.clear();
 
         assert(!is_none(__node_id));
@@ -112,7 +109,7 @@ public:
         // for neighboring node on own edge
         if (__node_id.steiner_index < _steiner_info.node_count - 1) [[likely]] {
             steiner_graph::node_id_type const destination(__node_id.edge, __node_id.steiner_index + 1);
-            if (destination != __reached_from) {
+            if (destination != __reached_from) [[likely]] {
                 coordinate_t destination_coordinate = graph.node(destination).coordinates;
                 out.emplace_back(destination, __node_id, 0);
                 destination_coordinates.emplace_back(destination_coordinate);
@@ -122,7 +119,7 @@ public:
         // for other neighboring node on own edge
         if (__node_id.steiner_index > 0) [[likely]] {
             steiner_graph::node_id_type const destination(__node_id.edge, __node_id.steiner_index - 1);
-            if (destination != __reached_from) {
+            if (destination != __reached_from) [[likely]]{
                 coordinate_t destination_coordinate = graph.node(destination).coordinates;
                 out.emplace_back(destination, __node_id, 0);
                 destination_coordinates.emplace_back(destination_coordinate);
@@ -152,7 +149,7 @@ public:
                 }
 
                 for (; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
-                    steiner_graph::node_id_type destination = {base_edge_id, i};
+                    steiner_graph::node_id_type const destination = {base_edge_id, i};
                     coordinate_t destination_coordinate = graph.node(destination).coordinates;
 
                     if (angle(from_coordinate, source_coordinate, source_coordinate, destination_coordinate) >
