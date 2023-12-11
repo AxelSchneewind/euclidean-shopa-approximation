@@ -30,7 +30,6 @@ endif (DOXYGEN_FOUND)
 # gengetopt
 find_program(GENGETOPT gengetopt)
 if (GENGETOPT)
-    configure_file(src/cli/route.ggo src/cli/cmdline_route.c @ONLY)
     add_custom_target(cmdline ALL
             COMMAND ${GENGETOPT} -i src/cli/route.ggo -F cmdline_route --output-dir src/cli
             SOURCES src/cli/route.ggo
