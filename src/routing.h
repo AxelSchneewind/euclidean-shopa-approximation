@@ -16,6 +16,8 @@ private:
 
         virtual void write_graph_file(std::ostream &output) const = 0;
 
+        virtual void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const = 0;
+
         virtual void
         write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const = 0;
 
@@ -64,6 +66,7 @@ private:
 
         ClientModel(GraphT &&graph, bool output_csv = false);;
 
+        void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const override;
         void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const override;
 
         void write_graph_file(std::ostream &output) const override;
@@ -125,6 +128,10 @@ public:
 
     void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const {
         pimpl->write_subgraph_file(output, bottom_left, top_right);
+    };
+
+    void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const {
+        pimpl->write_subgraph_file_gl(output, bottom_left, top_right);
     };
 
     void write_query(std::ostream &output) const { pimpl->write_query(output); }
