@@ -15,7 +15,7 @@ private:
     std::vector<node_id_type> _M_touched;
 
     std::vector<Label> _M_labels;
-    std::vector<bool> _M_node_labelled;
+    std::vector<bool> _M_node_labelled; // TODO remove
 
 public:
     using label_type = Label;

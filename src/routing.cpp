@@ -202,7 +202,7 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
     query = std::make_unique<Query<steiner_graph>>(make_query(from));
     using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>, label_type<steiner_graph>>;
     using distance_queue = dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
-    using distance_dijkstra = dijkstra<steiner_graph, distance_queue, distance_labels, default_neighbors<steiner_graph, distance_labels>, use_all_edges<steiner_graph>>;
+    using distance_dijkstra = dijkstra<steiner_graph, distance_queue, distance_labels, default_neighbors<steiner_graph>, use_all_edges<steiner_graph>>;
 
     std_graph_t::node_id_type last_node = none_value<std_graph_t::node_id_type>;
     distance_dijkstra distances(graph);
