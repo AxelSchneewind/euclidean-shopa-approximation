@@ -440,6 +440,13 @@ Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_stats(std::os
 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>void
+Client::ClientModel<GraphT, RoutingT>::write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left,
+                                                           coordinate_t top_right) const {
+    throw std::runtime_error("write_subgraph_file not implemented");
+}
+
+template<typename GraphT, typename RoutingT>
+requires std::convertible_to<typename RoutingT::graph_type, GraphT>void
 Client::ClientModel<GraphT, RoutingT>::write_subgraph_file(std::ostream &output, coordinate_t bottom_left,
                                                            coordinate_t top_right) const {
     throw std::runtime_error("write_subgraph_file not implemented");
@@ -476,8 +483,38 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::write_subgraph_file(
 
     std_graph_t result = std_graph_t::make_graph(graph, subgraph);
 
+    fmi_file_io::write(output, result);
+}
+
+
+template<>
+void Client::ClientModel<steiner_graph, steiner_routing_t>::write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left,
+                                                              coordinate_t top_right) const {
+    auto &&all_nodes = graph.node_ids();
+    std::vector<steiner_graph::node_id_type> nodes;
+    std::vector<steiner_graph::edge_id_type> edges;
+
+    for (auto node_id: all_nodes) {
+        if (!is_in_rectangle(graph.node(node_id).coordinates, bottom_left, top_right))
+            continue;
+
+        nodes.push_back(node_id);
+
+        for (auto edge: graph.outgoing_edges(node_id)) {
+            if (!is_in_rectangle(graph.node(edge.destination).coordinates, bottom_left, top_right))
+                continue;
+
+            edges.push_back({node_id, edge.destination});
+        }
+    }
+
+    steiner_graph::subgraph_type subgraph(graph, std::move(nodes), std::move(edges));
+
+    std_graph_t result = std_graph_t::make_graph(graph, subgraph);
+
     gl_file_io::write(output, result, 1, 1);
 }
+
 
 
 template<typename GraphT, typename RoutingT>
