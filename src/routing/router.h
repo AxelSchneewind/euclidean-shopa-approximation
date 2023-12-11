@@ -27,6 +27,9 @@ private:
     graph_type::node_id_type _M_target_node;
     graph_type::node_id_type _M_mid_node;
 
+    typename Dijkstra::node_cost_pair_type forward_current;
+    typename Dijkstra::node_cost_pair_type backward_current;
+
     void step_forward();
 
     void step_backward();
@@ -80,9 +83,9 @@ public:
      */
     distance_type distance(const typename Graph::node_id_type &__node) const;
 
-    distance_type forward_distance() const { return _M_forward_search.queue_empty() ? infinity<typename Graph::distance_type> : _M_forward_search.current().distance; };
+    distance_type forward_distance() const { return forward_current.distance; };
 
-    distance_type backward_distance() const { return _M_backward_search.queue_empty() ? infinity<typename Graph::distance_type> : _M_backward_search.current().distance; };
+    distance_type backward_distance() const { return backward_current.distance; };
 
     auto &&forward_labels() const { return _M_forward_search.labels(); }
 
