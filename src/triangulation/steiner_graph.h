@@ -17,9 +17,7 @@ struct steiner_node_id {
                                                                             steiner_index(__steiner_index) {}
 
     constexpr steiner_node_id(EdgeId __edge, IntraEdgeId __steiner_index, IntraEdgeId __node_count)
-            : edge(__edge),
-              steiner_index(
-                      __steiner_index > __node_count / 2 ? __steiner_index - __node_count / 2 : __steiner_index) {}
+            : edge(__edge), steiner_index(__steiner_index) {}
 
     constexpr explicit steiner_node_id(EdgeId __edge) : edge(__edge), steiner_index(0) {}
 
