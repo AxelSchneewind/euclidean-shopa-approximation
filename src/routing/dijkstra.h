@@ -25,10 +25,6 @@ public:
     using labels_type = L;
     using neighbor_getter_type = N;
 
-    // determines optimality of labels depending on whether the graph allows shortcuts
-    // TODO find more elegant way for this
-    static constexpr bool search_symmetric = (typeid(typename G::edge_info_type) != typeid(ch_edge_t));
-
     static constexpr size_t SIZE_PER_NODE = L::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE = L::SIZE_PER_EDGE;
 
@@ -68,10 +64,9 @@ public:
 
     ~dijkstra() = default;
 
-    dijkstra<G, Q, L, N, UseEdge> &operator=(dijkstra<G, Q, L, N, UseEdge> &&__other) noexcept = default;
+    dijkstra &operator=(dijkstra &&__other) noexcept = default;
 
-    dijkstra<G, Q, L, N, UseEdge> &operator=(const dijkstra<G, Q, L, N, UseEdge> &__other) = delete;
-
+    dijkstra &operator=(dijkstra const &__other) = delete;
 
     typename G::distance_type min_path_length() const;
 

@@ -107,6 +107,12 @@ public:
               _M_expanded_node_aggregates{__graph.subdivision_info().offsets(), nullptr, default_value}, min_value{0.0},
               max_distance{0.0}, default_value(default_value), frontier_width(frontier_width) {};
 
+    frontier_labels(frontier_labels &&) noexcept = default;
+
+    frontier_labels &operator=(frontier_labels &&) noexcept = default;
+
+    ~frontier_labels() = default;
+
     size_t aggregate_count() const {
         return _M_expanded_node_aggregates.edge_count();
     }

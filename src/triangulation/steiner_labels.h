@@ -86,6 +86,12 @@ public:
 
     steiner_labels(G const &__graph);
 
+    ~steiner_labels() = default;
+
+    steiner_labels(steiner_labels &&) noexcept = default;
+
+    steiner_labels &operator=(steiner_labels &&) noexcept = default;
+
     // init for given query
     void init(node_id_type __start_node, node_id_type __target_node);
 
