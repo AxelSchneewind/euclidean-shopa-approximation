@@ -60,7 +60,8 @@ private:
         std::unique_ptr<Query<GraphT>> query;
         std::unique_ptr<Result<GraphT>> result;
 
-	Query<GraphT> make_query(int from, int to = -1);
+	    Query<GraphT> make_query(int from, int to = -1);
+
     public:
         ClientModel(GraphT &&graph, RoutingT &&router, bool output_csv = false);;
 
