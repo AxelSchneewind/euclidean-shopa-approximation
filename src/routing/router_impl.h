@@ -219,5 +219,6 @@ router<Graph, Dijkstra>::init(Graph::node_id_type __start_node, Graph::node_id_t
     _M_forward_search.init(_M_start_node, _M_target_node);
     _M_backward_search.init(_M_target_node, _M_start_node);
 
-    _M_mid_node = none_value<typename Graph::node_id_type>;
+    forward_current = _M_forward_search.current();
+    backward_current = _M_backward_search.current();
 }

@@ -43,7 +43,7 @@ private:
     UseEdge _M_use_edge;
 
     // add reachable (and not settled) nodes to active nodes in queue
-    void expand(node_cost_pair_type __node);
+    void expand(node_cost_pair_type node);
 
 public:
 

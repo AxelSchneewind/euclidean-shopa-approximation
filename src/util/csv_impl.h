@@ -47,7 +47,7 @@ void format_header(table const &values, std::ostream &out, Columns &&columns) {
 
 void format_header(table const &values, std::ostream &out) {
     for (auto column: values.columns())
-    	out << ',' << column;
+        out << ',' << column;
     out << '\n' << std::flush;
 }
 
@@ -55,7 +55,7 @@ void format_header(table const &values, std::ostream &out) {
 template<typename Columns>
 void format_csv(table const &values, std::ostream &out, Columns &&columns) {
     for (std::size_t i = 0; i < values.row_count(); i++) {
-    	out << i;
+        out << i;
         for (std::size_t j = 0; j < columns.size(); j++)
             out << ',' << values.get(i, j);
         out << '\n';
@@ -66,7 +66,7 @@ void format_csv(table const &values, std::ostream &out, Columns &&columns) {
 
 void format_csv(table const &values, std::ostream &out) {
     for (std::size_t i = 0; i < values.row_count(); i++) {
-    	out << i;
+        out << i;
         for (std::size_t j = 0; j < values.columns().size(); j++)
             out << ',' << values.get(i, j);
         out << '\n';
@@ -76,15 +76,15 @@ void format_csv(table const &values, std::ostream &out) {
 
 template<typename Columns>
 void format_csv_line(table const &values, std::ostream &out, Columns &&columns, int row) {
-    	out << row << ',';
-        for (std::size_t j = 0; j < columns.size(); j++)
-		out << ',' << values.get(row, columns[j]);
+    out << row << ',';
+    for (std::size_t j = 0; j < columns.size(); j++)
+        out << ',' << values.get(row, columns[j]);
     out << '\n' << std::flush;
 }
 
 void format_csv_line(table const &values, std::ostream &out, int row) {
-   	out << row;
-        for (std::size_t j = 0; j < values.columns().size(); j++)
-		out << ',' << values.get(row, j);
+    out << row;
+    for (std::size_t j = 0; j < values.columns().size(); j++)
+        out << ',' << values.get(row, j);
     out << '\n' << std::flush;
 }

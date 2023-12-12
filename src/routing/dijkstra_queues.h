@@ -54,26 +54,26 @@ public:
 
 template<RoutableGraph Graph, typename NodeCostPair, typename Comp = Default>
 class dijkstra_queue : protected std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp> {
-protected:
-    using base_queue_type = std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>;
+private:
+    std::size_t pull_counter{0};
+    std::size_t push_counter{0};
+    std::size_t _max_size{0};
 
     // count the number of push operations since last cleanup (bounds the number of duplicates currently present)
-    int counter;
+    std::size_t counter;
 
     // when to perform cleanup (0 means no cleanup)
-    static constexpr size_t max_queue_size = 0;//3200000;
-    static constexpr size_t max_allowed_duplicates = max_queue_size;
+    static constexpr std::size_t max_queue_size = 320000;
+    static constexpr std::size_t max_allowed_duplicates = max_queue_size;
 
-    size_t pull_counter;
-    size_t push_counter;
-    size_t _max_size;
+protected:
+    using base_queue_type = std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>;
 
 public:
     using value_type = NodeCostPair;
 
     dijkstra_queue(Graph const &__graph, Comp __comp = Comp{})
-            : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(__comp), counter(0), pull_counter(0),
-              push_counter(0), _max_size(0) {}
+            : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(__comp), counter(0) {}
 
     void init(Graph::node_id_type __start_node, Graph::node_id_type __target_node) {
         while (!empty())

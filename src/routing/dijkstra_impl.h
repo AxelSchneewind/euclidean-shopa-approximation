@@ -72,16 +72,36 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
         NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
 void
-dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type __node) {
+dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type node) {
     static std::vector<node_cost_pair_type> node_cost_pairs;
-
-    assert(!is_none(__node.node));
-    _M_neighbors(__node, node_cost_pairs);
-
-    // push all
-    _M_queue.push_range({node_cost_pairs.begin(), node_cost_pairs.end()});
-
     node_cost_pairs.clear();
+
+    assert(!is_none(node.node));
+    _M_neighbors(node, node_cost_pairs);
+
+    for (auto edge: node_cost_pairs) {
+        assert (!is_none(edge.node));
+        // assert (_M_graph.has_edge(__node.node, edge.destination));
+
+        const node_id_type& successor = edge.node;
+        const distance_t successor_cost = _M_labels.get(successor).distance; // use shortest distance
+        const distance_t new_cost = edge.distance;
+
+        assert(new_cost >= node.distance);
+        if (new_cost < successor_cost) [[likely]] {
+            assert (edge.node != node.predecessor);
+
+            // (re-)insert node into the queue with updated priority
+            // node_cost_pairs.emplace_back(successor, __node.node, new_cost);
+            _M_queue.push(edge.node, edge.predecessor, edge.distance); // TODO fix
+
+            // label current node with preliminary value
+            _M_labels.label(successor, node_cost_pairs.back());
+        }
+    }
+
+    // // push all
+    // _M_queue.push_range({node_cost_pairs.begin(), node_cost_pairs.end()});
 }
 
 
