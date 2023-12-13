@@ -64,7 +64,7 @@ public:
     void operator()(NodeCostPair const &node, std::vector<NodeCostPair> &out) {
         auto const& node_id = node.node;
         auto const& reached_from = node.predecessor;
-        float const max_angle = std::atan(3.0 * graph.epsilon());
+        float constexpr max_angle = M_PI_4;// ~10º // std::atan(3.0 * graph.epsilon());
 
         destination_coordinates.clear();
 
@@ -108,7 +108,7 @@ public:
         if (node_id.steiner_index < steiner_info.node_count - 1) [[likely]] {
             steiner_graph::node_id_type const destination{node_id.edge, node_id.steiner_index + 1};
             if (destination != reached_from) [[likely]] {
-                coordinate_t destination_coordinate = graph.node(destination).coordinates;
+                coordinate_t destination_coordinate { graph.node(destination).coordinates };
                 out.emplace_back(destination, node_id, 0);
                 destination_coordinates.emplace_back(destination_coordinate);
             }
@@ -118,7 +118,7 @@ public:
         if (node_id.steiner_index > 0) [[likely]] {
             steiner_graph::node_id_type const destination{node_id.edge, node_id.steiner_index - 1};
             if (destination != reached_from) [[likely]]{
-                coordinate_t destination_coordinate = graph.node(destination).coordinates;
+                coordinate_t destination_coordinate { graph.node(destination).coordinates };
                 out.emplace_back(destination, node_id, 0);
                 destination_coordinates.emplace_back(destination_coordinate);
             }

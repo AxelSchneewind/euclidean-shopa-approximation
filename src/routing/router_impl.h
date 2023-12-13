@@ -21,43 +21,58 @@ router<Graph, Dijkstra>::min_route_distance(Dijkstra::node_cost_pair_type __node
 
 template<typename Graph, typename Dijkstra>
 Graph::subgraph_type
-router<Graph, Dijkstra>::shortest_path_tree() const {
+router<Graph, Dijkstra>::shortest_path_tree() {
+    constexpr std::size_t max_node_count = std::numeric_limits<int>::max();
+    constexpr std::size_t max_edge_count = std::numeric_limits<int>::max();
+
     std::vector<typename Graph::node_id_type> nodes;
     std::vector<typename Graph::edge_id_type> edges;
 
     // add nodes and edges of forward dijkstra
     auto &&visited = _M_forward_search.labels().all_visited();
     for (auto node_id: visited) {
+        if (nodes.size() >= max_node_count || edges.size() >= max_edge_count) {
+            remove_duplicates(nodes);
+            remove_duplicates(edges);
+            if (nodes.size() >= max_node_count || edges.size() >= max_edge_count)
+                break;
+        }
+
         if (!_M_forward_search.reached(node_id))
             continue;
 
-        nodes.push_back(node_id);
+        nodes.emplace_back(node_id);
         typename Graph::node_id_type predecessor = _M_forward_search.labels().get(node_id).predecessor;
 
-        if (is_none(predecessor) || predecessor == node_id || !_M_forward_search.reached(predecessor) ||
-            _M_forward_search.labels().get(predecessor).distance > distance())
+        if (is_none(predecessor) || predecessor == node_id || !_M_forward_search.reached(predecessor))
             continue;
 
         typename Graph::edge_id_type edge = _M_graph.topology().edge_id(predecessor, node_id);
-        edges.push_back(edge);
+        edges.emplace_back(edge);
     }
 
     // add nodes and edges of backward dijkstra
     auto &&bwd_visited = _M_backward_search.labels().all_visited();
     for (auto node_id: bwd_visited) {
+        if (nodes.size() >= max_node_count || edges.size() >= max_edge_count) {
+            remove_duplicates(nodes);
+            remove_duplicates(edges);
+            if (nodes.size() >= max_node_count || edges.size() >= max_edge_count)
+                break;
+        }
+
         if (!_M_backward_search.reached(node_id))
             continue;
 
-        nodes.push_back(node_id);
+        nodes.emplace_back(node_id);
 
         typename Graph::node_id_type successor = _M_backward_search.labels().get(node_id).predecessor;
 
-        if (is_none(successor) || successor == node_id || !_M_backward_search.reached(successor) ||
-            _M_forward_search.labels().get(successor).distance > distance())
+        if (is_none(successor) || successor == node_id || !_M_backward_search.reached(successor))
             continue;
 
         typename Graph::edge_id_type edge = _M_graph.topology().edge_id(node_id, successor);
-        edges.push_back(edge);
+        edges.emplace_back(edge);
     }
 
     remove_duplicates(nodes);

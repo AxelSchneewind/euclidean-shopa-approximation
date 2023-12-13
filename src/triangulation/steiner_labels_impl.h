@@ -5,7 +5,8 @@
 
 template<RoutableGraph G, typename N>
 steiner_labels<G, N>::label_iterator_type
-steiner_labels<G, N>::all_visited() const {
+steiner_labels<G, N>::all_visited() {
+    remove_duplicates(_M_touched);
     return label_iterator_type(_M_touched.begin(), _M_touched.end(),
                                std::function<steiner_graph::node_id_iterator_type(
                                        steiner_graph::triangle_edge_id_type)>(

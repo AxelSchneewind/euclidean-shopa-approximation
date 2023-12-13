@@ -111,7 +111,7 @@ public:
      * returns the tree of all visited nodes
      * @return
      */
-    typename Graph::subgraph_type shortest_path_tree() const; // TODO move implementation to dijkstra
+    typename Graph::subgraph_type shortest_path_tree(); // TODO move implementation to dijkstra
 
     /**
      *

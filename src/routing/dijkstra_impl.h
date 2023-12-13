@@ -96,7 +96,7 @@ dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type node) {
             _M_queue.push(edge.node, edge.predecessor, edge.distance); // TODO fix
 
             // label current node with preliminary value
-            _M_labels.label(successor, node_cost_pairs.back());
+            _M_labels.label(successor, edge);
         }
     }
 
