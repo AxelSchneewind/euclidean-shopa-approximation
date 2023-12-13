@@ -84,11 +84,12 @@ main(int argc, char const *argv[]) {
 
         client.compute_route(src_node, dest_node);
 
-        client.write_query(std::cout);
-        client.write_info(std::cout);
-
         if (output_csv)
             client.write_csv(std::cout);
+	else {
+	    client.write_query(std::cout);
+            client.write_info(std::cout);
+	}
 
         client.write_csv_header(output_info);
         client.write_csv(output_info);
