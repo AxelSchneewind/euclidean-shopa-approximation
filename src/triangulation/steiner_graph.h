@@ -19,8 +19,6 @@ struct steiner_node_id {
     constexpr steiner_node_id(EdgeId __edge, IntraEdgeId __steiner_index, IntraEdgeId __node_count)
             : edge(__edge), steiner_index(__steiner_index) {}
 
-    constexpr explicit steiner_node_id(EdgeId __edge) : edge(__edge), steiner_index(0) {}
-
     bool operator>=(const steiner_node_id &__other) const {
         return edge >= __other.edge || steiner_index >= __other.steiner_index;
     }
@@ -43,7 +41,7 @@ struct std::formatter<steiner_node_id<E, I>> : std::formatter<std::string> {
 
 template<typename E, typename I>
 struct std::hash<steiner_node_id<E, I>> {
-    std::size_t operator()(const steiner_node_id<E, I> &__s) const noexcept;
+    std::size_t operator()(const steiner_node_id<E, I> &s) const noexcept;
 };
 
 
