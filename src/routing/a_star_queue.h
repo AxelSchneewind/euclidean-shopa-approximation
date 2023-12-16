@@ -45,7 +45,6 @@ private:
     Graph const &_M_graph;
     coordinate_t _M_target_coordinates;
     static constexpr double factor = 1.0; // must be <= 1 for correctness
-    float additional_distance;
 
 public:
     using value_type = NodeCostPair;
@@ -85,9 +84,8 @@ public:
             base_queue_type::push(ncp);
     }
 
-    void set_target(coordinate_t coordinates, float additional) {
+    void set_target(coordinate_t coordinates) {
         _M_target_coordinates = coordinates;
-        additional_distance = additional;
     }
 };
 
