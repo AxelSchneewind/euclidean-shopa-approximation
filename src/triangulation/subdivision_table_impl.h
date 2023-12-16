@@ -127,7 +127,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         float r_first = (__epsilon / 5) * __r_values[node1] / length;
         float r_second = (__epsilon / 5) * __r_values[node2] / length;
         assert(r_first >= 0 && r_second >= 0);
-        // assert(r < __epsilon / 5);
+        assert(r_first <= 1.0 && r_second < 1.0);
 
         // get the class this edge belongs to
         auto index = class_index(angle1);
@@ -221,7 +221,8 @@ float subdivision_table::class_angle(int __index) {
     return min_angle + step_size * (__index);
 }
 
-int subdivision_table::class_index(float __radians) {
+int subdivision_table::class_index(double __radians) {
+    __radians = std::min(__radians, M_PI_2);
     int result = std::floor((__radians - min_angle) / step_size);
     return std::min(std::max(result, 0), step_count - 1);
 }
@@ -230,15 +231,10 @@ subdivision_table::subdivision_edge_info subdivision_table::edge(int __edge) con
 
 coordinate_t
 subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coordinate_t c1, coordinate_t c2) const {
-    const auto info = edge(__edge);
-
-    assert(steiner_index >= -info.node_count);
-    assert(steiner_index < info.node_count);
-
-    // accept values larger than -node_count
-    steiner_index = (steiner_index + info.node_count) % info.node_count;
+    const auto& info = edges[__edge];
 
     assert(steiner_index >= 0);
+    assert(steiner_index < info.node_count);
 
     if (steiner_index == 0) [[unlikely]]
         return c1;

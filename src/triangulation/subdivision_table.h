@@ -16,8 +16,8 @@ public:
     static constexpr int step_count = 127;
 
     // assume that each angle is at least 5 degrees
-    static constexpr float min_angle = (M_PI / 180) * 5;
-    static constexpr float max_angle = (M_PI / 180) * 175;
+    static constexpr float min_angle = (M_PI / 180) *  5;
+    static constexpr float max_angle = (M_PI / 180) * 85;
 
     static constexpr float step_size = (max_angle - min_angle) / (step_count - 1);
 
@@ -68,7 +68,7 @@ public:
 
     static float class_angle(int __index);
 
-    static int class_index(float __radians);
+    static int class_index(double __radians);
 
     coordinate_t node_coordinates(edge_id_t __edge, short steiner_index, coordinate_t c1, coordinate_t c2) const;
 
