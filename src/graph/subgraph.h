@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "../util/remove_duplicates.h"
+
 template<typename BaseGraph>
 struct path {
     using node_id_type = typename BaseGraph::node_id_type;
@@ -9,9 +11,25 @@ struct path {
     std::vector<node_id_type> nodes;
 
     path(path &other) = default;
-    path &operator=(path &other) = default;
+    path &operator=(path const&other) = default;
 
     path(BaseGraph const &base_graph, std::vector<node_id_type> &&__n) : base{base_graph}, nodes{__n} {};
+
+    void invert() {
+        for (int i = 0; i < nodes.size() / 2; ++i) {
+            std::swap(nodes[i], nodes[nodes.size() - 1 - i]);
+        }
+    }
+
+    static path concat(path const& first, path const& other) {
+        auto nodes = first.nodes;
+
+        for (int i = 0; i < other.nodes.size(); ++i) {
+            nodes.emplace_back(other.nodes[i]);
+        }
+
+        return {first.base, std::move(nodes)};
+    }
 };
 
 template<typename BaseGraph>
@@ -48,7 +66,7 @@ filter_nodes(const subgraph<Graph> &other, NodePredicate &&predicate = NodePredi
         if (predicate(node_id))
             filtered_nodes.push_back(node_id);
 
-    return {std::move(filtered_nodes), std::move(filtered_edges)};
+    return {other.base, std::move(filtered_nodes), std::move(filtered_edges)};
 };
 
 template<typename Graph, std::predicate<typename Graph::edge_id_type> NodePredicate>
@@ -61,6 +79,22 @@ filter_edges(const subgraph<Graph> &other, NodePredicate &&predicate = NodePredi
         if (predicate(edge_id))
             filtered_edges.push_back(edge_id);
 
-    return {std::move(filtered_nodes), std::move(filtered_edges)};
+    return {other.base, std::move(filtered_nodes), std::move(filtered_edges)};
 };
 
+template<typename Graph>
+subgraph<Graph>
+subgraphs_union(const subgraph<Graph> &first, const subgraph<Graph> &second) {
+    auto nodes = first.nodes;
+    auto edges = first.edges;
+
+    for (auto&& node : second.nodes)
+        nodes.emplace_back(node);
+    for (auto&& edge : second.edges)
+        edges.emplace_back(edge);
+
+    remove_duplicates(nodes);
+    remove_duplicates(edges);
+
+    return {first.base, std::move(nodes), std::move(edges)};
+}
