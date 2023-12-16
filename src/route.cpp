@@ -25,7 +25,7 @@ main(int argc, char const *argv[]) {
 
     std::string graph_file;
     std::string output_directory;
-    float epsilon = 0.5;
+    double epsilon = 0.5;
     bool output_csv = arguments.csv_format_flag != 0;
 
     graph_file = arguments.graph_file_arg;
@@ -35,18 +35,17 @@ main(int argc, char const *argv[]) {
     // read graph
     Client client;
     if (graph_file.ends_with(".graph"))
-        client.read_graph_file(graph_file, epsilon, output_csv);
+        client.read_graph_file(graph_file, (float)epsilon, output_csv);
     else
         client.read_graph_file(graph_file, output_csv);
 
 
-    if (!output_csv) {
+    if (output_csv)
         client.write_csv_header(std::cout);
-    }
-    client.write_graph_stats(std::cout);
+    else client.write_graph_stats(std::cout);
 
     bool done = false;
-    bool from_stdin = (arguments.query_given / 2 < 1) || (arguments.stdin_flag != 0);
+    bool from_stdin = (arguments.query_given < 1) || (arguments.stdin_flag != 0);
     int query_index = 0;
 
     while (!done) {
@@ -57,6 +56,9 @@ main(int argc, char const *argv[]) {
         if (query_index + 1 < arguments.query_given) {
             src_node = arguments.query_arg[query_index++];
             dest_node = arguments.query_arg[query_index++];
+        } else if (query_index < arguments.query_given) {
+            src_node = arguments.query_arg[query_index++];
+            dest_node = -1;
         } else if (from_stdin) {
             std::cout << "src node: " << std::flush;
             std::cin >> src_node;
@@ -82,14 +84,17 @@ main(int argc, char const *argv[]) {
 
         client.write_graph_stats(output_info);
 
-        client.compute_route(src_node, dest_node);
+        if (dest_node >= 0)
+            client.compute_route(src_node, dest_node);
+        else
+            client.compute_one_to_all(src_node);
 
         if (output_csv)
             client.write_csv(std::cout);
-	else {
-	    client.write_query(std::cout);
+        else {
+            client.write_query(std::cout);
             client.write_info(std::cout);
-	}
+        }
 
         client.write_csv_header(output_info);
         client.write_csv(output_info);
