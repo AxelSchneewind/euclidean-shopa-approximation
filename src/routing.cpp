@@ -194,6 +194,7 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
     using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>, label_type<steiner_graph>>;
     using distance_queue = dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
     using distance_dijkstra = dijkstra<steiner_graph, distance_queue, distance_labels, default_neighbors<steiner_graph>, use_all_edges<steiner_graph>>;
+    double max_dist = 0.4;
 
     std_graph_t::node_id_type last_node = none_value<std_graph_t::node_id_type>;
     distance_dijkstra distances(graph);
@@ -201,9 +202,11 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
 
     distances.init(query->from);
 
+    std::chrono::time_point<std::chrono::high_resolution_clock> before, after;
+
     std::thread status([&]() -> void {
         double vm, res;
-        while (!distances.queue_empty()) {
+        while (distances.current().distance < max_dist) {
             if (output_csv) {
 
             } else {
@@ -217,20 +220,10 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
 
             usleep(50000);
         }
-
-        statistics.put(Statistics::QUEUE_PULL_COUNT, distances.queue().pull_count());
-        statistics.put(Statistics::QUEUE_PUSH_COUNT, distances.queue().push_count());
-        statistics.put(Statistics::QUEUE_MAX_SIZE, distances.queue().max_size());
-
-        if (!output_csv) {
-            std::cout << "\nqueue was pulled from "
-                      << distances.queue().pull_count() << " times, pushed to "
-                      << distances.queue().push_count() << " times, and had a maximum size of "
-                      << distances.queue().max_size() << " elements" << std::endl;
-        }
     });
 
-    while (!distances.queue_empty()) [[likely]] {
+    before = std::chrono::high_resolution_clock::now();
+    while (distances.current().distance < max_dist) [[likely]] {
         distances.step();
 
         auto ncp = distances.current();
@@ -243,6 +236,25 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
                 last_node = base_node_id;
             }
         }
+    }
+    after = std::chrono::high_resolution_clock::now();
+
+
+    steiner_graph::path_type path {graph, std::vector<steiner_graph::node_id_type>()};
+    auto tree = distances.shortest_path_tree();
+    result = std::make_unique<Result<steiner_graph>>(*query, router.route_found(), max_dist, max_dist, tree,
+                                                     path, tree.node_count(), after - before);
+
+
+    statistics.put(Statistics::QUEUE_PULL_COUNT, distances.queue().pull_count());
+    statistics.put(Statistics::QUEUE_PUSH_COUNT, distances.queue().push_count());
+    statistics.put(Statistics::QUEUE_MAX_SIZE, distances.queue().max_size());
+
+    if (!output_csv) {
+        std::cout << "\nqueue was pulled from "
+                  << distances.queue().pull_count() << " times, pushed to "
+                  << distances.queue().push_count() << " times, and had a maximum size of "
+                  << distances.queue().max_size() << " elements" << std::endl;
     }
 
     status.join();
