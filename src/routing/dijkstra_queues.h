@@ -63,7 +63,7 @@ private:
     std::size_t counter;
 
     // when to perform cleanup (0 means no cleanup)
-    static constexpr std::size_t max_queue_size = 320000;
+    static constexpr std::size_t max_queue_size = 0;
     static constexpr std::size_t max_allowed_duplicates = max_queue_size;
 
 protected:

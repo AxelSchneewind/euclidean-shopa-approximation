@@ -194,13 +194,13 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
     using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>, label_type<steiner_graph>>;
     using distance_queue = dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
     // using distance_dijkstra = dijkstra<steiner_graph, distance_queue, distance_labels, default_neighbors<steiner_graph>, use_all_edges<steiner_graph>>;
-    using distance_dijkstra = dijkstra<steiner_graph, distance_queue, steiner_labels<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>, default_neighbors<steiner_graph>, use_all_edges<steiner_graph>>;
+    using distance_dijkstra = dijkstra<steiner_graph, distance_queue, steiner_labels<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>, steiner_neighbors<steiner_graph>, use_all_edges<steiner_graph>>;
 
     double max_dist = 0.4;
 
     std_graph_t::node_id_type last_node = none_value<std_graph_t::node_id_type>;
     distance_dijkstra distances(graph);
-    distances.labels().set_frontier_width(0.5);
+    //distances.labels().set_frontier_width(0.5);
 
     distances.init(query->from);
 
@@ -213,11 +213,11 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
 
             } else {
                 process_mem_usage(vm, res);
-                std::cout << "\rdistance: " << std::setw(10) << std::setprecision(3) << distances.current().distance
-                          << ", node aggregates currently expanded (in labels): " << std::setw(10)
-                          << distances.labels().aggregate_count();
-                std::cout << ", memory usage : VM " << std::setw(9) << std::setprecision(2) << vm / 1024 << "MiB, RES "
-                          << std::setw(9) << std::setprecision(2) << res / 1024 << std::flush;
+                std::cout << "\rdistance: " << std::setw(10) << std::setprecision(3) << distances.current().distance;
+                          // << ", node aggregates currently expanded (in labels): ";
+                          // << std::setw(10) << distances.labels().aggregate_count();
+                std::cout << ", memory usage : VM " << std::setw(9) << vm / 1024 << "MiB, RES "
+                          << std::setw(9) << res / 1024 << std::flush;
             }
 
             usleep(50000);
@@ -542,10 +542,15 @@ template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) const {
     if (result) {
-        output << "path: " << (result.route_found() && result.route.nodes.size() < 100) result.route ? " some very long path " << '\n'
+        output << "path: ";
+        if (result->route_found && result->path.nodes.size() < 100)
+            output << result->path;
+        else
+            output << " I'm not printing that ";
+        output << '\n'
                << "has cost " << statistics.get(Statistics::COST) << ","
                << " with beeline distance "
-               << statistics.get(Statistics::BEELINE_DISTANCE) << ", satisfying epsilon >= "
+               << statistics.get(Statistics::BEELINE_DISTANCE) << ", satisfying ε >= "
                << statistics.get(Statistics::EPSILON_SATISFIED) << ", search visited "
                << statistics.get(Statistics::TREE_SIZE) << " nodes and took "
                << statistics.get(Statistics::TIME) << std::endl;
@@ -555,6 +560,9 @@ void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) con
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 void Client::ClientModel<GraphT, RoutingT>::write_beeline(std::ostream &output) const {
+    if (is_none(query->to))
+        return;
+
     std::vector<node_t> nodes = {graph.node(query->from), graph.node(query->to)};
     unidirectional_adjacency_list<int, edge_t>::adjacency_list_builder edges(2);
     edges.add_edge(0, 1, {distance(nodes[0].coordinates, nodes[1].coordinates)});

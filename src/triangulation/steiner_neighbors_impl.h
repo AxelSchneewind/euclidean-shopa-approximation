@@ -24,8 +24,8 @@ private:
 
             for (typename Graph::node_id_type::intra_edge_id_type i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
                 steiner_graph::node_id_type destination {e, i};
-                destination_coordinates.emplace_back(graph.node(destination).coordinates);
                 out.emplace_back(destination, node.node, 0);
+                destination_coordinates.emplace_back(graph.node(destination).coordinates);
             }
         }
 
@@ -59,12 +59,11 @@ public:
     template<typename... Args>
     steiner_neighbors(Graph const &graph, Args const&...) : graph(graph) {}
 
-    // TODO: prune according to paper section 2.4
     template<typename NodeCostPair>
     void operator()(NodeCostPair const &node, std::vector<NodeCostPair> &out) {
         auto const& node_id = node.node;
         auto const& reached_from = node.predecessor;
-        float constexpr max_angle = M_PI_4;// ~10º // std::atan(3.0 * graph.epsilon());
+        double const max_angle = M_PI_4;// std::atan(2.0 * graph.epsilon());
 
         destination_coordinates.clear();
 
@@ -100,8 +99,8 @@ public:
         }
 
         // make list of edges (i.e. destination/cost pairs)
-        coordinate_t source_coordinate = graph.node(node_id).coordinates;
-        coordinate_t from_coordinate = graph.node(reached_from).coordinates;
+        coordinate_t const source_coordinate = graph.node(node_id).coordinates;
+        coordinate_t const from_coordinate = graph.node(reached_from).coordinates;
         const auto &&steiner_info = graph.steiner_info(node_id.edge);
 
         // for neighboring node on own edge
@@ -137,8 +136,8 @@ public:
                 const auto &&destination_steiner_info = graph.steiner_info(base_edge_id);
 
                 // linear search
-                typename Graph::node_id_type::intra_edge_id_type i = 1;
-                for (; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+                typename Graph::node_id_type::intra_edge_id_type i = 0;
+                for (; i < destination_steiner_info.node_count; ++i) [[likely]] {
                     steiner_graph::node_id_type const destination {base_edge_id, i};
                     coordinate_t const destination_coordinate = graph.node(destination).coordinates;
                     if (angle(from_coordinate, source_coordinate, source_coordinate, destination_coordinate) <
@@ -146,7 +145,7 @@ public:
                         break;
                 }
 
-                for (; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+                for (; i < destination_steiner_info.node_count; ++i) [[likely]] {
                     steiner_graph::node_id_type const destination {base_edge_id, i};
                     coordinate_t destination_coordinate = graph.node(destination).coordinates;
 
