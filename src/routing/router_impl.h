@@ -121,9 +121,7 @@ router<Graph, Dijkstra>::route() const {
     if (is_none(_M_mid_node))
         throw std::runtime_error("No route found");
 
-    std::deque<typename Graph::node_id_type> p;
-    p.push_front(_M_mid_node);
-
+    // TODO fix loop in path
     auto path_fwd = _M_forward_search.path(_M_mid_node);
     auto path_bwd = _M_backward_search.path(_M_mid_node);
     path_bwd.invert();
