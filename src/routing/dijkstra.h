@@ -115,4 +115,20 @@ public:
      * @return
      */
     bool reached(typename G::node_id_type __node) const;
+
+
+    /**
+     * returns the shortest path tree containing all nodes that have been settled with their minimal distances
+     * @param Graph
+     * @param Dijkstra
+     * @return
+     */
+    G::subgraph_type shortest_path_tree();
+
+    /**
+     * returns the path from source to target node (if found, otherwise throws exception)
+     * @param target
+     * @return
+     */
+    G::path_type path(node_id_type target) const;;
 };
