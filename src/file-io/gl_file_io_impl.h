@@ -3,6 +3,8 @@
 #include "gl_file_io.h"
 #include "../triangulation/steiner_graph.h"
 
+#include <iomanip>
+
 template<Topology Graph, typename format>
 std::ostream &gl_file_io::write(std::ostream &output, const Graph &graph, int line_width, int color) {
     using f = format;
@@ -17,6 +19,7 @@ std::ostream &gl_file_io::write(std::ostream &output, const Graph &graph, int li
 
     for (auto node: graph.node_ids()) {
         auto n = graph.node(node);
+        f::write(output, std::setprecision(20));
         f::write(output, n.coordinates.latitude) << ' ';
         f::write(output, n.coordinates.longitude);
         f::write(output, '\n');
