@@ -9,17 +9,24 @@
 #include <memory>
 
 class Client {
+public:
+    enum class Projection {
+        GB_TO_WGS84,
+        WGS84_TO_GB,
+        NONE
+    };
+
 private:
     class ClientConcept {
     public:
         virtual ~ClientConcept() = default;
 
-        virtual void write_graph_file(std::ostream &output) const = 0;
+        virtual void write_graph_file(std::ostream &output, Projection projection = Projection::NONE) const = 0;
 
-        virtual void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const = 0;
+        virtual void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right, Projection projection = Projection::NONE) const = 0;
 
         virtual void
-        write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const = 0;
+        write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right, Projection projection = Projection::NONE) const = 0;
 
         virtual void compute_route(int from, int to) = 0;
 
@@ -27,9 +34,9 @@ private:
 
         virtual void compute_one_to_all(int from, std::ostream &out) = 0;
 
-        virtual void write_route_file(std::ostream &output) const = 0;
+        virtual void write_route_file(std::ostream &output, Projection projection = Projection::NONE) const = 0;
 
-        virtual void write_tree_file(std::ostream &output) const = 0;
+        virtual void write_tree_file(std::ostream &output, Projection projection = Projection::NONE) const = 0;
 
         virtual void write_info(std::ostream &output) const = 0;
 
@@ -39,7 +46,7 @@ private:
 
         virtual void write_graph_stats(std::ostream &output) const = 0;
 
-        virtual void write_beeline(std::ostream &output) const = 0;
+        virtual void write_beeline(std::ostream &output, Projection projection = Projection::NONE) const = 0;
 
         virtual void write_query(std::ostream &output) const = 0;
 
@@ -67,10 +74,10 @@ private:
 
         ClientModel(GraphT &&graph, bool output_csv = false);;
 
-        void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const override;
-        void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const override;
+        void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right, Projection projection = Projection::NONE) const override;
+        void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right, Projection projection = Projection::NONE) const override;
 
-        void write_graph_file(std::ostream &output) const override;
+        void write_graph_file(std::ostream &output, Projection projection = Projection::NONE) const override;
 
         void compute_route(int from, int to) override;
 
@@ -78,16 +85,16 @@ private:
 
         void compute_one_to_all(int from, std::ostream &output) override;
 
-        void write_route_file(std::ostream &output) const override;
+        void write_route_file(std::ostream &output, Projection projection = Projection::NONE) const override;
 
-        void write_tree_file(std::ostream &output) const override;
+        void write_tree_file(std::ostream &output, Projection projection = Projection::NONE) const override;
 
         void write_info(std::ostream &output) const override;
 
         void write_csv(std::ostream &output) const override;
         void write_csv_header(std::ostream &output) const override;
 
-        void write_beeline(std::ostream &output) const override;
+        void write_beeline(std::ostream &output, Projection projection = Projection::NONE) const override;
 
         void write_graph_stats(std::ostream &output) const override;
 
@@ -114,11 +121,11 @@ public:
 
     void compute_one_to_all(int from, std::ostream &output) { pimpl->compute_one_to_all(from, output); };
 
-    void write_route_file(std::ostream &output) const { pimpl->write_route_file(output); };
+    void write_route_file(std::ostream &output, Projection projection = Projection::NONE) const { pimpl->write_route_file(output, projection); };
 
-    void write_tree_file(std::ostream &output) const { pimpl->write_tree_file(output); };
+    void write_tree_file(std::ostream &output, Projection projection = Projection::NONE) const { pimpl->write_tree_file(output, projection); };
 
-    void write_beeline_file(std::ostream &output) const { pimpl->write_beeline(output); };
+    void write_beeline_file(std::ostream &output, Projection projection = Projection::NONE) const { pimpl->write_beeline(output, projection); };
 
     void write_csv(std::ostream &output) const { pimpl->write_csv(output); };
     void write_csv_header(std::ostream &output) const { pimpl->write_csv_header(output); };
@@ -127,12 +134,12 @@ public:
 
     void write_graph_stats(std::ostream &output) const { pimpl->write_graph_stats(output); };
 
-    void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const {
-        pimpl->write_subgraph_file(output, bottom_left, top_right);
+    void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right, Projection projection = Projection::NONE) const {
+        pimpl->write_subgraph_file(output, bottom_left, top_right, projection);
     };
 
-    void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const {
-        pimpl->write_subgraph_file_gl(output, bottom_left, top_right);
+    void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right, Projection projection = Projection::NONE) const {
+        pimpl->write_subgraph_file_gl(output, bottom_left, top_right, projection);
     };
 
     void write_query(std::ostream &output) const { pimpl->write_query(output); }

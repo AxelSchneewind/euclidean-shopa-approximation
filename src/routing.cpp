@@ -194,7 +194,8 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
     using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>, label_type<steiner_graph>>;
     using distance_queue = dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
     // using distance_dijkstra = dijkstra<steiner_graph, distance_queue, distance_labels, default_neighbors<steiner_graph>, use_all_edges<steiner_graph>>;
-    using distance_dijkstra = dijkstra<steiner_graph, distance_queue, steiner_labels<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>, steiner_neighbors<steiner_graph>, use_all_edges<steiner_graph>>;
+    using labels_type = steiner_labels<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
+    using distance_dijkstra = dijkstra<steiner_graph, distance_queue, labels_type, steiner_neighbors<steiner_graph, labels_type>, use_all_edges<steiner_graph>>;
 
     double max_dist = 0.4;
 
@@ -244,13 +245,21 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::compute_one_to_all(i
 
     steiner_graph::path_type path {graph, std::vector<steiner_graph::node_id_type>()};
     auto tree = distances.shortest_path_tree();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>((after - before));
     result = std::make_unique<Result<steiner_graph>>(*query, router.route_found(), max_dist, max_dist, tree,
-                                                     path, tree.node_count(), after - before);
+                                                     path, tree.node_count(), duration);
 
 
     statistics.put(Statistics::QUEUE_PULL_COUNT, distances.queue().pull_count());
     statistics.put(Statistics::QUEUE_PUSH_COUNT, distances.queue().push_count());
     statistics.put(Statistics::QUEUE_MAX_SIZE, distances.queue().max_size());
+    statistics.put(Statistics::TIME, duration);
+    statistics.put(Statistics::TREE_SIZE, tree.node_count());
+
+    double vm, res;
+    process_mem_usage(vm, res);
+    statistics.put(Statistics::MEMORY_USAGE_FINAL, vm / 1024);
+
 
     if (!output_csv) {
         std::cout << "\nqueue was pulled from "
@@ -379,17 +388,17 @@ void Client::ClientModel<GraphT, RoutingT>::compute_route(int from, int to) {
 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
-void Client::ClientModel<GraphT, RoutingT>::write_graph_file(std::ostream &output) const {
+void Client::ClientModel<GraphT, RoutingT>::write_graph_file(std::ostream &output, Projection projection) const {
     throw std::exception();
 }
 
 template<>
-void Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_file(std::ostream &output) const {
+void Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_file(std::ostream &output, Projection projection) const {
     triangulation_file_io::write(output, graph);
 }
 
 template<>
-void Client::ClientModel<std_graph_t, std_routing_t>::write_graph_file(std::ostream &output) const {
+void Client::ClientModel<std_graph_t, std_routing_t>::write_graph_file(std::ostream &output, Projection projection) const {
     fmi_file_io::write(output, graph);
 }
 
@@ -449,14 +458,14 @@ Client::ClientModel<steiner_graph, steiner_routing_t>::write_graph_stats(std::os
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>void
 Client::ClientModel<GraphT, RoutingT>::write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left,
-                                                              coordinate_t top_right) const {
+                                                              coordinate_t top_right, Projection projection) const {
     throw std::runtime_error("write_subgraph_file not implemented");
 }
 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>void
 Client::ClientModel<GraphT, RoutingT>::write_subgraph_file(std::ostream &output, coordinate_t bottom_left,
-                                                           coordinate_t top_right) const {
+                                                           coordinate_t top_right, Projection projection) const {
     throw std::runtime_error("write_subgraph_file not implemented");
 }
 
@@ -468,7 +477,7 @@ bool is_in_rectangle(coordinate_t point, coordinate_t bottom_left, coordinate_t 
 template<>
 void Client::ClientModel<steiner_graph, steiner_routing_t>::write_subgraph_file(std::ostream &output,
                                                                                 coordinate_t bottom_left,
-                                                                                coordinate_t top_right) const {
+                                                                                coordinate_t top_right, Projection projection) const {
     auto &&all_nodes = graph.node_ids();
     std::vector<steiner_graph::node_id_type> nodes;
     std::vector<steiner_graph::edge_id_type> edges;
@@ -498,7 +507,7 @@ void Client::ClientModel<steiner_graph, steiner_routing_t>::write_subgraph_file(
 template<>
 void Client::ClientModel<steiner_graph, steiner_routing_t>::write_subgraph_file_gl(std::ostream &output,
                                                                                    coordinate_t bottom_left,
-                                                                                   coordinate_t top_right) const {
+                                                                                   coordinate_t top_right, Projection projection) const {
     auto &&all_nodes = graph.node_ids();
     std::vector<steiner_graph::node_id_type> nodes;
     std::vector<steiner_graph::edge_id_type> edges;
@@ -559,7 +568,7 @@ void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) con
 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
-void Client::ClientModel<GraphT, RoutingT>::write_beeline(std::ostream &output) const {
+void Client::ClientModel<GraphT, RoutingT>::write_beeline(std::ostream &output, Projection projection) const {
     if (is_none(query->to))
         return;
 
@@ -576,7 +585,7 @@ void Client::ClientModel<GraphT, RoutingT>::write_beeline(std::ostream &output) 
 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
-void Client::ClientModel<GraphT, RoutingT>::write_tree_file(std::ostream &output) const {
+void Client::ClientModel<GraphT, RoutingT>::write_tree_file(std::ostream &output, Projection projection) const {
     if (!result)
         return;
 
@@ -587,11 +596,27 @@ void Client::ClientModel<GraphT, RoutingT>::write_tree_file(std::ostream &output
 
 template<typename GraphT, typename RoutingT>
 requires std::convertible_to<typename RoutingT::graph_type, GraphT>
-void Client::ClientModel<GraphT, RoutingT>::write_route_file(std::ostream &output) const {
+void Client::ClientModel<GraphT, RoutingT>::write_route_file(std::ostream &output, Projection projection) const {
     if (!result)
         return;
 
     auto route_subgraph = graph.make_subgraph(result->path);
     auto route_graph = std_graph_t::make_graph(graph, route_subgraph);
+
+    switch (projection) {
+        case Projection::NONE:
+        break;
+        case Projection::WGS84_TO_GB:
+            for (int i = 0; i < route_graph.node_count(); ++i) {
+                 WGS84toGoogleBing(route_graph.node(i).coordinates, route_graph.node(i).coordinates);
+            }
+            break;
+        case Projection::GB_TO_WGS84:
+            for (int i = 0; i < route_graph.node_count(); ++i) {
+                GoogleBingtoWGS84Mercator(route_graph.node(i).coordinates, route_graph.node(i).coordinates);
+            }
+            break;
+    }
+
     gl_file_io::write(output, route_graph, 2, 5);
 }

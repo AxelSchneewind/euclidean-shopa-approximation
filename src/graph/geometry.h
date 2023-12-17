@@ -91,3 +91,26 @@ interpolate_linear(coordinate_t __source, coordinate_t __destination, float __re
     __destination *= __relative;
     return __source + __destination;
 }
+
+
+
+void WGS84toGoogleBing(double lat, double lon, double &x, double &y) {
+    x = lon * 20037508.34 / 180;
+    y = std::log(std::tan((90 + lat) * M_PI / 360)) / (M_PI / 180);
+    y = y * 20037508.34 / 180;
+}
+void WGS84toGoogleBing(coordinate_t latlon, coordinate_t &xy) {
+    return WGS84toGoogleBing(latlon.latitude, latlon.longitude, xy.latitude, xy.longitude);
+}
+
+
+void GoogleBingtoWGS84Mercator (double x, double y, double &lat, double
+&lon) {
+    lon = (x / 20037508.34) * 180;
+    lat = (y / 20037508.34) * 180;
+
+    lat = 180/M_PI * (2 * std::atan(std::exp(lat * M_PI / 180)) - M_PI / 2);
+}
+void GoogleBingtoWGS84Mercator(coordinate_t latlon, coordinate_t &xy) {
+    return GoogleBingtoWGS84Mercator(latlon.latitude, latlon.longitude, xy.latitude, xy.longitude);
+}
