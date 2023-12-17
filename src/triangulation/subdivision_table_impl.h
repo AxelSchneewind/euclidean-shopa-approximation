@@ -39,20 +39,20 @@ subdivision_table::min_r_per_triangle_class(const std::vector<node_t> &__nodes, 
 }
 
 std::vector<subdivision_table::edge_class>
-subdivision_table::precompute(float __epsilon, float __min_relative_r_value) {
+subdivision_table::precompute(double __epsilon, double __min_relative_r_value) {
     std::vector<edge_class> triangle_classes;
 
     for (int index = 0; index < step_count; ++index) {
-        float angle = class_angle(index);
+        double angle = class_angle(index);
 
         triangle_classes.emplace_back();
 
-        float sine = std::sin(angle);
+        double sine = std::sin(angle);
 
-        float relative = __min_relative_r_value;
-        float edge_distance = 0;
+        double relative = __min_relative_r_value;
+        double edge_distance = 0.0;
 
-        while (relative < 1) {
+        while (relative < 1.0) {
             triangle_classes.back().node_positions.push_back(relative);
             edge_distance = sine * relative;
             relative += __epsilon * edge_distance;
@@ -84,8 +84,8 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
 
         // get minimal angle for node1 and node2
         // treat angles > 90 degrees like 90 degrees
-        float angle1 = M_PI / 2; // between node1->node2 and node1->node3
-        float angle2 = M_PI / 2; // between node2->node1 and node2->node3
+        double angle1 = M_PI / 2; // between node1->node2 and node1->node3
+        double angle2 = M_PI / 2; // between node2->node1 and node2->node3
 
         for (auto edge: __polyhedron.edges(i)) {
             if (is_none(edge)) continue;
@@ -115,17 +115,17 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         double length = distance(c2, c1);
 
         // relative value where the mid-point (with max distance to other edges) lies between node1 and node2
-        float mid_value = 1 / (1 + std::sin(angle1) / std::sin(angle2));
-        float mid_value_second = 1 / (1 + std::sin(angle2) / std::sin(angle1));
+        double mid_value = 1 / (1 + std::sin(angle1) / std::sin(angle2));
+        double mid_value_second = 1 / (1 + std::sin(angle2) / std::sin(angle1));
         assert(std::abs(mid_value + mid_value_second - 1.0) < 0.001);
         assert(mid_value < 1 && mid_value > 0);
 
         // store minimal distance from the given mid-point to any other edge, relative to this edges length
-        float mid_dist = mid_value * std::sin(angle1);
+        double mid_dist = mid_value * std::sin(angle1);
 
         // distance values have been computed already, convert to r(v) relative to this edges length
-        float r_first = (__epsilon / 5) * __r_values[node1] / length;
-        float r_second = (__epsilon / 5) * __r_values[node2] / length;
+        double r_first = (__epsilon / 5) * __r_values[node1] / length;
+        double r_second = (__epsilon / 5) * __r_values[node2] / length;
         assert(r_first >= 0 && r_second >= 0);
         assert(r_first <= 1.0 && r_second < 1.0);
 
@@ -197,8 +197,8 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         entry.mid_position = static_cast<float>(mid_value);
         entry.mid_index = static_cast<unsigned short>(mid_index);
         entry.node_count = static_cast<unsigned short>(count);
-        entry.r_first = r_first;
-        entry.r_second = r_second;
+        entry.r_first = static_cast<float>(r_first);
+        entry.r_second = static_cast<float>(r_second);
         entry.edge_class_first = static_cast<unsigned char>(index);
         entry.edge_class_second = static_cast<unsigned char>(index_second);
         entry.first_start_index = static_cast<unsigned short>(first_start_index);
@@ -217,7 +217,7 @@ subdivision_table::subdivision_table(std::vector<edge_class> &&__node_positions,
                                      std::vector<subdivision_edge_info> &&__edges) : triangle_classes(
         std::move(__node_positions)), edges(std::move(__edges)) {}
 
-float subdivision_table::class_angle(int __index) {
+double subdivision_table::class_angle(int __index) {
     return min_angle + step_size * (__index);
 }
 
@@ -255,7 +255,7 @@ subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coord
         assert(index >= 0);
         assert(index < triangle_classes[info.edge_class_first].node_positions.size());
 
-        auto relative = triangle_classes[info.edge_class_first].node_positions[index];
+        auto&& relative = triangle_classes[info.edge_class_first].node_positions[index];
         assert(relative >= info.r_first - 0.002F);
         assert(relative <= info.mid_position + 0.002F);
         return interpolate_linear(c1, c2, relative);
@@ -265,7 +265,7 @@ subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coord
         assert(index >= 0);
         assert(index < triangle_classes[info.edge_class_second].node_positions.size());
 
-        auto relative = triangle_classes[info.edge_class_second].node_positions[index];
+        auto&& relative = triangle_classes[info.edge_class_second].node_positions[index];
         assert(relative >= info.r_second - 0.002F);
         assert(relative <= 1.0F - info.mid_position + 0.002F);
         return interpolate_linear(c2, c1, relative);

@@ -13,13 +13,13 @@
 class subdivision_table {
 public:
     // in radians
-    static constexpr int step_count = 127;
+    static constexpr unsigned char step_count = 127;
 
     // assume that each angle is at least 5 degrees
-    static constexpr float min_angle = (M_PI / 180) *  5;
-    static constexpr float max_angle = (M_PI / 180) * 85;
+    static constexpr double min_angle = (M_PI / 180) *  5;
+    static constexpr double max_angle = (M_PI / 180) * 85;
 
-    static constexpr float step_size = (max_angle - min_angle) / (step_count - 1);
+    static constexpr double step_size = (max_angle - min_angle) / (step_count - 1);
 
     struct edge_class {
         std::vector<float> node_positions;
@@ -31,27 +31,25 @@ public:
         // maximum distance of a point on this edge to other edges, relative to the length of this edge
         // std::float16_t mid_dist;
 
-        // number of steiner points on this edge (counting the source and middle node)
-        unsigned short node_count;
-
         // r(v), relative to this edge
         float r_first;
         float r_second;
 
+        // number of steiner points on this edge (counting the source and middle node)
+        unsigned short node_count;
+
         // which classes of edges this one belongs to (first and second half)
         unsigned char edge_class_first;
+        unsigned char edge_class_second;
+
         // interval of node positions
         unsigned short first_start_index;
+        unsigned short second_start_index;
 
         unsigned short mid_index;
 
-        unsigned short second_start_index;
-        unsigned char edge_class_second;
-
         bool operator==(const subdivision_edge_info &__other) const = default;
     };
-
-    static_assert(sizeof(subdivision_edge_info) == 28);
 
 
     std::vector<edge_class> triangle_classes;
@@ -66,7 +64,7 @@ public:
 
     subdivision_table(std::vector<edge_class> &&__node_positions, std::vector<subdivision_edge_info> &&__edges);
 
-    static float class_angle(int __index);
+    static double class_angle(int __index);
 
     static int class_index(double __radians);
 
@@ -74,7 +72,7 @@ public:
 
     subdivision_edge_info edge(int __edge) const;
 
-    static std::vector<subdivision_table::edge_class> precompute(float __epsilon, float __min_relative_r_value);
+    static std::vector<subdivision_table::edge_class> precompute(double __epsilon, double __min_relative_r_value);
 
     std::vector<size_t> offsets() const {
         std::vector<size_t> results;
