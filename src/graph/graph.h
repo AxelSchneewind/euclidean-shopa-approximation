@@ -73,6 +73,7 @@ public:
     inline size_t edge_count() const;
 
     inline NodeInfo node(NodeId __node_id) const;
+    inline NodeInfo& node(NodeId __node_id) { return _M_node_list[__node_id]; };
 
     EdgeInfo edge(EdgeId __edge_id) const;
 
