@@ -43,6 +43,11 @@ struct coordinate_t {
     coordinate_t operator*(const float &second) const {
         return {latitude * second, longitude * second};
     }
+    coordinate_t& operator*=(const float &second) {
+        latitude *= second;
+        longitude *= second;
+        return *this;
+    }
 
     bool operator==(const coordinate_t &second) const {
         return latitude == second.latitude && longitude == second.longitude;

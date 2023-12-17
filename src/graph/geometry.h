@@ -88,5 +88,6 @@ line_distance(coordinate_t __source, coordinate_t __destination, coordinate_t __
 inline coordinate_t
 interpolate_linear(coordinate_t __source, coordinate_t __destination, float __relative) {
     __destination -= __source;
-    return __source + __destination * __relative;
+    __destination *= __relative;
+    return __source + __destination;
 }
