@@ -92,7 +92,6 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     auto edges = read_triangles<steiner_graph::node_info_type, steiner_graph::base_topology_type::node_id_type, steiner_graph::base_topology_type::edge_info_type, f>(
             input_triangles, nodes, triangle_count, faces);
 
-    // TODO test directed adjacencylist (reduces subdivision table size)
     auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional(edges.get());
     return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces), __epsilon);
 }

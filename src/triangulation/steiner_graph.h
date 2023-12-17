@@ -225,6 +225,8 @@ public:
     node_info_type node(triangle_node_id_type __id) const;
 
     bool is_base_node(node_id_type __id) const;
+    bool is_base_neighboring_node(node_id_type __id) const { return __id.steiner_index == 1 || __id.steiner_index ==
+                                                                                                  steiner_info(__id.edge).node_count - 2;};
 
     triangle_node_id_type base_node_id(node_id_type __id) const;
 

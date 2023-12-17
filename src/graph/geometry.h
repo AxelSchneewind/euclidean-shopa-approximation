@@ -52,6 +52,20 @@ angle(coordinate_t __s0, coordinate_t __d0, coordinate_t __s1, coordinate_t __d1
     return std::acos(AB / (A.length() * B.length()));
 }
 
+inline double
+angle(coordinate_t dir0, coordinate_t dir1) {
+    // use dot product
+    auto const AB = dir0 * dir1;
+    return std::acos(AB / (dir0.length() * dir1.length()));
+}
+
+inline double
+angle_cos(coordinate_t dir0, coordinate_t dir1) {
+    // use dot product
+    auto const AB = dir0 * dir1;
+    return AB / (dir0.length() * dir1.length());
+}
+
 
 inline double
 line_distance(coordinate_t __source, coordinate_t __destination, coordinate_t __point) {
@@ -73,6 +87,6 @@ line_distance(coordinate_t __source, coordinate_t __destination, coordinate_t __
  */
 inline coordinate_t
 interpolate_linear(coordinate_t __source, coordinate_t __destination, float __relative) {
-    coordinate_t const delta = __destination - __source;
-    return __source + delta * __relative;
+    __destination -= __source;
+    return __source + __destination * __relative;
 }

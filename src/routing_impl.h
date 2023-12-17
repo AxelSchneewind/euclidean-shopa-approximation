@@ -77,5 +77,5 @@ using steiner_a_star_node_cost_pair = node_cost_pair<steiner_graph::node_id_type
 
 using steiner_queue_t = a_star_queue<steiner_graph, steiner_a_star_node_cost_pair>;
 using steiner_labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
-using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, steiner_labels_t, steiner_neighbors<steiner_graph>, use_all_edges<steiner_graph>>;
+using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, steiner_labels_t, steiner_neighbors<steiner_graph, steiner_labels_t>, use_all_edges<steiner_graph>>;
 using steiner_routing_t = router<steiner_graph, steiner_dijkstra>;

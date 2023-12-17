@@ -21,9 +21,19 @@ struct coordinate_t {
     coordinate_t operator+(const coordinate_t &second) const {
         return {latitude + second.latitude, longitude + second.longitude};
     }
+    coordinate_t& operator+=(const coordinate_t &second) {
+        latitude += second.latitude;
+        longitude += second.longitude;
+        return *this;
+    }
 
     coordinate_t operator-(const coordinate_t &second) const {
         return {latitude - second.latitude, longitude - second.longitude};
+    }
+    coordinate_t& operator-=(const coordinate_t &second) {
+        latitude -= second.latitude;
+        longitude -= second.longitude;
+        return *this;
     }
 
     float operator*(const coordinate_t &second) const {
