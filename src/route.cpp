@@ -76,13 +76,11 @@ main(int argc, char const *argv[]) {
         std::string beeline_file = std::format("{}/beeline.gl", target_directory);
         std::string route_file = std::format("{}/route.gl", target_directory);
         std::string tree_file = std::format("{}/tree.gl", target_directory);
-        std::string info_file = std::format("{}/info.gl", target_directory);
+        std::string info_file = std::format("{}/info.csv", target_directory);
         std::ofstream output_beeline(beeline_file);
         std::ofstream output_route(route_file);
         std::ofstream output_tree(tree_file);
         std::ofstream output_info(info_file);
-
-        client.write_graph_stats(output_info);
 
         if (dest_node >= 0)
             client.compute_route(src_node, dest_node);
