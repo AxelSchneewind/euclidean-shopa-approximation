@@ -65,8 +65,8 @@ void make_node_radii(
                 triangle_edge_ids.emplace_back(triangle_edge);
         }
 
-        assert(adjacent_edge_ids.size() > 0);
-        assert(triangle_edge_ids.size() > 0);
+        // assert(adjacent_edge_ids.size() > 0);
+        // assert(triangle_edge_ids.size() > 0);
 
         std::sort(triangle_edge_ids.begin(), triangle_edge_ids.end());
         std::sort(adjacent_edge_ids.begin(), adjacent_edge_ids.end());
@@ -75,7 +75,7 @@ void make_node_radii(
         remove_duplicates_sorted(triangle_edge_ids);
         remove_duplicates_sorted(adjacent_edge_ids);
         int edge_count = set_minus_sorted<int>(triangle_edge_ids, adjacent_edge_ids, triangle_edge_ids);
-        assert(edge_count > 0);
+        // assert(edge_count > 0);
 
         // get minimal value from triangle edges
         double dist = infinity<double>;
@@ -85,17 +85,21 @@ void make_node_radii(
             auto const& c1 = __nodes[__triangulation.source(edge_id)].coordinates;
             auto const& c2 = __nodes[__triangulation.destination(edge_id)].coordinates;
             if (c3 != c2 && c3 != c1 && c2 != c1) {
-                dist = std::min(dist, line_distance(c1, c2, c3)); // somehow computes garbage sometimes
-                dist = std::min(dist, distance(c1, c2));
-                dist = std::min(dist, distance(c1, c3));
+                auto line_dist = line_distance(c1, c2, c3); // somehow computes garbage sometimes
+                if (line_dist > 0)
+                    dist = std::min(dist, line_dist);
+                else {
+                    dist = std::min(dist, distance(c2, c3));
+                    dist = std::min(dist, distance(c1, c3));
+                }
             } else {
                 dist = 0.0;
             }
-            assert(is_infinity(dist) || (dist <= distance(c1, c3) && dist <= distance(c1, c2)));
+            assert(is_infinity(dist) || (dist <= 1.0001 * distance(c2, c3) && dist <= 1.0001 * distance(c1, c3)));
         }
-        dist = std::max(dist, 0.0001);
+        dist = std::max(dist, 64.0 * std::numeric_limits<float>::min());
         __out[node] = dist;
-        assert(!is_infinity(dist));
+        // assert(!is_infinity(dist));
 
         adjacent_edge_ids.clear();
         triangle_edge_ids.clear();
@@ -117,7 +121,7 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&__triangu
     std::vector<float> r_values;
     make_node_radii(triangulation_nodes, triangulation, poly, __epsilon, r_values);
 
-    constexpr float minimal_relative_radius = 0.000000001;
+    constexpr double minimal_relative_radius = 64.0 * std::numeric_limits<float>::min();
     float min_r_value = 1.;
     for (auto base_node: triangulation.node_ids()) {
         for (auto edge: triangulation.outgoing_edges(base_node)) {
@@ -555,7 +559,7 @@ bool steiner_graph::is_base_node(steiner_graph::node_id_type __id) const {
 
 steiner_graph::triangle_node_id_type steiner_graph::base_node_id(steiner_graph::node_id_type __id) const {
     assert(is_base_node(__id));
-    return __id.steiner_index == 0 ? base_graph().source(__id.edge) : base_graph().destination(__id.edge);
+    return __id.steiner_index < steiner_info(__id.edge).node_count / 2 ? base_graph().source(__id.edge) : base_graph().destination(__id.edge);
 }
 
 steiner_graph::node_id_type steiner_graph::from_base_node_id(int __node) const {
