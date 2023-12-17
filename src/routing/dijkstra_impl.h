@@ -161,6 +161,10 @@ G::path_type dijkstra<G, Q, L, N, UseEdge>::path(node_id_type target) const {
         result.push_back(fwd_node);
     }
 
+    for (int i = 0; i < result.size() / 2; ++i) {
+        std::swap(result[i], result[result.size() - 1 - i]);
+    }
+
     remove_duplicates_sorted(result);
 
     return {_M_graph, std::move(result)};
