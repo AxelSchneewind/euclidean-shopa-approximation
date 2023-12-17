@@ -1,7 +1,7 @@
 package "Routing"
 version "1.0"
 purpose ""
-usage "route /path/to/graph-file /path/to/results-directory epsilon src0 dest0..."
+usage "route --graph-file /path/to/graph-file --output-directory /path/to/results-directory --epsilon 0.5 -q src0,dest0,..."
 description "computes the shortest path for each given pair of source and destination node."
 versiontext "1.0"
 
@@ -21,6 +21,7 @@ option "stdin" i "indicates that queries should be read from stdin" flag off
 
 section "output" sectiondesc="options for the command line output"
 option "csv-format" c "indicates that routing information should be printed in the csv format" flag off
+option "project" p "which projection to apply to coordinates when writing to files (from google_bing,wgs84,none)"
 
 
 # option <long> <short> "<desc>"
