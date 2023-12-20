@@ -123,7 +123,7 @@ public:
      * @param Dijkstra
      * @return
      */
-    G::subgraph_type shortest_path_tree();
+    G::subgraph_type shortest_path_tree() const;
 
     /**
      * returns the path from source to target node (if found, otherwise throws exception)

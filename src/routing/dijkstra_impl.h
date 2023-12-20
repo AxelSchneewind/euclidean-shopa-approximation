@@ -23,6 +23,7 @@ dijkstra<G, Q, L, N, UseEdge>::dijkstra(dijkstra<G, Q, L, N, UseEdge> &&__other)
         : _M_labels(std::move(__other._M_labels)),
           _M_graph(std::move(__other._M_graph)),
           _M_queue(std::move(__other._M_queue)),
+          _M_neighbors(std::move(__other._M_neighbors)),
           _M_use_edge(std::move(__other._M_use_edge)) {
 }
 
@@ -167,11 +168,11 @@ G::path_type dijkstra<G, Q, L, N, UseEdge>::path(node_id_type target) const {
 
     remove_duplicates_sorted(result);
 
-    return {_M_graph, std::move(result)};
+    return {std::move(result)};
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
-G::subgraph_type dijkstra<G, Q, L, N, UseEdge>::shortest_path_tree() {
+G::subgraph_type dijkstra<G, Q, L, N, UseEdge>::shortest_path_tree() const {
     constexpr std::size_t max_node_count = std::numeric_limits<int>::max();
     constexpr std::size_t max_edge_count = std::numeric_limits<int>::max();
 
@@ -204,5 +205,5 @@ G::subgraph_type dijkstra<G, Q, L, N, UseEdge>::shortest_path_tree() {
     remove_duplicates(nodes);
     remove_duplicates(edges);
 
-    return {_M_graph, std::move(nodes), std::move(edges)};
+    return {std::move(nodes), std::move(edges)};
 }

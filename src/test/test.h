@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../query.h"
+#include "../interface/Query.h"
 #include "../routing_impl.h"
 #include <array>
 #include <cassert>

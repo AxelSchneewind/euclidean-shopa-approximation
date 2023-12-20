@@ -99,7 +99,7 @@ public:
 
     Label get(node_id_type __node) const;
 
-    label_iterator_type all_visited();
+    label_iterator_type all_visited() const;
 
     void label(node_id_type __node, Label __label);
 };

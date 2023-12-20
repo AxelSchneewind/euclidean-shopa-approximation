@@ -105,13 +105,26 @@ public:
      * returns the nodes of the path from start to target node
      * @return
      */
-    typename Graph::path_type route() const; // TODO move implementation to dijkstra
+    typename Graph::path_type route() const;
 
     /**
      * returns the tree of all visited nodes
      * @return
      */
-    typename Graph::subgraph_type shortest_path_tree(); // TODO move implementation to dijkstra
+    typename Graph::subgraph_type shortest_path_tree();
+
+    /**
+     * returns the tree of the forward search
+     * @return
+     */
+    typename Graph::subgraph_type tree_forward() const {
+        return _M_forward_search.shortest_path_tree();
+    }
+
+    typename Graph::subgraph_type tree_backward() const {
+        return _M_forward_search.shortest_path_tree();
+    };
+
 
     /**
      *

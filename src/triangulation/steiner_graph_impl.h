@@ -520,7 +520,7 @@ steiner_graph::subgraph_type steiner_graph::make_subgraph(const path_type &__rou
 
         edges.emplace_back(src, dest);
     }
-    return {*this, std::move(nodes), std::move(edges)};
+    return {std::move(nodes), std::move(edges)};
 }
 
 steiner_graph::distance_type steiner_graph::path_length(const path_type &__route) const {

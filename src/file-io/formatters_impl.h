@@ -74,17 +74,9 @@ namespace stream_encoders {
 
 
     template<>
-    adjacency_list_edge<node_id_t, edge_t>
-    encode_text::read(std::istream &input) {
-        adjacency_list_edge<node_id_t, edge_t> result;
-        input >> result.source >> result.destination >> result.info.cost;
-        return result;
-    }
-
-    template<>
     std::ostream &
     encode_text::write(std::ostream &output, const adjacency_list_edge<node_id_t, edge_t> &edge) {
-        output << (int) edge.source << ' ' << (int) edge.destination << ' ' << (float) edge.info.cost;
+        output << (long) edge.source << ' ' << (long) edge.destination << ' ' << (double) edge.info.cost;
         return output;
     }
 
@@ -102,12 +94,34 @@ namespace stream_encoders {
         return output;
     }
 
+    template<>
+    std::ostream &
+    encode_text::write(std::ostream &output, gl_edge_t const &edge) {
+        output << edge.color << ' ' << edge.line_width;
+        return output;
+    }
+
+    template<>
+    adjacency_list_edge<node_id_t, edge_t>
+    encode_text::read(std::istream &input) {
+        adjacency_list_edge<node_id_t, edge_t> result{};
+        input >> result.source >> result.destination >> result.info.cost;
+        return result;
+    }
 
     template<>
     adjacency_list_edge<node_id_t, ch_edge_t>
     encode_text::read(std::istream &input) {
-        adjacency_list_edge<node_id_t, ch_edge_t> result;
+        adjacency_list_edge<node_id_t, ch_edge_t> result{};
         input >> result.source >> result.destination >> result.info.cost;
+        return result;
+    }
+
+    template<>
+    adjacency_list_edge<node_id_t, gl_edge_t>
+    encode_text::read(std::istream &input) {
+        adjacency_list_edge<node_id_t, gl_edge_t> result{};
+        input >> result.source >> result.destination >> result.info.color >> result.info.line_width;
         return result;
     }
 

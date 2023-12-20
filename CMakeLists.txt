@@ -47,7 +47,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native") # -ffast-math
 
 
 # compile implementation into one library file
-add_library(routing src/routing.cpp)
+add_library(routing src/interface/Client.cpp src/interface/Graph_impl.h src/interface/Router_impl.h)
 link_libraries(routing)
 
 add_executable(make_gl src/make_gl.cpp)

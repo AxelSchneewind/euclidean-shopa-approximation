@@ -223,6 +223,7 @@ public:
     node_info_type node(node_id_type __id) const;
 
     node_info_type node(triangle_node_id_type __id) const;
+    node_info_type& node(triangle_node_id_type __id) { return _M_base_nodes[__id]; };
 
     bool is_base_node(node_id_type __id) const;
     bool is_base_neighboring_node(node_id_type __id) const { return __id.steiner_index == 1 || __id.steiner_index ==

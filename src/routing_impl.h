@@ -47,6 +47,7 @@ none_value<label_type<Graph>> = {};
 
 
 using std_graph_t = graph<node_t, edge_t, node_id_t, edge_id_t>;
+using gl_graph_t = graph<node_t, gl_edge_t, node_id_t, edge_id_t>;
 using ch_graph_t = graph<ch_node_t, ch_edge_t, node_id_t, edge_id_t>;
 
 using default_node_cost_pair = node_cost_pair<std_graph_t::node_id_type, std_graph_t::distance_type>;
