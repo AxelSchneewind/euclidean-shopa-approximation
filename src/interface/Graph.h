@@ -3,16 +3,11 @@
 #include "../graph/base_types.h"
 #include "../file-io/triangulation_file_io.h"
 #include "../file-io/fmi_file_io.h"
+#include "../graph/geometry.h"
 
 #include <memory>
 #include <fstream>
 
-
-enum class Projection {
-    NONE,
-    WGS84_TO_GB,
-    GB_TO_WGS84
-};
 
 enum class GraphType {
     STD_GRAPH_DIRECTED,
@@ -28,13 +23,9 @@ public:
 
     virtual void project(Projection projection) = 0;
 
-    virtual void write_graph_file(std::ostream &output) const = 0;
+    virtual void write_graph_file(std::string path) const = 0;
 
-    virtual void write_graph_file_gl(std::ostream &output) const = 0;
-
-    virtual void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const = 0;
-
-    virtual void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const = 0;
+    virtual void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const = 0;
 
     virtual void write_graph_stats(std::ostream &output) const = 0;
 
@@ -68,13 +59,9 @@ private:
 
         void project(Projection projection) override;
 
-        void write_graph_file(std::ostream &output) const override;
+        void write_graph_file(std::string path) const override;
 
-        void write_graph_file_gl(std::ostream &output) const override;
-
-        void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const override {/**/};
-
-        void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const override {/**/};
+        void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const override {/**/};
 
         void write_graph_stats(std::ostream &output) const override;
 
@@ -111,14 +98,10 @@ public:
 
     void project(Projection projection) override { pimpl->project(projection); };
 
-    void write_graph_file(std::ostream &output) const override { pimpl->write_graph_file(output); }
-    void write_graph_file_gl(std::ostream &output) const override { pimpl->write_graph_file_gl(output); }
-
+    void write_graph_file(std::string path) const override { pimpl->write_graph_file(path); }
     void write_graph_stats(std::ostream &output) const override { pimpl->write_graph_stats(output); };
 
-    void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const { pimpl->write_subgraph_file(output, bottom_left, top_right); };
-
-    void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const { pimpl->write_subgraph_file_gl(output, bottom_left, top_right); };
+    void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const override { pimpl->write_subgraph_file(path, bottom_left, top_right); };
 
     int node_count() const override { return pimpl->node_count(); }
 

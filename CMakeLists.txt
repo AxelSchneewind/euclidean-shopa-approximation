@@ -45,11 +45,14 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
 # performance options
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native") # -ffast-math
 
+# executables that should not be linked against the library file
+add_executable(project src/project.cpp)
 
 # compile implementation into one library file
-add_library(routing src/interface/Client.cpp src/interface/Graph_impl.h src/interface/Router_impl.h)
+add_library(routing src/interface/Client.cpp)
 link_libraries(routing)
 
+# executables that will be linked against routing library
 add_executable(make_gl src/make_gl.cpp)
 add_executable(make_pruned_gl src/make_pruned_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)

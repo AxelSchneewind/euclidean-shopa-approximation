@@ -34,18 +34,18 @@ public:
     template<typename ...Args>
     void read_graph_file(std::string path, Args... args);
 
-    void write_graph_file(std::ostream &output) { _graph.write_graph_file(output); }
+    void write_graph_file(std::string path) { _graph.write_graph_file(path); }
 
     void compute_route(int from, int to) { _router.compute_route(from, to); };
 
     void compute_one_to_all(int from) { /*_router.compute_one_to_all(from);*/ };
     void compute_one_to_all(int from, std::ostream& out) { /*_router.compute_one_to_all(from, out);*/ };
 
-    void write_route_file(std::ostream &output) const { _result.path().write_graph_file_gl(output); };
+    void write_route_file(std::string path) const { _result.path().write_graph_file(path); };
 
-    void write_tree_file(std::ostream &output) const { _result.tree_forward().write_graph_file_gl(output); };
+    void write_tree_file(std::string path) const { _result.tree_forward().write_graph_file(path); };
 
-    void write_beeline_file(std::ostream &output) const { /*_result.beeline().write_graph_file_gl(output);*/ };
+    void write_beeline_file(std::string path) const { /*_result.beeline().write_graph_file_gl(output);*/ };
 
     void write_csv(std::ostream &output) const { format_csv(statistics, output); };
     void write_csv_header(std::ostream &output) const { format_header(statistics, output); };

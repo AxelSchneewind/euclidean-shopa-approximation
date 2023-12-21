@@ -4,6 +4,8 @@
 #include "Router_impl.h"
 #include "Query_impl.h"
 
+#include "../routing_impl.h"
+
 #include "../util/memory_usage.h"
 #include "../util/csv_impl.h"
 

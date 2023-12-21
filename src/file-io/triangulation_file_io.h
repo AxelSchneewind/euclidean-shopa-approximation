@@ -7,16 +7,17 @@
 
 class triangulation_file_io {
 public:
-
-
     template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
-    static auto
+    static unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder
     read_triangles(std::istream &input, std::vector<NodeInfo> const& nodes, std::size_t count, std::vector<std::array<NodeId, 3>>& faces);
 
     template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
-    static auto
+    static unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder
     read_triangles(std::istream &input, std::vector<NodeInfo> const& nodes, std::size_t count);
 
+    template<typename NodeId, typename formatter = stream_encoders::encode_text>
+    static void
+    write_triangles(std::ostream &output, std::vector<std::array<NodeId, 3>> const& faces);
 
     template<Topology Graph, typename format = stream_encoders::encode_text>
     static Graph read(std::istream &input) { return read<Graph, format> (input, input, input); };

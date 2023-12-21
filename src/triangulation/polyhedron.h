@@ -113,6 +113,10 @@ public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(edge_info_type);
 
+    std::size_t node_count() const { return _M_node_edges_offsets.size() - 1; }
+    std::size_t edge_count() const { return _M_edge_info.size(); }
+    std::size_t face_count() const { return _M_face_info.size(); }
+
     /**
      * makes a polyhedron object from the given base graph
      * @param __base

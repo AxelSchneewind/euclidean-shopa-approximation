@@ -24,6 +24,8 @@
 #include "triangulation/steiner_labels_impl.h"
 #include "routing/node_labels_impl.h"
 
+#include "graph/geometry_impl.h"
+
 template<RoutableGraph G>
 struct label_type {
     G::distance_type distance;

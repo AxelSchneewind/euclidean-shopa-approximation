@@ -87,28 +87,22 @@ int Graph::GraphImplementation<GraphT>::node_count() const {
     return graph.node_count();
 }
 
-template<typename GraphT>
-void Graph::GraphImplementation<GraphT>::write_graph_file_gl(std::ostream &output) const {
-    gl_file_io::write(output, graph);
-}
 
 template<typename GraphT>
-void Graph::GraphImplementation<GraphT>::write_graph_file(std::ostream &output) const {
-    fmi_file_io::write(output, graph);
+void Graph::GraphImplementation<GraphT>::write_graph_file(std::string path) const {
+    std::ofstream output(path);
+    if (path.ends_with(".fmi"))
+        fmi_file_io::write(output, graph);
+    else if (path.ends_with(".steiner.graph"))
+        fmi_file_io::write(output, graph);
+    else if (path.ends_with(".graph"))
+        triangulation_file_io::write(output, graph);
+    else if (path.ends_with(".gl"))
+        gl_file_io::write(output, graph);
+
+    output.close();
 }
 
-void project_coordinate(coordinate_t& src, Projection projection) {
-    switch (projection) {
-        case Projection::NONE:
-            return;
-        case Projection::WGS84_TO_GB:
-            WGS84toGoogleBing(src.latitude, src.longitude, src.latitude, src.longitude);
-            return;
-        case Projection::GB_TO_WGS84:
-            GoogleBingtoWGS84Mercator(src.latitude, src.longitude, src.latitude, src.longitude);
-            return;
-    }
-}
 
 template<typename GraphT>
 void Graph::GraphImplementation<GraphT>::project(Projection projection) {
@@ -129,8 +123,10 @@ template<typename... Args>
 Graph Graph::read_graph_file(std::string path, double epsilon, Args... args) {
     std::ifstream input(path);
 
-    if (path.ends_with(".graph"))
+    if (path.ends_with(".graph") && epsilon != 0.0)
         return { GraphImplementation<steiner_graph>( triangulation_file_io::read_steiner(input, epsilon))};
+    else if (path.ends_with(".graph"))
+        return { GraphImplementation<std_graph_t>( triangulation_file_io::read<std_graph_t>(input))};
     else if (path.ends_with(".fmi"))
         return { GraphImplementation<std_graph_t>(fmi_file_io::read<std_graph_t>(input)) };
     else if (path.ends_with(".sch"))

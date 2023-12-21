@@ -86,16 +86,13 @@ void make_node_radii(
             auto const& c2 = __nodes[__triangulation.destination(edge_id)].coordinates;
             if (c3 != c2 && c3 != c1 && c2 != c1) {
                 auto line_dist = line_distance(c1, c2, c3); // somehow computes garbage sometimes
-                if (line_dist > 0)
-                    dist = std::min(dist, line_dist);
-                else {
-                    dist = std::min(dist, distance(c2, c3));
-                    dist = std::min(dist, distance(c1, c3));
-                }
+                dist = std::min(dist, line_dist);
+                dist = std::min(dist, distance(c2, c3));
+                dist = std::min(dist, distance(c1, c3));
             } else {
                 dist = 0.0;
             }
-            assert(is_infinity(dist) || (dist <= 1.0001 * distance(c2, c3) && dist <= 1.0001 * distance(c1, c3)));
+            assert(is_infinity(dist) || (dist <= 1.01 * distance(c2, c3) && dist <= 1.01 * distance(c1, c3)));
         }
         dist = std::max(dist, 64.0 * std::numeric_limits<float>::min());
         __out[node] = dist;
@@ -577,7 +574,7 @@ steiner_graph::node_id_type steiner_graph::from_base_node_id(int __node) const {
     }
 
     [[unlikely]]
-            throw std::runtime_error("node has no incident edges");
+    return none_value<node_id_type>;
 }
 
 steiner_graph::node_id_iterator_type steiner_graph::node_id_iterator_type::operator++() {

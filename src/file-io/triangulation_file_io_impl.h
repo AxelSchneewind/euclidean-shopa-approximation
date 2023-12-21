@@ -8,10 +8,11 @@
 
 #include "formatters.h"
 #include "fmi_file_io.h"
+#include <iomanip>
 
 
 template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
-auto
+unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder
 triangulation_file_io::read_triangles(std::istream &input,
                                       std::vector<NodeInfo> const &nodes,
                                       std::size_t count,
@@ -37,7 +38,7 @@ triangulation_file_io::read_triangles(std::istream &input,
 }
 
 template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
-auto
+unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder
 triangulation_file_io::read_triangles(std::istream &input,
                                       std::vector<NodeInfo> const &nodes, std::size_t count) {
     typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
@@ -58,6 +59,18 @@ triangulation_file_io::read_triangles(std::istream &input,
         }
     }
     return builder;
+}
+
+template<typename NodeId, typename formatter>
+void triangulation_file_io::write_triangles(std::ostream &output, const std::vector<std::array<NodeId, 3>> &faces) {
+    for (int t = 0; t < faces.size(); t++) {
+        formatter::template write<NodeId>(output, faces[t][0]);
+        formatter::write(output, ' ');
+        formatter::template write<NodeId>(output, faces[t][1]);
+        formatter::write(output, ' ');
+        formatter::template write<NodeId>(output, faces[t][2]);
+        formatter::write(output, '\n');
+    }
 }
 
 
@@ -102,25 +115,31 @@ steiner_graph triangulation_file_io::read<steiner_graph>(std::istream &input) {
 }
 
 
+template<Topology Graph, typename format>
+void triangulation_file_io::write(std::ostream &output, const Graph &graph) {
+    return;
+}
+
 template<>
 void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &output,
                                                                                const steiner_graph &graph) {
     stream_encoders::encode_text f;
 
-    f.write(output, graph.node_count());
+    f.write(output, graph.base_graph().node_count());
     f.write(output, '\n');
-    f.write(output, graph.node_count());
+    f.write(output, graph.base_polyhedron().face_count());
     f.write(output, '\n');
 
-    for (int i = 0; i < graph.node_count(); ++i) {
+    for (int i = 0; i < graph.base_graph().node_count(); ++i) {
         auto n = graph.node(i);
 
+        f.write(output, std::setprecision(20));
         f.write(output, n.coordinates.latitude) << ' ';
         f.write(output, n.coordinates.longitude);
         f.write(output, '\n');
     }
 
-    for (int e = 0; e < graph.edge_count(); ++e) {
+    for (int e = 0; e < graph.base_graph().edge_count(); ++e) {
         auto triangles = graph.base_polyhedron().edge_faces(e);
         for (auto triangle: triangles) {
             if (is_none(triangle)) continue;
