@@ -146,9 +146,9 @@ template<typename... Args>
 Graph Graph::read_graph_file(std::string path, Args... args) {
     std::ifstream input(path);
 
-    if (path.ends_with(".graph"))
+    if (path.ends_with(".graph")) {
         return { GraphImplementation<steiner_graph>( triangulation_file_io::read_steiner(input, 0.5F))};
-    else if (path.ends_with(".fmi"))
+    } else if (path.ends_with(".fmi"))
         return { GraphImplementation<std_graph_t>(fmi_file_io::read<std_graph_t>(input)) };
     else if (path.ends_with(".sch"))
         return {GraphImplementation<ch_graph_t>(fmi_file_io::read<ch_graph_t>(input))};

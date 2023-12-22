@@ -44,13 +44,18 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edge(
 
 template<typename NodeId, typename E>
 void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges(const std::vector<edge_type> &edges) {
-    for (auto& e : edges)
+    for (auto& e : edges) {
+        add_node(e.source);
+        add_node(e.destination);
         _M_edges.emplace_back(e);
+    }
 }
 
 template<typename NodeId, typename E>
 void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges(std::vector<edge_type> &&edges) {
     while(!edges.empty()){
+        add_node(edges.back().source);
+        add_node(edges.back().destination);
         _M_edges.emplace_back(edges.back());
         edges.pop_back();
         edges.shrink_to_fit();
@@ -63,6 +68,8 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges
     for (auto& tri : faces) {
         for (int i = 0; i < 3; ++i) {
             int next = (i + 1) % 3;
+            add_node(tri[i]);
+            add_node(tri[next]);
 
             if (tri[i] < tri[next])
                 add_edge(tri[i], tri[next]);
@@ -79,6 +86,8 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges
         auto tri = faces.back();
         for (int i = 0; i < 3; ++i) {
             int next = (i + 1) % 3;
+            add_node(tri[i]);
+            add_node(tri[next]);
 
             if (tri[i] < tri[next])
                 add_edge(tri[i], tri[next]);

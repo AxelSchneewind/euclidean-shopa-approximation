@@ -8,41 +8,8 @@
 #include "file-io/triangulation_file_io_impl.h"
 #include "routing_impl.h"
 
-template<RoutableGraph G, typename file_io_in, typename file_io_out>
-void make_gl(std::istream &input, std::ostream &output, int linewidth, int color) {
-    using f_in = file_io_in;
-    using f_out = file_io_out;
-
-    // read
-    G graph = f_in::template read<G>(input);
-
-    std::cout << "read graph with " << graph.node_count() << " nodes and " << graph.edge_count() / 2 << " edges"
-              << std::endl;
-
-    // write gl file for graph
-    f_out::template write<G>(output, graph, linewidth, color);
-}
-
-template<typename file_io_in, typename file_io_out>
-void make_steiner_gl(std::istream &input, std::ostream &output, int linewidth, int color, float epsilon) {
-    using f_in = file_io_in;
-    using f_out = file_io_out;
-
-    // read
-    steiner_graph graph = f_in::read_steiner(input, epsilon);
-
-    std::cout << "read graph with " << graph.node_count() << " nodes and " << graph.edge_count() / 2 << " edges "
-              << "from which " << graph.base_graph().node_count() << " nodes and " << graph.base_graph().edge_count() / 2 << " are stored explicitly"
-              << std::endl;
-
-    // write gl file for graph
-    f_out::template write<steiner_graph>(output, graph, linewidth, color);
-}
-
-
 int
 main(int argc, char const *argv[]) {
-
     std::string filename;
     std::string filename_out;
     if (argc > 1)
@@ -114,8 +81,9 @@ main(int argc, char const *argv[]) {
             edge.info.line_width = linewidth;
         }
 
+        // TODO output steiner graph if epsilon argument has been passed
         if (output_file_ending == ".steiner.gl") {
-            make_steiner_gl<triangulation_file_io, gl_file_io>(input, output, linewidth, color, epsilon);
+
         } else if (output_file_ending == ".gl") {
             output << node_count << std::endl;
             output << edges.size() << std::endl;

@@ -19,9 +19,7 @@ std::ostream &gl_file_io::write(std::ostream &output, const Graph &graph, int li
 
     for (auto node: graph.node_ids()) {
         auto n = graph.node(node);
-        f::write(output, std::setprecision(20));
-        f::write(output, n.coordinates.latitude) << ' ';
-        f::write(output, n.coordinates.longitude);
+        f::write(output, n);
         f::write(output, '\n');
     }
 
