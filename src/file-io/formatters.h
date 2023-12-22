@@ -19,12 +19,11 @@ namespace stream_encoders {
         template<typename T>
         static std::ostream &write(std::ostream &output, const T &value);
 
-
         template<typename E, typename I>
-        std::ostream &write(std::ostream &output, const steiner_node_id<E, I> &value);
+        static std::ostream &write(std::ostream &output, const steiner_node_id<E, I> &value);
 
         template<typename N>
-        std::ostream &write(std::ostream &output, const steiner_edge_id<N> &value);
+        static std::ostream &write(std::ostream &output, const steiner_edge_id<N> &value);
 
         // read/write lists
         template<typename T>

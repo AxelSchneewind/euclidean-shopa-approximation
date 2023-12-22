@@ -1,6 +1,7 @@
 #include <fstream>
 #include <string>
 
+#include "file-io/file_io_impl.h"
 #include "file-io/gl_file_io.h"
 #include "file-io/gl_file_io_impl.h"
 #include "file-io/triangulation_file_io.h"
@@ -90,11 +91,36 @@ main(int argc, char const *argv[]) {
     std::string_view output_file_ending(&filename_out.at(filename_out.find_first_of('.')));
 
     if (input_file_ending == ".graph") {
+        std::vector<coordinate_t> nodes;
+        std::vector<std::array<unsigned long, 3>> faces;
+
+        long node_count, face_count;
+        input >> node_count >> face_count;
+
+        nodes.resize(node_count);
+        faces.resize(face_count);
+
+        file_io::read_nodes<coordinate_t, stream_encoders::encode_text>(input, nodes);
+        file_io::read_triangles<unsigned long, stream_encoders::encode_text>(input, faces);
+
+        unidirectional_adjacency_list<unsigned long, gl_edge_t>::adjacency_list_builder builder;
+        builder.add_edges_from_triangulation(faces);
+        builder.sort_edges();
+        auto edges = builder.edges();
+
+        // set color and linewidth
+        for(auto& edge : edges) {
+            edge.info.color = color;
+            edge.info.line_width = linewidth;
+        }
 
         if (output_file_ending == ".steiner.gl") {
             make_steiner_gl<triangulation_file_io, gl_file_io>(input, output, linewidth, color, epsilon);
         } else if (output_file_ending == ".gl") {
-            make_gl<std_graph_t, triangulation_file_io, gl_file_io>(input, output, color, linewidth);
+            output << node_count << std::endl;
+            output << edges.size() << std::endl;
+            file_io::write_nodes(output, std::span<coordinate_t>{nodes.begin(), nodes.end()});
+            file_io::write_edges(output, edges);
         }
     }
 

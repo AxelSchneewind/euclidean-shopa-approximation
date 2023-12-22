@@ -27,10 +27,72 @@ unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edge(NodeI
     add_node(__source);
     add_node(__destination);
 
-    auto edge = adjacency_list_edge<NodeId, E>(__source, __destination, __info);
-    _M_edges.push_back(edge);
+    adjacency_list_edge<NodeId, E> edge(__source, __destination, __info);
+    _M_edges.emplace_back(edge);
     ++_M_edge_count;
 }
+
+template<typename NodeId, typename E>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edge(NodeId __source, NodeId __destination) {
+    add_node(__source);
+    add_node(__destination);
+
+    adjacency_list_edge<NodeId, E> edge(__source, __destination);
+    _M_edges.emplace_back(edge);
+    ++_M_edge_count;
+}
+
+template<typename NodeId, typename E>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges(const std::vector<edge_type> &edges) {
+    for (auto& e : edges)
+        _M_edges.emplace_back(e);
+}
+
+template<typename NodeId, typename E>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges(std::vector<edge_type> &&edges) {
+    while(!edges.empty()){
+        _M_edges.emplace_back(edges.back());
+        edges.pop_back();
+        edges.shrink_to_fit();
+    }
+}
+
+
+template<typename NodeId, typename E>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges_from_triangulation( std::vector<std::array<node_id_type, 3>> const&faces) {
+    for (auto& tri : faces) {
+        for (int i = 0; i < 3; ++i) {
+            int next = (i + 1) % 3;
+
+            if (tri[i] < tri[next])
+                add_edge(tri[i], tri[next]);
+            else
+                add_edge(tri[next], tri[i]);
+        }
+    }
+}
+
+template<typename NodeId, typename E>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges_from_triangulation(
+        std::vector<std::array<node_id_type, 3>> &&faces) {
+    while(!faces.empty()) {
+        auto tri = faces.back();
+        for (int i = 0; i < 3; ++i) {
+            int next = (i + 1) % 3;
+
+            if (tri[i] < tri[next])
+                add_edge(tri[i], tri[next]);
+            else
+                add_edge(tri[next], tri[i]);
+        }
+        faces.pop_back();
+        faces.shrink_to_fit();
+    }
+
+    faces.clear();
+    std::move(faces);
+}
+
 
 template<typename NodeId, typename E>
 void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::insert_backward_edges() {
@@ -39,20 +101,32 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::insert_ba
     for (std::size_t i = 0; i < edge_count; ++i) {
         auto edge = _M_edges[i];
         std::swap(edge.source, edge.destination);
-        _M_edges.push_back(edge);
+        _M_edges.emplace_back(edge);
     }
 
     _M_edge_count *= 2;
 }
 
 template<typename NodeId, typename E>
-unidirectional_adjacency_list<NodeId, E>
-unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::get() {
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::sort_edges() {
     // order by source id
     auto order = [&](adjacency_list_edge<NodeId, E> __e1, adjacency_list_edge<NodeId, E> __e2) {
         return __e1.source < __e2.source || (__e1.source == __e2.source && __e1.destination < __e2.destination);
     };
     std::sort(_M_edges.begin(), _M_edges.end(), order);
+}
+
+template<typename NodeId, typename E>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::remove_duplicates() {
+    sort_edges();
+    remove_duplicates_sorted(_M_edges);
+}
+
+
+template<typename NodeId, typename E>
+unidirectional_adjacency_list<NodeId, E>
+unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::get() {
+    sort_edges();
 
     // remove duplicates
     remove_duplicates_sorted<adjacency_list_edge<NodeId, E>>(_M_edges);
@@ -256,6 +330,7 @@ unidirectional_adjacency_list<NodeId, E>::inverse() const {
 
     return builder.get();
 }
+
 
 
 template<typename NodeId, typename E>

@@ -77,6 +77,8 @@ public:
         std::vector<adjacency_list_edge<NodeId, E>> _M_edges;
 
     public:
+        using edge_type = adjacency_list_edge<NodeId, E>;
+
         adjacency_list_builder() : _M_node_count(0), _M_edge_count(0) {};
 
         adjacency_list_builder(adjacency_list_builder &&__other) = default;
@@ -93,11 +95,25 @@ public:
 
         adjacency_list_builder &operator=(const adjacency_list_builder &__other) = default;
 
+        edge_type& edge(std::size_t index) { return _M_edges[index]; }
+
+        void sort_edges();
+        void remove_duplicates();
+
+        std::span<edge_type, std::dynamic_extent> edges() { return {_M_edges.begin(), _M_edges.end()};}
+
+        void add_edges_from_triangulation(std::vector<std::array<node_id_type, 3>> const& faces);
+        void add_edges_from_triangulation(std::vector<std::array<node_id_type, 3>> && faces);
+
+        void add_edges(std::vector<edge_type> const& edges);
+        void add_edges(std::vector<edge_type> && edges);
+
         void add_node(NodeId __node);
 
-        void add_edge(adjacency_list_edge<NodeId, E> __edge) { _M_edges.push_back(__edge); };
+        void add_edge(adjacency_list_edge<NodeId, E> const& __edge) { _M_edges.emplace_back(__edge); };
 
         void add_edge(NodeId __source, NodeId __destination, E __info);
+        void add_edge(NodeId __source, NodeId __destination);
 
         void insert_backward_edges();
 

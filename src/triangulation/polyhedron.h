@@ -101,6 +101,7 @@ private:
     std::vector<face_id_type> _M_node_edges;
     std::vector<int> _M_node_edges_offsets;
 
+
     polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
                std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
                std::vector<edge_id_type> &&__inverse_edges,
@@ -109,7 +110,6 @@ private:
     );
 
 public:
-
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(edge_info_type);
 

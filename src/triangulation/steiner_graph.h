@@ -1,6 +1,7 @@
 #pragma once
 
 #include "subdivision_table.h"
+#include "../graph/subgraph.h"
 #include <format>
 
 template<typename EdgeId, typename IntraEdgeId>

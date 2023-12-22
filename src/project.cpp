@@ -1,12 +1,9 @@
-
-#include "interface/Graph.h"
-
+#include "graph/base_types_impl.h"
 #include "graph/geometry_impl.h"
 #include "file-io/formatters_impl.h"
-#include "file-io/fmi_file_io_impl.h"
-#include "file-io/triangulation_file_io_impl.h"
+#include "file-io/file_io_impl.h"
 
-#include "routing_impl.h"
+#include <fstream>
 
 
 int main(int argc, const char* argv[]) {
@@ -16,11 +13,15 @@ int main(int argc, const char* argv[]) {
     long node_count, triangle_count;
     input >> node_count >> triangle_count;
 
-    auto nodes = fmi_file_io::read_nodes<node_t, stream_encoders::encode_text>(input, node_count);
-    std::vector<std::array<node_id_t, 3>> faces;
+    std::cout << " has " << node_count << " nodes and " << triangle_count << " faces. " << std::flush;
 
-    typename unidirectional_adjacency_list<node_id_t, float>::adjacency_list_builder triangles = triangulation_file_io::read_triangles<node_t, node_id_t, float, stream_encoders::encode_text>(input, nodes, triangle_count, faces);
-    std::cout << "\b\b\b, done" << std::endl;
+    std::vector<coordinate_t> nodes(node_count);
+    file_io::read_nodes<coordinate_t, stream_encoders::encode_text>(input, nodes);
+
+    std::vector<std::array<unsigned long, 3>> faces(triangle_count);
+    file_io::read_triangles<unsigned long, stream_encoders::encode_text>(input, faces);
+
+    std::cout << "\n, done" << std::endl;
 
     Projection projection = Projection::NONE;
     std::string projection_name(argv[3]);
@@ -32,14 +33,18 @@ int main(int argc, const char* argv[]) {
     std::cout << "projecting with " << (int)projection << "..." << std::flush;
     // graph.project(projection);
     for(auto& node : nodes)
-        project_coordinate(node.coordinates, projection);
+        project_coordinate(node, projection);
 
     std::cout << "\b\b\b, done" << std::endl;
 
     std::cout << "writing to " << argv[2] << "..." << std::flush;
     // graph.write_graph_file(argv[2]);
     std::ofstream output(argv[2]);
-    fmi_file_io::write_nodes<node_t, stream_encoders::encode_text>(output, nodes);
-    triangulation_file_io::write_triangles<node_id_t, stream_encoders::encode_text>(output, faces);
+    output << node_count << std::endl;
+    output << triangle_count << std::endl;
+    file_io::write_nodes<coordinate_t, stream_encoders::encode_text>(output, nodes);
+    file_io::write_triangles<unsigned long, stream_encoders::encode_text>(output, faces);
     std::cout << "\b\b\b, done" << std::endl;
+
+    output.close();
 }

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <span>
+#include <iomanip>
 
 namespace stream_encoders {
 
@@ -52,7 +53,7 @@ namespace stream_encoders {
     template<>
     std::ostream &
     encode_text::write(std::ostream &output, const coordinate_t &c) {
-        output << c.latitude << ' ' << c.longitude << ' ';
+        output << std::setprecision(20) << c.latitude << ' ' << c.longitude << ' ';
         return output;
     }
 
@@ -68,8 +69,7 @@ namespace stream_encoders {
     template<>
     std::ostream &
     encode_text::write(std::ostream &output, const node_t &node) {
-        output << node.coordinates.latitude << ' ' << node.coordinates.longitude;
-        return output;
+        return write(output, node.coordinates);
     }
 
 
@@ -79,6 +79,15 @@ namespace stream_encoders {
         output << (long) edge.source << ' ' << (long) edge.destination << ' ' << (double) edge.info.cost;
         return output;
     }
+
+    template<>
+    std::ostream &
+    encode_text::write(std::ostream &output, const adjacency_list_edge<node_id_t, gl_edge_t> &edge) {
+        output << (long) edge.source << ' ' << (long) edge.destination << ' ' << (long) edge.info.line_width << ' '
+               << (long) edge.info.color;
+        return output;
+    }
+
 
     template<>
     std::ostream &
@@ -135,16 +144,32 @@ namespace stream_encoders {
 
 // triangles
     template<>
-    triangle
-    encode_text::read(std::istream &input) {
-        triangle result;
+    std::array<int, 3>
+    encode_text::read<std::array<int, 3>>(std::istream &input) {
+        std::array<int, 3> result;
         input >> result[0] >> result[1] >> result[2];
         return result;
     }
 
     template<>
     std::ostream &
-    encode_text::write(std::ostream &output, const triangle &triangle) {
+    encode_text::write(std::ostream &output, const std::array<int, 3> &triangle) {
+        output << triangle[0] << ' ' << triangle[1] << ' ' << triangle[2] << ' ';
+        return output;
+    }
+
+
+    template<>
+    std::array<unsigned long, 3>
+    encode_text::read(std::istream &input) {
+        std::array<unsigned long, 3> result;
+        input >> result[0] >> result[1] >> result[2];
+        return result;
+    }
+
+    template<>
+    std::ostream &
+    encode_text::write(std::ostream &output, const std::array<unsigned long, 3> &triangle) {
         output << triangle[0] << ' ' << triangle[1] << ' ' << triangle[2] << ' ';
         return output;
     }
@@ -178,8 +203,8 @@ namespace stream_encoders {
     template<>
     std::ostream &
     encode_text::write(std::ostream &output, const ch_node_t &node) {
-        output << node.coordinates.latitude << ' ' << node.coordinates.longitude << ' ' << node.level
-               << ' ';
+        write(output, node.coordinates);
+        output  << ' ' << node.level << ' ';
         return output;
     }
 
