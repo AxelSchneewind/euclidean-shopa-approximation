@@ -58,6 +58,7 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
     _router.compute_route();
 
     auto after = std::chrono::high_resolution_clock::now();
+    done = true;
     status.join();
 
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
