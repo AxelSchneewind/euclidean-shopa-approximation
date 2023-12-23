@@ -33,8 +33,8 @@ private:
     public:
         ~RouterImplementation() = default;
 
-        RouterImplementation(GraphT && graph, RouterT && router) : _graph{std::move(graph)}, _router{std::move(router)} {};
-        RouterImplementation(Graph const& graph, RouterT && router) : _graph{graph}, _router{std::move(router)} {};
+        // RouterImplementation(GraphT && graph, RouterT && router) : _graph{std::move(graph)}, _router{std::move(router)} {};
+        RouterImplementation(Graph const& graph, RouterT && router) : _graph(graph), _router(std::move(router)) {};
 
         void compute_route(long from, long to) override;
 

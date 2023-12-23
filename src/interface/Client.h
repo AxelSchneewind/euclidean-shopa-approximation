@@ -38,7 +38,7 @@ public:
 
     void compute_route(int from, int to) { _router.compute_route(from, to); };
 
-    void compute_one_to_all(int from) { /*_router.compute_one_to_all(from);*/ };
+    void compute_one_to_all(int from) {  /*_router.compute_one_to_all(from);*/ };
     void compute_one_to_all(int from, std::ostream& out) { /*_router.compute_one_to_all(from, out);*/ };
 
     void write_route_file(std::string path) const { _result.path().write_graph_file(path); };

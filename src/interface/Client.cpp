@@ -104,16 +104,16 @@ void Client::read_graph_file(std::string path, bool output_csv) {
 
 
     if (path.ends_with(".graph")) {
-        _graph = Graph::read_graph_file(path, 0.5F);
+        _graph.read_graph_file(path, 0.5F);
         _router = {_graph};
     } else if (path.ends_with(".fmi")) {
-        _graph = Graph::read_graph_file(path);
+        _graph.read_graph_file(path);
         _router = {_graph};
     } else if (path.ends_with(".sch")) {
-        _graph = Graph::read_graph_file(path);
+        _graph.read_graph_file(path);
         _router = {_graph};
     } else if (path.ends_with(".gl")) {
-        _graph = Graph::read_graph_file(path);
+        _graph.read_graph_file(path);
         _router = {_graph};
     } else {
         throw std::invalid_argument("unrecognized file ending");
@@ -125,7 +125,7 @@ void Client::read_graph_file(std::string path, bool output_csv) {
 };
 
 template<>
-void Client::read_graph_file(std::string path, float epsilon, bool csv) {
+void Client::read_graph_file(std::string path, double epsilon, bool csv) {
     std::ifstream input(path);
 
     if (path.ends_with(".graph")) {

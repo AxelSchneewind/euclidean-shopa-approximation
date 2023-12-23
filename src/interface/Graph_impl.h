@@ -73,17 +73,44 @@ void Graph::GraphImplementation<GraphT>::write_graph_stats(std::ostream &output)
 
 
 template<typename GraphT>
-coordinate_t Graph::GraphImplementation<GraphT>::node_coordinates(int node_id) const {
+coordinate_t Graph::GraphImplementation<GraphT>::node_coordinates(long node_id) const {
     return graph.node(node_id).coordinates;
 }
 
 template<typename GraphT>
-int Graph::GraphImplementation<GraphT>::edge_count() const {
+long Graph::GraphImplementation<GraphT>::node_at(coordinate_t &position) const {
+    for (auto&& id : graph.node_ids()) {
+        auto&& node = graph.node(id);
+        if (node.coordinates == position)
+            return id;
+    }
+    return none_value<long>;
+}
+
+template<>
+long Graph::GraphImplementation<steiner_graph>::node_at(coordinate_t &position) const {
+    for (auto&& id : graph.base_graph().node_ids()) {
+        auto&& node = graph.node(id);
+        if (node.coordinates == position)
+            return id;
+    }
+
+    for (auto&& id : graph.node_ids()) {
+        auto&& node = graph.node(id);
+        if (node.coordinates == position)
+            return graph.base_graph().node_count() - 1;
+    }
+
+    return none_value<long>;
+}
+
+template<typename GraphT>
+std::size_t Graph::GraphImplementation<GraphT>::edge_count() const {
     return graph.edge_count();
 }
 
 template<typename GraphT>
-int Graph::GraphImplementation<GraphT>::node_count() const {
+std::size_t Graph::GraphImplementation<GraphT>::node_count() const {
     return graph.node_count();
 }
 
@@ -106,33 +133,33 @@ void Graph::GraphImplementation<GraphT>::write_graph_file(std::string path) cons
 
 template<typename GraphT>
 void Graph::GraphImplementation<GraphT>::project(Projection projection) {
-    for (int i = 0; i < graph.node_count(); ++i) {
+    for (std::size_t i = 0; i < graph.node_count(); ++i) {
         project_coordinate(graph.node(i).coordinates, projection);
     }
 }
 
 template<>
 void Graph::GraphImplementation<steiner_graph>::project(Projection projection) {
-    for (int i = 0; i < graph.base_graph().node_count(); ++i) {
+    for (std::size_t i = 0; i < graph.base_graph().node_count(); ++i) {
         project_coordinate(graph.node(i).coordinates, projection);
     }
 }
 
 
 template<typename... Args>
-Graph Graph::read_graph_file(std::string path, double epsilon, Args... args) {
+void Graph::read_graph_file(std::string path, double epsilon, Args... args) {
     std::ifstream input(path);
 
     if (path.ends_with(".graph") && epsilon != 0.0)
-        return { GraphImplementation<steiner_graph>( triangulation_file_io::read_steiner(input, epsilon))};
+        pimpl = std::make_unique<GraphImplementation<steiner_graph>>(triangulation_file_io::read_steiner(input, epsilon));
     else if (path.ends_with(".graph"))
-        return { GraphImplementation<std_graph_t>( triangulation_file_io::read<std_graph_t>(input))};
+        pimpl = std::make_unique<GraphImplementation<std_graph_t>>( triangulation_file_io::read<std_graph_t>(input));
     else if (path.ends_with(".fmi"))
-        return { GraphImplementation<std_graph_t>(fmi_file_io::read<std_graph_t>(input)) };
+        pimpl = std::make_unique<GraphImplementation<std_graph_t>>(fmi_file_io::read<std_graph_t>(input));
     else if (path.ends_with(".sch"))
-        return {GraphImplementation<ch_graph_t>(fmi_file_io::read<ch_graph_t>(input))};
+        pimpl = std::make_unique<GraphImplementation<ch_graph_t>>(fmi_file_io::read<ch_graph_t>(input));
     else if (path.ends_with(".gl"))
-        return {GraphImplementation<gl_graph_t>(fmi_file_io::read<gl_graph_t>(input)) };
+        pimpl = std::make_unique<GraphImplementation<gl_graph_t>>(fmi_file_io::read<gl_graph_t>(input));
     else
         throw std::invalid_argument("unrecognized file ending");
 
@@ -143,17 +170,17 @@ Graph Graph::read_graph_file(std::string path, double epsilon, Args... args) {
 
 
 template<typename... Args>
-Graph Graph::read_graph_file(std::string path, Args... args) {
+void Graph::read_graph_file(std::string path, Args... args) {
     std::ifstream input(path);
 
     if (path.ends_with(".graph")) {
-        return { GraphImplementation<steiner_graph>( triangulation_file_io::read_steiner(input, 0.5F))};
+        pimpl = std::make_unique<GraphImplementation<steiner_graph>>( triangulation_file_io::read_steiner(input, 0.5F));
     } else if (path.ends_with(".fmi"))
-        return { GraphImplementation<std_graph_t>(fmi_file_io::read<std_graph_t>(input)) };
+        pimpl = std::make_unique<GraphImplementation<std_graph_t>>(fmi_file_io::read<std_graph_t>(input));
     else if (path.ends_with(".sch"))
-        return {GraphImplementation<ch_graph_t>(fmi_file_io::read<ch_graph_t>(input))};
+        pimpl = std::make_unique<GraphImplementation<ch_graph_t>>(fmi_file_io::read<ch_graph_t>(input));
     else if (path.ends_with(".gl"))
-        return {GraphImplementation<gl_graph_t>(fmi_file_io::read<gl_graph_t>(input)) };
+        pimpl = std::make_unique<GraphImplementation<gl_graph_t>>(fmi_file_io::read<gl_graph_t>(input));
     else
         throw std::invalid_argument("unrecognized file ending");
 
