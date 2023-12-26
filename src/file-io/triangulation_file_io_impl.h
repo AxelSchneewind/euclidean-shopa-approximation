@@ -88,7 +88,6 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
 
     steiner_graph::adjacency_list_type::builder adj_list_builder;
     adj_list_builder.add_edges_from_triangulation(faces);
-    adj_list_builder.remove_unconnected_nodes();
 
     auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional(adj_list_builder.get());
     return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces), __epsilon);
