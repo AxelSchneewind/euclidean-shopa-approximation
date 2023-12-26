@@ -71,23 +71,27 @@ public:
 
     class adjacency_list_builder {
     private:
-        size_t _M_node_count;
-        size_t _M_edge_count;
+        size_t _node_count;
+        size_t _edge_count;
 
-        std::vector<adjacency_list_edge<NodeId, E>> _M_edges;
+        std::vector<adjacency_list_edge<NodeId, E>> _edges;
+        std::vector<edge_index_type> _offsets;
+
+        bool _edges_sorted;
+        bool _offsets_valid;
+
+        void make_offsets();
 
     public:
         using edge_type = adjacency_list_edge<NodeId, E>;
 
-        adjacency_list_builder() : _M_node_count(0), _M_edge_count(0) {};
+        adjacency_list_builder() : _node_count(0), _edge_count(0) {};
 
-        adjacency_list_builder(adjacency_list_builder &&__other) = default;
+        adjacency_list_builder(adjacency_list_builder &&other) = default;
 
-        adjacency_list_builder(const adjacency_list_builder &__other) = default;
+        adjacency_list_builder(const adjacency_list_builder &other) = default;
 
-        adjacency_list_builder(size_t __node_count) : _M_node_count(__node_count), _M_edge_count(0) {
-            _M_edges.reserve(_M_node_count);
-        };
+        adjacency_list_builder(size_t node_count) : _node_count(node_count), _edge_count(0), _offsets_valid(false), _edges_sorted(false) { _edges.reserve(_node_count); };
 
         ~adjacency_list_builder() = default;
 
@@ -95,12 +99,22 @@ public:
 
         adjacency_list_builder &operator=(const adjacency_list_builder &__other) = default;
 
-        edge_type& edge(std::size_t index) { return _M_edges[index]; }
+        edge_type& edge(std::size_t index) { _offsets_valid = false; _edges_sorted = false; return _edges[index]; }
 
         void sort_edges();
         void remove_duplicates();
 
-        std::span<edge_type, std::dynamic_extent> edges() { return {_M_edges.begin(), _M_edges.end()};}
+        void remove_unconnected_nodes();
+
+        template<std::predicate<node_id_type> NodePredicate>
+        void filter_nodes(NodePredicate&& node_predicate);
+
+        template<std::predicate<edge_info_type> EdgePredicate>
+        void filter_edges(EdgePredicate&& edge_predicate);
+
+        void reorder_nodes(std::span<node_id_type> new_node_ids);
+
+        std::span<edge_type, std::dynamic_extent> edges() { return {_edges.begin(), _edges.end()};}
 
         void add_edges_from_triangulation(std::vector<std::array<node_id_type, 3>> const& faces);
         void add_edges_from_triangulation(std::vector<std::array<node_id_type, 3>> && faces);
@@ -110,7 +124,7 @@ public:
 
         void add_node(NodeId __node);
 
-        void add_edge(adjacency_list_edge<NodeId, E> const& __edge) { _M_edges.emplace_back(__edge); };
+        void add_edge(adjacency_list_edge<NodeId, E> const& __edge) { _edges.emplace_back(__edge); };
 
         void add_edge(NodeId __source, NodeId __destination, E __info);
         void add_edge(NodeId __source, NodeId __destination);
@@ -249,6 +263,7 @@ public:
 
     bool operator==(const unidirectional_adjacency_list<NodeId, E> &__other);
 };
+
 
 
 template<typename NodeId, typename E>

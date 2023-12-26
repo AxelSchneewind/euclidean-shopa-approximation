@@ -14,8 +14,9 @@
 template<typename NodeId, typename E>
 void
 unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_node(NodeId __node) {
-    if (_M_node_count <= (std::size_t) __node) {
-        _M_node_count = (std::size_t) __node + 1;
+    if (_node_count <= __node) [[unlikely]] {
+        _node_count = (std::size_t) __node + 1;
+        _offsets_valid = false;
     }
 }
 
@@ -27,9 +28,11 @@ unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edge(NodeI
     add_node(__source);
     add_node(__destination);
 
-    adjacency_list_edge<NodeId, E> edge(__source, __destination, __info);
-    _M_edges.emplace_back(edge);
-    ++_M_edge_count;
+    _edges.emplace_back(__source, __destination, __info);
+    ++_edge_count;
+
+    _offsets_valid = false;
+    _edges_sorted = false;
 }
 
 template<typename NodeId, typename E>
@@ -38,8 +41,11 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edge(
     add_node(__destination);
 
     adjacency_list_edge<NodeId, E> edge(__source, __destination);
-    _M_edges.emplace_back(edge);
-    ++_M_edge_count;
+    _edges.emplace_back(edge);
+    ++_edge_count;
+
+    _offsets_valid = false;
+    _edges_sorted = false;
 }
 
 template<typename NodeId, typename E>
@@ -47,8 +53,11 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges
     for (auto& e : edges) {
         add_node(e.source);
         add_node(e.destination);
-        _M_edges.emplace_back(e);
+        _edges.emplace_back(e);
     }
+
+    _offsets_valid = false;
+    _edges_sorted = false;
 }
 
 template<typename NodeId, typename E>
@@ -56,10 +65,13 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges
     while(!edges.empty()){
         add_node(edges.back().source);
         add_node(edges.back().destination);
-        _M_edges.emplace_back(edges.back());
+        _edges.emplace_back(edges.back());
         edges.pop_back();
         edges.shrink_to_fit();
     }
+
+    _offsets_valid = false;
+    _edges_sorted = false;
 }
 
 
@@ -71,12 +83,16 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges
             add_node(tri[i]);
             add_node(tri[next]);
 
+            // add edge such that source < destination
             if (tri[i] < tri[next])
                 add_edge(tri[i], tri[next]);
-            else
+            else if (tri[i] > tri[next])
                 add_edge(tri[next], tri[i]);
         }
     }
+
+    _offsets_valid = false;
+    _edges_sorted = false;
 }
 
 template<typename NodeId, typename E>
@@ -100,53 +116,166 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges
 
     faces.clear();
     std::move(faces);
+
+    _offsets_valid = false;
+    _edges_sorted = false;
 }
 
 
 template<typename NodeId, typename E>
 void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::insert_backward_edges() {
-    std::size_t edge_count = _M_edges.size();
+    std::size_t edge_count = _edges.size();
 
     for (std::size_t i = 0; i < edge_count; ++i) {
-        auto edge = _M_edges[i];
+        auto edge = _edges[i];
         std::swap(edge.source, edge.destination);
-        _M_edges.emplace_back(edge);
+        _edges.emplace_back(edge);
     }
 
-    _M_edge_count *= 2;
+    _edge_count *= 2;
+
+    _offsets_valid = false;
+    _edges_sorted = false;
 }
 
 template<typename NodeId, typename E>
 void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::sort_edges() {
+    if (_edges_sorted) return;
+
     // order by source id
-    auto order = [&](adjacency_list_edge<NodeId, E> __e1, adjacency_list_edge<NodeId, E> __e2) {
+    auto order = [&](adjacency_list_edge<NodeId, E> const& __e1, adjacency_list_edge<NodeId, E> const& __e2) {
         return __e1.source < __e2.source || (__e1.source == __e2.source && __e1.destination < __e2.destination);
     };
-    std::sort(_M_edges.begin(), _M_edges.end(), order);
+    std::sort(_edges.begin(), _edges.end(), order);
+
+    _edges_sorted = true;
 }
 
 template<typename NodeId, typename E>
 void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::remove_duplicates() {
     sort_edges();
-    remove_duplicates_sorted(_M_edges);
+    remove_duplicates_sorted(_edges);
 }
+
+template<typename NodeId, typename E>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::remove_unconnected_nodes() {
+    sort_edges();
+    make_offsets();
+
+    std::vector<bool> connected(_node_count, false);
+    for(auto&& edge: _edges) {
+        connected[edge.source] = true;
+        connected[edge.destination] = true;
+    }
+
+    filter_nodes([&](auto node_id) -> bool { return connected[node_id]; });
+}
+
+template<typename NodeId, typename E>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::make_offsets() {
+    if (_offsets_valid && _edges_sorted) return;
+
+    _offsets.clear();
+    sort_edges();
+
+    // make offset and source arrays
+    edge_index_type index = 0;
+    for (auto&& edge: _edges) {
+        while (_offsets.size() <= edge.source) {
+            _offsets.emplace_back(index);
+        }
+        ++index;
+    }
+
+    while (_offsets.size() <= _node_count) {
+        _offsets.emplace_back(_edge_count);
+    }
+
+    _offsets_valid = true;
+}
+
+
+template<typename NodeId, typename E>
+void
+unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::reorder_nodes(std::span<node_id_type> new_node_ids) {
+    assert (new_node_ids.size() >= _node_count);
+
+    // count nodes
+    _node_count = 0;
+    for (auto&& id : new_node_ids)
+        if (!is_none(id))
+            _node_count = std::max(_node_count, (std::size_t)id);
+    _node_count++;
+
+    // change node ids in each edge
+    for (int i = 0; i < _edge_count; ++i) {
+        _edges[i].source = new_node_ids[_edges[i].source];
+        _edges[i].destination = new_node_ids[_edges[i].destination];
+    }
+
+    // remove edges containing removed nodes (nodes that have none_value<...> as the new id)
+    for (int i = 0; i < _edge_count; ) {
+        if (is_none(_edges[i].source) || is_none(_edges[i].destination)) {
+            _edges[i] = _edges.back();
+            _edges.pop_back();
+        } else {
+            i++;
+        }
+    }
+    _edge_count = _edges.size();
+
+    _offsets_valid = false;
+    _edges_sorted = false;
+}
+
+template<typename NodeId, typename E>
+template<std::predicate<typename unidirectional_adjacency_list<NodeId, E>::edge_info_type> EdgePredicate>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::filter_edges(EdgePredicate&& edge_predicate) {
+    int j = 0;
+    for (int i = 0; i < _edge_count; ++i) {
+        if (edge_predicate(i)) {
+            _edges[j++] = _edges[i];
+        }
+    }
+    _edges.resize(j);
+    _edge_count = _edges.size();
+
+    _offsets_valid = false;
+}
+
+template<typename NodeId, typename E>
+template<std::predicate<typename unidirectional_adjacency_list<NodeId, E>::node_id_type> NodePredicate>
+void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::filter_nodes(NodePredicate&& node_predicate) {
+    std::vector<NodeId> new_node_ids(_node_count);
+
+    int j = 0;
+    for (int i = 0; i < _node_count; ++i) {
+        if (node_predicate(i)){
+            new_node_ids[i] = j++;
+        } else {
+            new_node_ids[i] = none_value<NodeId>;
+        }
+    }
+
+    reorder_nodes({new_node_ids.begin(), new_node_ids.end()});
+}
+
+
 
 
 template<typename NodeId, typename E>
 unidirectional_adjacency_list<NodeId, E>
 unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::get() {
     sort_edges();
+    remove_duplicates();
+    _edge_count = _edges.size();
 
-    // remove duplicates
-    remove_duplicates_sorted<adjacency_list_edge<NodeId, E>>(_M_edges);
-    _M_edge_count = _M_edges.size();
-
-    auto result = unidirectional_adjacency_list<NodeId, E>(_M_node_count, std::move(_M_edges));
+    auto result = unidirectional_adjacency_list<NodeId, E>(_node_count, std::move(_edges));
 
     // reset
-    _M_node_count = 0;
-    _M_edge_count = 0;
-    _M_edges.clear();
+    _node_count = 0;
+    _edge_count = 0;
+    _edges.clear();
 
     return result;
 }
@@ -273,10 +402,10 @@ template<typename NodeId, typename E>
 unidirectional_adjacency_list<NodeId, E>::unidirectional_adjacency_list(size_t __node_count,
                                                                         std::vector<adjacency_list_edge<NodeId, E>> &&__edges)
         : _M_node_count(__node_count), _M_edge_count(__edges.size()) {
-
     // make offset and source arrays
     int index = 0;
     for (auto edge: __edges) {
+        assert(!is_none(edge.source));
         while (_M_offsets.size() <= edge.source) {
             _M_offsets.emplace_back(index);
         }
