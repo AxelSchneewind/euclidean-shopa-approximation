@@ -47,7 +47,10 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
 
     std::vector<steiner_graph::node_info_type> nodes;
     std::vector<steiner_graph::adjacency_list_type::builder::edge_type> edges;
-    std::vector<std::array<steiner_graph::base_topology_type::node_id_type, 3>> faces;
+    std::vector<std::array<steiner_graph::triangle_node_id_type, 3>> faces;
+
+    if (node_count > (std::size_t)std::numeric_limits<int>::max || triangle_count > (std::size_t) std::numeric_limits<int>::max)
+        throw std::runtime_error("node or face count to high");
 
     nodes.resize(node_count);
     faces.resize(triangle_count);
@@ -55,10 +58,39 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     file_io::read_nodes<steiner_graph::node_info_type, f>(input_nodes, {nodes.begin(), nodes.end()});
     file_io::read_triangles<steiner_graph::base_topology_type::node_id_type, f>(input_triangles, {faces.begin(), faces.end()});
 
+    // check for unconnected nodes
+    std::vector<bool> connected(triangle_count, false);
+    for (auto&& triangle : faces) {
+        connected[triangle[0]] = true;
+        connected[triangle[1]] = true;
+        connected[triangle[2]] = true;
+    }
+
+    //
+    std::vector<steiner_graph::triangle_node_id_type> new_node_ids(triangle_count);
+    int j = 0;
+    for (int i = 0; i < triangle_count; ++i) {
+        if (connected[i]) {
+            new_node_ids[i] = j++;
+        } else {
+            new_node_ids[i] = none_value<steiner_graph::triangle_node_id_type>;
+        }
+    }
+    connected.clear(); connected.shrink_to_fit();
+
+    // apply new node ids
+    for (auto& triangle : faces) {
+        triangle[0] = new_node_ids[triangle[0]];
+        triangle[1] = new_node_ids[triangle[1]];
+        triangle[2] = new_node_ids[triangle[2]];
+    }
+    new_node_ids.clear(); new_node_ids.shrink_to_fit();
+
     steiner_graph::adjacency_list_type::builder adj_list_builder;
     adj_list_builder.add_edges_from_triangulation(faces);
+    adj_list_builder.remove_unconnected_nodes();
 
-    steiner_graph::adjacency_list_type adj_list { steiner_graph::adjacency_list_type::make_bidirectional(adj_list_builder.get()) };
+    auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional(adj_list_builder.get());
     return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces), __epsilon);
 }
 
