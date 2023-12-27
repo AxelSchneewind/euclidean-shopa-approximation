@@ -41,7 +41,7 @@ void Graph::GraphImplementation<steiner_graph>::write_graph_stats(std::ostream &
     output << "\r\agraph has "
            << std::setw(12) << graph.node_count() << " nodes and "
            << std::setw(12) << graph.edge_count() / 2 << " edges"
-           << "\n                 with "
+           << "\n       with "
            << std::setw(12) << graph.base_graph().node_count() << " nodes and "
            << std::setw(12) << graph.base_graph().edge_count() / 2 << " edges stored explicitly (ε = "
            << graph.epsilon() << ")" << std::endl;

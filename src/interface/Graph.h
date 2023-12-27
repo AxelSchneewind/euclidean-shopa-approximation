@@ -78,15 +78,16 @@ private:
     };
 
 
-    std::unique_ptr<GraphInterface> pimpl;
+    std::shared_ptr<GraphInterface> pimpl;
 
     template <typename GraphT>
-    Graph(GraphImplementation<GraphT>&& impl) : pimpl(std::make_unique<GraphImplementation<GraphT>>(std::move(impl))) {};
+    Graph(GraphImplementation<GraphT>&& impl) : pimpl(std::make_shared<GraphImplementation<GraphT>>(std::move(impl))) {};
 
 public:
     Graph() : pimpl(nullptr) {};
 
     Graph(Graph&&) = default;
+    Graph(Graph const&) = default;
 
     Graph& operator=(Graph&&) = default;
 
