@@ -120,21 +120,18 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         assert(std::abs(mid_value + mid_value_second - 1.0) < 0.001);
         assert(mid_value < 1 && mid_value > 0);
 
-        // store minimal distance from the given mid-point to any other edge, relative to this edges length
-        double mid_dist = mid_value * std::sin(angle1);
-
         // distance values have been computed already, convert to r(v) relative to this edges length
         double r_first = (__epsilon / 5) * __r_values[node1] / length;
         double r_second = (__epsilon / 5) * __r_values[node2] / length;
         assert(r_first >= 0 && r_second >= 0);
-        assert(r_first <= 1.0 && r_second < 1.0);
+        assert(r_first <= 1.0 && r_second <= 1.0);
 
         // get the class this edge belongs to
         auto index = class_index(angle1);
         auto index_second = class_index(angle2);
 
         // get interval in first half that is between r and mid_value
-        auto &node_positions = __table[index].node_positions;
+        auto const& node_positions = __table[index].node_positions;
         size_t first_start_index = 0;
         while (first_start_index < node_positions.size() && node_positions[first_start_index] < r_first)
             first_start_index++;
@@ -213,9 +210,9 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
 subdivision_table::subdivision_table(subdivision_table &&__other) noexcept: triangle_classes(
         std::move(__other.triangle_classes)), edges(std::move(__other.edges)) {}
 
-subdivision_table::subdivision_table(std::vector<edge_class> &&__node_positions,
-                                     std::vector<subdivision_edge_info> &&__edges) : triangle_classes(
-        std::move(__node_positions)), edges(std::move(__edges)) {}
+subdivision_table::subdivision_table(std::vector<edge_class> &&__node_positions, std::vector<subdivision_edge_info> &&__edges)
+: triangle_classes( std::move(__node_positions))
+, edges(std::move(__edges)) {}
 
 double subdivision_table::class_angle(int __index) {
     return min_angle + step_size * (__index);
