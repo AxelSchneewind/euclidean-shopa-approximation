@@ -36,7 +36,11 @@ public:
 
     void write_graph_file(std::string path) { _graph.write_graph_file(path); }
 
-    void compute_route(int from, int to) { _router.compute_route(from, to); };
+    void compute_route(int from, int to) {
+        _router.compute_route(from, to);
+        _query = _router.query();
+        _result = _router.result();
+    };
 
     void compute_one_to_all(int from) {  /*_router.compute_one_to_all(from);*/ };
     void compute_one_to_all(int from, std::ostream& out) { /*_router.compute_one_to_all(from, out);*/ };
@@ -50,7 +54,17 @@ public:
     void write_csv(std::ostream &output) const { format_csv(statistics, output); };
     void write_csv_header(std::ostream &output) const { format_header(statistics, output); };
 
-    void write_info(std::ostream &output) const {  };
+    void write_info(std::ostream &output) const {
+     if (_result.route_found()) {
+         output << "path: "; // TODO print path
+         output << '\n'
+                << "has cost " << _result.distance() << ","
+                << " with beeline distance "
+                << _query.beeline_distance() << ", search visited "
+                << _result.tree_forward().node_count() << " + " << _result.tree_backward().node_count() << " nodes and took "
+                << _result.duration() << std::endl;
+     }
+    };
 
     void write_graph_stats(std::ostream &output) const { _graph.write_graph_stats(output); };
 

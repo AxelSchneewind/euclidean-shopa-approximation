@@ -102,6 +102,7 @@ template<>
 void Client::read_graph_file(std::string path, bool output_csv) {
     std::ifstream input(path);
 
+    std::cout << "reading graph from " << path << "..." << std::flush;
 
     if (path.ends_with(".graph")) {
         _graph.read_graph_file(path, 0.5F);
@@ -119,6 +120,8 @@ void Client::read_graph_file(std::string path, bool output_csv) {
         throw std::invalid_argument("unrecognized file ending");
     }
 
+    std::cout << "\b\b\b, done";
+
 // ...
 
     input.close();
@@ -128,6 +131,8 @@ template<>
 void Client::read_graph_file(std::string path, double epsilon, bool csv) {
     std::ifstream input(path);
 
+    std::cout << "reading graph from " << path << "..." << std::flush;
+
     if (path.ends_with(".graph")) {
         _graph.read_graph_file(path, epsilon);
         _router = {_graph};
@@ -135,6 +140,8 @@ void Client::read_graph_file(std::string path, double epsilon, bool csv) {
         throw std::invalid_argument("unrecognized file ending");
     }
     // ...
+
+    std::cout << "\b\b\b, done";
 
     input.close();
 };
@@ -391,20 +398,7 @@ void Client::read_graph_file(std::string path, double epsilon, bool csv) {
 // template<typename GraphT, typename RoutingT>
 // requires std::convertible_to<typename RoutingT::graph_type, GraphT>
 // void Client::ClientModel<GraphT, RoutingT>::write_info(std::ostream &output) const {
-//     if (result) {
-//         output << "path: ";
-//         if (result->route_found && result->path.nodes.size() < 100)
-//             output << result->path;
-//         else
-//             output << " I'm not printing that ";
-//         output << '\n'
-//                << "has cost " << statistics.get(Statistics::COST) << ","
-//                << " with beeline distance "
-//                << statistics.get(Statistics::BEELINE_DISTANCE) << ", satisfying ε >= "
-//                << statistics.get(Statistics::EPSILON_SATISFIED) << ", search visited "
-//                << statistics.get(Statistics::TREE_SIZE) << " nodes and took "
-//                << statistics.get(Statistics::TIME) << std::endl;
-//     }
+
 // }
 //
 // template<typename GraphT, typename RoutingT>
