@@ -26,7 +26,7 @@ main(int argc, char const *argv[]) {
         std::cin >> filename_out;
     }
 
-    float epsilon;
+    double epsilon;
     if (argc > 3)
         epsilon = std::stof(argv[3]);
     else {
@@ -85,8 +85,8 @@ main(int argc, char const *argv[]) {
         if (output_file_ending == ".steiner.gl") {
 
         } else if (output_file_ending == ".gl") {
-            output << node_count << std::endl;
-            output << edges.size() << std::endl;
+            output << node_count << '\n';
+            output << edges.size() << '\n';
             file_io::write_nodes(output, std::span<coordinate_t>{nodes.begin(), nodes.end()});
             file_io::write_edges(output, edges);
         }
