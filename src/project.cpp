@@ -6,7 +6,8 @@
 
 int main(int argc, const char* argv[]) {
     std::cout << "Reading graph from " << argv[1] << "..." << std::flush;
-    Graph graph = Graph::read_graph_file(argv[1]);
+    Graph graph;
+    graph.read_graph_file(argv[1]);
 
     std::cout << "\n, done" << std::endl;
 
