@@ -38,11 +38,9 @@ adjacency_list<NodeId, E>::make_bidirectional(unidirectional_adjacency_list<Node
 
 template<typename NodeId, typename E>
 adjacency_list<NodeId, E>
-adjacency_list<NodeId, E>::make_bidirectional(
-        std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __forward) {
+adjacency_list<NodeId, E>::make_bidirectional(std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> __forward) {
     std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> forward(__forward);
-    std::shared_ptr<unidirectional_adjacency_list<NodeId, E>> backward(
-            new unidirectional_adjacency_list<NodeId, E>(__forward->inverse()));
+    std::shared_ptr<unidirectional_adjacency_list<NodeId, E>> backward = std::make_shared<unidirectional_adjacency_list<NodeId, E>>(__forward->inverse());
 
     return adjacency_list<NodeId, E>(forward, backward);
 }
