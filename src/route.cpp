@@ -99,7 +99,6 @@ main(int argc, char const *argv[]) {
         if (output_csv)
             client.write_csv(std::cout);
         else {
-            client.write_query(std::cout);
             client.write_info(std::cout);
         }
 
