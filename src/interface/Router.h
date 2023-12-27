@@ -22,9 +22,7 @@ private:
     template <typename GraphT, typename RouterT>
     class RouterImplementation : public RouterInterface {
     private:
-        Graph const& _graph;
-        QueryImplementation<GraphT> _query;
-        ResultImplementation<GraphT> _result;
+        GraphT const& _graph;
 
         std::shared_ptr<QueryImplementation<GraphT>> _query_ptr;
         std::shared_ptr<ResultImplementation<GraphT>> _result_ptr;
@@ -33,12 +31,11 @@ private:
     public:
         ~RouterImplementation() = default;
 
-        // RouterImplementation(GraphT && graph, RouterT && router) : _graph{std::move(graph)}, _router{std::move(router)} {};
-        RouterImplementation(Graph const& graph, RouterT && router) : _graph(graph), _router(std::move(router)) {};
+        RouterImplementation(GraphT const& graph, RouterT && router) : _graph(graph), _router(std::move(router)) {};
 
         void compute_route(long from, long to) override;
 
-        Query query() override { return Query(_query); };
+        Query query() override { return Query(_query_ptr); };
         Result result() override { return Result(_result_ptr); };
     };
 

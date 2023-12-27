@@ -8,13 +8,11 @@ Router::Router(const Graph &graph) {
     switch (graph.type()) {
         case GraphType::STEINER_GRAPH_DIRECTED:
         case GraphType::STEINER_GRAPH_UNDIRECTED:
-            pimpl = std::make_unique<RouterImplementation < steiner_graph, steiner_routing_t>>
-            (graph, steiner_routing_t(graph.get<steiner_graph &>()));
+            pimpl = std::make_unique<RouterImplementation < steiner_graph, steiner_routing_t>> (graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
             break;
         case GraphType::STD_GRAPH_DIRECTED:
         case GraphType::STD_GRAPH_UNDIRECTED:
-            pimpl = std::make_unique<RouterImplementation < std_graph_t, std_routing_t>>
-            (graph, std_routing_t(graph.get<std_graph_t &>()));
+            pimpl = std::make_unique<RouterImplementation < std_graph_t, std_routing_t>> (graph.get<std_graph_t>(), std_routing_t(graph.get<std_graph_t>()));
             break;
     }
 }
@@ -22,8 +20,10 @@ Router::Router(const Graph &graph) {
 
 template<typename GraphT, typename RouterT>
 void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, long to) {
-    _query = QueryImplementation<GraphT>(_graph.get<GraphT>(), from, to);
-    _router.init(_query.from_internal(), _query.to_internal());
+    _query_ptr = std::make_shared<QueryImplementation<GraphT>>(_graph, from, to);
+
+    std::cout << "computing route from node " << from << " to " << to << std::endl;
+    _router.init(_query_ptr->from_internal(), _query_ptr->to_internal());
 
     // create thread to show progress
     bool done = false;
@@ -50,6 +50,8 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
                       << "MiB" << std::flush;
             usleep(100000);
         }
+
+        std::cout << ", done" << std::endl;
     });
 
 
@@ -62,5 +64,6 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
     status.join();
 
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
-    _result = ResultImplementation<GraphT>(_graph.get < GraphT const& > (), _query, _router, duration);
+    std::cout << "search took " << duration << std::endl;
+    _result_ptr = std::make_shared<ResultImplementation<GraphT>>(_graph, *_query_ptr, _router, duration);
 }
