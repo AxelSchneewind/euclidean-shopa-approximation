@@ -16,6 +16,9 @@ public:
 
     virtual long from() const = 0;
     virtual long to() const = 0;
+
+    virtual Graph beeline() const = 0;
+    virtual distance_t beeline_distance() const = 0;
 };
 
 template<RoutableGraph GraphT>
@@ -27,17 +30,24 @@ private:
     node_id_type _from_internal;
     node_id_type _to_internal;
 
+    Graph _beeline;
+    distance_t _beeline_distance;
+
 public:
-    QueryImplementation();;
+    QueryImplementation();
     QueryImplementation(GraphT const& graph, long from, long to);
 
-    long from() const { return _from; }
-    long to() const { return _to; }
+    long from() const override { return _from; }
+    long to() const override { return _to; }
 
     node_id_type from_internal() const { return _from_internal; }
     node_id_type to_internal() const { return _to_internal; }
 
-    void write(std::ostream& out) const { out << _from << ',' << _to; }
+
+    Graph beeline() const override  { return _beeline; };
+    distance_t beeline_distance() const override { return _beeline_distance; }
+
+    void write(std::ostream& out) const override { out << _from << ',' << _to; }
 };
 
 class Query {
@@ -52,17 +62,20 @@ public:
     Query& operator=(Query const&) = default;
     Query& operator=(Query &&) noexcept = default;
 
+    Query(std::shared_ptr<QueryInterface> other) : pimpl(std::move(other)) {}
+
     template<typename GraphT>
     Query(QueryImplementation<GraphT> const& impl) : pimpl(std::make_shared<QueryImplementation<GraphT>>(impl)) {}
 
     template<typename GraphT>
-    Query(QueryImplementation<GraphT> && impl) : pimpl(std::make_shared<QueryImplementation<GraphT>>(impl)) {}
+    Query(QueryImplementation<GraphT> && impl) : pimpl(std::make_shared<QueryImplementation<GraphT>>(std::move(impl))) {}
 
     template<typename GraphT>
     Query(GraphT& graph, long from, long to) : pimpl{graph, from, to} {}
 
-    Query(Query&) = default;
-    Query& operator=(Query&) = default;
+
+    Graph beeline() const { return pimpl->beeline(); };
+    distance_t beeline_distance() const { return pimpl->beeline_distance(); };
 
     void write(std::ostream& out) const { out << pimpl->from() << ',' << pimpl->to(); };
 
@@ -82,7 +95,6 @@ public:
     virtual bool route_found() const = 0;
 
     virtual distance_t distance() const = 0;
-    virtual distance_t beeline_distance() const = 0;
 
     virtual Graph const& tree_forward() const = 0;
     virtual Graph const& tree_backward() const = 0;
@@ -101,7 +113,6 @@ private:
     bool _route_found = false;
 
     distance_t _distance = infinity<distance_t>;
-    distance_t _beeline_distance = infinity<distance_t>;
 
     Graph _tree_forward;
     Graph _tree_backward;
@@ -121,14 +132,13 @@ public:
     ResultImplementation& operator=(ResultImplementation &&) = default;
 
     template<typename RouterT>
-    ResultImplementation(GraphT const& graph, QueryImplementation<GraphT> query, RouterT const& router, std::chrono::duration<double, std::milli> duration);;
+    ResultImplementation(GraphT const& graph, QueryImplementation<GraphT> query, RouterT const& router, std::chrono::duration<double, std::milli> duration);
 
     Query query() const { return Query( QueryImplementation<GraphT>( _query ) ) ; };
 
     bool route_found() const { return _route_found; };
 
     distance_t distance() const { return _distance; };
-    distance_t beeline_distance() const { return _beeline_distance; };
 
     Graph const & tree_forward() const { return _tree_forward; };
     Graph const & tree_backward() const { return _tree_backward; };
@@ -168,7 +178,6 @@ public:
     bool route_found() const { return pimpl->route_found(); };
 
     distance_t distance() const { return pimpl->distance(); };
-    distance_t beeline_distance() const { return pimpl->beeline_distance(); };
 
     Graph const& tree_forward() const { return pimpl->tree_forward(); };
     Graph const& tree_backward() const { return pimpl->tree_backward(); };
