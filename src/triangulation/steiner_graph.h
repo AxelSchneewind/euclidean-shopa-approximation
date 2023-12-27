@@ -14,22 +14,22 @@ struct steiner_node_id {
 
     steiner_node_id() : edge(none_value<edge_id_type>), steiner_index(none_value<intra_edge_id_type>) {};
 
-    constexpr steiner_node_id(EdgeId __edge, IntraEdgeId __steiner_index) : edge(__edge),
-                                                                            steiner_index(__steiner_index) {}
+    constexpr steiner_node_id(EdgeId edge, IntraEdgeId steiner_index) : edge(edge),
+                                                                            steiner_index(steiner_index) {}
 
-    constexpr steiner_node_id(EdgeId __edge, IntraEdgeId __steiner_index, IntraEdgeId __node_count)
-            : edge(__edge), steiner_index(__steiner_index) {}
+    constexpr steiner_node_id(EdgeId edge, IntraEdgeId steiner_index, IntraEdgeId /*node_count*/)
+            : edge(edge), steiner_index(steiner_index) {}
 
-    bool operator>=(const steiner_node_id &__other) const {
-        return edge >= __other.edge || steiner_index >= __other.steiner_index;
+    bool operator>=(const steiner_node_id &other) const {
+        return edge >= other.edge || steiner_index >= other.steiner_index;
     }
 
-    bool operator>(const steiner_node_id &__other) const {
-        return edge > __other.edge || (edge == __other.edge && steiner_index > __other.steiner_index);
+    bool operator>(const steiner_node_id &other) const {
+        return edge > other.edge || (edge == other.edge && steiner_index > other.steiner_index);
     }
 
-    bool operator==(const steiner_node_id &__other) const {
-        return edge == __other.edge && steiner_index == __other.steiner_index;
+    bool operator==(const steiner_node_id &other) const {
+        return edge == other.edge && steiner_index == other.steiner_index;
     }
 };
 
@@ -125,10 +125,10 @@ public:
         node_id_type _M_last_node;
 
     public:
-        node_id_iterator_type(const steiner_graph *__graph, node_id_type __current, node_id_type __max)
-                : _M_graph_ptr(__graph),
-                  _M_current_node(__current),
-                  _M_last_node(__max) {
+        node_id_iterator_type(const steiner_graph *graph, node_id_type current, node_id_type max)
+                : _M_graph_ptr(graph),
+                  _M_current_node(current),
+                  _M_last_node(max) {
 
             while (_M_current_node.edge < _M_last_node.edge &&
                    _M_graph_ptr->base_graph().source(_M_current_node.edge) >=
@@ -143,22 +143,22 @@ public:
 
         end_type end() { return {}; };
 
-        bool operator==(node_id_iterator_type __other) const {
-            return _M_current_node.edge == __other._M_current_node.edge &&
-                   _M_current_node.steiner_index == __other._M_current_node.steiner_index;
+        bool operator==(node_id_iterator_type other) const {
+            return _M_current_node.edge == other._M_current_node.edge &&
+                   _M_current_node.steiner_index == other._M_current_node.steiner_index;
         }
 
-        bool operator==(end_type __other) const {
+        bool operator==(end_type other) const {
             return _M_current_node.edge >= _M_last_node.edge;
         }
 
-        bool operator!=(node_id_iterator_type __other) const {
-            return _M_current_node.edge != __other._M_current_node.edge ||
-                   _M_current_node.steiner_index != __other._M_current_node.steiner_index;
+        bool operator!=(node_id_iterator_type other) const {
+            return _M_current_node.edge != other._M_current_node.edge ||
+                   _M_current_node.steiner_index != other._M_current_node.steiner_index;
         }
 
-        bool operator!=(end_type __other) const {
-            return !operator==(__other);
+        bool operator!=(end_type other) const {
+            return !operator==(other);
         }
 
         node_id_iterator_type operator++();
@@ -170,10 +170,10 @@ public:
 
     steiner_graph(steiner_graph &&other) noexcept;
 
-    steiner_graph(std::vector<node_info_type> &&__triangulation_nodes,
-                  adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&__triangulation_edges,
-                  polyhedron<base_topology_type, 3> &&__triangles,
-                  subdivision_table &&__table, float __epsilon);
+    steiner_graph(std::vector<node_info_type> &&triangulation_nodes,
+                  adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&triangulation_edges,
+                  polyhedron<base_topology_type, 3> &&triangles,
+                  subdivision_table &&table, float epsilon);
 
 
     static constexpr size_t SIZE_PER_NODE =
@@ -215,66 +215,68 @@ public:
 
     size_t edge_count() const { return _M_edge_count; }
 
+    size_t face_count() const { return _M_polyhedron.face_count(); }
+
     float epsilon() const { return _M_epsilon; }
 
     node_id_iterator_type node_ids() const;
 
     node_id_iterator_type node_ids(triangle_edge_id_type __edge) const;
 
-    node_info_type node(node_id_type __id) const;
+    node_info_type node(node_id_type id) const;
 
-    node_info_type node(triangle_node_id_type __id) const;
-    node_info_type& node(triangle_node_id_type __id) { return _M_base_nodes[__id]; };
+    node_info_type node(triangle_node_id_type id) const;
+    node_info_type& node(triangle_node_id_type id) { return _M_base_nodes[id]; };
 
-    bool is_base_node(node_id_type __id) const;
-    bool is_base_neighboring_node(node_id_type __id) const { return __id.steiner_index == 1 || __id.steiner_index ==
-                                                                                                  steiner_info(__id.edge).node_count - 2;};
+    bool is_base_node(node_id_type id) const;
+    bool is_base_neighboring_node(node_id_type id) const { return id.steiner_index == 1 || id.steiner_index ==
+                                                                                                  steiner_info(id.edge).node_count - 2;};
 
-    triangle_node_id_type base_node_id(node_id_type __id) const;
+    triangle_node_id_type base_node_id(node_id_type id) const;
 
-    static node_id_type source(edge_id_type __id);
+    static node_id_type source(edge_id_type id);
 
-    static node_id_type destination(edge_id_type __id);
+    static node_id_type destination(edge_id_type id);
 
-    edge_info_type edge(edge_id_type __id) const;
+    edge_info_type edge(edge_id_type id) const;
 
-    subdivision_table::subdivision_edge_info steiner_info(triangle_edge_id_type __id) const;
+    subdivision_table::subdivision_edge_info steiner_info(triangle_edge_id_type id) const;
 
-    edge_id_type edge_id(node_id_type __src, node_id_type __dest) const;
+    edge_id_type edge_id(node_id_type src, node_id_type dest) const;
 
-    bool has_edge(node_id_type __src, node_id_type __dest) const;
+    bool has_edge(node_id_type src, node_id_type dest) const;
 
     const steiner_graph &topology() const { return *this; }
 
     const steiner_graph &inverse_topology() const { return *this; }
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    outgoing_edges(node_id_type __node_id) const;
+    outgoing_edges(node_id_type node_id) const;
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    outgoing_edges(triangle_node_id_type __node_id) const;
+    outgoing_edges(triangle_node_id_type node_id) const;
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    outgoing_edges(node_id_type __node_id, node_id_type __reached_from, float __max_angle) const;
+    outgoing_edges(node_id_type node_id, node_id_type reached_from, float max_angle) const;
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    outgoing_edges(triangle_node_id_type __base_node_id, node_id_type __reached_from) const;
+    outgoing_edges(triangle_node_id_type base_node_id, node_id_type reached_from) const;
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    incoming_edges(node_id_type __node_id) const { return outgoing_edges(__node_id); };
+    incoming_edges(node_id_type node_id) const { return outgoing_edges(node_id); };
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    incoming_edges(node_id_type __node_id, node_id_type __reached_from, float __max_angle) const {
-        return outgoing_edges(__node_id, __reached_from, __max_angle);
+    incoming_edges(node_id_type node_id, node_id_type reached_from, float __max_angle) const {
+        return outgoing_edges(node_id, reached_from, __max_angle);
     };
 
-    distance_type path_length(const path_type &__route) const;
+    distance_type path_length(const path_type &route) const;
 
-    subgraph_type make_subgraph(const path_type &__route) const;
+    subgraph_type make_subgraph(const path_type &route) const;
 
-    static steiner_graph make_graph(std::vector<steiner_graph::node_info_type> &&__triangulation_nodes,
-                                    steiner_graph::base_topology_type &&__triangulation_edges,
-                                    std::vector<std::array<triangle_node_id_type, 3>> &&__faces, float __epsilon);
+    static steiner_graph make_graph(std::vector<steiner_graph::node_info_type> &&triangulation_nodes,
+                                    steiner_graph::base_topology_type &&triangulation_edges,
+                                    std::vector<std::array<triangle_node_id_type, 3>> &&faces, float epsilon);
 
 };
 
