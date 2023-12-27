@@ -47,26 +47,26 @@ private:
 
 public:
 
-    dijkstra(dijkstra &&__other) noexcept;
+    dijkstra(dijkstra &&other) noexcept;
 
-    dijkstra(const dijkstra &__other) = delete;
+    dijkstra(const dijkstra &other) = delete;
 
 
     // constructs a dijkstra object for the given graph
-    explicit dijkstra(G const &__graph)
-            : _M_graph(__graph), _M_queue{__graph},
-              _M_labels{__graph}, _M_neighbors{__graph, _M_labels}, _M_use_edge{__graph} {};
+    explicit dijkstra(G const &graph)
+            : _M_graph(graph), _M_queue{_M_graph},
+              _M_labels{_M_graph}, _M_neighbors{_M_graph, _M_labels}, _M_use_edge{_M_graph} {};
 
-    explicit dijkstra(G const &__graph, Q &&__queue, L &&__labels, N &&__neighbors, UseEdge &&__use_edge)
-            : _M_graph(__graph), _M_queue(std::move(__queue)),
-              _M_labels(std::move(__labels)), _M_neighbors(std::move(__neighbors)),
+    explicit dijkstra(G const &graph, Q &&queue, L &&labels, N &&__neighbors, UseEdge &&__use_edge)
+            : _M_graph(graph), _M_queue(std::move(queue)),
+              _M_labels(std::move(labels)), _M_neighbors(std::move(__neighbors)),
               _M_use_edge(std::move(__use_edge)) {};
 
     ~dijkstra() = default;
 
-    dijkstra &operator=(dijkstra &&__other) noexcept = default;
+    dijkstra &operator=(dijkstra &&other) noexcept = default;
 
-    dijkstra &operator=(dijkstra const &__other) = delete;
+    dijkstra &operator=(dijkstra const &other) = delete;
 
     typename G::distance_type min_path_length() const;
 
@@ -82,7 +82,7 @@ public:
 
     L &labels() { return _M_labels; }
 
-    L::label_type get_label(G::node_id_type __node) const { return _M_labels.get(__node); }
+    L::label_type get_label(G::node_id_type node) const { return _M_labels.get(node); }
 
     /**
      * init one to one
@@ -90,7 +90,7 @@ public:
      * @param start_node
      * @param target_node
      */
-    void init(node_id_type __start_node, node_id_type __target_node = none_value<node_id_type>);
+    void init(node_id_type start_node, node_id_type target_node = none_value<node_id_type>);
 
     /**
      * get the current node without removing from queue
@@ -114,7 +114,7 @@ public:
      * @param node
      * @return
      */
-    bool reached(typename G::node_id_type __node) const;
+    bool reached(typename G::node_id_type node) const;
 
 
     /**
@@ -130,5 +130,5 @@ public:
      * @param target
      * @return
      */
-    G::path_type path(node_id_type target) const;;
+    G::path_type path(node_id_type target) const;
 };
