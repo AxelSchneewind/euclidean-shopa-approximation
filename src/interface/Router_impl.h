@@ -34,10 +34,10 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
             std::cout << "\rdistances: "
                       << std::setw(12) /*<< std::setprecision(3)*/ << _router.forward_distance()
                       << " (" << std::setw(12) /*<< std::setprecision(3)*/
-                      << _router.forward_search().current().value() << "), "
+                      << _router.forward_current().value() << "), "
                       << std::setw(12) /*<< std::setprecision(3)*/ << _router.backward_distance()
                       << " (" << std::setw(12) /*<< std::setprecision(3)*/
-                      << _router.backward_search().current().value() << ")";
+                      << _router.backward_current().value() << ")";
 
             if constexpr (requires(RouterT::labels_type && l) { l.aggregate_count(); }) {
                 std::cout << ", node aggregates currently expanded: " << std::setw(10)
