@@ -85,8 +85,8 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
 
         // get minimal angle for node1 and node2
         // treat angles > 90 degrees like 90 degrees
-        double angle1 = M_PI / 2; // between node1->node2 and node1->node3
-        double angle2 = M_PI / 2; // between node2->node1 and node2->node3
+        double angle1 = M_PI_2; // between node1->node2 and node1->node3
+        double angle2 = M_PI_2; // between node2->node1 and node2->node3
 
         for (auto edge: polyhedron.edges(i)) {
             if (is_none(edge)) continue;
@@ -102,6 +102,13 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
             // compute angles
             auto a1 = angle(c1, c2, c1, c3);
             auto a2 = angle(c2, c1, c2, c3);
+
+            if (a1 >= M_PI)
+                a1 = M_PI - a1;
+            if (a2 >= M_PI)
+                a2 = M_PI - a2;
+            assert(a1 < M_PI && a2 < M_PI);
+
             if (a1 < angle1)
                 angle1 = a1;
             if (a2 < angle2)
@@ -112,7 +119,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         angle1 = std::min(angle1, max_angle);
         angle2 = std::min(angle2, max_angle);
 
-        // length of the edge
+        // length |e| of the edge
         double length = distance(c2, c1);
 
         // relative value where the mid-point (with max distance to other edges) lies between node1 and node2
@@ -122,8 +129,8 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         assert(mid_value < 1 && mid_value > 0);
 
         // distance values have been computed already, convert to r(v) relative to this edges length
-        double r_first = (epsilon / 5) * (r_values[node1] / length);
-        double r_second = (epsilon / 5) * (r_values[node2] / length);
+        double r_first = (epsilon) * (r_values[node1] / length);
+        double r_second = (epsilon) * (r_values[node2] / length);
         assert(r_first >= 0 && r_second >= 0);
         assert(r_first <= 1.0 && r_second <= 1.0);
 
@@ -202,7 +209,6 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         entry.first_start_index = static_cast<unsigned short>(first_start_index);
         entry.second_start_index = static_cast<unsigned short>(second_start_index);
         result.push_back(entry);
-
     }
 
     return result;
@@ -225,11 +231,12 @@ int subdivision_table::class_index(double __radians) {
     return std::min(std::max(result, 0), step_count - 1);
 }
 
-subdivision_table::subdivision_edge_info subdivision_table::edge(int __edge) const { return edges[__edge]; }
+subdivision_table::subdivision_edge_info const& subdivision_table::edge(int edge) const { return edges[edge]; }
+subdivision_table::subdivision_edge_info & subdivision_table::edge(int edge) { return edges[edge]; }
 
 coordinate_t
-subdivision_table::node_coordinates(edge_id_t __edge, short steiner_index, coordinate_t c1, coordinate_t c2) const {
-    const auto& info = edges[__edge];
+subdivision_table::node_coordinates(edge_id_t edge, short steiner_index, coordinate_t c1, coordinate_t c2) const {
+    const auto& info = edges[edge];
 
     assert(steiner_index >= 0);
     assert(steiner_index < info.node_count);
