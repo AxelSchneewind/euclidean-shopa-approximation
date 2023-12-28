@@ -9,7 +9,7 @@ double
 distance_euclidean(coordinate_t c1, coordinate_t c2);
 
 inline double
-to_radians(double __degree);
+to_radians(double degrees);
 
 // exact distance on earths surface
 distance_t
@@ -17,14 +17,14 @@ distance(coordinate_t __c1, coordinate_t __c2);
 
 /**
  * angle in radians
- * @param __s0
- * @param __d0
- * @param __s1
- * @param __d1
+ * @param source0
+ * @param dest0
+ * @param source1
+ * @param dest1
  * @return
  */
 inline double
-angle(coordinate_t __s0, coordinate_t __d0, coordinate_t __s1, coordinate_t __d1);
+angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1);
 
 inline double
 angle(coordinate_t dir0, coordinate_t dir1);
@@ -49,15 +49,12 @@ interpolate_linear(coordinate_t __source, coordinate_t __destination, float __re
 
 void WGS84toGoogleBing(double lat, double lon, double &x, double &y);
 
-
-void GoogleBingtoWGS84Mercator (double x, double y, double &lat, double
-&lon);
+void GoogleBingtoWGS84Mercator (double x, double y, double &lat, double &lon);
 
 enum class Projection {
     NONE,
     WGS84_TO_GB,
     GB_TO_WGS84
 };
-
 
 void project_coordinate(coordinate_t& src, Projection projection);

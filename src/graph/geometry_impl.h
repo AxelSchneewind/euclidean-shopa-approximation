@@ -34,27 +34,30 @@ distance(coordinate_t __c1, coordinate_t __c2) {
 
 /**
  * angle in radians
- * @param __s0
- * @param __d0
- * @param __s1
- * @param __d1
+ * @param source0
+ * @param dest0
+ * @param source1
+ * @param dest1
  * @return
  */
 inline double
-angle(coordinate_t __s0, coordinate_t __d0, coordinate_t __s1, coordinate_t __d1) {
+angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1) {
     // use dot product
-    auto const A = __d0 - __s0;
-    auto const B = __d1 - __s1;
-    auto const AB = A * B;
-
-    return std::acos(AB / (A.length() * B.length()));
+    auto const A = dest0 - source0;
+    auto const B = dest1 - source1;
+    return angle(A, B);
 }
 
 inline double
 angle(coordinate_t dir0, coordinate_t dir1) {
-    // use dot product
-    auto const AB = dir0 * dir1;
-    return std::acos(AB / (dir0.length() * dir1.length()));
+    // using dot product
+    // auto const AB = dir0 * dir1;
+    // return std::acos(AB / (dir0.length() * dir1.length()));
+
+    // using atan on both vectors
+    auto angle0 = std::atan2(dir0.longitude, dir0.latitude);
+    auto angle1 = std::atan2(dir1.longitude, dir1.latitude);
+    return angle1 - angle0;
 }
 
 inline double
@@ -68,26 +71,28 @@ angle_cos(coordinate_t dir0, coordinate_t dir1) {
 inline double
 line_distance(coordinate_t __source, coordinate_t __destination, coordinate_t __point) {
     double phi = angle(__source, __destination, __source, __point);
+    phi = std::fabs(phi);
+
+    if (phi >= M_PI)
+        phi = 2 * M_PI - phi;
 
     // approximated distance
     return std::sin(phi) * (__point - __source).length();
-    // // for exact distance
-    // return to_radians(std::sin(phi) * (__point - __source).length()) * 6371;
 }
 
 
 /**
  * generates the point s + (d - s) * x
- * @param __source
- * @param __destination
- * @param __relative
+ * @param source
+ * @param destination
+ * @param relative
  * @return
  */
 inline coordinate_t
-interpolate_linear(coordinate_t __source, coordinate_t __destination, float __relative) {
-    __destination -= __source;
-    __destination *= __relative;
-    return __source + __destination;
+interpolate_linear(coordinate_t source, coordinate_t destination, float relative) {
+    destination -= source;
+    destination *= relative;
+    return source + destination;
 }
 
 
@@ -99,8 +104,7 @@ void WGS84toGoogleBing(double lat, double lon, double &x, double &y) {
 }
 
 
-void GoogleBingtoWGS84Mercator (double x, double y, double &lat, double
-&lon) {
+void GoogleBingtoWGS84Mercator (double x, double y, double &lat, double &lon) {
     lon = (x / 20037508.34) * 180;
     lat = (y / 20037508.34) * 180;
 
