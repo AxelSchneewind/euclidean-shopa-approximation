@@ -44,14 +44,14 @@ void
 router<Graph, Dijkstra>::step_forward() {
     assert (!_M_forward_search.queue_empty());
 
-    forward_current = _M_forward_search.current();
-    assert(!is_none(forward_current.node));
+    _forward_current = _M_forward_search.current();
+    assert(!is_none(_forward_current.node));
 
     _M_forward_search.step();
 
     // check if searches met and provide best result so far
-    if (_M_backward_search.reached(forward_current.node) && distance(forward_current.node) < distance()) {
-        _M_mid_node = forward_current.node;
+    if (_M_backward_search.reached(_forward_current.node) && distance(_forward_current.node) < distance()) {
+        _M_mid_node = _forward_current.node;
     }
 }
 
@@ -60,14 +60,14 @@ void
 router<Graph, Dijkstra>::step_backward() {
     assert (!_M_backward_search.queue_empty());
 
-    backward_current = _M_backward_search.current();
-    assert(!is_none(backward_current.node));
+    _backward_current = _M_backward_search.current();
+    assert(!is_none(_backward_current.node));
 
     _M_backward_search.step();
 
     // check if searches met and provide best result yet
-    if (_M_forward_search.reached(backward_current.node) && distance(backward_current.node) < distance()) {
-        _M_mid_node = backward_current.node;
+    if (_M_forward_search.reached(_backward_current.node) && distance(_backward_current.node) < distance()) {
+        _M_mid_node = _backward_current.node;
     }
 }
 
@@ -164,6 +164,6 @@ router<Graph, Dijkstra>::init(Graph::node_id_type __start_node, Graph::node_id_t
     _M_forward_search.init(_M_start_node, _M_target_node);
     _M_backward_search.init(_M_target_node, _M_start_node);
 
-    forward_current = _M_forward_search.current();
-    backward_current = _M_backward_search.current();
+    _forward_current = _M_forward_search.current();
+    _backward_current = _M_backward_search.current();
 }
