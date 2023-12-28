@@ -240,7 +240,8 @@ public:
 
     edge_info_type edge(edge_id_type id) const;
 
-    subdivision_table::subdivision_edge_info steiner_info(triangle_edge_id_type id) const;
+    subdivision_table::subdivision_edge_info const& steiner_info(triangle_edge_id_type id) const;
+    subdivision_table::subdivision_edge_info & steiner_info(triangle_edge_id_type id) ;
 
     edge_id_type edge_id(node_id_type src, node_id_type dest) const;
 

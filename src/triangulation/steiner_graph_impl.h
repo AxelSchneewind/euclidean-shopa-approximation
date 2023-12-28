@@ -86,8 +86,6 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
                 dist = std::min(dist, line_dist);
                 dist = std::min(dist, distance(c2, c3));
                 dist = std::min(dist, distance(c1, c3));
-            } else {
-                dist = 0.0;
             }
             assert(is_infinity(dist) || (dist <= 1.01 * distance(c2, c3) && dist <= 1.01 * distance(c1, c3)));
         }
@@ -112,14 +110,14 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangula
     std::vector<double> r_values;
     make_node_radii(triangulation_nodes, triangulation, poly, r_values);
 
-    const double min_inner_angle = M_PI / 720; // 1/4º
-    const double minimal_relative_radius = std::sin(min_inner_angle) * (1/(1 + std::sin(M_PI - min_inner_angle) / std::sin(min_inner_angle))) * (epsilon / 5);
+    const double min_inner_angle = M_PI / 180; // 1º
+    const double minimal_relative_radius = std::sin(min_inner_angle) * (1/(1 + std::sin(M_PI - min_inner_angle) / std::sin(min_inner_angle))) * epsilon;
     double min_r_value = 1.0;
     for (auto base_node: triangulation.node_ids()) {
         for (auto edge: triangulation.outgoing_edges(base_node)) {
             auto length = distance(triangulation_nodes[base_node].coordinates, triangulation_nodes[edge.destination].coordinates);
 
-            double r_relative = (epsilon / 5) * (r_values[base_node] / length);
+            double r_relative = epsilon * (r_values[base_node] / length);
             if (r_relative <= minimal_relative_radius) { min_r_value = minimal_relative_radius; break; }
 
             min_r_value = std::min(min_r_value, r_relative);
@@ -323,7 +321,7 @@ steiner_graph::outgoing_edges(node_id_type node_id, node_id_type reached_from, f
     // make list of edges (i.e. destination/cost pairs)
     coordinate_t source_coordinate = node(node_id).coordinates;
     coordinate_t from_coordinate = node(reached_from).coordinates;
-    const auto &&_steiner_info = steiner_info(node_id.edge);
+    auto &&_steiner_info = steiner_info(node_id.edge);
 
     // for neighboring node on own edge
     if (node_id.steiner_index < _steiner_info.node_count - 1) [[likely]] {
@@ -354,7 +352,7 @@ steiner_graph::outgoing_edges(node_id_type node_id, node_id_type reached_from, f
             if (base_edge_id == node_id.edge) [[unlikely]]
                 continue;
 
-            const auto &&destination_steiner_info = steiner_info(base_edge_id);
+            auto &&destination_steiner_info = steiner_info(base_edge_id);
 
             for (short i = 0; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
                 steiner_graph::node_id_type destination = {base_edge_id, i};
@@ -476,7 +474,7 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
             if (base_edge_id == src.edge) [[unlikely]]
                 continue;
 
-            const auto &&destination_steiner_info = steiner_info(base_edge_id);
+            auto &&destination_steiner_info = steiner_info(base_edge_id);
             if (base_edge_id == dest.edge && is_between(base_edge_id, 0, destination_steiner_info.node_count))
                 return true;
         }
@@ -510,8 +508,13 @@ steiner_graph::distance_type steiner_graph::path_length(const path_type &route) 
     return result;
 }
 
-subdivision_table::subdivision_edge_info
+subdivision_table::subdivision_edge_info const&
 steiner_graph::steiner_info(steiner_graph::triangle_edge_id_type id) const {
+    return _M_table.edge(id);
+}
+
+subdivision_table::subdivision_edge_info &
+steiner_graph::steiner_info(steiner_graph::triangle_edge_id_type id) {
     return _M_table.edge(id);
 }
 
@@ -548,7 +551,7 @@ steiner_graph::node_id_type steiner_graph::from_base_node_id(int node) const {
 
     for (auto edge: _M_base_topology.incoming_edges(node)) {
         auto e_id = _M_base_topology.edge_id(edge.destination, node);
-        return {e_id, steiner_info(e_id).node_count - 1U};
+        return node_id_type(e_id, steiner_info(e_id).node_count - 1U);
     }
 
     [[unlikely]]
