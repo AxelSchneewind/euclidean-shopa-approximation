@@ -42,6 +42,8 @@ public:
         _result = _router.result();
     };
 
+    Result& result() {return _result;}
+
     void compute_one_to_all(int from) {  /*_router.compute_one_to_all(from);*/ };
     void compute_one_to_all(int from, std::ostream& out) { /*_router.compute_one_to_all(from, out);*/ };
 
