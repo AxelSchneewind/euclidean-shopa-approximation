@@ -22,7 +22,7 @@ option "stdin" i "indicates that queries should be read from stdin" flag off
 
 section "output" sectiondesc="options for the command line output"
 option "csv-format" c "indicates that routing information should be printed in the csv format" flag off
-option "project" p "which projection to apply to coordinates when writing to files (from google_bing,wgs84,none)"
+option "projection" p "which projection to apply to coordinates when writing to files (from google_bing,wgs84,none)" values="google_bing","wgs84","none" default="none" argoptional
 
 
 # option <long> <short> "<desc>"
