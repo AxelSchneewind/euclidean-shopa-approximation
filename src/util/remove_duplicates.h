@@ -29,7 +29,6 @@ remove_duplicates(std::vector<T> &items) {
 
 /**
  * removes duplicates in-place for sorted lists
- * TODO check
  * @tparam T
  * @param items
  */
@@ -38,7 +37,7 @@ void
 remove_duplicates_sorted(std::vector<T> &items) {
     size_t j = 1;
     for (size_t i = 1; i < items.size(); ++i) {
-        auto element = items[i];
+        auto const& element = items[i];
         if (element != items[j - 1]) {
             items[j++] = element;
         }
