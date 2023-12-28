@@ -134,8 +134,8 @@ router<Graph, Dijkstra>::shortest_path_tree() {
     auto tree_fwd = _M_forward_search.shortest_path_tree();
     auto tree_bwd = _M_forward_search.shortest_path_tree();
 
-    filter_nodes(tree_fwd, [&](auto node) -> bool { _M_forward_search.get_label(node).distance + ::distance(_M_graph.node(node).coordinates, _M_graph.node(_M_target_node).coordinates) <= distance(); });
-    filter_nodes(tree_bwd, [&](auto node) -> bool { _M_backward_search.get_label(node).distance + ::distance(_M_graph.node(node).coordinates, _M_graph.node(_M_start_node).coordinates) <= distance();  });
+    filter_nodes(tree_fwd, [&](auto node) -> bool { return _M_forward_search.get_label(node).distance + ::distance(_M_graph.node(node).coordinates, _M_graph.node(_M_target_node).coordinates) <= distance(); });
+    filter_nodes(tree_bwd, [&](auto node) -> bool { return _M_backward_search.get_label(node).distance + ::distance(_M_graph.node(node).coordinates, _M_graph.node(_M_start_node).coordinates) <= distance();  });
 
     return subgraphs_union<Graph>(tree_fwd, tree_bwd);
 }

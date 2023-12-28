@@ -22,6 +22,8 @@ std::size_t table::column_index(std::string_view c) {
         if (_columns[i] == c)
             return i;
     }
+
+    return -1;
 }
 
 std::string_view table::get(std::size_t row, std::size_t column) const {

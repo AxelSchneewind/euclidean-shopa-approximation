@@ -48,11 +48,13 @@ struct gengetopt_args_info
   double epsilon_arg;	/**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) (default='0.5').  */
   char * epsilon_orig;	/**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) original value given at command line.  */
   const char *epsilon_help; /**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) help description.  */
-  long* query_arg;	/**< @brief pair(s) of source and destination nodes.  */
-  char ** query_orig;	/**< @brief pair(s) of source and destination nodes original value given at command line.  */
-  unsigned int query_min; /**< @brief pair(s) of source and destination nodes's minimum occurreces */
-  unsigned int query_max; /**< @brief pair(s) of source and destination nodes's maximum occurreces */
-  const char *query_help; /**< @brief pair(s) of source and destination nodes help description.  */
+  char ** query_arg;	/**< @brief pair(s) of source and destination node ids.  */
+  char ** query_orig;	/**< @brief pair(s) of source and destination node ids original value given at command line.  */
+  unsigned int query_min; /**< @brief pair(s) of source and destination node ids's minimum occurreces */
+  unsigned int query_max; /**< @brief pair(s) of source and destination node ids's maximum occurreces */
+  const char *query_help; /**< @brief pair(s) of source and destination node ids help description.  */
+  int coordinates_flag;	/**< @brief interpret the pair(s) of source and destination nodes as their coordinates (default=off).  */
+  const char *coordinates_help; /**< @brief interpret the pair(s) of source and destination nodes as their coordinates help description.  */
   int stdin_flag;	/**< @brief indicates that queries should be read from stdin (default=off).  */
   const char *stdin_help; /**< @brief indicates that queries should be read from stdin help description.  */
   int csv_format_flag;	/**< @brief indicates that routing information should be printed in the csv format (default=off).  */
@@ -65,6 +67,7 @@ struct gengetopt_args_info
   unsigned int output_directory_given ;	/**< @brief Whether output-directory was given.  */
   unsigned int epsilon_given ;	/**< @brief Whether epsilon was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
+  unsigned int coordinates_given ;	/**< @brief Whether coordinates was given.  */
   unsigned int stdin_given ;	/**< @brief Whether stdin was given.  */
   unsigned int csv_format_given ;	/**< @brief Whether csv-format was given.  */
   unsigned int project_given ;	/**< @brief Whether project was given.  */

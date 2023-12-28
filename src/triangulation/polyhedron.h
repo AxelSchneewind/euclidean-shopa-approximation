@@ -101,17 +101,31 @@ private:
     std::vector<face_id_type> _M_node_edges;
     std::vector<int> _M_node_edges_offsets;
 
-    polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&__adjacent_edges,
-               std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&__adjacent_faces,
-               std::vector<edge_id_type> &&__inverse_edges,
-               std::vector<face_id_type> &&__node_faces,
-               std::vector<int> &&__node_face_offsets
-    );
+
+    polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&adjacent_edges,
+               std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&adjacent_faces,
+               std::vector<edge_id_type> &&inverse_edges,
+               std::vector<face_id_type> &&node_faces,
+               std::vector<int> &&node_face_offsets);
 
 public:
-
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(edge_info_type);
+
+    std::size_t node_count() const { return _M_node_edges_offsets.size() - 1; }
+
+    std::size_t edge_count() const { return _M_edge_info.size(); }
+
+    std::size_t face_count() const { return _M_face_info.size(); }
+
+    std::size_t boundary_edge_count() const {
+        std::size_t result = 0;
+        for (auto &&edge_info: _M_edge_info) {
+            result += is_none(edge_info.adjacent_faces[1]);
+        }
+
+        return result;
+    }
 
     /**
      * makes a polyhedron object from the given base graph
@@ -119,7 +133,7 @@ public:
      * @return
      */
     static polyhedron<BaseGraph, MaxNodesPerFace> make_polyhedron(const BaseGraph &__base,
-                                                                  const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &__faces);
+                                                                  std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &&__faces);
 
     std::span<const face_id_type, FACE_COUNT_PER_EDGE> edge_faces(edge_id_type __edge) const {
         return {_M_edge_info[__edge].adjacent_faces};
@@ -136,13 +150,13 @@ public:
     }
 
     /**
-     * gets edges that belong to the faces bordering this edge
+     * gets edges that belong to the faces bordering this edge (including the given edge itself)
      * does not include the inverse to the given edge
      * @param __edge
      * @return
      */
-    edges_iterator_type edges(int __edge) const {
-        return {*this, {_M_edge_info[__edge].adjacent_faces}};
+    edges_iterator_type edges(int edge) const {
+        return {*this, {_M_edge_info[edge].adjacent_faces}};
     };
 
     /**
@@ -150,8 +164,8 @@ public:
      * @param __edge
      * @return
      */
-    edge_id_type inverse_edge(edge_id_type __edge) const {
-        return _M_edge_info[__edge].inverse_edge;
+    edge_id_type inverse_edge(edge_id_type edge) const {
+        return _M_edge_info[edge].inverse_edge;
     };
 };
 

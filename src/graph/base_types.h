@@ -62,6 +62,9 @@ template<typename T>
 constexpr T none_value;
 
 template<>
+constexpr long none_value<long> = -1;
+
+template<>
 constexpr int none_value<int> = -1;
 
 template<>
@@ -104,11 +107,17 @@ struct node_t {
 struct edge_t {
     cost_t cost;
 
-    edge_t
-    invert(const std::vector<edge_id_t> & /*unused*/) const;
-
     bool operator==(const edge_t &) const = default;
 };
+
+
+struct gl_edge_t {
+    int line_width;
+    int color;
+
+    bool operator==(const gl_edge_t &) const = default;
+};
+
 
 struct ch_node_t : public node_t {
     short level;
@@ -119,9 +128,6 @@ struct ch_node_t : public node_t {
 struct ch_edge_t : edge_t {
     edge_id_t edgeA;
     edge_id_t edgeB;
-
-    ch_edge_t
-    invert(const std::vector<edge_id_t> &__new_index) const;
 };
 
 

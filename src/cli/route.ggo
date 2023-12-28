@@ -16,7 +16,8 @@ section "triangulation"
 option "epsilon" e "ε value to use for discretizing the triangulation (if a .graph file is given)" double default="0.5" dependon="graph-file"
 
 section "query"
-option "query" q "pair(s) of source and destination nodes" long multiple
+option "query" q "pair(s) of source and destination node ids" string multiple
+option "coordinates" - "interpret the pair(s) of source and destination nodes as their coordinates" flag off
 option "stdin" i "indicates that queries should be read from stdin" flag off
 
 section "output" sectiondesc="options for the command line output"

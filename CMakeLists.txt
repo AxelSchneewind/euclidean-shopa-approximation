@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(routing)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_COMPILER g++)
 
 include_directories(include)
@@ -35,7 +35,7 @@ if (GENGETOPT)
             SOURCES src/cli/route.ggo
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 else (GENGETOPT)
-    message("gengetopt needs to be installed to generate the command line argument parser")
+    message("gengetopt needs to be installed to modify and generate the command line argument parser")
 endif (GENGETOPT)
 
 
@@ -45,10 +45,12 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
 # performance options
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native") # -ffast-math
 
-
 # compile implementation into one library file
-add_library(routing src/routing.cpp)
+add_library(routing src/interface/Client.cpp)
 link_libraries(routing)
+
+# executables that will be linked against routing library
+add_executable(project src/project.cpp)
 
 add_executable(make_gl src/make_gl.cpp)
 add_executable(make_pruned_gl src/make_pruned_gl.cpp)

@@ -27,7 +27,7 @@
 
 const char *gengetopt_args_info_purpose = "";
 
-const char *gengetopt_args_info_usage = "Usage: route --graph-file /path/to/graph-file --output-directory\n/path/to/results-directory --epsilon 0.5 -q src0,dest0,...";
+const char *gengetopt_args_info_usage = "Usage: route /path/to/graph-file /path/to/results-directory epsilon src0 dest0...";
 
 const char *gengetopt_args_info_versiontext = "1.0";
 
@@ -42,19 +42,18 @@ const char *gengetopt_args_info_help[] = {
   "\ntriangulation:",
   "  -e, --epsilon=DOUBLE          ε value to use for discretizing the\n                                  triangulation (if a .graph file is given)\n                                  (default=`0.5')",
   "\nquery:",
-  "  -q, --query=LONG              pair(s) of source and destination nodes",
+  "  -q, --query=STRING            pair(s) of source and destination node ids",
+  "      --coordinates             interpret the pair(s) of source and destination\n                                  nodes as their coordinates  (default=off)",
   "  -i, --stdin                   indicates that queries should be read from\n                                  stdin  (default=off)",
   "\noutput:",
   "  options for the command line output",
   "  -c, --csv-format              indicates that routing information should be\n                                  printed in the csv format  (default=off)",
-  "  -p, --project                 which projection to apply to coordinates when\n                                  writing to files (from\n                                  google_bing,wgs84,none)",
     0
 };
 
 typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
-  , ARG_LONG
   , ARG_DOUBLE
 } cmdline_parser_arg_type;
 
@@ -82,9 +81,9 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->output_directory_given = 0 ;
   args_info->epsilon_given = 0 ;
   args_info->query_given = 0 ;
+  args_info->coordinates_given = 0 ;
   args_info->stdin_given = 0 ;
   args_info->csv_format_given = 0 ;
-  args_info->project_given = 0 ;
 }
 
 static
@@ -99,6 +98,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->epsilon_orig = NULL;
   args_info->query_arg = NULL;
   args_info->query_orig = NULL;
+  args_info->coordinates_flag = 0;
   args_info->stdin_flag = 0;
   args_info->csv_format_flag = 0;
   
@@ -117,9 +117,9 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->query_help = gengetopt_args_info_help[8] ;
   args_info->query_min = 0;
   args_info->query_max = 0;
-  args_info->stdin_help = gengetopt_args_info_help[9] ;
-  args_info->csv_format_help = gengetopt_args_info_help[12] ;
-  args_info->project_help = gengetopt_args_info_help[13] ;
+  args_info->coordinates_help = gengetopt_args_info_help[9] ;
+  args_info->stdin_help = gengetopt_args_info_help[10] ;
+  args_info->csv_format_help = gengetopt_args_info_help[13] ;
   
 }
 
@@ -206,7 +206,6 @@ free_string_field (char **s)
 
 /** @brief generic value variable */
 union generic_value {
-    long long_arg;
     double double_arg;
     char *string_arg;
     const char *default_string_arg;
@@ -231,25 +230,25 @@ static void add_node(struct generic_list **list) {
   new_node->orig = 0;
 }
 
-/**
- * The passed arg parameter is NOT set to 0 from this function
- */
+
 static void
-free_multiple_field(unsigned int len, void *arg, char ***orig)
+free_multiple_string_field(unsigned int len, char ***arg, char ***orig)
 {
   unsigned int i;
-  if (arg) {
+  if (*arg) {
     for (i = 0; i < len; ++i)
       {
+        free_string_field(&((*arg)[i]));
         free_string_field(&((*orig)[i]));
       }
+    free_string_field(&((*arg)[0])); /* free default string */
 
-    free (arg);
+    free (*arg);
+    *arg = 0;
     free (*orig);
     *orig = 0;
   }
 }
-
 
 static void
 cmdline_parser_release (struct gengetopt_args_info *args_info)
@@ -260,8 +259,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->output_directory_arg));
   free_string_field (&(args_info->output_directory_orig));
   free_string_field (&(args_info->epsilon_orig));
-  free_multiple_field (args_info->query_given, (void *)(args_info->query_arg), &(args_info->query_orig));
-  args_info->query_arg = 0;
+  free_multiple_string_field (args_info->query_given, &(args_info->query_arg), &(args_info->query_orig));
   
   
 
@@ -311,12 +309,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
   if (args_info->epsilon_given)
     write_into_file(outfile, "epsilon", args_info->epsilon_orig, 0);
   write_multiple_into_file(outfile, args_info->query_given, "query", args_info->query_orig, 0);
+  if (args_info->coordinates_given)
+    write_into_file(outfile, "coordinates", 0, 0 );
   if (args_info->stdin_given)
     write_into_file(outfile, "stdin", 0, 0 );
   if (args_info->csv_format_given)
     write_into_file(outfile, "csv-format", 0, 0 );
-  if (args_info->project_given)
-    write_into_file(outfile, "project", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -595,12 +593,6 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   if (check_multiple_option_occurrences(prog_name, args_info->query_given, args_info->query_min, args_info->query_max, "'--query' ('-q')"))
      error_occurred = 1;
   
-  if (! args_info->project_given)
-    {
-      fprintf (stderr, "%s: '--project' ('-p') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error_occurred = 1;
-    }
-  
   
   /* checks for dependences among options */
   if (args_info->epsilon_given && ! args_info->graph_file_given)
@@ -681,9 +673,6 @@ int update_arg(void *field, char **orig_field,
   case ARG_FLAG:
     *((int *)field) = !*((int *)field);
     break;
-  case ARG_LONG:
-    if (val) *((long *)field) = (long)strtol (val, &stop_char, 0);
-    break;
   case ARG_DOUBLE:
     if (val) *((double *)field) = strtod (val, &stop_char);
     break;
@@ -701,7 +690,6 @@ int update_arg(void *field, char **orig_field,
 
   /* check numeric conversion */
   switch(arg_type) {
-  case ARG_LONG:
   case ARG_DOUBLE:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
@@ -815,8 +803,6 @@ void update_multiple_arg(void *field, char ***orig_field,
     *orig_field = (char **) realloc (*orig_field, (field_given + prev_given) * sizeof (char *));
 
     switch(arg_type) {
-    case ARG_LONG:
-      *((long **)field) = (long *)realloc (*((long **)field), (field_given + prev_given) * sizeof (long)); break;
     case ARG_DOUBLE:
       *((double **)field) = (double *)realloc (*((double **)field), (field_given + prev_given) * sizeof (double)); break;
     case ARG_STRING:
@@ -830,8 +816,6 @@ void update_multiple_arg(void *field, char ***orig_field,
         tmp = list;
         
         switch(arg_type) {
-        case ARG_LONG:
-          (*((long **)field))[i + field_given] = tmp->arg.long_arg; break;
         case ARG_DOUBLE:
           (*((double **)field))[i + field_given] = tmp->arg.double_arg; break;
         case ARG_STRING:
@@ -846,12 +830,6 @@ void update_multiple_arg(void *field, char ***orig_field,
   } else { /* set the default value */
     if (default_value && ! field_given) {
       switch(arg_type) {
-      case ARG_LONG:
-        if (! *((long **)field)) {
-          *((long **)field) = (long *)malloc (sizeof (long));
-          (*((long **)field))[0] = default_value->long_arg;
-        }
-        break;
       case ARG_DOUBLE:
         if (! *((double **)field)) {
           *((double **)field) = (double *)malloc (sizeof (double));
@@ -924,13 +902,13 @@ cmdline_parser_internal (
         { "output-directory",	1, NULL, 'o' },
         { "epsilon",	1, NULL, 'e' },
         { "query",	1, NULL, 'q' },
+        { "coordinates",	0, NULL, 0 },
         { "stdin",	0, NULL, 'i' },
         { "csv-format",	0, NULL, 'c' },
-        { "project",	0, NULL, 'p' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:o:e:q:icp", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:o:e:q:ic", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -982,10 +960,10 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'q':	/* pair(s) of source and destination nodes.  */
+        case 'q':	/* pair(s) of source and destination node ids.  */
         
           if (update_multiple_arg_temp(&query_list, 
-              &(local_args_info.query_given), optarg, 0, 0, ARG_LONG,
+              &(local_args_info.query_given), optarg, 0, 0, ARG_STRING,
               "query", 'q',
               additional_error))
             goto failure;
@@ -1011,20 +989,22 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'p':	/* which projection to apply to coordinates when writing to files (from google_bing,wgs84,none).  */
-        
-        
-          if (update_arg( 0 , 
-               0 , &(args_info->project_given),
-              &(local_args_info.project_given), optarg, 0, 0, ARG_NO,
-              check_ambiguity, override, 0, 0,
-              "project", 'p',
-              additional_error))
-            goto failure;
-        
-          break;
 
         case 0:	/* Long option with no short option */
+          /* interpret the pair(s) of source and destination nodes as their coordinates.  */
+          if (strcmp (long_options[option_index].name, "coordinates") == 0)
+          {
+          
+          
+            if (update_arg((void *)&(args_info->coordinates_flag), 0, &(args_info->coordinates_given),
+                &(local_args_info.coordinates_given), optarg, 0, 0, ARG_FLAG,
+                check_ambiguity, override, 1, 0, "coordinates", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          
+          break;
         case '?':	/* Invalid option.  */
           /* `getopt_long' already printed an error message.  */
           goto failure;
@@ -1039,7 +1019,7 @@ cmdline_parser_internal (
   update_multiple_arg((void *)&(args_info->query_arg),
     &(args_info->query_orig), args_info->query_given,
     local_args_info.query_given, 0,
-    ARG_LONG, query_list);
+    ARG_STRING, query_list);
 
   args_info->query_given += local_args_info.query_given;
   local_args_info.query_given = 0;
@@ -1057,7 +1037,7 @@ cmdline_parser_internal (
   return 0;
 
 failure:
-  free_list (query_list, 0 );
+  free_list (query_list, 1 );
   
   cmdline_parser_release (&local_args_info);
   return (EXIT_FAILURE);

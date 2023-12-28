@@ -1,93 +1,14 @@
 #pragma once
 
 #include "fmi_file_io.h"
+#include "file_io.h"
+#include "formatters_impl.h"
 
 #include <istream>
 #include <ostream>
 #include <span>
 #include <vector>
 
-
-template<typename NodeInfo, typename formatter>
-std::vector<NodeInfo>
-fmi_file_io::read_nodes(std::istream &input, std::size_t count) {
-    std::vector<NodeInfo> nodes;
-    for (int i = 0; i < count; ++i) {
-        NodeInfo n;
-        n.coordinates = formatter::template read<coordinate_t>(input);
-        nodes.push_back(n);
-    }
-    return nodes;
-}
-
-template<typename NodeInfo, typename formatter>
-std::vector<NodeInfo>
-fmi_file_io::read_nodes(std::istream &input, std::size_t count, float coordinate_factor) {
-    std::vector<NodeInfo> nodes;
-    for (int i = 0; i < count; ++i) {
-        NodeInfo n;
-        n.coordinates = formatter::template read<coordinate_t>(input);
-        n.coordinates.latitude *= coordinate_factor;
-        n.coordinates.longitude *= coordinate_factor;
-        nodes.push_back(n);
-    }
-    return nodes;
-}
-
-template<typename NodeInfo, typename formatter, typename NodeTransform>
-std::vector<NodeInfo>
-fmi_file_io::read_nodes(std::istream &input, std::size_t count, NodeTransform &transform) {
-    std::vector<NodeInfo> nodes;
-    for (int i = 0; i < count; ++i) {
-        NodeInfo n;
-        n.coordinates = formatter::template read<coordinate_t>(input);
-        n = transform(n);
-        nodes.push_back(n);
-    }
-    return nodes;
-}
-
-
-template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
-auto
-fmi_file_io::read_edges(std::istream &input, std::vector<NodeInfo> const &nodes, std::size_t count) {
-    typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
-
-    for (edge_id_t edge_index = 0; edge_index < count; edge_index++)
-        builder.add_edge(formatter::template read<adjacency_list_edge<NodeId, EdgeInfo>>(input));
-
-    return builder;
-}
-
-template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter, typename EdgeTransform>
-auto
-fmi_file_io::read_edges(std::istream &input, std::vector<NodeInfo> const &nodes, std::size_t count,
-                        EdgeTransform &transform) {
-    typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
-
-    for (edge_id_t edge_index = 0; edge_index < count; edge_index++) {
-        auto edge = formatter::template read<adjacency_list_edge<NodeId, EdgeInfo>>(input);
-        edge = transform(nodes, edge);
-        builder.add_edge(edge);
-    }
-
-    return builder;
-}
-
-template<typename NodeInfo, typename NodeId, typename EdgeInfo, typename formatter>
-auto
-fmi_file_io::read_edges(std::istream &input, std::vector<NodeInfo> const &nodes, std::size_t count,
-                        float cost_factor) {
-    typename unidirectional_adjacency_list<NodeId, EdgeInfo>::adjacency_list_builder builder(nodes.size());
-
-    for (edge_id_t edge_index = 0; edge_index < count; edge_index++) {
-        auto edge = formatter::template read<adjacency_list_edge<NodeId, EdgeInfo>>(input);
-        edge.info.cost *= cost_factor;
-        builder.add_edge(edge);
-    }
-
-    return builder;
-}
 
 
 template<typename Graph, typename Formatter>
@@ -99,12 +20,15 @@ fmi_file_io::read(std::istream &input_size, std::istream &input_nodes, std::istr
     size_t node_count(f::template read<std::size_t>(input_size));
     size_t edge_count(f::template read<std::size_t>(input_size));
 
-    std::vector<typename Graph::node_info_type> nodes = read_nodes<typename Graph::node_info_type, f>(input_nodes,
-                                                                                                      node_count);
-    auto edges = read_edges<typename Graph::node_info_type, typename Graph::node_id_type, typename Graph::edge_info_type, f>(
-            input_edges, nodes, edge_count);
+    std::vector<typename Graph::node_info_type> nodes(node_count);
+    file_io::read_nodes<typename Graph::node_info_type, f>(input_nodes, nodes);
+    std::vector<typename Graph::adjacency_list_type::builder::edge_type> edges(edge_count);
+    file_io::read_edges<typename Graph::adjacency_list_type::builder::edge_type, f>(input_edges, edges);
 
-    auto list = Graph::adjacency_list_type::make_bidirectional(std::move(edges.get()));
+    typename Graph::adjacency_list_type::builder builder;
+    builder.add_edges(std::move(edges));
+
+    auto list = Graph::adjacency_list_type::make_bidirectional(std::move(builder.get()));
     auto adj_list = typename Graph::adjacency_list_type(std::move(list));
     return Graph::make_graph(std::move(nodes), std::move(adj_list));
 }

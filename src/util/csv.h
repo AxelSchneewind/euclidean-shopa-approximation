@@ -14,6 +14,8 @@ private:
 
 
 public:
+    table() = default;
+
     template<typename Columns>
     table(Columns columns) {
         for (auto &&c: columns) {

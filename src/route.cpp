@@ -1,4 +1,4 @@
-#include "routing.h"
+#include "interface/Client.h"
 
 #include "cli/cmdline_route.h"
 
@@ -25,17 +25,19 @@ main(int argc, char const *argv[]) {
 
     std::string graph_file;
     std::string output_directory;
-    double epsilon = 0.5;
+    double epsilon = arguments.epsilon_arg;
+
+    bool nodes_by_coordinates = arguments.coordinates_flag;
+
     bool output_csv = arguments.csv_format_flag != 0;
 
     graph_file = arguments.graph_file_arg;
     output_directory = arguments.output_directory_arg;
-    epsilon = arguments.epsilon_arg;
 
     // read graph
     Client client;
     if (graph_file.ends_with(".graph"))
-        client.read_graph_file(graph_file, (float)epsilon, output_csv);
+        client.read_graph_file(graph_file, (double)epsilon, output_csv);
     else
         client.read_graph_file(graph_file, output_csv);
 
@@ -54,10 +56,15 @@ main(int argc, char const *argv[]) {
         int dest_node(0);
 
         if (query_index + 1 < arguments.query_given) {
-            src_node = arguments.query_arg[query_index++];
-            dest_node = arguments.query_arg[query_index++];
+            if (nodes_by_coordinates) {
+                throw std::runtime_error("not implemented");
+            } else {
+                src_node = std::stoi(arguments.query_arg[query_index++]);
+                dest_node = std::stoi(arguments.query_arg[query_index++]);
+            }
+
         } else if (query_index < arguments.query_given) {
-            src_node = arguments.query_arg[query_index++];
+            src_node = std::stoi(arguments.query_arg[query_index++]);
             dest_node = -1;
         } else if (from_stdin) {
             std::cout << "src node: " << std::flush;
@@ -90,15 +97,14 @@ main(int argc, char const *argv[]) {
         if (output_csv)
             client.write_csv(std::cout);
         else {
-            client.write_query(std::cout);
             client.write_info(std::cout);
         }
 
         client.write_csv_header(output_info);
         client.write_csv(output_info);
-        client.write_beeline_file(output_beeline);
-        client.write_route_file(output_route);
-        client.write_tree_file(output_tree);
+        client.write_beeline_file(beeline_file);
+        client.write_route_file(route_file);
+        client.write_tree_file(tree_file);
 
         output_route.close();
         output_beeline.close();

@@ -7,13 +7,14 @@
 template<typename BaseGraph>
 struct path {
     using node_id_type = typename BaseGraph::node_id_type;
-    BaseGraph const &base;
     std::vector<node_id_type> nodes;
+
+    path() = default;
 
     path(path &other) = default;
     path &operator=(path const&other) = default;
 
-    path(BaseGraph const &base_graph, std::vector<node_id_type> &&__n) : base{base_graph}, nodes{__n} {};
+    path(std::vector<node_id_type> &&__n) : nodes{__n} {};
 
     void invert() {
         for (int i = 0; i < nodes.size() / 2; ++i) {
@@ -28,7 +29,7 @@ struct path {
             nodes.emplace_back(other.nodes[i]);
         }
 
-        return {first.base, std::move(nodes)};
+        return {std::move(nodes)};
     }
 };
 
@@ -38,15 +39,15 @@ struct subgraph {
     using edge_id_type = typename BaseGraph::edge_id_type;
 
 // private:
-    const BaseGraph &base;
     std::vector<node_id_type> nodes;
     std::vector<edge_id_type> edges;
 public:
-    subgraph(BaseGraph const& base, std::vector<node_id_type>&& n, std::vector<edge_id_type>&& e) : base{base}, nodes(std::move(n)), edges(std::move(e)) {};
-    subgraph(BaseGraph const& base) : base{base} {};
+    subgraph() = default;
 
-    subgraph(subgraph&& other) noexcept : base{other.base}, nodes(std::move(other.nodes)), edges(std::move(other.edges)) {};
-    subgraph(subgraph const& other) : base{other.base}, nodes(other.nodes), edges(other.edges) {};
+    subgraph(std::vector<node_id_type>&& n, std::vector<edge_id_type>&& e) : nodes(std::move(n)), edges(std::move(e)) {};
+
+    subgraph(subgraph&& other) noexcept : nodes(std::move(other.nodes)), edges(std::move(other.edges)) {};
+    subgraph(subgraph const& other) : nodes(other.nodes), edges(other.edges) {};
 
     subgraph& operator=(subgraph const& other) { nodes = other.nodes; edges = other.edges; return *this; };
     subgraph& operator=(subgraph && other)  noexcept { nodes = std::move(other.nodes); edges = std::move(other.edges); return *this; };
@@ -66,7 +67,7 @@ filter_nodes(const subgraph<Graph> &other, NodePredicate &&predicate = NodePredi
         if (predicate(node_id))
             filtered_nodes.push_back(node_id);
 
-    return {other.base, std::move(filtered_nodes), std::move(filtered_edges)};
+    return {std::move(filtered_nodes), std::move(filtered_edges)};
 };
 
 template<typename Graph, std::predicate<typename Graph::edge_id_type> NodePredicate>
@@ -79,7 +80,7 @@ filter_edges(const subgraph<Graph> &other, NodePredicate &&predicate = NodePredi
         if (predicate(edge_id))
             filtered_edges.push_back(edge_id);
 
-    return {other.base, std::move(filtered_nodes), std::move(filtered_edges)};
+    return {std::move(filtered_nodes), std::move(filtered_edges)};
 };
 
 template<typename Graph>
@@ -96,5 +97,5 @@ subgraphs_union(const subgraph<Graph> &first, const subgraph<Graph> &second) {
     remove_duplicates(nodes);
     remove_duplicates(edges);
 
-    return {first.base, std::move(nodes), std::move(edges)};
+    return {std::move(nodes), std::move(edges)};
 }

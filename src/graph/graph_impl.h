@@ -34,7 +34,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph(
         edges.push_back(_M_adjacency_list.edge_id(id_current, id_next));
     }
 
-    return {*this, std::move(nodes), std::move(edges)};
+    return {std::move(nodes), std::move(edges)};
 }
 
 

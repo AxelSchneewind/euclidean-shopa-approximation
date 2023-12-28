@@ -63,40 +63,41 @@ subdivision_table::precompute(double __epsilon, double __min_relative_r_value) {
 }
 
 std::vector<subdivision_table::subdivision_edge_info>
-subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_t> &__triangulation,
-                                         const std::vector<node_t> &__nodes,
-                                         const polyhedron<adjacency_list<int, std::nullptr_t>, 3> &__polyhedron,
-                                         const std::vector<edge_class> &__table,
-                                         const std::vector<float> &__r_values, float __epsilon) {
+subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_t> &triangulation,
+                                         const std::vector<node_t> &nodes,
+                                         const polyhedron<adjacency_list<int, std::nullptr_t>, 3> &polyhedron,
+                                         const std::vector<edge_class> &table,
+                                         const std::vector<double> &r_values,
+                                         double epsilon) {
 
     // store subdivision information here
     std::vector<subdivision_edge_info> result;
-    result.reserve(__triangulation.edge_count());
+    result.reserve(triangulation.edge_count());
 
-    for (size_t i = 0; i < __triangulation.edge_count(); i++) {
-        auto node1 = __triangulation.source(i);
-        auto node2 = __triangulation.destination(i);
-        auto inv_edge = __triangulation.edge_id(node2, node1);
+    for (size_t i = 0; i < triangulation.edge_count(); i++) {
+        auto node1 = triangulation.source(i);
+        auto node2 = triangulation.destination(i);
+        auto inv_edge = triangulation.edge_id(node2, node1);
 
         // get coordinates
-        auto c1 = __nodes[node1].coordinates;
-        auto c2 = __nodes[node2].coordinates;
+        auto c1 = nodes[node1].coordinates;
+        auto c2 = nodes[node2].coordinates;
 
         // get minimal angle for node1 and node2
         // treat angles > 90 degrees like 90 degrees
         double angle1 = M_PI / 2; // between node1->node2 and node1->node3
         double angle2 = M_PI / 2; // between node2->node1 and node2->node3
 
-        for (auto edge: __polyhedron.edges(i)) {
+        for (auto edge: polyhedron.edges(i)) {
             if (is_none(edge)) continue;
 
-            auto node3 = __triangulation.destination(edge);
+            auto node3 = triangulation.destination(edge);
             if (node3 == node1 || node3 == node2)
-                node3 = __triangulation.source(edge);
+                node3 = triangulation.source(edge);
 
             if (node3 == node1 || node3 == node2) continue;
 
-            auto c3 = __nodes[node3].coordinates;
+            auto c3 = nodes[node3].coordinates;
 
             // compute angles
             auto a1 = angle(c1, c2, c1, c3);
@@ -120,21 +121,18 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         assert(std::abs(mid_value + mid_value_second - 1.0) < 0.001);
         assert(mid_value < 1 && mid_value > 0);
 
-        // store minimal distance from the given mid-point to any other edge, relative to this edges length
-        double mid_dist = mid_value * std::sin(angle1);
-
         // distance values have been computed already, convert to r(v) relative to this edges length
-        double r_first = (__epsilon / 5) * __r_values[node1] / length;
-        double r_second = (__epsilon / 5) * __r_values[node2] / length;
+        double r_first = (epsilon / 5) * (r_values[node1] / length);
+        double r_second = (epsilon / 5) * (r_values[node2] / length);
         assert(r_first >= 0 && r_second >= 0);
-        assert(r_first <= 1.0 && r_second < 1.0);
+        assert(r_first <= 1.0 && r_second <= 1.0);
 
         // get the class this edge belongs to
         auto index = class_index(angle1);
         auto index_second = class_index(angle2);
 
         // get interval in first half that is between r and mid_value
-        auto &node_positions = __table[index].node_positions;
+        auto const& node_positions = table[index].node_positions;
         size_t first_start_index = 0;
         while (first_start_index < node_positions.size() && node_positions[first_start_index] < r_first)
             first_start_index++;
@@ -147,7 +145,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         assert(first_last_index - first_start_index >= 0);
 
         // get interval in second edge half that is between r and mid_value
-        auto &node_positions_second = __table[index_second].node_positions;
+        auto &node_positions_second = table[index_second].node_positions;
         size_t second_start_index = 0;
         while (second_start_index < node_positions_second.size() &&
                node_positions_second[second_start_index] < r_second)
@@ -213,9 +211,9 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
 subdivision_table::subdivision_table(subdivision_table &&__other) noexcept: triangle_classes(
         std::move(__other.triangle_classes)), edges(std::move(__other.edges)) {}
 
-subdivision_table::subdivision_table(std::vector<edge_class> &&__node_positions,
-                                     std::vector<subdivision_edge_info> &&__edges) : triangle_classes(
-        std::move(__node_positions)), edges(std::move(__edges)) {}
+subdivision_table::subdivision_table(std::vector<edge_class> &&__node_positions, std::vector<subdivision_edge_info> &&__edges)
+: triangle_classes( std::move(__node_positions))
+, edges(std::move(__edges)) {}
 
 double subdivision_table::class_angle(int __index) {
     return min_angle + step_size * (__index);
