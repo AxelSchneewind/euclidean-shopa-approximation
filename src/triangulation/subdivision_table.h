@@ -94,10 +94,10 @@ public:
 
 
     static std::vector<subdivision_edge_info> make_subdivision_info(
-            const adjacency_list<int, std::nullptr_t> &__triangulation,
-            const std::vector<node_t> &__nodes,
-            const polyhedron<adjacency_list<int, std::nullptr_t>, 3> &__polyhedron,
-            const std::vector<edge_class> &__table,
-            const std::vector<float> &__r_values,
-            float __epsilon);
+            const adjacency_list<int, std::nullptr_t> &triangulation,
+            const std::vector<node_t> &nodes,
+            const polyhedron<adjacency_list<int, std::nullptr_t>, 3> &polyhedron,
+            const std::vector<edge_class> &table,
+            const std::vector<double> &r_values,
+            double epsilon);
 };

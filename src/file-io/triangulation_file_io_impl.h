@@ -38,7 +38,7 @@ triangulation_file_io::read(std::istream &input_size, std::istream &input_nodes,
 
 steiner_graph
 triangulation_file_io::read_steiner(std::istream &input_size, std::istream &input_nodes, std::istream &input_triangles,
-                                    float __epsilon) {
+                                    double epsilon) {
     using f = stream_encoders::encode_text;
     f::skip_comments(input_size);
 
@@ -49,7 +49,7 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     std::vector<steiner_graph::adjacency_list_type::builder::edge_type> edges;
     std::vector<std::array<steiner_graph::triangle_node_id_type, 3>> faces;
 
-    if (node_count > (std::size_t)std::numeric_limits<int>::max || triangle_count > (std::size_t) std::numeric_limits<int>::max)
+    if (node_count >= (std::size_t)std::numeric_limits<int>::max || triangle_count >= (std::size_t) std::numeric_limits<int>::max)
         throw std::runtime_error("node or face count to high");
 
     nodes.resize(node_count);
@@ -66,7 +66,7 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
         connected[triangle[2]] = true;
     }
 
-    //
+    // make new node ids
     std::vector<steiner_graph::triangle_node_id_type> new_node_ids(triangle_count);
     int j = 0;
     for (int i = 0; i < triangle_count; ++i) {
@@ -90,7 +90,7 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     adj_list_builder.add_edges_from_triangulation(faces);
 
     auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional(adj_list_builder.get());
-    return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces), __epsilon);
+    return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces), epsilon);
 }
 
 template<>

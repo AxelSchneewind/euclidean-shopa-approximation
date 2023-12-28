@@ -38,7 +38,7 @@ std::ostream &operator<<(std::ostream &output, steiner_edge_id<N> id) {
 
 void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
                      const steiner_graph::base_topology_type &triangulation,
-                     const steiner_graph::polyhedron_type &polyhedron, std::vector<float> &out) {
+                     const steiner_graph::polyhedron_type &polyhedron, std::vector<double> &out) {
     out.clear();
     out.resize(nodes.size());
 
@@ -109,18 +109,18 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangula
 
     auto poly = polyhedron<steiner_graph::base_topology_type, 3>::make_polyhedron(triangulation, std::move(faces));
 
-    std::vector<float> r_values;
+    std::vector<double> r_values;
     make_node_radii(triangulation_nodes, triangulation, poly, r_values);
 
     const double min_inner_angle = M_PI / 720; // 1/4º
-    const double minimal_relative_radius = std::sin(min_inner_angle) * (1/(1 + std::sin(M_PI - min_inner_angle) / std::sin(min_inner_angle))) * epsilon;
-    double min_r_value = 0.5;
+    const double minimal_relative_radius = std::sin(min_inner_angle) * (1/(1 + std::sin(M_PI - min_inner_angle) / std::sin(min_inner_angle))) * (epsilon / 5);
+    double min_r_value = 1.0;
     for (auto base_node: triangulation.node_ids()) {
         for (auto edge: triangulation.outgoing_edges(base_node)) {
             auto length = distance(triangulation_nodes[base_node].coordinates, triangulation_nodes[edge.destination].coordinates);
 
-            double r_relative = (epsilon / 5) * r_values[base_node] / length;
-            if (r_relative <= minimal_relative_radius) continue;
+            double r_relative = (epsilon / 5) * (r_values[base_node] / length);
+            if (r_relative <= minimal_relative_radius) { min_r_value = minimal_relative_radius; break; }
 
             min_r_value = std::min(min_r_value, r_relative);
         }
@@ -131,8 +131,9 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangula
     auto subdivision_info = subdivision_table::make_subdivision_info(triangulation, triangulation_nodes, poly,
                                                                      table,
                                                                      r_values, epsilon);
-    subdivision_table s_table{std::move(table), std::move(subdivision_info)};
     r_values.clear();
+
+    subdivision_table s_table{std::move(table), std::move(subdivision_info)};
 
     return {std::move(triangulation_nodes),
             std::move(triangulation),
