@@ -27,7 +27,7 @@
 
 const char *gengetopt_args_info_purpose = "";
 
-const char *gengetopt_args_info_usage = "Usage: route /path/to/graph-file /path/to/results-directory epsilon src0 dest0...";
+const char *gengetopt_args_info_usage = "Usage: route --graph-file /path/to/graph-file --output-directory\n/path/to/results-directory --epsilon 0.5 -q src0,dest0,...";
 
 const char *gengetopt_args_info_versiontext = "1.0";
 
@@ -48,6 +48,7 @@ const char *gengetopt_args_info_help[] = {
   "\noutput:",
   "  options for the command line output",
   "  -c, --csv-format              indicates that routing information should be\n                                  printed in the csv format  (default=off)",
+  "  -p, --project                 which projection to apply to coordinates when\n                                  writing to files (from\n                                  google_bing,wgs84,none)",
     0
 };
 
@@ -84,6 +85,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->coordinates_given = 0 ;
   args_info->stdin_given = 0 ;
   args_info->csv_format_given = 0 ;
+  args_info->project_given = 0 ;
 }
 
 static
@@ -120,6 +122,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->coordinates_help = gengetopt_args_info_help[9] ;
   args_info->stdin_help = gengetopt_args_info_help[10] ;
   args_info->csv_format_help = gengetopt_args_info_help[13] ;
+  args_info->project_help = gengetopt_args_info_help[14] ;
   
 }
 
@@ -315,6 +318,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "stdin", 0, 0 );
   if (args_info->csv_format_given)
     write_into_file(outfile, "csv-format", 0, 0 );
+  if (args_info->project_given)
+    write_into_file(outfile, "project", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -592,6 +597,12 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   
   if (check_multiple_option_occurrences(prog_name, args_info->query_given, args_info->query_min, args_info->query_max, "'--query' ('-q')"))
      error_occurred = 1;
+  
+  if (! args_info->project_given)
+    {
+      fprintf (stderr, "%s: '--project' ('-p') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error_occurred = 1;
+    }
   
   
   /* checks for dependences among options */
@@ -905,10 +916,11 @@ cmdline_parser_internal (
         { "coordinates",	0, NULL, 0 },
         { "stdin",	0, NULL, 'i' },
         { "csv-format",	0, NULL, 'c' },
+        { "project",	0, NULL, 'p' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:o:e:q:ic", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:o:e:q:icp", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -985,6 +997,18 @@ cmdline_parser_internal (
           if (update_arg((void *)&(args_info->csv_format_flag), 0, &(args_info->csv_format_given),
               &(local_args_info.csv_format_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "csv-format", 'c',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'p':	/* which projection to apply to coordinates when writing to files (from google_bing,wgs84,none).  */
+        
+        
+          if (update_arg( 0 , 
+               0 , &(args_info->project_given),
+              &(local_args_info.project_given), optarg, 0, 0, ARG_NO,
+              check_ambiguity, override, 0, 0,
+              "project", 'p',
               additional_error))
             goto failure;
         
