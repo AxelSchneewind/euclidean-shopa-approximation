@@ -96,6 +96,10 @@ public:
 
     virtual distance_t distance() const = 0;
 
+    virtual Graph & tree_forward() = 0;
+    virtual Graph & tree_backward() = 0;
+    virtual Graph & path() = 0;
+
     virtual Graph const& tree_forward() const = 0;
     virtual Graph const& tree_backward() const = 0;
     virtual Graph const& path() const = 0;
@@ -134,19 +138,22 @@ public:
     template<typename RouterT>
     ResultImplementation(GraphT const& graph, QueryImplementation<GraphT> query, RouterT const& router, std::chrono::duration<double, std::milli> duration);
 
-    Query query() const { return Query( QueryImplementation<GraphT>( _query ) ) ; };
+    Query query() const override { return Query( QueryImplementation<GraphT>( _query ) ) ; };
 
-    bool route_found() const { return _route_found; };
+    bool route_found() const override { return _route_found; };
 
-    distance_t distance() const { return _distance; };
+    distance_t distance() const override { return _distance; };
 
-    Graph const & tree_forward() const { return _tree_forward; };
-    Graph const & tree_backward() const { return _tree_backward; };
-    Graph const & path() const { return _path; };
+    Graph& tree_forward() override  { return _tree_forward; };
+    Graph& tree_backward() override  { return _tree_backward; };
+    Graph& path() override { return _path; };
+    Graph const& tree_forward() const override { return _tree_forward; };
+    Graph const& tree_backward() const override { return _tree_backward; };
+    Graph const& path() const override { return _path; };
 
-    std::size_t nodes_visited() const { return _nodes_visited; };
+    std::size_t nodes_visited() const override { return _nodes_visited; };
 
-    std::chrono::duration<double, std::milli> duration() const { return _duration; };
+    std::chrono::duration<double, std::milli> duration() const override { return _duration; };
 };
 
 class Result {
@@ -179,6 +186,9 @@ public:
 
     distance_t distance() const { return pimpl->distance(); };
 
+    Graph & tree_forward() { return pimpl->tree_forward(); };
+    Graph & tree_backward() { return pimpl->tree_backward(); };
+    Graph & path() { return pimpl->path(); };
     Graph const& tree_forward() const { return pimpl->tree_forward(); };
     Graph const& tree_backward() const { return pimpl->tree_backward(); };
     Graph const& path() const { return pimpl->path(); };
