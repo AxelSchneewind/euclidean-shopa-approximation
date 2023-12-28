@@ -59,7 +59,9 @@ struct gengetopt_args_info
   const char *stdin_help; /**< @brief indicates that queries should be read from stdin help description.  */
   int csv_format_flag;	/**< @brief indicates that routing information should be printed in the csv format (default=off).  */
   const char *csv_format_help; /**< @brief indicates that routing information should be printed in the csv format help description.  */
-  const char *project_help; /**< @brief which projection to apply to coordinates when writing to files (from google_bing,wgs84,none) help description.  */
+  char * projection_arg;	/**< @brief which projection to apply to coordinates when writing to files (from google_bing,wgs84,none) (default='none').  */
+  char * projection_orig;	/**< @brief which projection to apply to coordinates when writing to files (from google_bing,wgs84,none) original value given at command line.  */
+  const char *projection_help; /**< @brief which projection to apply to coordinates when writing to files (from google_bing,wgs84,none) help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -70,7 +72,7 @@ struct gengetopt_args_info
   unsigned int coordinates_given ;	/**< @brief Whether coordinates was given.  */
   unsigned int stdin_given ;	/**< @brief Whether stdin was given.  */
   unsigned int csv_format_given ;	/**< @brief Whether csv-format was given.  */
-  unsigned int project_given ;	/**< @brief Whether project was given.  */
+  unsigned int projection_given ;	/**< @brief Whether projection was given.  */
 
 } ;
 
@@ -194,6 +196,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  */
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
+
+extern const char *cmdline_parser_projection_values[];  /**< @brief Possible values for projection. */
 
 
 #ifdef __cplusplus

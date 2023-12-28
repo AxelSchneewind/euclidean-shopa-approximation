@@ -100,11 +100,11 @@ main(int argc, char const *argv[]) {
             client.write_info(std::cout);
         }
 
-        if (arguments.project_arg == "google_bing") {
+        if (arguments.projection_arg == "google_bing") {
             client.result().path().project(Projection::WGS84_TO_GB);
             client.result().tree_forward().project(Projection::WGS84_TO_GB);
             client.result().tree_backward().project(Projection::WGS84_TO_GB);
-        } else if (arguments.project_arg == "wgs84") {
+        } else if (arguments.projection_arg == "wgs84") {
             client.result().path().project(Projection::GB_TO_WGS84);
             client.result().tree_forward().project(Projection::GB_TO_WGS84);
             client.result().tree_backward().project(Projection::GB_TO_WGS84);

@@ -48,7 +48,7 @@ const char *gengetopt_args_info_help[] = {
   "\noutput:",
   "  options for the command line output",
   "  -c, --csv-format              indicates that routing information should be\n                                  printed in the csv format  (default=off)",
-  "  -p, --project                 which projection to apply to coordinates when\n                                  writing to files (from\n                                  google_bing,wgs84,none)",
+  "  -p, --projection[=STRING]     which projection to apply to coordinates when\n                                  writing to files (from\n                                  google_bing,wgs84,none)  (possible\n                                  values=\"google_bing\", \"wgs84\", \"none\"\n                                  default=`none')",
     0
 };
 
@@ -70,6 +70,8 @@ cmdline_parser_internal (int argc, char **argv, struct gengetopt_args_info *args
 static int
 cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error);
 
+const char *cmdline_parser_projection_values[] = {"google_bing", "wgs84", "none", 0}; /*< Possible values for projection. */
+
 static char *
 gengetopt_strdup (const char *s);
 
@@ -85,7 +87,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->coordinates_given = 0 ;
   args_info->stdin_given = 0 ;
   args_info->csv_format_given = 0 ;
-  args_info->project_given = 0 ;
+  args_info->projection_given = 0 ;
 }
 
 static
@@ -103,6 +105,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->coordinates_flag = 0;
   args_info->stdin_flag = 0;
   args_info->csv_format_flag = 0;
+  args_info->projection_arg = gengetopt_strdup ("none");
+  args_info->projection_orig = NULL;
   
 }
 
@@ -122,7 +126,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->coordinates_help = gengetopt_args_info_help[9] ;
   args_info->stdin_help = gengetopt_args_info_help[10] ;
   args_info->csv_format_help = gengetopt_args_info_help[13] ;
-  args_info->project_help = gengetopt_args_info_help[14] ;
+  args_info->projection_help = gengetopt_args_info_help[14] ;
   
 }
 
@@ -263,19 +267,62 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->output_directory_orig));
   free_string_field (&(args_info->epsilon_orig));
   free_multiple_string_field (args_info->query_given, &(args_info->query_arg), &(args_info->query_orig));
+  free_string_field (&(args_info->projection_arg));
+  free_string_field (&(args_info->projection_orig));
   
   
 
   clear_given (args_info);
 }
 
+/**
+ * @param val the value to check
+ * @param values the possible values
+ * @return the index of the matched value:
+ * -1 if no value matched,
+ * -2 if more than one value has matched
+ */
+static int
+check_possible_values(const char *val, const char *values[])
+{
+  int i, found, last;
+  size_t len;
+
+  if (!val)   /* otherwise strlen() crashes below */
+    return -1; /* -1 means no argument for the option */
+
+  found = last = 0;
+
+  for (i = 0, len = strlen(val); values[i]; ++i)
+    {
+      if (strncmp(val, values[i], len) == 0)
+        {
+          ++found;
+          last = i;
+          if (strlen(values[i]) == len)
+            return i; /* exact macth no need to check more */
+        }
+    }
+
+  if (found == 1) /* one match: OK */
+    return last;
+
+  return (found ? -2 : -1); /* return many values or none matched */
+}
+
 
 static void
 write_into_file(FILE *outfile, const char *opt, const char *arg, const char *values[])
 {
-  FIX_UNUSED (values);
+  int found = -1;
   if (arg) {
-    fprintf(outfile, "%s=\"%s\"\n", opt, arg);
+    if (values) {
+      found = check_possible_values(arg, values);      
+    }
+    if (found >= 0)
+      fprintf(outfile, "%s=\"%s\" # %s\n", opt, arg, values[found]);
+    else
+      fprintf(outfile, "%s=\"%s\"\n", opt, arg);
   } else {
     fprintf(outfile, "%s\n", opt);
   }
@@ -318,8 +365,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "stdin", 0, 0 );
   if (args_info->csv_format_given)
     write_into_file(outfile, "csv-format", 0, 0 );
-  if (args_info->project_given)
-    write_into_file(outfile, "project", 0, 0 );
+  if (args_info->projection_given)
+    write_into_file(outfile, "projection", args_info->projection_orig, cmdline_parser_projection_values);
   
 
   i = EXIT_SUCCESS;
@@ -598,9 +645,9 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   if (check_multiple_option_occurrences(prog_name, args_info->query_given, args_info->query_min, args_info->query_max, "'--query' ('-q')"))
      error_occurred = 1;
   
-  if (! args_info->project_given)
+  if (! args_info->projection_given)
     {
-      fprintf (stderr, "%s: '--project' ('-p') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      fprintf (stderr, "%s: '--projection' ('-p') option required%s\n", prog_name, (additional_error ? additional_error : ""));
       error_occurred = 1;
     }
   
@@ -669,7 +716,18 @@ int update_arg(void *field, char **orig_field,
       return 1; /* failure */
     }
 
-  FIX_UNUSED (default_value);
+  if (possible_values && (found = check_possible_values((value ? value : default_value), possible_values)) < 0)
+    {
+      if (short_opt != '-')
+        fprintf (stderr, "%s: %s argument, \"%s\", for option `--%s' (`-%c')%s\n", 
+          package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt, short_opt,
+          (additional_error ? additional_error : ""));
+      else
+        fprintf (stderr, "%s: %s argument, \"%s\", for option `--%s'%s\n", 
+          package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt,
+          (additional_error ? additional_error : ""));
+      return 1; /* failure */
+    }
     
   if (field_given && *field_given && ! override)
     return 0;
@@ -916,11 +974,11 @@ cmdline_parser_internal (
         { "coordinates",	0, NULL, 0 },
         { "stdin",	0, NULL, 'i' },
         { "csv-format",	0, NULL, 'c' },
-        { "project",	0, NULL, 'p' },
+        { "projection",	2, NULL, 'p' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:o:e:q:icp", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:o:e:q:icp::", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1004,11 +1062,11 @@ cmdline_parser_internal (
         case 'p':	/* which projection to apply to coordinates when writing to files (from google_bing,wgs84,none).  */
         
         
-          if (update_arg( 0 , 
-               0 , &(args_info->project_given),
-              &(local_args_info.project_given), optarg, 0, 0, ARG_NO,
+          if (update_arg( (void *)&(args_info->projection_arg), 
+               &(args_info->projection_orig), &(args_info->projection_given),
+              &(local_args_info.projection_given), optarg, cmdline_parser_projection_values, "none", ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "project", 'p',
+              "projection", 'p',
               additional_error))
             goto failure;
         
