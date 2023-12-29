@@ -11,7 +11,7 @@ TRIANGULATION_RESULTS=/home/axel/Studium/Semester_7/graphs/visibility_aegaeis/re
 TRIANGULATION_UNREF_RESULTS=/home/axel/Studium/Semester_7/graphs/visibility_aegaeis/results_unref
 
 
-NODES=(100 20000 100000 200000 500000 56961)
+NODES=(100 20000 100000 123000 200000 500000 56961)
 # TODO
 NODES_UNREF=()
 

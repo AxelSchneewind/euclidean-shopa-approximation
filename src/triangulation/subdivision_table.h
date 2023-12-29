@@ -13,11 +13,11 @@
 class subdivision_table {
 public:
     // in radians
-    static constexpr unsigned char step_count = 127;
+    static constexpr unsigned char step_count = 254;
 
     // assume that each angle is at least 5 degrees
-    static constexpr double min_angle = (M_PI / 180) *  5;
-    static constexpr double max_angle = (M_PI / 180) * 85;
+    static constexpr double min_angle = (M_PI / 180) *  1;
+    static constexpr double max_angle = (M_PI / 180) * 89;
 
     static constexpr double step_size = (max_angle - min_angle) / (step_count - 1);
 
@@ -70,7 +70,8 @@ public:
 
     coordinate_t node_coordinates(edge_id_t __edge, short steiner_index, coordinate_t c1, coordinate_t c2) const;
 
-    subdivision_edge_info edge(int __edge) const;
+    subdivision_edge_info& edge(int edge);
+    subdivision_edge_info const& edge(int edge) const;
 
     static std::vector<subdivision_table::edge_class> precompute(double __epsilon, double __min_relative_r_value);
 
@@ -89,8 +90,8 @@ public:
     }
 
     static std::vector<float>
-    min_r_per_triangle_class(const std::vector<node_t> &__nodes, const std::vector<float> &r_values,
-                             const std::vector<triangle> &__faces);;
+    min_r_per_triangle_class(const std::vector<node_t> &nodes, const std::vector<float> &r_values,
+                             const std::vector<triangle> &__faces);
 
 
     static std::vector<subdivision_edge_info> make_subdivision_info(
