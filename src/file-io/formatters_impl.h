@@ -53,7 +53,7 @@ namespace stream_encoders {
     template<>
     std::ostream &
     encode_text::write(std::ostream &output, const coordinate_t &c) {
-        output << std::setprecision(20) << c.latitude << ' ' << c.longitude << ' ';
+        output << std::setprecision(20) << c.latitude << ' ' << std::setprecision(20) << c.longitude << ' ';
         return output;
     }
 
