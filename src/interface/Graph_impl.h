@@ -36,7 +36,7 @@ void Graph::GraphImplementation<steiner_graph>::write_graph_stats(std::ostream &
     output << "\r\agraph has "
            << std::setw(12) << graph.node_count() << " nodes and "
            << std::setw(12) << graph.edge_count() << " edges"
-           << "\n      with "
+           <<   "\n     with "
            << std::setw(12) << graph.base_graph().node_count() << " nodes and "
            << std::setw(12) << graph.base_graph().edge_count() << " edges stored explicitly (ε = "
            << graph.epsilon() << ")" << std::endl;
@@ -166,10 +166,10 @@ void Graph::GraphImplementation<GraphT>::write_subgraph_file(std::string path, c
                                                              coordinate_t top_right) const {
     std::ofstream output(path);
 
-    auto &&all_nodes = graph.node_ids();
     std::vector<typename GraphT::node_id_type> nodes;
     std::vector<typename GraphT::edge_id_type> edges;
 
+    auto &&all_nodes = graph.node_ids();
     for (auto node_id: all_nodes) {
         if (!is_in_rectangle(graph.node(node_id).coordinates, bottom_left, top_right))
             continue;
@@ -196,6 +196,41 @@ void Graph::GraphImplementation<GraphT>::write_subgraph_file(std::string path, c
     }
 }
 
+
+template<>
+void Graph::GraphImplementation<steiner_graph>::write_subgraph_file(std::string path, coordinate_t bottom_left,
+                                                             coordinate_t top_right) const {
+    std::ofstream output(path);
+
+    std::vector<steiner_graph::base_topology_type::node_id_type> nodes;
+    std::vector<steiner_graph::base_topology_type::edge_id_type> edges;
+
+    auto &&all_nodes = graph.base_graph().node_ids();
+    for (auto node_id: all_nodes) {
+        if (!is_in_rectangle(graph.node(node_id).coordinates, bottom_left, top_right))
+            continue;
+        if (nodes.size() > 1000000 || edges.size() > 200000000)
+            break;
+        nodes.emplace_back(node_id);
+
+        for (auto edge: graph.base_graph().outgoing_edges(node_id)) {
+            if (!is_in_rectangle(graph.node(edge.destination).coordinates, bottom_left, top_right))
+                continue;
+
+            edges.emplace_back(graph.base_graph().edge_id(node_id, edge.destination));
+        }
+    }
+
+    subgraph<steiner_graph::base_topology_type> s(std::move(nodes), std::move(edges));
+    steiner_graph subgraph = steiner_graph::make_graph(graph, s);
+    if (path.ends_with(".fmi")) {
+        fmi_file_io::write(output, subgraph);
+    } else if (path.ends_with(".gl")) {
+        gl_file_io::write(output, subgraph);
+    } else if (path.ends_with(".graph")) {
+        throw std::runtime_error("Not implemented");
+    }
+}
 
 template<typename GraphT>
 void Graph::GraphImplementation<GraphT>::project(Projection projection) {
