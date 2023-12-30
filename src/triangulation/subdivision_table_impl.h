@@ -18,20 +18,20 @@ bool is_between(Value val, Min min, Max max) {
 }
 
 std::vector<float>
-subdivision_table::min_r_per_triangle_class(const std::vector<node_t> &__nodes, const std::vector<float> &r_values,
-                                            const std::vector<triangle> &__faces) {
+subdivision_table::min_r_per_triangle_class(const std::vector<node_t> &nodes, const std::vector<float> &r_values,
+                                            const std::vector<triangle> &faces) {
     std::vector<float> min_r(M_PI / step_size, infinity<float>);
 
-    for (auto face: __faces) {
+    for (auto face: faces) {
         for (int node_index = 0; node_index < 3; ++node_index) {
-            auto c1 = __nodes[face[node_index]].coordinates;
-            auto c2 = __nodes[face[(node_index + 1) % 3]].coordinates;
-            auto c3 = __nodes[face[(node_index + 2) % 3]].coordinates;
-            float radians = angle(c1, c2, c1, c3);
+            auto c1 = nodes[face[node_index]].coordinates;
+            auto c2 = nodes[face[(node_index + 1) % 3]].coordinates;
+            auto c3 = nodes[face[(node_index + 2) % 3]].coordinates;
+            double radians = inner_angle(c1, c2, c1, c3);
             int index = class_index(radians);
 
-            float r_relative = r_values[face[node_index]] / distance(c2, c1);
-            min_r[index] = std::min(min_r[index], r_relative);
+            double r_relative = r_values[face[node_index]] / distance(c2, c1);
+            min_r[index] = std::min(min_r[index], (float)r_relative);
         }
     }
 
@@ -39,7 +39,7 @@ subdivision_table::min_r_per_triangle_class(const std::vector<node_t> &__nodes, 
 }
 
 std::vector<subdivision_table::edge_class>
-subdivision_table::precompute(double __epsilon, double __min_relative_r_value) {
+subdivision_table::precompute(double epsilon, double min_relative_r_value) {
     std::vector<edge_class> triangle_classes;
 
     for (int index = 0; index < step_count; ++index) {
@@ -49,13 +49,13 @@ subdivision_table::precompute(double __epsilon, double __min_relative_r_value) {
 
         double sine = std::sin(angle);
 
-        double relative = __min_relative_r_value;
+        double relative = min_relative_r_value;
         double edge_distance = 0.0;
 
         while (relative < 1.0) {
             triangle_classes.back().node_positions.push_back(relative);
             edge_distance = sine * relative;
-            relative += __epsilon * edge_distance;
+            relative += epsilon * edge_distance;
         }
     }
 
@@ -91,23 +91,19 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         for (auto edge: polyhedron.edges(i)) {
             if (is_none(edge)) continue;
 
+            // make sure node3 is different from node1 and node2
             auto node3 = triangulation.destination(edge);
             if (node3 == node1 || node3 == node2)
                 node3 = triangulation.source(edge);
-
             if (node3 == node1 || node3 == node2) continue;
 
             auto c3 = nodes[node3].coordinates;
 
             // compute angles
-            auto a1 = angle(c1, c2, c1, c3);
-            auto a2 = angle(c2, c1, c2, c3);
-
-            if (a1 >= M_PI)
-                a1 = M_PI - a1;
-            if (a2 >= M_PI)
-                a2 = M_PI - a2;
-            assert(a1 < M_PI && a2 < M_PI);
+            auto a1 = inner_angle(c1, c2, c1, c3);
+            auto a2 = inner_angle(c2, c1, c2, c3);
+            auto a3 = inner_angle(c3, c1, c3, c2);
+            assert(std::fabs((a1 + a2 + a3) - M_PI) < M_PI / 180);
 
             if (a1 < angle1)
                 angle1 = a1;
@@ -129,8 +125,9 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         assert(mid_value < 1 && mid_value > 0);
 
         // distance values have been computed already, convert to r(v) relative to this edges length
-        double r_first = (epsilon) * (r_values[node1] / length);
-        double r_second = (epsilon) * (r_values[node2] / length);
+        double factor = std::min(epsilon, 1.0) /*/5*/;
+        double r_first = factor * (r_values[node1] / length);
+        double r_second = factor * (r_values[node2] / length);
         assert(r_first >= 0 && r_second >= 0);
         assert(r_first <= 1.0 && r_second <= 1.0);
 
@@ -152,7 +149,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         assert(first_last_index - first_start_index >= 0);
 
         // get interval in second edge half that is between r and mid_value
-        auto &node_positions_second = table[index_second].node_positions;
+        auto const&node_positions_second = table[index_second].node_positions;
         size_t second_start_index = 0;
         while (second_start_index < node_positions_second.size() &&
                node_positions_second[second_start_index] < r_second)
@@ -221,13 +218,14 @@ subdivision_table::subdivision_table(std::vector<edge_class> &&__node_positions,
 : triangle_classes( std::move(__node_positions))
 , edges(std::move(__edges)) {}
 
-double subdivision_table::class_angle(int __index) {
-    return min_angle + step_size * (__index);
+double subdivision_table::class_angle(int index) {
+    return min_angle + (step_size * index);
 }
 
-int subdivision_table::class_index(double __radians) {
-    __radians = std::min(__radians, M_PI_2);
-    int result = std::floor((__radians - min_angle) / step_size);
+int subdivision_table::class_index(double radians) {
+    assert(radians >= 0);
+    radians = std::min(radians, M_PI_2);
+    int result = std::floor((radians - min_angle) / step_size);
     return std::min(std::max(result, 0), step_count - 1);
 }
 

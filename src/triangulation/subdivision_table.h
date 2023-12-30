@@ -16,8 +16,8 @@ public:
     static constexpr unsigned char step_count = 254;
 
     // assume that each angle is at least 5 degrees
-    static constexpr double min_angle = (M_PI / 180) *  1;
-    static constexpr double max_angle = (M_PI / 180) * 89;
+    static constexpr double min_angle = (M_PI_2 / 90) *  5;
+    static constexpr double max_angle = (M_PI_2 / 90) * 85;
 
     static constexpr double step_size = (max_angle - min_angle) / (step_count - 1);
 
@@ -64,9 +64,9 @@ public:
 
     subdivision_table(std::vector<edge_class> &&__node_positions, std::vector<subdivision_edge_info> &&__edges);
 
-    static double class_angle(int __index);
+    static double class_angle(int index);
 
-    static int class_index(double __radians);
+    static int class_index(double radians);
 
     coordinate_t node_coordinates(edge_id_t __edge, short steiner_index, coordinate_t c1, coordinate_t c2) const;
 
