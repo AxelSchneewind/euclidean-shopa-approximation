@@ -48,7 +48,7 @@ const char *gengetopt_args_info_help[] = {
   "\noutput:",
   "  options for the command line output",
   "  -c, --csv-format              indicates that routing information should be\n                                  printed in the csv format  (default=off)",
-  "  -p, --projection[=STRING]     which projection to apply to coordinates when\n                                  writing to files (from\n                                  google_bing,wgs84,none)  (possible\n                                  values=\"google_bing\", \"wgs84\", \"none\"\n                                  default=`none')",
+  "  -p, --projection=ENUM         which projection to apply to coordinates when\n                                  writing to files  (possible\n                                  values=\"google_bing\", \"wgs84\", \"none\"\n                                  default=`none')",
     0
 };
 
@@ -56,6 +56,7 @@ typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
   , ARG_DOUBLE
+  , ARG_ENUM
 } cmdline_parser_arg_type;
 
 static
@@ -105,7 +106,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->coordinates_flag = 0;
   args_info->stdin_flag = 0;
   args_info->csv_format_flag = 0;
-  args_info->projection_arg = gengetopt_strdup ("none");
+  args_info->projection_arg = projection_arg_none;
   args_info->projection_orig = NULL;
   
 }
@@ -213,6 +214,7 @@ free_string_field (char **s)
 
 /** @brief generic value variable */
 union generic_value {
+    int int_arg;
     double double_arg;
     char *string_arg;
     const char *default_string_arg;
@@ -267,7 +269,6 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->output_directory_orig));
   free_string_field (&(args_info->epsilon_orig));
   free_multiple_string_field (args_info->query_given, &(args_info->query_arg), &(args_info->query_orig));
-  free_string_field (&(args_info->projection_arg));
   free_string_field (&(args_info->projection_orig));
   
   
@@ -645,12 +646,6 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   if (check_multiple_option_occurrences(prog_name, args_info->query_given, args_info->query_min, args_info->query_max, "'--query' ('-q')"))
      error_occurred = 1;
   
-  if (! args_info->projection_given)
-    {
-      fprintf (stderr, "%s: '--projection' ('-p') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error_occurred = 1;
-    }
-  
   
   /* checks for dependences among options */
   if (args_info->epsilon_given && ! args_info->graph_file_given)
@@ -744,6 +739,9 @@ int update_arg(void *field, char **orig_field,
     break;
   case ARG_DOUBLE:
     if (val) *((double *)field) = strtod (val, &stop_char);
+    break;
+  case ARG_ENUM:
+    if (val) *((int *)field) = found;
     break;
   case ARG_STRING:
     if (val) {
@@ -872,6 +870,8 @@ void update_multiple_arg(void *field, char ***orig_field,
     *orig_field = (char **) realloc (*orig_field, (field_given + prev_given) * sizeof (char *));
 
     switch(arg_type) {
+    case ARG_ENUM:
+      *((int **)field) = (int *)realloc (*((int **)field), (field_given + prev_given) * sizeof (int)); break;
     case ARG_DOUBLE:
       *((double **)field) = (double *)realloc (*((double **)field), (field_given + prev_given) * sizeof (double)); break;
     case ARG_STRING:
@@ -887,6 +887,8 @@ void update_multiple_arg(void *field, char ***orig_field,
         switch(arg_type) {
         case ARG_DOUBLE:
           (*((double **)field))[i + field_given] = tmp->arg.double_arg; break;
+        case ARG_ENUM:
+          (*((int **)field))[i + field_given] = tmp->arg.int_arg; break;
         case ARG_STRING:
           (*((char ***)field))[i + field_given] = tmp->arg.string_arg; break;
         default:
@@ -899,6 +901,12 @@ void update_multiple_arg(void *field, char ***orig_field,
   } else { /* set the default value */
     if (default_value && ! field_given) {
       switch(arg_type) {
+      case ARG_ENUM:
+        if (! *((int **)field)) {
+          *((int **)field) = (int *)malloc (sizeof (int));
+          (*((int **)field))[0] = default_value->int_arg; 
+        }
+        break;
       case ARG_DOUBLE:
         if (! *((double **)field)) {
           *((double **)field) = (double *)malloc (sizeof (double));
@@ -974,11 +982,11 @@ cmdline_parser_internal (
         { "coordinates",	0, NULL, 0 },
         { "stdin",	0, NULL, 'i' },
         { "csv-format",	0, NULL, 'c' },
-        { "projection",	2, NULL, 'p' },
+        { "projection",	1, NULL, 'p' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:o:e:q:icp::", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:o:e:q:icp:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1059,12 +1067,12 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'p':	/* which projection to apply to coordinates when writing to files (from google_bing,wgs84,none).  */
+        case 'p':	/* which projection to apply to coordinates when writing to files.  */
         
         
           if (update_arg( (void *)&(args_info->projection_arg), 
                &(args_info->projection_orig), &(args_info->projection_given),
-              &(local_args_info.projection_given), optarg, cmdline_parser_projection_values, "none", ARG_STRING,
+              &(local_args_info.projection_given), optarg, cmdline_parser_projection_values, "none", ARG_ENUM,
               check_ambiguity, override, 0, 0,
               "projection", 'p',
               additional_error))

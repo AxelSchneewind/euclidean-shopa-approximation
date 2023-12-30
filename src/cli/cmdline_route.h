@@ -34,6 +34,8 @@ extern "C" {
 #define CMDLINE_PARSER_VERSION "1.0"
 #endif
 
+enum enum_projection { projection__NULL = -1, projection_arg_google_bing = 0, projection_arg_wgs84, projection_arg_none };
+
 /** @brief Where the command line options are stored */
 struct gengetopt_args_info
 {
@@ -59,9 +61,9 @@ struct gengetopt_args_info
   const char *stdin_help; /**< @brief indicates that queries should be read from stdin help description.  */
   int csv_format_flag;	/**< @brief indicates that routing information should be printed in the csv format (default=off).  */
   const char *csv_format_help; /**< @brief indicates that routing information should be printed in the csv format help description.  */
-  char * projection_arg;	/**< @brief which projection to apply to coordinates when writing to files (from google_bing,wgs84,none) (default='none').  */
-  char * projection_orig;	/**< @brief which projection to apply to coordinates when writing to files (from google_bing,wgs84,none) original value given at command line.  */
-  const char *projection_help; /**< @brief which projection to apply to coordinates when writing to files (from google_bing,wgs84,none) help description.  */
+  enum enum_projection projection_arg;	/**< @brief which projection to apply to coordinates when writing to files (default='none').  */
+  char * projection_orig;	/**< @brief which projection to apply to coordinates when writing to files original value given at command line.  */
+  const char *projection_help; /**< @brief which projection to apply to coordinates when writing to files help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
