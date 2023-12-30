@@ -41,32 +41,35 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph(
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 template<RoutableGraph Other, typename Subgraph>
 graph<NodeInfo, EdgeInfo, NodeId, EdgeId>
-graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other & __base_graph,
-                                                      const Subgraph& __subgraph) {
-    NodeId node_count = __subgraph.node_count();
-    EdgeId edge_count = __subgraph.edge_count();
+graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other & base_graph,
+                                                      const Subgraph& subgraph) {
+    NodeId node_count = subgraph.node_count();
+    EdgeId edge_count = subgraph.edge_count();
 
     std::vector<NodeInfo> nodes;
     std::unordered_map<typename Other::node_id_type, size_t> new_node_ids;
 
     // make node list and store indices for each node
     for (size_t i = 0; i < node_count; i++) {
-        auto node_id = __subgraph.nodes[i];
+        auto node_id = subgraph.nodes[i];
 
-        nodes.push_back((NodeInfo) __base_graph.node(node_id));
+        nodes.emplace_back(base_graph.node(node_id));
         new_node_ids[node_id] = (NodeId) i;
     }
 
     // make one-directional adjacency list
     typename adjacency_list<NodeId, EdgeInfo>::builder forward_builder(node_count);
-    for (auto edge: __subgraph.edges) {
+    for (auto&& edge: subgraph.edges) {
         if (is_none(edge)) continue;
 
-        auto src = __base_graph.source(edge);
-        auto dest = __base_graph.destination(edge);
-        EdgeInfo info = __base_graph.edge(edge);
+        auto&& src = base_graph.source(edge);
+        auto&& dest = base_graph.destination(edge);
+        assert(!is_none(src) && !is_none(dest));
+        if(!base_graph.has_edge(src, dest)) continue;
 
-        forward_builder.add_edge((NodeId) new_node_ids[src], (NodeId) new_node_ids[dest], info);
+        auto&& info = base_graph.edge(edge);
+
+        forward_builder.add_edge(new_node_ids[src], new_node_ids[dest], info);
     }
 
     // make bidirectional adjacency list

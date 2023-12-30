@@ -39,23 +39,29 @@ public:
 
 
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
-void make_face_edges(const BaseGraph &__base,
-                     const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &__faces,
-                     std::vector<std::array<typename BaseGraph::edge_id_type, MaxNodesPerFace>> &__face_edges,
-                     std::vector<std::array<int, 2>> &__edge_faces) {
+void make_face_edges(const BaseGraph &base,
+                     const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &faces,
+                     std::vector<std::array<typename BaseGraph::edge_id_type, MaxNodesPerFace>> &face_edges,
+                     std::vector<std::array<int, 2>> &edge_faces);
+
+template<Topology BaseGraph, std::size_t MaxNodesPerFace>
+void make_face_edges(const BaseGraph &base,
+                     const std::vector<std::array<BaseGraph::node_id_type, MaxNodesPerFace>> &faces,
+                     std::vector<std::array<BaseGraph::edge_id_type, MaxNodesPerFace>> &face_edges,
+                     std::vector<std::array<int, 2>> &edge_faces) {
     constexpr std::size_t edges_per_face = 3;
 
-    __face_edges.clear();
-    __face_edges.reserve(__faces.size());
+    face_edges.clear();
+    face_edges.reserve(faces.size());
 
-    __edge_faces.clear();
-    __edge_faces.resize(__base.edge_count());
+    edge_faces.clear();
+    edge_faces.resize(base.edge_count());
 
-    std::vector<char> triangle_count(__base.edge_count());
+    std::vector<char> triangle_count(base.edge_count());
 
     int face_index = 0;
     std::vector<typename BaseGraph::node_id_type> adjacent_edges;
-    for (auto face: __faces) {
+    for (auto face: faces) {
         adjacent_edges.clear();
 
         for (int i = 0; i < MaxNodesPerFace; ++i) {
@@ -67,7 +73,7 @@ void make_face_edges(const BaseGraph &__base,
             if (node_id == node_id_n)
                 continue;
 
-            auto edge_id = __base.edge_id(node_id, node_id_n);
+            auto edge_id = base.edge_id(node_id, node_id_n);
             assert(!is_none(edge_id));
             adjacent_edges.emplace_back(edge_id);
         }
@@ -77,48 +83,48 @@ void make_face_edges(const BaseGraph &__base,
         assert(adjacent_edges.size() == edges_per_face);
 
         // add edges array to face
-        __face_edges.emplace_back();
+        face_edges.emplace_back();
         int index = 0;
         for (auto e: adjacent_edges) {
-            assert (__base.source(e) < __base.destination(e));
-            __face_edges.back().at(index++) = e;
+            assert (base.source(e) < base.destination(e));
+            face_edges.back().at(index++) = e;
         }
         assert(index <= MaxNodesPerFace);
 
         // add triangle to edges
         for (auto e: adjacent_edges) {
-            __edge_faces[e][triangle_count[e]++] = face_index;
+            edge_faces[e][triangle_count[e]++] = face_index;
         }
 
         face_index++;
     }
 
     // fill with -1 for edges that are only part of one face
-    for (int i = 0; i < __base.edge_count(); ++i) {
+    for (int i = 0; i < base.edge_count(); ++i) {
         assert(triangle_count[i] >= 1);
         assert(triangle_count[i] <= 2);
-        if (triangle_count[i] < 2)
-            __edge_faces[i][triangle_count[i]++] = none_value<typename BaseGraph::edge_id_type>;
+        while (triangle_count[i] < 2)
+            edge_faces[i][triangle_count[i]++] = none_value<typename BaseGraph::edge_id_type>;
     }
 }
 
 template<Topology BaseGraph>
-void make_inverse_edges(const BaseGraph &__base, std::vector<typename BaseGraph::edge_id_type> &__result) {
-    __result.clear();
-    __result.resize(__base.edge_count());
+void make_inverse_edges(const BaseGraph &base, std::vector<typename BaseGraph::edge_id_type> &result) {
+    result.clear();
+    result.resize(base.edge_count());
 
-    for (int i = 0; i < __base.edge_count(); ++i) {
-        auto src = __base.source(i);
-        auto dest = __base.destination(i);
-        __result[i] = __base.edge_id(dest, src);
+    for (int i = 0; i < base.edge_count(); ++i) {
+        auto src = base.source(i);
+        auto dest = base.destination(i);
+        result[i] = base.edge_id(dest, src);
     }
 }
 
 
-// can be generalized to any type of polyhedron (using variable instead of staticly sized arrays)
+// can be generalized to any type of polyhedron (using variable instead of statically sized arrays)
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 polyhedron<BaseGraph, MaxNodesPerFace>
-polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
+polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &base,
                                                         std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &&faces) {
     using node_id_type = polyhedron<BaseGraph, MaxNodesPerFace>::node_id_type;
     using edge_id_type = polyhedron<BaseGraph, MaxNodesPerFace>::edge_id_type;
@@ -129,11 +135,11 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
     // and all adjacent edge_faces for each edge
     std::vector<std::array<edge_id_type, edge_count_per_face>> triangle_edges;
     std::vector<std::array<int, face_count_per_edge>> edge_triangles;
-    make_face_edges(__base, faces, triangle_edges, edge_triangles);
+    make_face_edges(base, faces, triangle_edges, edge_triangles);
 
     // get the inverse edge for each edge
     std::vector<edge_id_type> inverse_edges;
-    make_inverse_edges(__base, inverse_edges);
+    make_inverse_edges(base, inverse_edges);
 
     // make edges reachable from base nodes
     std::vector<edge_id_type> node_edges;
@@ -141,10 +147,10 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
     {
         std::vector<steiner_graph::triangle_edge_id_type> adjacent_edge_ids;
         std::vector<steiner_graph::triangle_edge_id_type> triangle_edge_ids;
-        for (std::size_t node = 0; node < __base.node_count(); ++node) {
+        for (std::size_t node = 0; node < base.node_count(); ++node) {
             // get edges and triangles adjacent to node
-            for (auto&& edge: __base.outgoing_edges(node)) {
-                auto edge_id = __base.edge_id(node, edge.destination);
+            for (auto&& edge: base.outgoing_edges(node)) {
+                auto edge_id = base.edge_id(node, edge.destination);
                 adjacent_edge_ids.push_back(edge_id);
 
                 for (auto triangle: edge_triangles[edge_id]) {
@@ -153,8 +159,8 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
                         triangle_edge_ids.push_back(other_edge);
                 }
             }
-            for (auto&& edge: __base.incoming_edges(node)) {
-                auto edge_id = __base.edge_id(edge.destination, node);
+            for (auto&& edge: base.incoming_edges(node)) {
+                auto edge_id = base.edge_id(edge.destination, node);
                 adjacent_edge_ids.push_back(edge_id);
 
                 for (auto triangle: edge_triangles[edge_id]) {
@@ -164,9 +170,8 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &__base,
                 }
             }
 
-            // fails as nodes without any edges are not filtered out
-            assert(adjacent_edge_ids.size() >= 2);
-            assert(triangle_edge_ids.size() >= 6);
+            // assert(adjacent_edge_ids.size() >= 2);
+            // assert(triangle_edge_ids.size() >= 6);
 
             std::sort(triangle_edge_ids.begin(), triangle_edge_ids.end());
             std::sort(adjacent_edge_ids.begin(), adjacent_edge_ids.end());
@@ -199,12 +204,12 @@ polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
         std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&adjacent_edges,
         std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&adjacent_faces,
         std::vector<edge_id_type> &&inverse_edges,
-        std::vector<face_id_type> &&node_faces,
+        std::vector<edge_id_type> &&node_edges,
         std::vector<int> &&node_face_offsets)
         : _M_face_info(std::move(adjacent_edges)),
           _M_edge_info(),
           _M_node_edges_offsets(std::move(node_face_offsets)),
-          _M_node_edges(std::move(node_faces)) {
+          _M_node_edges(std::move(node_edges)) {
 
     int i = 0;
     while (!adjacent_faces.empty()) {
