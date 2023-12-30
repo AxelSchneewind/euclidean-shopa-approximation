@@ -170,11 +170,6 @@ main(int argc, char const *argv[]) {
     } else if (mode == "node count per edge") {
         std::ifstream input(graph_path);
 
-        constexpr int bin_count = 180;
-        constexpr double step_size = M_PI / (bin_count - 1);
-        double min_angle = M_PI;
-        double max_angle = 0.0;
-
         auto graph = triangulation_file_io::read_steiner(input, epsilon);
 
         if (header)
@@ -182,7 +177,6 @@ main(int argc, char const *argv[]) {
 
         for (int e = 0; e < graph.base_graph().edge_count(); ++e) {
             auto &&steiner_info = graph.steiner_info(e);
-
             std::cout << e << ',' << steiner_info.node_count << '\n';
         }
         std::cout << std::flush;
