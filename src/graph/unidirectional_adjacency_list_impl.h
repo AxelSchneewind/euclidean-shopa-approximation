@@ -143,7 +143,7 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::sort_edge
     if (_edges_sorted) return;
 
     // order by source id
-    auto order = [&](adjacency_list_edge<NodeId, E> const& __e1, adjacency_list_edge<NodeId, E> const& __e2) {
+    auto order = [](adjacency_list_edge<NodeId, E> const& __e1, adjacency_list_edge<NodeId, E> const& __e2) {
         return __e1.source < __e2.source || (__e1.source == __e2.source && __e1.destination < __e2.destination);
     };
     std::sort(_edges.begin(), _edges.end(), order);
