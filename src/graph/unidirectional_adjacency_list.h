@@ -235,7 +235,7 @@ public:
      * get the index of (source, destination)
      * @param source
      * @param dest
-     * @return the index, or NO_EDGE_ID otherwise
+     * @return the index, or -1 otherwise
      */
     inline edge_index_type edge_id(NodeId source, NodeId dest) const;
 
