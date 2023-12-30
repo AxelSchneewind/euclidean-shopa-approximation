@@ -26,23 +26,15 @@ main(int argc, char const *argv[]) {
         std::cin >> filename_out;
     }
 
-    double epsilon;
-    if (argc > 3)
-        epsilon = std::stof(argv[3]);
-    else {
-        std::cout << "epsilon: ";
-        std::cin >> epsilon;
-    }
-
     int color, linewidth;
-    if (argc > 4)
+    if (argc > 3)
         linewidth = std::stoi(argv[4]);
     else {
         std::cout << "output linewidth: " << std::flush;
         std::cin >> linewidth;
     }
 
-    if (argc > 5)
+    if (argc > 4)
         color = std::stoi(argv[5]);
     else {
         std::cout << "output color: " << std::flush;
@@ -82,6 +74,14 @@ main(int argc, char const *argv[]) {
         }
 
         if (output_file_ending == ".steiner.gl") {
+            double epsilon;
+            if (argc > 5)
+                epsilon = std::stof(argv[3]);
+            else {
+                std::cout << "epsilon: ";
+                std::cin >> epsilon;
+            }
+
             unidirectional_adjacency_list<node_id_t, nullptr_t>::adjacency_list_builder builder;
             builder.add_edges_from_triangulation(faces);
             auto steiner_edges = adjacency_list<node_id_t, nullptr_t>::make_bidirectional(builder.get());

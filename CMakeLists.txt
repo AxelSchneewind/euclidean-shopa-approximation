@@ -30,9 +30,14 @@ endif (DOXYGEN_FOUND)
 # gengetopt
 find_program(GENGETOPT gengetopt)
 if (GENGETOPT)
-    add_custom_target(cmdline ALL
+    add_custom_target(cmdline_route ALL
             COMMAND ${GENGETOPT} -i src/cli/route.ggo -F cmdline_route --output-dir src/cli
             SOURCES src/cli/route.ggo
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+    add_custom_target(cmdline_prune_graph ALL
+            COMMAND ${GENGETOPT} -i src/cli/prune_graph.ggo -F cmdline_prune_graph --output-dir src/cli
+            SOURCES src/cli/prune_graph.ggo
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 else (GENGETOPT)
     message("gengetopt needs to be installed to modify and generate the command line argument parser")
@@ -45,7 +50,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
 # performance options
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native") # -ffast-math
 
-add_executable(prune_graph src/prune_graph.cpp)
+add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
+add_dependencies(prune_graph cmdline_prune_graph)
 
 # compile implementation into one library file
 add_library(routing src/interface/Client.cpp)
@@ -59,7 +65,7 @@ add_executable(make_pruned_gl src/make_pruned_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)
 
 add_executable(route src/route.cpp src/cli/cmdline_route.c)
-add_dependencies(route cmdline)
+add_dependencies(route cmdline_route)
 
 add_executable(distance_one_to_all src/distance_one_to_all.cpp)
 add_executable(subdivision_stats src/subdivision_stats.cpp)

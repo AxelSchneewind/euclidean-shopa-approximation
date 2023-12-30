@@ -5,18 +5,18 @@ usage "route --graph-file /path/to/graph-file --output-directory /path/to/result
 description "computes the shortest path for each given pair of source and destination node."
 versiontext "1.0"
 
-args ""
+args "test"
 
 
 section "input/output files"
-option "graph-file" g "path to graph file (of type .fmi or .graph)" string required
-option "output-directory" o "path to output directory (where the subdirectory with the output files should be created)" string default="."
+option "graph-file" g "path to graph file (of type .fmi or .graph)" string typestr="FILE" required
+option "output-directory" o "path to output directory (where the subdirectory with the output files should be created)" string typestr="FILE" default="."
 
 section "triangulation"
 option "epsilon" e "ε value to use for discretizing the triangulation (if a .graph file is given)" double default="0.5" dependon="graph-file"
 
 section "query"
-option "query" q "pair(s) of source and destination node ids" string multiple
+option "query" q "pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed)" string multiple
 option "coordinates" - "interpret the pair(s) of source and destination nodes as their coordinates" flag off
 option "stdin" i "indicates that queries should be read from stdin" flag off
 

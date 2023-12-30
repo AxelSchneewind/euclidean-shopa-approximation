@@ -4,18 +4,28 @@
 #include "graph/geometry.h"
 #include "graph/geometry_impl.h"
 
+#include "cli/cmdline_prune_graph.h"
+
 #include <fstream>
 #include <chrono>
 
-int main(int argc, const char *argv[]) {
-    std::string graph_file(argv[1]);
-    std::string output_file(argv[2]);
+int main(int argc, char *argv[]) {
+    gengetopt_args_info args;
+    int ret = cmdline_parser(argc, argv, &args);
+
+    if (ret != 0 || args.help_given) {
+        cmdline_parser_print_help();
+        return 0;
+    }
+
+    std::string graph_file(args.graph_file_arg);
+    std::string output_file(args.output_file_arg);
 
     std::ifstream input(graph_file);
     std::ofstream output(output_file);
 
-    coordinate_t bottom_left{std::stod(argv[3]), std::stod(argv[4])};
-    coordinate_t top_right{std::stod(argv[5]), std::stod(argv[6])};
+    coordinate_t bottom_left{args.minX_arg, args.maxX_arg};
+    coordinate_t top_right{args.minY_arg, args.maxY_arg};
 
     if (graph_file.ends_with(".graph") && graph_file.ends_with(".graph")) {
         std::size_t node_count, face_count;
