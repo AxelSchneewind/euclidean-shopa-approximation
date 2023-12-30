@@ -43,13 +43,13 @@ line_distance(coordinate_t __source, coordinate_t __destination, coordinate_t __
 
 /**
  * generates the point s + (d - s) * x
- * @param __source
- * @param __destination
- * @param __relative
+ * @param source
+ * @param destination
+ * @param relative
  * @return
  */
 inline coordinate_t
-interpolate_linear(coordinate_t __source, coordinate_t __destination, float __relative);
+interpolate_linear(coordinate_t __source, coordinate_t __destination, double __relative);
 
 
 void WGS84toGoogleBing(double lat, double lon, double &x, double &y);
