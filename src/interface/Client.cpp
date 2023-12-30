@@ -326,22 +326,7 @@ void Client::read_graph_file(std::string path, double epsilon, bool csv) {
 // void Client::ClientModel<steiner_graph, steiner_routing_t>::write_subgraph_file(std::ostream &output,
 //                                                                                 coordinate_t bottom_left,
 //                                                                                 coordinate_t top_right) const {
-//     auto &&all_nodes = graph.node_ids();
-//     std::vector<steiner_graph::node_id_type> nodes;
-//     std::vector<steiner_graph::edge_id_type> edges;
-//
-//     for (auto node_id: all_nodes) {
-//         if (!is_in_rectangle(graph.node(node_id).coordinates, bottom_left, top_right))
-//             continue;
-//
-//         nodes.push_back(node_id);
-//
-//         for (auto edge: graph.outgoing_edges(node_id)) {
-//             if (!is_in_rectangle(graph.node(edge.destination).coordinates, bottom_left, top_right))
-//                 continue;
-//
-//             edges.push_back({node_id, edge.destination});
-//         }
+
 //     }
 //
 //     steiner_graph::subgraph_type subgraph(graph, std::move(nodes), std::move(edges));

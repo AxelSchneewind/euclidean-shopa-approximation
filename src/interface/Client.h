@@ -70,12 +70,8 @@ public:
 
     void write_graph_stats(std::ostream &output) const { _graph.write_graph_stats(output); };
 
-    void write_subgraph_file(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const {
-        //pimpl->write_subgraph_file(output, bottom_left, top_right);
-    };
-
-    void write_subgraph_file_gl(std::ostream &output, coordinate_t bottom_left, coordinate_t top_right) const {
-        //pimpl->write_subgraph_file_gl(output, bottom_left, top_right);
+    void write_subgraph_file(std::string &path, coordinate_t bottom_left, coordinate_t top_right) const {
+        _graph.write_subgraph_file(path, bottom_left, top_right);
     };
 
     void write_query(std::ostream &output) const { _query.write(output); }
