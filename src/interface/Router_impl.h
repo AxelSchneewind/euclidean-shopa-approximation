@@ -37,7 +37,9 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
                       << _router.forward_current().value() << "), "
                       << std::setw(12) /*<< std::setprecision(3)*/ << _router.backward_distance()
                       << " (" << std::setw(12) /*<< std::setprecision(3)*/
-                      << _router.backward_current().value() << ")";
+                      << _router.backward_current().value() << ")"
+                      << ", beeline: "
+                      << std::setw(12) << _query_ptr->beeline_distance();
 
             if constexpr (requires(RouterT::labels_type && l) { l.aggregate_count(); }) {
                 std::cout << ", node aggregates currently expanded: " << std::setw(10)
