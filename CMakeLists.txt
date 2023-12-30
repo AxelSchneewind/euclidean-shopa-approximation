@@ -45,12 +45,14 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
 # performance options
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native") # -ffast-math
 
+add_executable(prune_graph src/prune_graph.cpp)
+
 # compile implementation into one library file
 add_library(routing src/interface/Client.cpp)
 link_libraries(routing)
 
 # executables that will be linked against routing library
-add_executable(project src/project.cpp)
+add_executable(project_graph src/project.cpp)
 
 add_executable(make_gl src/make_gl.cpp)
 add_executable(make_pruned_gl src/make_pruned_gl.cpp)
@@ -64,6 +66,7 @@ add_executable(subdivision_stats src/subdivision_stats.cpp)
 
 
 # installation
-install(TARGETS route RUNTIME DESTINATION bin)
+install(TARGETS route subdivision_stats make_gl prune_graph project_graph RUNTIME DESTINATION bin)
+
 
 include(CPack)
