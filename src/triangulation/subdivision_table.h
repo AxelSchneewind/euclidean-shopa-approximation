@@ -60,20 +60,20 @@ public:
 
     ~subdivision_table() = default;
 
-    subdivision_table(subdivision_table &&__other) noexcept;
+    subdivision_table(subdivision_table &&other) noexcept;
 
-    subdivision_table(std::vector<edge_class> &&__node_positions, std::vector<subdivision_edge_info> &&__edges);
+    subdivision_table(std::vector<edge_class> &&node_positions, std::vector<subdivision_edge_info> &&__edges);
 
     static double class_angle(int index);
 
     static int class_index(double radians);
 
-    coordinate_t node_coordinates(edge_id_t __edge, short steiner_index, coordinate_t c1, coordinate_t c2) const;
+    coordinate_t node_coordinates(edge_id_t edge, short steiner_index, coordinate_t const& c1, coordinate_t const& c2) const;
 
     subdivision_edge_info& edge(int edge);
     subdivision_edge_info const& edge(int edge) const;
 
-    static std::vector<subdivision_table::edge_class> precompute(double __epsilon, double __min_relative_r_value);
+    static std::vector<subdivision_table::edge_class> precompute(double epsilon, double __min_relative_r_value);
 
     std::vector<size_t> offsets() const {
         std::vector<size_t> results;

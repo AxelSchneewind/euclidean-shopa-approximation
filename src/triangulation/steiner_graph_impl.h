@@ -62,8 +62,8 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
                 triangle_edge_ids.emplace_back(triangle_edge);
         }
 
-        // assert(adjacent_edge_ids.size() > 0);
-        // assert(triangle_edge_ids.size() > 0);
+        assert(adjacent_edge_ids.size() > 0);
+        assert(triangle_edge_ids.size() > 0);
 
         std::sort(triangle_edge_ids.begin(), triangle_edge_ids.end());
         std::sort(adjacent_edge_ids.begin(), adjacent_edge_ids.end());
@@ -120,7 +120,7 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangula
             auto length = distance(triangulation_nodes[base_node].coordinates,
                                    triangulation_nodes[edge.destination].coordinates);
 
-            double r_relative = (epsilon/*/5*/) * (r_values[base_node] / length);
+            double r_relative = (epsilon / 5) * (r_values[base_node] / length);
 
             if (r_relative <= minimal_relative_radius) continue;
 
@@ -143,6 +143,75 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangula
             std::move(s_table),
             epsilon};
 }
+
+
+// TODO fix
+steiner_graph steiner_graph::make_graph(const steiner_graph &other, const subgraph<base_topology_type> &subgraph) {
+    base_topology_type::builder builder(subgraph.node_count());
+    std::unordered_map<triangle_node_id_type, bool> contained;
+
+    // mark nodes from subgraph as contained
+    for (triangle_node_id_type id: subgraph.nodes)
+        contained[id] = true;
+
+    // make faces with new node ids
+    std::vector<std::array<triangle_node_id_type, 3>> faces;
+    for (int i = 0; i < other.base_polyhedron().face_count(); ++i) {
+        auto &&face = other.base_polyhedron().face_edges(i);
+
+        std::vector<triangle_node_id_type> nodes;
+        nodes.emplace_back(other.base_graph().destination(face[0]));
+        nodes.emplace_back(other.base_graph().destination(face[1]));
+        nodes.emplace_back(other.base_graph().destination(face[2]));
+        nodes.emplace_back(other.base_graph().source(face[0]));
+        nodes.emplace_back(other.base_graph().source(face[1]));
+        nodes.emplace_back(other.base_graph().source(face[2]));
+        remove_duplicates(nodes);
+
+        if (contained.contains(nodes[0]) && contained.contains(nodes[1]) && contained.contains(nodes[2])) {
+            faces.emplace_back(std::array<triangle_node_id_type, 3>{nodes[0], nodes[1], nodes[2]}); // insert original ids
+        }
+    }
+
+    // check for unconnected nodes
+    contained.clear();
+    for (auto &&triangle: faces) {
+        contained[triangle[0]] = true;
+        contained[triangle[1]] = true;
+        contained[triangle[2]] = true;
+    }
+
+    // assign new node ids
+    std::unordered_map<triangle_node_id_type, triangle_node_id_type> new_node_id;
+    triangle_node_id_type node_count = 0;
+    for (triangle_node_id_type id: subgraph.nodes) {
+        if (contained.contains(id) && contained[id])
+            new_node_id[id] = node_count++;
+    }
+    contained.clear();
+
+    // apply new node ids
+    for (auto &triangle: faces) {
+        triangle[0] = new_node_id[triangle[0]];
+        triangle[1] = new_node_id[triangle[1]];
+        triangle[2] = new_node_id[triangle[2]];
+        assert(!is_none(triangle[0]) && !is_none(triangle[1]) && !is_none(triangle[2]));
+    }
+
+    // make bidirectional adjacency list
+    builder.add_edges_from_triangulation(faces);
+    auto list = base_topology_type::make_bidirectional(builder.get());
+
+    std::vector<triangle_node_info_type> nodes(node_count);
+    for (triangle_node_id_type id: subgraph.nodes) {
+        if (new_node_id.contains(id) && !is_none(new_node_id[id]) && new_node_id.at(id) < node_count)
+            nodes.at(new_node_id[id]) = other.node(id);
+    }
+    new_node_id.clear();
+
+    return steiner_graph::make_graph(std::move(nodes), std::move(list), std::move(faces), other.epsilon());
+}
+
 
 steiner_graph::steiner_graph(steiner_graph &&other) noexcept
         : _M_node_count(other._M_node_count),
@@ -388,14 +457,14 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
         for (auto edge: _M_base_topology.incoming_edges(base_src)) {
             auto edge_id = _M_base_topology.edge_id(edge.destination, base_src);
 
-            if (dest.edge == edge_id && dest.steiner_index == steiner_info(edge_id).node_count)
+            if (dest.edge == edge_id && dest.steiner_index == steiner_info(edge_id).node_count - 2)
                 return true;
         }
 
-        for (auto edge: _M_polyhedron.node_edges(base_src)) {
-            if (dest.edge == edge)
-                return true;
-        }
+        // for (auto edge: _M_polyhedron.node_edges(base_src)) {
+        //     if (dest.edge == edge)
+        //         return true;
+        // }
     }
 
     if (is_base_node(dest) &&
@@ -411,14 +480,14 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
         for (auto edge: _M_base_topology.incoming_edges(base_dest)) {
             auto edge_id = _M_base_topology.edge_id(edge.destination, base_dest);
 
-            if (src.edge == edge_id && src.steiner_index == steiner_info(edge_id).node_count)
+            if (src.edge == edge_id && src.steiner_index == steiner_info(edge_id).node_count - 2)
                 return true;
         }
 
-        for (auto edge: _M_polyhedron.node_edges(base_dest)) {
-            if (src.edge == edge)
-                return true;
-        }
+        // for (auto edge: _M_polyhedron.node_edges(base_dest)) {
+        //     if (src.edge == edge)
+        //         return true;
+        // }
     }
 
     // face-crossing edges
@@ -426,7 +495,7 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
     for (unsigned char triangle_index = 0;
          triangle_index < polyhedron_type::FACE_COUNT_PER_EDGE; triangle_index++) [[unlikely]] {
         if (is_none(triangles[triangle_index])) continue;
-        auto triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
+        auto &&triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
 
         for (auto const &base_edge_id: triangle_edges) [[likely]] {
             if (base_edge_id == src.edge) [[unlikely]]

@@ -44,16 +44,16 @@ subdivision_table::precompute(double epsilon, double min_relative_r_value) {
 
     for (int index = 0; index < step_count; ++index) {
         double angle = class_angle(index);
+        assert(class_index(angle) <= index);
+        double sine = std::sin(angle);
 
         triangle_classes.emplace_back();
-
-        double sine = std::sin(angle);
 
         double relative = min_relative_r_value;
         double edge_distance = 0.0;
 
         while (relative < 1.0) {
-            triangle_classes.back().node_positions.push_back(relative);
+            triangle_classes.back().node_positions.emplace_back(relative);
             edge_distance = sine * relative;
             relative += epsilon * edge_distance;
         }
@@ -87,6 +87,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         // treat angles > 90 degrees like 90 degrees
         double angle1 = M_PI_2; // between node1->node2 and node1->node3
         double angle2 = M_PI_2; // between node2->node1 and node2->node3
+        double angle3 = 0; // between node2->node1 and node2->node3
 
         for (auto edge: polyhedron.edges(i)) {
             if (is_none(edge)) continue;
@@ -103,7 +104,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
             auto a1 = inner_angle(c1, c2, c1, c3);
             auto a2 = inner_angle(c2, c1, c2, c3);
             auto a3 = inner_angle(c3, c1, c3, c2);
-            assert(std::fabs((a1 + a2 + a3) - M_PI) < M_PI / 180);
+            assert(std::fabs((a1 + a2 + a3) - M_PI) < M_PI / 180); // check that sum of inner angles is 180º (+- 1º for rounding)
 
             if (a1 < angle1)
                 angle1 = a1;
@@ -114,6 +115,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         angle2 = std::max(angle2, min_angle);
         angle1 = std::min(angle1, max_angle);
         angle2 = std::min(angle2, max_angle);
+        angle3 = M_PI - angle2 - angle1;
 
         // length |e| of the edge
         double length = distance(c2, c1);
@@ -125,7 +127,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         assert(mid_value < 1 && mid_value > 0);
 
         // distance values have been computed already, convert to r(v) relative to this edges length
-        double factor = std::min(epsilon, 1.0) /*/5*/;
+        double factor = std::min(epsilon, 1.0) / 5;
         double r_first = factor * (r_values[node1] / length);
         double r_second = factor * (r_values[node2] / length);
         assert(r_first >= 0 && r_second >= 0);
@@ -233,7 +235,7 @@ subdivision_table::subdivision_edge_info const& subdivision_table::edge(int edge
 subdivision_table::subdivision_edge_info & subdivision_table::edge(int edge) { return edges[edge]; }
 
 coordinate_t
-subdivision_table::node_coordinates(edge_id_t edge, short steiner_index, coordinate_t c1, coordinate_t c2) const {
+subdivision_table::node_coordinates(edge_id_t edge, short steiner_index, coordinate_t const& c1, coordinate_t const& c2) const {
     const auto& info = edges[edge];
 
     assert(steiner_index >= 0);

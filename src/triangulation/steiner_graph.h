@@ -271,6 +271,8 @@ public:
                                     steiner_graph::base_topology_type &&triangulation_edges,
                                     std::vector<std::array<triangle_node_id_type, 3>> &&faces, double epsilon);
 
+    static steiner_graph make_graph(steiner_graph const& other, subgraph<base_topology_type> const& subgraph);
+
 };
 
 static_assert(Topology<steiner_graph>);
