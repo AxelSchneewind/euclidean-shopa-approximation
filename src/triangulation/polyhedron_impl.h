@@ -46,8 +46,8 @@ void make_face_edges(const BaseGraph &base,
 
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 void make_face_edges(const BaseGraph &base,
-                     const std::vector<std::array<BaseGraph::node_id_type, MaxNodesPerFace>> &faces,
-                     std::vector<std::array<BaseGraph::edge_id_type, MaxNodesPerFace>> &face_edges,
+                     const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &faces,
+                     std::vector<std::array<typename BaseGraph::edge_id_type, MaxNodesPerFace>> &face_edges,
                      std::vector<std::array<int, 2>> &edge_faces) {
     constexpr std::size_t edges_per_face = 3;
 
