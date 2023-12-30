@@ -138,12 +138,12 @@ private:
 
                 auto &&destination_steiner_info = graph.steiner_info(base_edge_id);
 
-                // binary search
+                // binary search using the derivative over the angle depending on steiner index
                 typename Graph::node_id_type::intra_edge_id_type l = 0;
                 typename Graph::node_id_type::intra_edge_id_type r = destination_steiner_info.node_count - 2;
                 typename Graph::node_id_type::intra_edge_id_type m = (r + l) / 2;
                 double diff = 1.0;
-                double cos = 0.0;
+                double cos = -1.0;
                 while (l < r && diff != 0.0 && cos < max_angle_cos) {
                     steiner_graph::node_id_type const destination{base_edge_id, m};
                     coordinate_t const destination_coordinate = graph.node(destination).coordinates;
@@ -160,41 +160,44 @@ private:
                     m = (l + r) / 2;
                 }
 
-                // for (; i < destination_steiner_info.node_count; ++i) [[likely]] {
-                //     steiner_graph::node_id_type const destination {base_edge_id, i};
-                //     coordinate_t const destination_coordinate = graph.node(destination).coordinates;
-                //     if (angle_cos(direction, destination_coordinate - source_coordinate) >= max_angle_cos) [[unlikely]]
-                //         break;
-                // }
-
+                coordinate_t last_direction = direction * -1;
+                double spanner_angle_cos = std::cos(graph.epsilon() * M_PI / 2);
                 for (auto j = m; j >= 0; --j) [[likely]] {
                     steiner_graph::node_id_type const destination(base_edge_id, j);
                     coordinate_t const destination_coordinate = graph.node(destination).coordinates;
+                    coordinate_t const new_direction = destination_coordinate - source_coordinate;
 
-                    if (angle_cos(direction, destination_coordinate - source_coordinate) < max_angle_cos) [[likely]]
+                    if (angle_cos(direction, new_direction) < max_angle_cos) [[likely]]
                         break;
+                    if (angle_cos(last_direction, new_direction) >= spanner_angle_cos) [[likely]]
+                        continue;
 
                     out.emplace_back(destination, node_id, node.distance);
                     destination_coordinates.emplace_back(destination_coordinate);
+                    last_direction = new_direction;
                 }
 
+                last_direction = direction * -1;
+                spanner_angle_cos = std::cos(graph.epsilon() * M_PI / 2);
                 for (auto j = m + 1; j < destination_steiner_info.node_count; ++j) [[likely]] {
                     steiner_graph::node_id_type const destination(base_edge_id, j);
                     coordinate_t const destination_coordinate = graph.node(destination).coordinates;
+                    coordinate_t const new_direction = destination_coordinate - source_coordinate;
 
                     if (angle_cos(direction, destination_coordinate - source_coordinate) < max_angle_cos) [[likely]]
                         break;
+                    if (angle_cos(last_direction, new_direction) >= spanner_angle_cos) [[likely]]
+                        continue;
 
                     out.emplace_back(destination, node_id, node.distance);
                     destination_coordinates.emplace_back(destination_coordinate);
+                    last_direction = new_direction;
                 }
-
-                // std::cout << "m = " << m << " in (0, " << destination_steiner_info.node_count << "), " << out.size() << '\n';
             }
         }
 
         // compute distances (can hopefully be vectorized)
-        for (unsigned int e = 0; e < out.size(); ++e) [[likely]] {
+        for (int e = 0; e < out.size(); ++e) [[likely]] {
             out[e].distance += distance(source_coordinate, destination_coordinates[e]);
         }
     }
@@ -203,13 +206,15 @@ public:
     steiner_neighbors(Graph const &graph, Labels const &labels)
             : graph(graph)
             , labels(labels)
-            , max_angle{std::atan(1.0 * graph.epsilon())}
+            , max_angle{M_PI / 36} // 10º // std::atan(graph.epsilon() / 5)}
             , max_angle_cos{std::cos(max_angle)} {
-        std::cout << "max angle: " << max_angle << '\n';
     }
 
     template<typename... Args>
     steiner_neighbors(Graph const &graph, Labels const &labels, Args const &...) : steiner_neighbors(graph, labels) {}
+
+    steiner_neighbors(steiner_neighbors&&) noexcept = default;
+    steiner_neighbors& operator=(steiner_neighbors&&) noexcept = default;
 
     template<typename NodeCostPair>
     void operator()(NodeCostPair const &node, std::vector<NodeCostPair> &out) {
