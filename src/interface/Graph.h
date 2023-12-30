@@ -62,7 +62,7 @@ private:
 
         void write_graph_file(std::string path) const override;
 
-        void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const override {/**/};
+        void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const override;;
 
         void write_graph_stats(std::ostream &output) const override;
 
@@ -125,4 +125,3 @@ public:
             throw std::runtime_error("Graph cannot be interpreted with this type");
     }
 };
-
