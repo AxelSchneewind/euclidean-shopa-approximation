@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl_file_io.h"
+#include "formatters_impl.h"
 #include "../triangulation/steiner_graph.h"
 
 #include <iomanip>
@@ -58,9 +59,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
     for (auto node: graph.base_graph().node_ids()) {
         base_indices[node] = index++;
         auto&& n = graph.node(node);
-        f::write(output, n.coordinates.latitude) << ' ';
-        f::write(output, n.coordinates.longitude);
-        f::write(output, '\n');
+        f::write(output, n) << '\n';
     }
 
     std::unordered_map<steiner_graph::node_id_type, size_t> indices;
@@ -72,9 +71,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
         } else {
             indices[node] = index++;
             auto&& n = graph.node(node);
-            f::write(output, n.coordinates.latitude) << ' ';
-            f::write(output, n.coordinates.longitude);
-            f::write(output, '\n');
+            f::write(output, n) << '\n';
         }
     }
 
