@@ -173,7 +173,7 @@ public:
     steiner_graph(std::vector<node_info_type> &&triangulation_nodes,
                   adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&triangulation_edges,
                   polyhedron<base_topology_type, 3> &&triangles,
-                  subdivision_table &&table, float epsilon);
+                  subdivision_table &&table, double epsilon);
 
 
     static constexpr size_t SIZE_PER_NODE =
@@ -255,21 +255,13 @@ public:
     outgoing_edges(node_id_type node_id) const;
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    outgoing_edges(triangle_node_id_type node_id) const;
-
-    std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    outgoing_edges(node_id_type node_id, node_id_type reached_from, float max_angle) const;
-
-    std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    outgoing_edges(triangle_node_id_type base_node_id, node_id_type reached_from) const;
+    outgoing_edges(triangle_node_id_type base_node_id) const;
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     incoming_edges(node_id_type node_id) const { return outgoing_edges(node_id); };
 
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
-    incoming_edges(node_id_type node_id, node_id_type reached_from, float __max_angle) const {
-        return outgoing_edges(node_id, reached_from, __max_angle);
-    };
+    incoming_edges(triangle_node_id_type base_node_id) const { return outgoing_edges(base_node_id); };
 
     distance_type path_length(const path_type &route) const;
 
@@ -277,7 +269,7 @@ public:
 
     static steiner_graph make_graph(std::vector<steiner_graph::node_info_type> &&triangulation_nodes,
                                     steiner_graph::base_topology_type &&triangulation_edges,
-                                    std::vector<std::array<triangle_node_id_type, 3>> &&faces, float epsilon);
+                                    std::vector<std::array<triangle_node_id_type, 3>> &&faces, double epsilon);
 
 };
 

@@ -50,7 +50,7 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
             auto edge_id = triangulation.edge_id(node, edge.destination);
             adjacent_edge_ids.push_back(edge_id);
 
-            for (auto&& triangle_edge: polyhedron.edges(edge_id))
+            for (auto &&triangle_edge: polyhedron.edges(edge_id))
                 triangle_edge_ids.emplace_back(triangle_edge);
         }
         // get edges and triangles adjacent to node
@@ -58,7 +58,7 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
             auto inv_edge_id = triangulation.edge_id(edge.destination, node);
             adjacent_edge_ids.push_back(inv_edge_id);
 
-            for (auto&& triangle_edge: polyhedron.edges(inv_edge_id))
+            for (auto &&triangle_edge: polyhedron.edges(inv_edge_id))
                 triangle_edge_ids.emplace_back(triangle_edge);
         }
 
@@ -72,17 +72,17 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
         remove_duplicates_sorted(triangle_edge_ids);
         remove_duplicates_sorted(adjacent_edge_ids);
         int edge_count = set_minus_sorted<int>(triangle_edge_ids, adjacent_edge_ids, triangle_edge_ids);
-        // assert(edge_count > 0);
+        assert(edge_count > 0);
 
         // get minimal value from triangle edges
         double dist = infinity<double>;
         auto c3 = nodes[node].coordinates;
         for (int i = 0; i < edge_count; i++) {
-            auto const& edge_id = triangle_edge_ids[i];
-            auto const& c1 = nodes[triangulation.source(edge_id)].coordinates;
-            auto const& c2 = nodes[triangulation.destination(edge_id)].coordinates;
+            auto const &edge_id = triangle_edge_ids[i];
+            auto const &c1 = nodes[triangulation.source(edge_id)].coordinates;
+            auto const &c2 = nodes[triangulation.destination(edge_id)].coordinates;
             if (c3 != c2 && c3 != c1 && c2 != c1) {
-                auto line_dist = line_distance(c1, c2, c3); // somehow computes garbage sometimes
+                auto line_dist = line_distance(c1, c2, c3);
                 dist = std::min(dist, line_dist);
                 dist = std::min(dist, distance(c2, c3));
                 dist = std::min(dist, distance(c1, c3));
@@ -90,8 +90,8 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
             assert(is_infinity(dist) || (dist <= 1.01 * distance(c2, c3) && dist <= 1.01 * distance(c1, c3)));
         }
         dist = std::max(dist, 64.0 * std::numeric_limits<float>::min());
-        out[node] = dist;
         assert(!is_infinity(dist));
+        out[node] = dist;
 
         adjacent_edge_ids.clear();
         triangle_edge_ids.clear();
@@ -102,7 +102,7 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
 steiner_graph
 steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangulation_nodes,
                           steiner_graph::base_topology_type &&triangulation_edges,
-                          std::vector<std::array<triangle_node_id_type, 3>> &&faces, float epsilon) {
+                          std::vector<std::array<triangle_node_id_type, 3>> &&faces, double epsilon) {
     base_topology_type triangulation(std::move(triangulation_edges));
 
     auto poly = polyhedron<steiner_graph::base_topology_type, 3>::make_polyhedron(triangulation, std::move(faces));
@@ -111,14 +111,18 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangula
     make_node_radii(triangulation_nodes, triangulation, poly, r_values);
 
     const double min_inner_angle = M_PI / 180; // 1º
-    const double minimal_relative_radius = std::sin(min_inner_angle) * (1/(1 + std::sin(M_PI - min_inner_angle) / std::sin(min_inner_angle))) * epsilon;
-    double min_r_value = 1.0;
+    const double minimal_relative_radius =
+            std::sin(min_inner_angle) * (1 / (1 + std::sin(M_PI - min_inner_angle) / std::sin(min_inner_angle))) *
+            epsilon;
+    double min_r_value = 0.5;
     for (auto base_node: triangulation.node_ids()) {
         for (auto edge: triangulation.outgoing_edges(base_node)) {
-            auto length = distance(triangulation_nodes[base_node].coordinates, triangulation_nodes[edge.destination].coordinates);
+            auto length = distance(triangulation_nodes[base_node].coordinates,
+                                   triangulation_nodes[edge.destination].coordinates);
 
-            double r_relative = epsilon * (r_values[base_node] / length);
-            if (r_relative <= minimal_relative_radius) { min_r_value = minimal_relative_radius; break; }
+            double r_relative = (epsilon/*/5*/) * (r_values[base_node] / length);
+
+            if (r_relative <= minimal_relative_radius) continue;
 
             min_r_value = std::min(min_r_value, r_relative);
         }
@@ -156,7 +160,7 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
                              adjacency_list<steiner_graph::triangle_node_id_type, steiner_graph::triangle_edge_info_type> &&triangulation_edges,
                              polyhedron<base_topology_type, 3> &&triangles,
                              subdivision_table &&table,
-                             float epsilon)
+                             double epsilon)
         :
         _M_node_count(0),
         _M_edge_count(0),
@@ -169,8 +173,8 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
 
     // count nodes by iterating over base edges
     std::size_t base_edges_checked = 0;
-    for (auto&& base_node_id: _M_base_topology.node_ids()) {
-        for (auto&& edge: _M_base_topology.outgoing_edges(base_node_id)) {
+    for (auto &&base_node_id: _M_base_topology.node_ids()) {
+        for (auto &&edge: _M_base_topology.outgoing_edges(base_node_id)) {
             auto edge_id = _M_base_topology.edge_id(base_node_id, edge.destination);
             base_edges_checked++;
 
@@ -185,12 +189,13 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
             _M_edge_count += 2 * (steiner_info(edge_id).node_count - 1);
 
             // edges between this edge and another one
-            for (auto&& other_edge_id: _M_polyhedron.edges(edge_id)) {
+            for (auto &&other_edge_id: _M_polyhedron.edges(edge_id)) {
                 if (is_none(other_edge_id) || other_edge_id == edge_id) continue;
                 assert (_M_base_topology.source(other_edge_id) < _M_base_topology.destination(other_edge_id));
 
                 // only count in one direction as other edge is handled separately
-                _M_edge_count += 1 * (steiner_info(edge_id).node_count - 2) * (steiner_info(other_edge_id).node_count - 2);
+                _M_edge_count +=
+                        1 * (steiner_info(edge_id).node_count - 2) * (steiner_info(other_edge_id).node_count - 2);
             }
         }
     }
@@ -199,7 +204,7 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
     // count all outgoing edges of base nodes
     for (auto node: base_graph().node_ids()) {
         auto &&reachable_edges = _M_polyhedron.node_edges(node);
-        for (auto&& edge_id: reachable_edges) {
+        for (auto &&edge_id: reachable_edges) {
             if (is_none(edge_id)) continue;
             assert (_M_base_topology.source(edge_id) < _M_base_topology.destination(edge_id));
             _M_edge_count += 2 * (steiner_info(edge_id).node_count - 2);
@@ -209,28 +214,14 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
 
 
 coordinate_t steiner_graph::node_coordinates(steiner_graph::node_id_type id) const {
-    const coordinate_t& c1 = _M_base_nodes[_M_base_topology.source(id.edge)].coordinates;
-    const coordinate_t& c2 = _M_base_nodes[_M_base_topology.destination(id.edge)].coordinates;
+    const coordinate_t &c1 = _M_base_nodes[_M_base_topology.source(id.edge)].coordinates;
+    const coordinate_t &c2 = _M_base_nodes[_M_base_topology.destination(id.edge)].coordinates;
 
     return _M_table.node_coordinates(id.edge, id.steiner_index, c1, c2);
 }
 
 std::span<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>>
-steiner_graph::outgoing_edges(node_id_type node_id) const {
-    if (is_base_node(node_id)) [[unlikely]]
-        return outgoing_edges(base_node_id(node_id), node_id);
-    return outgoing_edges(node_id, node_id, M_PI);
-}
-
-std::span<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>>
 steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type base_node_id) const {
-    return outgoing_edges(base_node_id, from_base_node_id(base_node_id));
-}
-
-
-std::span<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>>
-steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type base_node_id,
-                              steiner_graph::node_id_type /*reached_from*/) const {
     static std::vector<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>> edges;
     static std::vector<coordinate_t> destination_coordinates;
 
@@ -239,17 +230,17 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type base_node_id,
 
     // NOTE: paper does not require these edges, but as bending only occurs at base nodes
     // these edges allow for less outgoing edges per steiner node
-    auto &&reachable_edges = _M_polyhedron.node_edges(base_node_id);
-    for (auto &&e: reachable_edges) [[likely]] {
-        auto destination_steiner_info = steiner_info(e);
+    // auto &&reachable_edges = _M_polyhedron.node_edges(base_node_id);
+    // for (auto &&e: reachable_edges) [[likely]] {
+    //     auto destination_steiner_info = steiner_info(e);
 
-        for (short i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
-            steiner_graph::node_id_type destination = {e, i};
-            coordinate_t destination_coordinate = node(destination).coordinates;
-            edges.push_back({destination, {}});
-            destination_coordinates.push_back(destination_coordinate);
-        }
-    }
+    //     for (short i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+    //         steiner_graph::node_id_type destination = {e, i};
+    //         coordinate_t destination_coordinate = node(destination).coordinates;
+    //         edges.push_back({destination, {}});
+    //         destination_coordinates.push_back(destination_coordinate);
+    //     }
+    // }
 
     for (auto &&e: _M_base_topology.outgoing_edges(base_node_id)) [[likely]] {
         assert (e.destination > base_node_id);
@@ -264,7 +255,7 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type base_node_id,
         assert (base_node_id > e.destination);
 
         auto e_id = _M_base_topology.edge_id(e.destination, base_node_id);
-        steiner_graph::node_id_type destination (e_id, steiner_info(e_id).node_count - 2U);
+        steiner_graph::node_id_type destination(e_id, steiner_info(e_id).node_count - 2U);
         coordinate_t destination_coordinate = node(destination).coordinates;
         edges.push_back({destination, {}});
         destination_coordinates.push_back(destination_coordinate);
@@ -280,7 +271,7 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type base_node_id,
 }
 
 std::span<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>>
-steiner_graph::outgoing_edges(node_id_type node_id, node_id_type reached_from, float /*max_angle*/) const {
+steiner_graph::outgoing_edges(node_id_type node_id) const {
     static std::vector<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>> edges;
     static std::vector<coordinate_t> destination_coordinates;
 
@@ -290,62 +281,33 @@ steiner_graph::outgoing_edges(node_id_type node_id, node_id_type reached_from, f
     assert (!is_none(node_id));
 
     if (is_base_node(node_id)) [[unlikely]]
-        return outgoing_edges(base_node_id(node_id), reached_from);
-
-    // get triangles that have not been visited yet
-    auto &&triangles = base_polyhedron().edge_faces(node_id.edge);
-    unsigned char triangle_first = 0;
-    unsigned char triangle_last = 2;
-
-    // if this node is reached via a face crossing segment, only use edges in next face
-    if (reached_from.edge != node_id.edge) [[likely]] {
-        auto visited_triangles = base_polyhedron().edge_faces(reached_from.edge);
-
-        if (is_none(triangles[0]) || triangles[0] == visited_triangles[0] || triangles[0] == visited_triangles[1])
-                [[unlikely]] {
-            triangle_first = 1;
-        }
-        if (is_none(triangles[1]) || triangles[1] == visited_triangles[0] || triangles[1] == visited_triangles[1])
-                [[unlikely]] {
-            triangle_last = 1;
-        }
-    } else {
-        if (is_none(triangles[0])) [[unlikely]] {
-            triangle_first = 1;
-        }
-        if (is_none(triangles[1])) [[unlikely]] {
-            triangle_last = 1;
-        }
-    }
+        return outgoing_edges(base_node_id(node_id));
 
     // make list of edges (i.e. destination/cost pairs)
     coordinate_t source_coordinate = node(node_id).coordinates;
-    coordinate_t from_coordinate = node(reached_from).coordinates;
     auto &&_steiner_info = steiner_info(node_id.edge);
+    auto &&triangles = _M_polyhedron.edge_faces(node_id.edge);
 
     // for neighboring node on own edge
     if (node_id.steiner_index < _steiner_info.node_count - 1) [[likely]] {
         steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index + 1);
-        if (destination != reached_from) [[likely]] {
-            coordinate_t destination_coordinate = node(destination).coordinates;
-            edges.push_back({destination, {}});
-            destination_coordinates.push_back(destination_coordinate);
-        }
+        coordinate_t destination_coordinate = node(destination).coordinates;
+        edges.push_back({destination, {}});
+        destination_coordinates.push_back(destination_coordinate);
     }
 
     // for other neighboring node on own edge
     if (node_id.steiner_index > 0) [[likely]] {
         steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index - 1);
-        if (destination != reached_from) [[likely]] {
-            coordinate_t destination_coordinate = node(destination).coordinates;
-            edges.push_back({destination, {}});
-            destination_coordinates.push_back(destination_coordinate);
-        }
+        coordinate_t destination_coordinate = node(destination).coordinates;
+        edges.push_back({destination, {}});
+        destination_coordinates.push_back(destination_coordinate);
     }
 
     // face-crossing edges
-    for (unsigned char triangle_index = triangle_first; triangle_index < triangle_last; triangle_index++) [[unlikely]] {
-        assert (!is_none(triangles[triangle_index]));
+    for (unsigned char triangle_index = 0; triangle_index < 2; triangle_index++) [[unlikely]] {
+        if (is_none(triangles[triangle_index])) continue;
+
         auto triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
 
         for (auto base_edge_id: triangle_edges) [[likely]] {
@@ -357,10 +319,6 @@ steiner_graph::outgoing_edges(node_id_type node_id, node_id_type reached_from, f
             for (short i = 0; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
                 steiner_graph::node_id_type destination = {base_edge_id, i};
                 coordinate_t destination_coordinate = node(destination).coordinates;
-
-                // if (reached_from != node_id && angle(from_coordinate, source_coordinate, source_coordinate, destination_coordinate) >
-                //     max_angle) [[likely]]
-                //     continue;
 
                 edges.push_back({destination, {}});
                 destination_coordinates.push_back(destination_coordinate);
@@ -508,7 +466,7 @@ steiner_graph::distance_type steiner_graph::path_length(const path_type &route) 
     return result;
 }
 
-subdivision_table::subdivision_edge_info const&
+subdivision_table::subdivision_edge_info const &
 steiner_graph::steiner_info(steiner_graph::triangle_edge_id_type id) const {
     return _M_table.edge(id);
 }
@@ -537,7 +495,8 @@ bool steiner_graph::is_base_node(steiner_graph::node_id_type id) const {
 
 steiner_graph::triangle_node_id_type steiner_graph::base_node_id(steiner_graph::node_id_type id) const {
     assert(is_base_node(id));
-    return id.steiner_index < steiner_info(id.edge).node_count / 2 ? base_graph().source(id.edge) : base_graph().destination(id.edge);
+    return id.steiner_index < steiner_info(id.edge).node_count / 2 ? base_graph().source(id.edge)
+                                                                   : base_graph().destination(id.edge);
 }
 
 steiner_graph::node_id_type steiner_graph::from_base_node_id(int node) const {
