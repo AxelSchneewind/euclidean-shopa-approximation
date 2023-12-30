@@ -1,4 +1,5 @@
 #pragma once
+
 #include "geometry.h"
 #include "base_types.h"
 
@@ -32,6 +33,46 @@ distance(coordinate_t __c1, coordinate_t __c2) {
     // return ans;
 };
 
+
+inline double
+angle(coordinate_t dir0, coordinate_t dir1) {
+    // using dot product
+    // auto const AB = dir0 * dir1;
+    // return std::acos(AB / (dir0.length() * dir1.length()));
+
+    // using atan on both vectors
+    auto angle0 = std::atan2(dir0.longitude, dir0.latitude);
+    auto angle1 = std::atan2(dir1.longitude, dir1.latitude);
+    return angle1 - angle0;
+}
+
+inline double
+inner_angle(coordinate_t dir0, coordinate_t dir1) {
+    // using dot product
+    // auto const AB = dir0 * dir1;
+    // return std::acos(AB / (dir0.length() * dir1.length()));
+
+    // using atan on both vectors
+    auto angle0 = std::atan2(dir0.longitude, dir0.latitude);
+    auto angle1 = std::atan2(dir1.longitude, dir1.latitude);
+    auto diff = std::fabs(angle1 - angle0);
+
+    if (diff > M_PI)
+        diff = 2 * M_PI - diff;
+
+    assert(diff >= 0);
+    assert(diff <= M_PI);
+    return diff;
+}
+
+
+inline double
+angle_cos(coordinate_t dir0, coordinate_t dir1) {
+    // use dot product
+    auto const AB = dir0 * dir1;
+    return AB / (dir0.length() * dir1.length());
+}
+
 /**
  * angle in radians
  * @param source0
@@ -49,32 +90,17 @@ angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate
 }
 
 inline double
-angle(coordinate_t dir0, coordinate_t dir1) {
-    // using dot product
-    // auto const AB = dir0 * dir1;
-    // return std::acos(AB / (dir0.length() * dir1.length()));
-
-    // using atan on both vectors
-    auto angle0 = std::atan2(dir0.longitude, dir0.latitude);
-    auto angle1 = std::atan2(dir1.longitude, dir1.latitude);
-    return angle1 - angle0;
-}
-
-inline double
-angle_cos(coordinate_t dir0, coordinate_t dir1) {
+inner_angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1) {
     // use dot product
-    auto const AB = dir0 * dir1;
-    return AB / (dir0.length() * dir1.length());
+    dest0 -= source0;
+    dest1 -= source1;
+    return inner_angle(dest0, dest1);
 }
 
 
 inline double
 line_distance(coordinate_t __source, coordinate_t __destination, coordinate_t __point) {
-    double phi = angle(__source, __destination, __source, __point);
-    phi = std::fabs(phi);
-
-    if (phi >= M_PI)
-        phi = 2 * M_PI - phi;
+    double phi = inner_angle(__source, __destination, __source, __point);
 
     // approximated distance
     return std::sin(phi) * (__point - __source).length();
@@ -104,14 +130,14 @@ void WGS84toGoogleBing(double lat, double lon, double &x, double &y) {
 }
 
 
-void GoogleBingtoWGS84Mercator (double x, double y, double &lat, double &lon) {
+void GoogleBingtoWGS84Mercator(double x, double y, double &lat, double &lon) {
     lon = (x / 20037508.34) * 180;
     lat = (y / 20037508.34) * 180;
 
-    lat = 180/M_PI * (2 * std::atan(std::exp(lat * M_PI / 180)) - M_PI / 2);
+    lat = 180 / M_PI * (2 * std::atan(std::exp(lat * M_PI / 180)) - M_PI / 2);
 }
 
-void project_coordinate(coordinate_t& src, Projection projection) {
+void project_coordinate(coordinate_t &src, Projection projection) {
     switch (projection) {
         case Projection::NONE:
             return;
@@ -122,4 +148,10 @@ void project_coordinate(coordinate_t& src, Projection projection) {
             GoogleBingtoWGS84Mercator(src.latitude, src.longitude, src.latitude, src.longitude);
             return;
     }
+}
+
+
+bool is_in_rectangle(coordinate_t point, coordinate_t bottom_left, coordinate_t top_right) {
+    return bottom_left.latitude <= point.latitude && point.latitude <= top_right.latitude
+           && bottom_left.longitude <= point.longitude && point.longitude <= top_right.longitude;
 }

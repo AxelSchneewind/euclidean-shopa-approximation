@@ -27,7 +27,12 @@ inline double
 angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1);
 
 inline double
+inner_angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1);
+
+inline double
 angle(coordinate_t dir0, coordinate_t dir1);
+inline double
+inner_angle(coordinate_t dir0, coordinate_t dir1);
 
 inline double
 angle_cos(coordinate_t dir0, coordinate_t dir1);
@@ -58,3 +63,5 @@ enum class Projection {
 };
 
 void project_coordinate(coordinate_t& src, Projection projection);
+
+inline bool is_in_rectangle(coordinate_t point, coordinate_t bottom_left, coordinate_t top_right);
