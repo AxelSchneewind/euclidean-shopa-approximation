@@ -91,7 +91,7 @@ main(int argc, char const *argv[]) {
         } else if (output_file_ending == ".gl") {
             output << node_count << '\n';
             output << edges.size() << '\n';
-            file_io::write_nodes(output, std::span<node_t>{nodes.begin(), nodes.end()});
+            file_io::write_nodes<node_t>(output, {nodes.begin(), nodes.end()});
             file_io::write_edges(output, edges);
         }
     }

@@ -20,8 +20,5 @@ int main(int argc, const char *argv[]) {
     coordinate_t bottom_left { std::stod(argv[4]), std::stod(argv[5]) } ;
     coordinate_t top_right { std::stod(argv[6]), std::stod(argv[7]) } ;
 
-    if (output_file.ends_with(".gl"))
-        client.write_subgraph_file(output_file, bottom_left, top_right);
-    else
-        client.write_subgraph_file(output_file, bottom_left, top_right);
+    client.write_subgraph_file(output_file, bottom_left, top_right);
 }
