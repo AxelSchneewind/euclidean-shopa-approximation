@@ -59,7 +59,7 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     file_io::read_triangles<steiner_graph::base_topology_type::node_id_type, f>(input_triangles, {faces.begin(), faces.end()});
 
     // check for unconnected nodes
-    std::vector<bool> connected(triangle_count, false);
+    std::vector<bool> connected(node_count, false);
     for (auto&& triangle : faces) {
         connected[triangle[0]] = true;
         connected[triangle[1]] = true;
@@ -67,9 +67,9 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     }
 
     // make new node ids
-    std::vector<steiner_graph::triangle_node_id_type> new_node_ids(triangle_count);
+    std::vector<steiner_graph::triangle_node_id_type> new_node_ids(node_count);
     int j = 0;
-    for (int i = 0; i < triangle_count; ++i) {
+    for (int i = 0; i < node_count; ++i) {
         if (connected[i]) {
             new_node_ids[i] = j++;
         } else {
