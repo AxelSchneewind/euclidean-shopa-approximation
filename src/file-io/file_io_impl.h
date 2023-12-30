@@ -1,6 +1,7 @@
 #pragma once
 
 #include "file_io.h"
+#include "formatters_impl.h"
 
 template<typename NodeInfo, typename formatter>
 void
