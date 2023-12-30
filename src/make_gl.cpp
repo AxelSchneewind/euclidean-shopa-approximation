@@ -58,8 +58,8 @@ main(int argc, char const *argv[]) {
     std::string_view output_file_ending(&filename_out.at(filename_out.find_first_of('.')));
 
     if (input_file_ending == ".graph") {
-        std::vector<coordinate_t> nodes;
-        std::vector<std::array<unsigned long, 3>> faces;
+        std::vector<node_t> nodes;
+        std::vector<std::array<node_id_t, 3>> faces;
 
         long node_count, face_count;
         input >> node_count >> face_count;
@@ -67,27 +67,31 @@ main(int argc, char const *argv[]) {
         nodes.resize(node_count);
         faces.resize(face_count);
 
-        file_io::read_nodes<coordinate_t, stream_encoders::encode_text>(input, nodes);
-        file_io::read_triangles<unsigned long, stream_encoders::encode_text>(input, faces);
+        file_io::read_nodes<node_t, stream_encoders::encode_text>(input, nodes);
+        file_io::read_triangles<node_id_t, stream_encoders::encode_text>(input, faces);
 
-        unidirectional_adjacency_list<unsigned long, gl_edge_t>::adjacency_list_builder builder;
+        unidirectional_adjacency_list<node_id_t, gl_edge_t>::adjacency_list_builder builder;
         builder.add_edges_from_triangulation(faces);
         builder.sort_edges();
         auto edges = builder.edges();
 
-        // set color and linewidth
+        // set color and line width
         for(auto& edge : edges) {
             edge.info.color = color;
             edge.info.line_width = linewidth;
         }
 
-        // TODO output steiner graph if epsilon argument has been passed
         if (output_file_ending == ".steiner.gl") {
+            unidirectional_adjacency_list<node_id_t, nullptr_t>::adjacency_list_builder builder;
+            builder.add_edges_from_triangulation(faces);
+            auto steiner_edges = adjacency_list<node_id_t, nullptr_t>::make_bidirectional(builder.get());
+            auto g = steiner_graph::make_graph(std::move(nodes), std::move(steiner_edges), std::move(faces), epsilon);
 
+            gl_file_io::write(output, g, linewidth, color);
         } else if (output_file_ending == ".gl") {
             output << node_count << '\n';
             output << edges.size() << '\n';
-            file_io::write_nodes(output, std::span<coordinate_t>{nodes.begin(), nodes.end()});
+            file_io::write_nodes(output, std::span<node_t>{nodes.begin(), nodes.end()});
             file_io::write_edges(output, edges);
         }
     }
