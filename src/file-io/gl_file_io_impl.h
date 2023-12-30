@@ -57,7 +57,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
     std::unordered_map<steiner_graph::base_topology_type::node_id_type, size_t> base_indices;
     for (auto node: graph.base_graph().node_ids()) {
         base_indices[node] = index++;
-        auto n = graph.node(node);
+        auto&& n = graph.node(node);
         f::write(output, n.coordinates.latitude) << ' ';
         f::write(output, n.coordinates.longitude);
         f::write(output, '\n');
@@ -71,7 +71,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
             indices[node] = base_indices[graph.base_graph().destination(node.edge)];
         } else {
             indices[node] = index++;
-            auto n = graph.node(node);
+            auto&& n = graph.node(node);
             f::write(output, n.coordinates.latitude) << ' ';
             f::write(output, n.coordinates.longitude);
             f::write(output, '\n');
