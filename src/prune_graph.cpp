@@ -24,8 +24,8 @@ int main(int argc, char *argv[]) {
     std::ifstream input(graph_file);
     std::ofstream output(output_file);
 
-    coordinate_t bottom_left{args.minX_arg, args.maxX_arg};
-    coordinate_t top_right{args.minY_arg, args.maxY_arg};
+    coordinate_t bottom_left{args.minY_arg, args.minX_arg };
+    coordinate_t top_right{args.maxY_arg, args.maxX_arg};
 
     if (graph_file.ends_with(".graph") && graph_file.ends_with(".graph")) {
         std::size_t node_count, face_count;
