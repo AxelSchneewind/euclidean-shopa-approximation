@@ -179,23 +179,22 @@ G::subgraph_type dijkstra<G, Q, L, N, UseEdge>::shortest_path_tree() const {
     std::vector<typename G::node_id_type> nodes;
     std::vector<typename G::edge_id_type> edges;
 
+    if (!reached(_M_start_node))
+        return {std::move(nodes), std::move(edges)};
+
     // add nodes and edges that have been visited
     auto &&visited = labels().all_visited();
-    for (auto node_id: visited) {
-        if (nodes.size() >= max_node_count || edges.size() >= max_edge_count) {
-            remove_duplicates(nodes);
-            remove_duplicates(edges);
-            if (nodes.size() >= max_node_count || edges.size() >= max_edge_count)
-                break;
-        }
+    for (auto const& node_id: visited) {
+        if (nodes.size() >= max_node_count || edges.size() >= max_edge_count)
+            break;
 
-        if (!reached(node_id) || labels().get(node_id).distance > current().value())
+        if (!reached(node_id) || labels().get(node_id).distance >= current().value())
             continue;
 
         nodes.emplace_back(node_id);
         typename G::node_id_type predecessor = labels().get(node_id).predecessor;
 
-        if (is_none(predecessor) /*|| predecessor == node_id*/)
+        if (is_none(predecessor) || predecessor == node_id)
             continue;
 
         typename G::edge_id_type edge = _M_graph.topology().edge_id(predecessor, node_id);
@@ -205,5 +204,8 @@ G::subgraph_type dijkstra<G, Q, L, N, UseEdge>::shortest_path_tree() const {
     remove_duplicates(nodes);
     remove_duplicates(edges);
 
-    return {std::move(nodes), std::move(edges)};
+    typename G::subgraph_type subgraph {std::move(nodes), std::move(edges)};
+    filter_nodes(subgraph, [&](auto const& node) -> bool { return get_label(node).distance < current().value(); });
+
+    return subgraph;
 }
