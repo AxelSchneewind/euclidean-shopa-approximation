@@ -16,13 +16,13 @@
 
 template<typename Graph, typename Dijkstra>
 Graph::distance_type
-router<Graph, Dijkstra>::min_route_distance(Dijkstra::node_cost_pair_type __node) const {
-    return __node.min_distance();
+router<Graph, Dijkstra>::min_route_distance(Dijkstra::node_cost_pair_type node) const {
+    return node.min_distance();
 }
 
 template<typename Graph, typename Dijkstra>
-router<Graph, Dijkstra>::router(Graph const &__graph)
-        : _M_graph(__graph),
+router<Graph, Dijkstra>::router(Graph const &graph)
+        : _M_graph(graph),
           _M_forward_search(_M_graph),
           _M_backward_search(_M_graph),
           _M_start_node(none_value<typename Graph::node_id_type>),
@@ -30,13 +30,13 @@ router<Graph, Dijkstra>::router(Graph const &__graph)
           _M_mid_node(none_value<typename Graph::node_id_type>) {}
 
 template<typename Graph, typename Dijkstra>
-router<Graph, Dijkstra>::router(router &&__routing) noexcept
-        : _M_graph(__routing._M_graph),
-          _M_forward_search(std::move(__routing._M_forward_search)),
-          _M_backward_search(std::move(__routing._M_backward_search)),
-          _M_start_node(__routing._M_start_node), _M_target_node(__routing._M_target_node),
-          _M_mid_node(__routing._M_mid_node) {
-    __routing._M_mid_node = none_value<typename Graph::node_id_type>;
+router<Graph, Dijkstra>::router(router &&routing) noexcept
+        : _M_graph(routing._M_graph),
+          _M_forward_search(std::move(routing._M_forward_search)),
+          _M_backward_search(std::move(routing._M_backward_search)),
+          _M_start_node(routing._M_start_node), _M_target_node(routing._M_target_node),
+          _M_mid_node(routing._M_mid_node) {
+    routing._M_mid_node = none_value<typename Graph::node_id_type>;
 }
 
 template<typename Graph, typename Dijkstra>
@@ -75,12 +75,13 @@ template<typename Graph, typename Dijkstra>
 void
 router<Graph, Dijkstra>::compute_route() {
     bool done = false;
+    std::size_t step_count = 0;
     while (!done) {
-        auto dist = distance();
+        auto dist = std::min(distance(), 2 * ::distance(_M_graph.node(_M_start_node).coordinates, _M_graph.node(_M_target_node).coordinates));
         bool const fwd_done =
                 _M_forward_search.queue_empty() || min_route_distance(_M_forward_search.current()) > dist;
-        bool const bwd_done =
-                _M_backward_search.queue_empty() || min_route_distance(_M_backward_search.current()) > dist;
+        bool const bwd_done = _M_backward_search.reached(_M_target_node);
+                // _M_backward_search.queue_empty() || min_route_distance(_M_backward_search.current()) > dist;
 
         // check if no better route can be found
         if (fwd_done && bwd_done) {
@@ -93,17 +94,19 @@ router<Graph, Dijkstra>::compute_route() {
         if (!bwd_done) {
             step_backward();
         }
+
+        step_count++;
     }
 }
 
 template<typename Graph, typename Dijkstra>
 Graph::distance_type
-router<Graph, Dijkstra>::distance(const Graph::node_id_type &__node) const {
-    if (is_none(__node) || !_M_forward_search.labels().reached(__node) ||
-        !_M_backward_search.reached(__node)) {
+router<Graph, Dijkstra>::distance(const Graph::node_id_type &node) const {
+    if (is_none(node) || !_M_forward_search.reached(node) ||
+        !_M_backward_search.reached(node)) {
         return infinity<typename Graph::distance_type>;
     }
-    return _M_forward_search.get_label(__node).distance + _M_backward_search.get_label(__node).distance;
+    return _M_forward_search.get_label(node).distance + _M_backward_search.get_label(node).distance;
 }
 
 template<typename Graph, typename Dijkstra>
@@ -130,12 +133,16 @@ router<Graph, Dijkstra>::route() const {
 
 template<typename Graph, typename Dijkstra>
 Graph::subgraph_type
-router<Graph, Dijkstra>::shortest_path_tree() {
+router<Graph, Dijkstra>::shortest_path_tree() const {
     auto tree_fwd = _M_forward_search.shortest_path_tree();
     auto tree_bwd = _M_backward_search.shortest_path_tree();
 
-    filter_nodes(tree_fwd, [&](auto node) -> bool { return _M_forward_search.get_label(node).distance + ::distance(_M_graph.node(node).coordinates, _M_graph.node(_M_target_node).coordinates) <= distance(); });
-    filter_nodes(tree_bwd, [&](auto node) -> bool { return _M_backward_search.get_label(node).distance + ::distance(_M_graph.node(node).coordinates, _M_graph.node(_M_start_node).coordinates) <= distance();  });
+    filter_nodes(tree_fwd, [&](auto node) -> bool {
+        return _M_forward_search.get_label(node).distance + ::distance(_M_graph.node(node).coordinates, _M_graph.node(_M_target_node).coordinates) <= distance();
+    });
+    filter_nodes(tree_bwd, [&](auto node) -> bool {
+        return _M_backward_search.get_label(node).distance + ::distance(_M_graph.node(node).coordinates, _M_graph.node(_M_start_node).coordinates) <= distance();
+    });
 
     return subgraphs_union<Graph>(tree_fwd, tree_bwd);
 }
@@ -149,18 +156,15 @@ router<Graph, Dijkstra>::mid_node() const {
 template<typename Graph, typename Dijkstra>
 bool
 router<Graph, Dijkstra>::route_found() const {
-    return !is_none(_M_mid_node) && _M_forward_search.reached(_M_mid_node) && _M_backward_search.reached(_M_mid_node) &&
-           (_M_forward_search.queue_empty()
-            || min_route_distance(_M_forward_search.current()) > distance()) &&
-           (_M_backward_search.queue_empty() ||
-            min_route_distance(_M_backward_search.current()) > distance());
+    return !is_none(_M_mid_node) && _M_forward_search.reached(_M_mid_node) && _M_backward_search.reached(_M_mid_node);
 }
 
 template<typename Graph, typename Dijkstra>
 void
-router<Graph, Dijkstra>::init(Graph::node_id_type __start_node, Graph::node_id_type __target_node) {
-    _M_start_node = __start_node;
-    _M_target_node = __target_node;
+router<Graph, Dijkstra>::init(Graph::node_id_type start_node, Graph::node_id_type target_node) {
+    _M_start_node = start_node;
+    _M_target_node = target_node;
+
     _M_forward_search.init(_M_start_node, _M_target_node);
     _M_backward_search.init(_M_target_node, _M_start_node);
 

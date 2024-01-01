@@ -115,7 +115,7 @@ public:
      * returns the trees of the forward and backward search
      * @return
      */
-    typename Graph::subgraph_type shortest_path_tree();
+    typename Graph::subgraph_type shortest_path_tree() const;
 
     /**
      * returns the tree of the forward search
