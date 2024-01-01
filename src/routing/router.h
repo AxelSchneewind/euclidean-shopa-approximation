@@ -112,7 +112,7 @@ public:
     typename Graph::path_type route() const;
 
     /**
-     * returns the tree of all visited nodes
+     * returns the trees of the forward and backward search
      * @return
      */
     typename Graph::subgraph_type shortest_path_tree();
@@ -126,9 +126,8 @@ public:
     }
 
     typename Graph::subgraph_type tree_backward() const {
-        return _M_forward_search.shortest_path_tree();
+        return _M_backward_search.shortest_path_tree();
     };
-
 
     /**
      *
