@@ -18,19 +18,6 @@ GraphType Graph::GraphImplementation<steiner_graph>::type() const {
 }
 
 
-template<RoutableGraph GraphT>
-template<typename RouterT>
-ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImplementation<GraphT> query,
-                                                   const RouterT &router,
-                                                   std::chrono::duration<double, std::milli> duration)
-        : _query(query), _route_found(router.route_found()),
-          _path(std_graph_t::make_graph(graph, graph.make_subgraph(router.route()))),
-          _tree_forward(std_graph_t::make_graph(graph, router.tree_forward())),
-          _tree_backward(std_graph_t::make_graph(graph, router.tree_backward())),
-          _nodes_visited(_tree_forward.node_count() + _tree_backward.node_count()), _distance(router.distance()),
-          _duration(duration) {}
-
-
 template<>
 void Graph::GraphImplementation<steiner_graph>::write_graph_stats(std::ostream &output) const {
     output << "\r\agraph has "
@@ -280,17 +267,13 @@ void Graph::read_graph_file(std::string path, Args... args) {
     std::ifstream input(path);
 
     if (path.ends_with(".graph")) {
-        pimpl = std::make_unique<GraphImplementation < steiner_graph>>
-        (triangulation_file_io::read_steiner(input, 0.5F));
+        pimpl = std::make_unique<GraphImplementation < steiner_graph>> (triangulation_file_io::read_steiner(input, 0.5F));
     } else if (path.ends_with(".fmi"))
-        pimpl = std::make_unique<GraphImplementation < std_graph_t>>
-    (fmi_file_io::read<std_graph_t>(input));
+        pimpl = std::make_unique<GraphImplementation < std_graph_t>> (fmi_file_io::read<std_graph_t>(input));
     else if (path.ends_with(".sch"))
-        pimpl = std::make_unique<GraphImplementation < ch_graph_t>>
-    (fmi_file_io::read<ch_graph_t>(input));
+        pimpl = std::make_unique<GraphImplementation < ch_graph_t>> (fmi_file_io::read<ch_graph_t>(input));
     else if (path.ends_with(".gl"))
-        pimpl = std::make_unique<GraphImplementation < gl_graph_t>>
-    (fmi_file_io::read<gl_graph_t>(input));
+        pimpl = std::make_unique<GraphImplementation < gl_graph_t>> (fmi_file_io::read<gl_graph_t>(input));
     else
     throw std::invalid_argument("unrecognized file ending");
 
