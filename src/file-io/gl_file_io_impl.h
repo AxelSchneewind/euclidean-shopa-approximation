@@ -19,14 +19,14 @@ std::ostream &gl_file_io::write(std::ostream &output, const Graph &graph, int li
     f::write(output, '\n');
 
     for (auto node: graph.node_ids()) {
-        auto n = graph.node(node);
+        auto&& n = graph.node(node);
         f::write(output, n);
         f::write(output, '\n');
     }
 
     for (auto node: graph.node_ids()) {
         for (auto edge: graph.outgoing_edges(node)) {
-            auto dest = edge.destination;
+            auto& dest = edge.destination;
 
             // avoid inserting an edge twice
             if (node >= dest && graph.has_edge(dest, node))
