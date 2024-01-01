@@ -33,10 +33,13 @@ public:
         auto result = *this;
         ++inner;
         if (inner == inner.end()) {
-            while(!(*outer)) {
+            ++outer; ++index;
+            while(!(*outer) && outer != outer_end) {
                 ++outer; ++index;
             }
-            inner = iterator_retriever(index);
+
+            if (outer != outer_end)
+                inner = iterator_retriever(index);
         }
         return result;
     }
@@ -44,10 +47,13 @@ public:
     nested_iterator &operator++(int) {
         ++inner;
         if (inner == inner.end()) {
-            while(!(*outer)) {
+            ++outer; ++index;
+            while(!(*outer) && outer != outer_end) {
                 ++outer; ++index;
             }
-            inner = iterator_retriever(index);
+
+            if (outer != outer_end)
+                inner = iterator_retriever(index);
         }
         return *this;
     }
