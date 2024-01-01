@@ -47,7 +47,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other & base_graph,
     EdgeId edge_count = subgraph.edge_count();
 
     std::vector<NodeInfo> nodes;
-    std::unordered_map<typename Other::node_id_type, size_t> new_node_ids;
+    std::unordered_map<typename Other::node_id_type, NodeId> new_node_ids;
 
     // make node list and store indices for each node
     for (size_t i = 0; i < node_count; i++) {
@@ -140,9 +140,9 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(
     return {std::move(__nodes), std::move(adj_list)};
 }
 
-template<typename NodeId>
+template<typename Graph>
 std::ostream &
-operator<<(std::ostream &__stream, path<NodeId> const &__r) {
+operator<<(std::ostream &__stream, path<Graph> const &__r) {
     __stream << "{ ";
 
     int length = __r.nodes.size();
