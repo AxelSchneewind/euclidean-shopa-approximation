@@ -161,7 +161,7 @@ private:
                 }
 
                 coordinate_t last_direction = direction * -1;
-                double spanner_angle_cos = std::cos(graph.epsilon() * M_PI / 2);
+                double spanner_angle_cos = std::cos(std::min(graph.epsilon() * M_PI_4, M_PI_4 / 16));
                 for (auto j = m; j >= 0; --j) [[likely]] {
                     steiner_graph::node_id_type const destination(base_edge_id, j);
                     coordinate_t const destination_coordinate = graph.node(destination).coordinates;
@@ -178,7 +178,6 @@ private:
                 }
 
                 last_direction = direction * -1;
-                spanner_angle_cos = std::cos(graph.epsilon() * M_PI / 2);
                 for (auto j = m + 1; j < destination_steiner_info.node_count; ++j) [[likely]] {
                     steiner_graph::node_id_type const destination(base_edge_id, j);
                     coordinate_t const destination_coordinate = graph.node(destination).coordinates;
@@ -206,7 +205,7 @@ public:
     steiner_neighbors(Graph const &graph, Labels const &labels)
             : graph(graph)
             , labels(labels)
-            , max_angle{M_PI / 36} // 10º // std::atan(graph.epsilon() / 5)}
+            , max_angle{M_PI}// std::min(M_PI * graph.epsilon(), M_PI_2)} // 10º // std::atan(graph.epsilon() / 5)}
             , max_angle_cos{std::cos(max_angle)} {
     }
 
@@ -219,7 +218,6 @@ public:
     template<typename NodeCostPair>
     void operator()(NodeCostPair const &node, std::vector<NodeCostPair> &out) {
         auto const &node_id = node.node;
-
         destination_coordinates.clear();
 
         assert(!is_none(node_id));
