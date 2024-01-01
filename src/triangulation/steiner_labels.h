@@ -9,26 +9,34 @@
 template<typename Outer, typename Inner>
 class nested_iterator {
 private:
+    size_t index;
     Outer outer;
     Outer outer_end;
     Inner inner;
-    std::function<Inner(typename Outer::value_type)> iterator_retriever;
+    std::function<Inner(size_t)> iterator_retriever;
 public:
 
-    nested_iterator(Outer iterator, Outer outer_end, std::function<Inner(typename Outer::value_type)> retriever)
+    nested_iterator(Outer iterator, Outer outer_end, std::function<Inner(std::size_t)> retriever)
             : outer{iterator},
               outer_end{outer_end},
-              inner{retriever(*outer)},
-              iterator_retriever{std::move(retriever)} {};
+              index{0},
+              inner{retriever(0)},
+              iterator_retriever{std::move(retriever)} {
+        while(!(*outer)) {
+            ++outer; ++index;
+        }
+        inner = iterator_retriever(index);
+    };
 
 
     nested_iterator operator++() {
         auto result = *this;
         ++inner;
         if (inner == inner.end()) {
-            ++outer;
-            if (outer != outer_end)
-                inner = iterator_retriever(*outer);
+            while(!(*outer)) {
+                ++outer; ++index;
+            }
+            inner = iterator_retriever(index);
         }
         return result;
     }
@@ -36,9 +44,10 @@ public:
     nested_iterator &operator++(int) {
         ++inner;
         if (inner == inner.end()) {
-            ++outer;
-            if (outer != outer_end)
-                inner = iterator_retriever(*outer);
+            while(!(*outer)) {
+                ++outer; ++index;
+            }
+            inner = iterator_retriever(index);
         }
         return *this;
     }
@@ -63,7 +72,7 @@ class steiner_labels {
 public:
     using label_type = Label;
 
-    using label_iterator_type = nested_iterator<typename std::vector<steiner_graph::triangle_edge_id_type>::const_iterator, steiner_graph::node_id_iterator_type>;
+    using label_iterator_type = nested_iterator<typename std::vector<bool>::const_iterator, steiner_graph::node_id_iterator_type>;
     // static_assert(std::ranges::forward_range<label_iterator_type>);
 
 private:
@@ -75,7 +84,7 @@ private:
 
     G const &_M_graph;
 
-    std::vector<typename G::triangle_edge_id_type> _M_touched;
+    std::vector<bool> _M_edge_touched;
 
     std::vector<label_type> _M_base_labels;
     labels_type _M_labels;
@@ -94,8 +103,6 @@ public:
 
     // init for given query
     void init(node_id_type __start_node, node_id_type __target_node);
-
-    bool reached(node_id_type __node) const;
 
     Label get(node_id_type __node) const;
 

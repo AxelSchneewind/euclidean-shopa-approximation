@@ -428,14 +428,14 @@ steiner_graph::edge_id(steiner_graph::node_id_type src, steiner_graph::node_id_t
     assert(src.edge >= 0 && src.steiner_index >= 0);
     assert(src.edge < _M_base_topology.edge_count() &&
            src.steiner_index < _M_table.edge(src.edge).node_count);
+    // assert(has_edge(src, dest));
 
-    // return has_edge(src, dest) ? edge_id_type{src, dest} : none_value<edge_id_type>;
     return {src, dest};
 }
 
 bool
 steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_type dest) const {
-    assert (_M_base_topology.source(src.edge) < _M_base_topology.destination(src.edge));
+    assert(_M_base_topology.source(src.edge) < _M_base_topology.destination(src.edge));
     assert(_M_base_topology.source(dest.edge) < _M_base_topology.destination(dest.edge));
 
     if (dest == src)
@@ -444,20 +444,22 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
     if (dest.edge == src.edge && std::abs(dest.steiner_index - src.steiner_index) == 1)
         return true;
 
-    if (is_base_node(src) &&
-        (dest.steiner_index == 1 || dest.steiner_index == steiner_info(dest.edge).node_count - 1)) {
+    if (is_base_node(src) && dest.steiner_index == 1) {
         auto base_src = base_node_id(src);
         for (auto edge: _M_base_topology.outgoing_edges(base_src)) {
             auto edge_id = _M_base_topology.edge_id(base_src, edge.destination);
 
-            if (dest.edge == edge_id && dest.steiner_index == 1)
+            if (dest.edge == edge_id)
                 return true;
         }
+    }
 
+    if (is_base_node(src) && dest.steiner_index == steiner_info(dest.edge).node_count - 2) {
+        auto base_src = base_node_id(src);
         for (auto edge: _M_base_topology.incoming_edges(base_src)) {
             auto edge_id = _M_base_topology.edge_id(edge.destination, base_src);
 
-            if (dest.edge == edge_id && dest.steiner_index == steiner_info(edge_id).node_count - 2)
+            if (dest.edge == edge_id)
                 return true;
         }
 
@@ -467,20 +469,20 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
         // }
     }
 
-    if (is_base_node(dest) &&
-        (src.steiner_index == 1 || src.steiner_index == steiner_info(src.edge).node_count - 1)) {
+    if (is_base_node(dest) && src.steiner_index == 1) {
         auto base_dest = base_node_id(dest);
         for (auto edge: _M_base_topology.outgoing_edges(base_dest)) {
             auto edge_id = _M_base_topology.edge_id(base_dest, edge.destination);
-
-            if (src.edge == edge_id && src.steiner_index == 1)
+            if (src.edge == edge_id)
                 return true;
         }
+    }
 
+    if (is_base_node(dest) && src.steiner_index == steiner_info(src.edge).node_count - 2) {
+        auto base_dest = base_node_id(dest);
         for (auto edge: _M_base_topology.incoming_edges(base_dest)) {
             auto edge_id = _M_base_topology.edge_id(edge.destination, base_dest);
-
-            if (src.edge == edge_id && src.steiner_index == steiner_info(edge_id).node_count - 2)
+            if (src.edge == edge_id)
                 return true;
         }
 
@@ -492,8 +494,7 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
 
     // face-crossing edges
     auto triangles = _M_polyhedron.edge_faces(src.edge);
-    for (unsigned char triangle_index = 0;
-         triangle_index < polyhedron_type::FACE_COUNT_PER_EDGE; triangle_index++) [[unlikely]] {
+    for (unsigned char triangle_index = 0; triangle_index < polyhedron_type::FACE_COUNT_PER_EDGE; triangle_index++) [[unlikely]] {
         if (is_none(triangles[triangle_index])) continue;
         auto &&triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
 
