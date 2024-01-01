@@ -66,6 +66,5 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
     status.join();
 
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
-    std::cout << "search took " << duration << std::endl;
     _result_ptr = std::make_shared<ResultImplementation<GraphT>>(_graph, *_query_ptr, _router, duration);
 }
