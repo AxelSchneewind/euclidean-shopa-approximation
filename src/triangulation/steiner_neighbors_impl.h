@@ -30,37 +30,42 @@ private:
             auto e_id = graph.base_graph().edge_id(base_node_id, e.destination);
             steiner_graph::node_id_type destination{e_id, 1};
             if (destination != node.predecessor) [[likely]] {
-                out.emplace_back(destination, node.node, node.distance);
+                assert (graph.has_edge(node_id, destination));
+                assert (!graph.is_base_node(destination));
+                out.emplace_back(destination, node_id, node.distance);
                 destination_coordinates.emplace_back(graph.node(destination).coordinates);
             }
         }
 
         for (auto &&e: graph.base_graph().incoming_edges(base_node_id)) [[likely]] {
             auto e_id = graph.base_graph().edge_id(e.destination, base_node_id);          // TODO optimize
-            steiner_graph::node_id_type destination(e_id, graph.steiner_info(e_id).node_count - 2U);
+            steiner_graph::node_id_type destination(e_id, graph.steiner_info(e_id).node_count - 2);
             if (destination != node.predecessor) [[likely]] {
+                assert (graph.has_edge(node_id, destination));
+                assert (!graph.is_base_node(destination));
                 out.emplace_back(destination, node.node, node.distance);
                 destination_coordinates.emplace_back(graph.node(destination).coordinates);
             }
         }
 
         // face-crossing edges
-        auto &&triangle_edges = graph.base_polyhedron().node_edges(base_node_id);
-        for (auto base_edge_id: triangle_edges) [[likely]] {
-            auto &&destination_steiner_info = graph.steiner_info(base_edge_id);
+        // auto &&triangle_edges = graph.base_polyhedron().node_edges(base_node_id);
+        // for (auto base_edge_id: triangle_edges) [[likely]] {
+        //     auto &&destination_steiner_info = graph.steiner_info(base_edge_id);
 
-            short i = 1;
-            for (; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
-                steiner_graph::node_id_type const destination{base_edge_id, i};
+        //     short i = 1;
+        //     for (; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+        //         steiner_graph::node_id_type const destination{base_edge_id, i};
 
-                // TODO find out what breaks the labels reference here
-                // if (labels.reached(destination)) [[likely]] continue;
+        //         // TODO find out what breaks the labels reference here
+        //         // if (labels.reached(destination)) [[likely]] continue;
 
-                coordinate_t const destination_coordinate { graph.node(destination).coordinates };
-                out.emplace_back(destination, node_id, node.distance);
-                destination_coordinates.emplace_back(destination_coordinate);
-            }
-        }
+        //         coordinate_t const destination_coordinate { graph.node(destination).coordinates };
+        //         assert (graph.has_edge(node_id, destination));
+        //         out.emplace_back(destination, node_id, node.distance);
+        //         destination_coordinates.emplace_back(destination_coordinate);
+        //     }
+        // }
 
         // compute distances (can be vectorized)
         for (unsigned int e = 0; e < out.size(); ++e) [[likely]] {
@@ -80,8 +85,8 @@ private:
         unsigned char triangle_last = 2;
 
         // if this node is reached via a face crossing segment, only use edges in next face
-        if (reached_from.edge != node_id.edge) [[likely]] {
-            auto visited_triangles = graph.base_polyhedron().edge_faces(reached_from.edge);
+        if (graph.is_base_node(reached_from) || reached_from.edge != node_id.edge) [[likely]] {
+            auto&& visited_triangles = graph.base_polyhedron().edge_faces(reached_from.edge);
 
             if (is_none(triangles[0]) || triangles[0] == visited_triangles[0] || triangles[0] == visited_triangles[1])
                     [[unlikely]] {
@@ -111,6 +116,7 @@ private:
             steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index + 1);
             if (destination != reached_from) [[likely]] {
                 coordinate_t destination_coordinate{graph.node(destination).coordinates};
+                assert (graph.has_edge(node_id, destination));
                 out.emplace_back(destination, node_id, node.distance);
                 destination_coordinates.emplace_back(destination_coordinate);
             }
@@ -121,6 +127,7 @@ private:
             steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index - 1);
             if (destination != reached_from) [[likely]] {
                 coordinate_t destination_coordinate{graph.node(destination).coordinates};
+                assert (graph.has_edge(node_id, destination));
                 out.emplace_back(destination, node_id, node.distance);
                 destination_coordinates.emplace_back(destination_coordinate);
             }
@@ -138,20 +145,20 @@ private:
 
                 auto &&destination_steiner_info = graph.steiner_info(base_edge_id);
 
-                // binary search using the derivative over the angle depending on steiner index
+                // binary search for node with minimal angle using the derivative over the angle depending on steiner index
                 typename Graph::node_id_type::intra_edge_id_type l = 0;
                 typename Graph::node_id_type::intra_edge_id_type r = destination_steiner_info.node_count - 2;
                 typename Graph::node_id_type::intra_edge_id_type m = (r + l) / 2;
                 double diff = 1.0;
-                double cos = -1.0;
-                while (l < r && diff != 0.0 && cos < max_angle_cos) {
+                double cos, cos_next;
+                while (l < r && diff != 0) [[likely]] {
                     steiner_graph::node_id_type const destination{base_edge_id, m};
-                    coordinate_t const destination_coordinate = graph.node(destination).coordinates;
+                    coordinate_t const destination_coordinate { graph.node(destination).coordinates };
                     cos = angle_cos(direction, destination_coordinate - source_coordinate);
 
                     steiner_graph::node_id_type const destination_next(base_edge_id, m + 1);
                     coordinate_t const destination_coordinate_next = graph.node(destination_next).coordinates;
-                    double cos_next = angle_cos(direction, destination_coordinate_next - source_coordinate);
+                    cos_next = angle_cos(direction, destination_coordinate_next - source_coordinate);
 
                     diff = cos_next - cos;
 
@@ -161,33 +168,37 @@ private:
                 }
 
                 coordinate_t last_direction = direction * -1;
-                double spanner_angle_cos = std::cos(std::min(graph.epsilon() * M_PI_4, M_PI_4 / 16));
-                for (auto j = m; j >= 0; --j) [[likely]] {
+                double const spanner_angle_cos = std::cos(std::min(graph.epsilon() * M_PI_2, M_PI_4 / 16));
+                for (auto j = m; j >= 1; --j) [[likely]] {
                     steiner_graph::node_id_type const destination(base_edge_id, j);
-                    coordinate_t const destination_coordinate = graph.node(destination).coordinates;
-                    coordinate_t const new_direction = destination_coordinate - source_coordinate;
+                    coordinate_t const destination_coordinate {graph.node(destination).coordinates};
+                    coordinate_t const new_direction { destination_coordinate - source_coordinate };
 
                     if (angle_cos(direction, new_direction) < max_angle_cos) [[likely]]
                         break;
                     if (angle_cos(last_direction, new_direction) >= spanner_angle_cos) [[likely]]
                         continue;
 
+                    assert (graph.has_edge(node_id, destination));
+                    assert (!graph.is_base_node(destination));
                     out.emplace_back(destination, node_id, node.distance);
                     destination_coordinates.emplace_back(destination_coordinate);
                     last_direction = new_direction;
                 }
 
                 last_direction = direction * -1;
-                for (auto j = m + 1; j < destination_steiner_info.node_count; ++j) [[likely]] {
+                for (auto j = m + 1; j < destination_steiner_info.node_count - 1; ++j) [[likely]] {
                     steiner_graph::node_id_type const destination(base_edge_id, j);
-                    coordinate_t const destination_coordinate = graph.node(destination).coordinates;
-                    coordinate_t const new_direction = destination_coordinate - source_coordinate;
+                    coordinate_t const destination_coordinate {graph.node(destination).coordinates};
+                    coordinate_t const new_direction { destination_coordinate - source_coordinate};
 
                     if (angle_cos(direction, destination_coordinate - source_coordinate) < max_angle_cos) [[likely]]
                         break;
                     if (angle_cos(last_direction, new_direction) >= spanner_angle_cos) [[likely]]
                         continue;
 
+                    assert (graph.has_edge(node_id, destination));
+                    assert (!graph.is_base_node(destination));
                     out.emplace_back(destination, node_id, node.distance);
                     destination_coordinates.emplace_back(destination_coordinate);
                     last_direction = new_direction;
@@ -205,7 +216,7 @@ public:
     steiner_neighbors(Graph const &graph, Labels const &labels)
             : graph(graph)
             , labels(labels)
-            , max_angle{M_PI}// std::min(M_PI * graph.epsilon(), M_PI_2)} // 10º // std::atan(graph.epsilon() / 5)}
+            , max_angle{std::min(M_PI_2 * graph.epsilon(), M_PI_2)} // 10º // std::atan(graph.epsilon() / 5)}
             , max_angle_cos{std::cos(max_angle)} {
     }
 
