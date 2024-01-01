@@ -115,7 +115,7 @@ void Graph::GraphImplementation<GraphT>::write_graph_file(std::string path) cons
     std::ofstream output(path);
     if (path.ends_with(".fmi"))
         fmi_file_io::write(output, graph);
-    else if (path.ends_with(".steiner.graph"))
+    else if (path.ends_with(".steiner.fmi"))
         fmi_file_io::write(output, graph);
     else if (path.ends_with(".graph"))
         triangulation_file_io::write(output, graph);
