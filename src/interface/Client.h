@@ -26,10 +26,10 @@ public:
     Client() = default;
 
     template<typename GraphT>
-    Client(GraphT&& graph);
+    Client(GraphT &&graph);
 
     template<typename GraphT, typename RouterT>
-    Client(GraphT&& graph, RouterT&& router);
+    Client(GraphT &&graph, RouterT &&router);
 
     template<typename ...Args>
     void read_graph_file(std::string path, Args... args);
@@ -42,30 +42,47 @@ public:
         _result = _router.result();
     };
 
-    Result& result() {return _result;}
+    Result &result() { return _result; }
+
+    Query &query() { return _query; }
 
     void compute_one_to_all(int from) {  /*_router.compute_one_to_all(from);*/ };
-    void compute_one_to_all(int from, std::ostream& out) { /*_router.compute_one_to_all(from, out);*/ };
+
+    void compute_one_to_all(int from, std::ostream &out) { /*_router.compute_one_to_all(from, out);*/ };
 
     void write_route_file(std::string path) const { _result.path().write_graph_file(path); };
 
-    void write_tree_file(std::string path) const { _result.tree_forward().write_graph_file(path); };
+    void write_tree_file(std::string path) const {
+        std::string prefix(path.substr(0, path.find_last_of('/') + 1));
+        std::string filename = path.substr(path.find_last_of('/'));
+        std::string name = filename.substr(0, filename.find_first_of('.'));
+        std::string suffix = filename.substr(filename.find_first_of('.'), filename.size());
 
-    void write_beeline_file(std::string path) const { /*_result.beeline().write_graph_file_gl(output);*/ };
+        std::string fwd{prefix + name + "_forward" + suffix};
+        std::string bwd{prefix + name + "_backward" + suffix};
+        if (_result.tree_forward().node_count() < 1000000)
+            _result.tree_forward().write_graph_file(fwd);
+        if (_result.tree_backward().node_count() < 1000000)
+            _result.tree_backward().write_graph_file(bwd);
+    };
+
+    void write_beeline_file(std::string path) const { _query.beeline().write_graph_file(path); };
 
     void write_csv(std::ostream &output) const { format_csv(statistics, output); };
+
     void write_csv_header(std::ostream &output) const { format_header(statistics, output); };
 
     void write_info(std::ostream &output) const {
-     if (_result.route_found()) {
-         output << "path: "; // TODO print path
-         output << '\n'
-                << "has cost " << _result.distance() << ","
-                << " with beeline distance "
-                << _query.beeline_distance() << ", search visited "
-                << _result.tree_forward().node_count() << " + " << _result.tree_backward().node_count() << " nodes and took "
-                << _result.duration() << std::endl;
-     }
+        output << "time:                                 " << _result.duration()
+               << "\n nodes visited:                       " << _result.tree_forward().node_count() << " + "
+               << _result.tree_backward().node_count()
+               << "\ntimes pulled (num of nodes labelled): " << _result.pull_count()
+               << "\ntimes pushed (num of edges relaxed):  " << _result.push_count();
+        if (_result.route_found()) {
+            output << "\npath:                                 "; // TODO print path
+            output << "\ncost:                                 " << _result.distance();
+        }
+        output << std::flush;
     };
 
     void write_graph_stats(std::ostream &output) const { _graph.write_graph_stats(output); };
