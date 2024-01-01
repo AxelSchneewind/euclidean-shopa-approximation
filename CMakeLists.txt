@@ -72,6 +72,7 @@ add_executable(subdivision_stats src/subdivision_stats.cpp)
 
 
 # installation
+set(CMAKE_INSTALL_PREFIX /opt/routing)
 install(TARGETS route subdivision_stats make_gl prune_graph project_graph RUNTIME DESTINATION bin)
 
 
