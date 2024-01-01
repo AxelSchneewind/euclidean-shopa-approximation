@@ -79,15 +79,19 @@ main(int argc, char const *argv[]) {
         // setup writer for graphs to show
         std::string eps_string = epsilon == 0 ? "exact" : std::format("{:_>5d}", (int) (epsilon * 10000));
         std::string target_directory = std::format("{}/{}_{}_{}", output_directory, src_node, dest_node, eps_string);
-        std::filesystem::create_directory(target_directory);
         std::string beeline_file = std::format("{}/beeline.gl", target_directory);
-        std::string route_file = std::format("{}/route.gl", target_directory);
+        std::string route_file = std::format("{}/path.gl", target_directory);
         std::string tree_file = std::format("{}/tree.gl", target_directory);
         std::string info_file = std::format("{}/info.csv", target_directory);
+        std::filesystem::create_directory(target_directory);
         std::ofstream output_beeline(beeline_file);
         std::ofstream output_route(route_file);
         std::ofstream output_tree(tree_file);
         std::ofstream output_info(info_file);
+        output_beeline << std::flush;
+        output_route << std::flush;
+        output_tree << std::flush;
+        output_info << std::flush;
 
         if (dest_node >= 0)
             client.compute_route(src_node, dest_node);
@@ -102,10 +106,12 @@ main(int argc, char const *argv[]) {
 
         if (arguments.projection_arg == enum_projection::projection_arg_google_bing) {
             client.result().path().project(Projection::WGS84_TO_GB);
+            client.query().beeline().project(Projection::WGS84_TO_GB);
             client.result().tree_forward().project(Projection::WGS84_TO_GB);
             client.result().tree_backward().project(Projection::WGS84_TO_GB);
         } else if (arguments.projection_arg == enum_projection::projection_arg_wgs84) {
             client.result().path().project(Projection::GB_TO_WGS84);
+            client.query().beeline().project(Projection::GB_TO_WGS84);
             client.result().tree_forward().project(Projection::GB_TO_WGS84);
             client.result().tree_backward().project(Projection::GB_TO_WGS84);
         }
