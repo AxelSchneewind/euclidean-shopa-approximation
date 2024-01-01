@@ -65,7 +65,7 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other & base_graph,
         auto&& src = base_graph.source(edge);
         auto&& dest = base_graph.destination(edge);
         assert(!is_none(src) && !is_none(dest));
-        if(!base_graph.has_edge(src, dest)) continue;
+        if(!base_graph.has_edge(src, dest) && !base_graph.has_edge(dest, src) || !new_node_ids.contains(src) || !new_node_ids.contains(dest)) continue;
 
         auto&& info = base_graph.edge(edge);
 
