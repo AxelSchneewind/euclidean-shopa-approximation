@@ -35,7 +35,7 @@ public:
         float r_first;
         float r_second;
 
-        // number of steiner points on this edge (counting the source and middle node)
+        // number of steiner points on this edge (counting the source and if present, middle nodes), >= 2
         unsigned short node_count;
 
         // which classes of edges this one belongs to (first and second half)

@@ -198,15 +198,15 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
             throw std::invalid_argument("some value does not fit");
 
         auto entry = subdivision_edge_info{};
-        entry.mid_position = static_cast<float>(mid_value);
-        entry.mid_index = static_cast<unsigned short>(mid_index);
-        entry.node_count = static_cast<unsigned short>(count);
-        entry.r_first = static_cast<float>(r_first);
-        entry.r_second = static_cast<float>(r_second);
-        entry.edge_class_first = static_cast<unsigned char>(index);
-        entry.edge_class_second = static_cast<unsigned char>(index_second);
-        entry.first_start_index = static_cast<unsigned short>(first_start_index);
-        entry.second_start_index = static_cast<unsigned short>(second_start_index);
+        entry.mid_position = mid_value;
+        entry.mid_index = mid_index;
+        entry.node_count = count;
+        entry.r_first = r_first;
+        entry.r_second = r_second;
+        entry.edge_class_first = index;
+        entry.edge_class_second = index_second;
+        entry.first_start_index = first_start_index;
+        entry.second_start_index = second_start_index;
         result.push_back(entry);
     }
 
@@ -236,14 +236,14 @@ subdivision_table::subdivision_edge_info & subdivision_table::edge(int edge) { r
 
 coordinate_t
 subdivision_table::node_coordinates(edge_id_t edge, short steiner_index, coordinate_t const& c1, coordinate_t const& c2) const {
-    const auto& info = edges[edge];
+    auto && info = edges[edge];
 
     assert(steiner_index >= 0);
     assert(steiner_index < info.node_count);
 
     if (steiner_index == 0) [[unlikely]]
         return c1;
-    if (steiner_index == info.node_count - 1) [[unlikely]]
+    else if (steiner_index == info.node_count - 1) [[unlikely]]
         return c2;
 
     if (steiner_index == info.mid_index) [[unlikely]]
