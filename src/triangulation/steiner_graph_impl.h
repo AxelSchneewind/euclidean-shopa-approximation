@@ -39,8 +39,9 @@ std::ostream &operator<<(std::ostream &output, steiner_edge_id<N> id) {
 void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
                      const steiner_graph::base_topology_type &triangulation,
                      const steiner_graph::polyhedron_type &polyhedron, std::vector<double> &out) {
-    out.clear();
-    out.resize(nodes.size());
+    assert(nodes.size() == triangulation.node_count());
+
+    out.resize(triangulation.node_count());
 
     std::vector<steiner_graph::triangle_edge_id_type> adjacent_edge_ids;
     std::vector<steiner_graph::triangle_edge_id_type> triangle_edge_ids;
@@ -62,39 +63,39 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
                 triangle_edge_ids.emplace_back(triangle_edge);
         }
 
-        assert(adjacent_edge_ids.size() > 0);
-        assert(triangle_edge_ids.size() > 0);
-
-        std::sort(triangle_edge_ids.begin(), triangle_edge_ids.end());
-        std::sort(adjacent_edge_ids.begin(), adjacent_edge_ids.end());
-
-        // get edges that are only reachable via a triangle
-        remove_duplicates_sorted(triangle_edge_ids);
-        remove_duplicates_sorted(adjacent_edge_ids);
-        int edge_count = set_minus_sorted<int>(triangle_edge_ids, adjacent_edge_ids, triangle_edge_ids);
-        assert(edge_count > 0);
-
-        // get minimal value from triangle edges
         double dist = infinity<double>;
-        auto c3 = nodes[node].coordinates;
-        for (int i = 0; i < edge_count; i++) {
-            auto const &edge_id = triangle_edge_ids[i];
-            auto const &c1 = nodes[triangulation.source(edge_id)].coordinates;
-            auto const &c2 = nodes[triangulation.destination(edge_id)].coordinates;
-            if (c3 != c2 && c3 != c1 && c2 != c1) {
-                auto line_dist = line_distance(c1, c2, c3);
-                dist = std::min(dist, line_dist);
-                dist = std::min(dist, distance(c2, c3));
-                dist = std::min(dist, distance(c1, c3));
-            }
-            assert(is_infinity(dist) || (dist <= 1.01 * distance(c2, c3) && dist <= 1.01 * distance(c1, c3)));
-        }
-        dist = std::max(dist, 64.0 * std::numeric_limits<float>::min());
-        assert(!is_infinity(dist));
-        out[node] = dist;
+        if (!triangle_edge_ids.empty()) {
+            std::sort(triangle_edge_ids.begin(), triangle_edge_ids.end());
+            std::sort(adjacent_edge_ids.begin(), adjacent_edge_ids.end());
 
-        adjacent_edge_ids.clear();
-        triangle_edge_ids.clear();
+            // get edges that are only reachable via a triangle
+            remove_duplicates_sorted(triangle_edge_ids);
+            remove_duplicates_sorted(adjacent_edge_ids);
+            int edge_count = set_minus_sorted<int>(triangle_edge_ids, adjacent_edge_ids, triangle_edge_ids);
+            assert(edge_count > 0);
+
+            // get minimal value from triangle edges
+            auto c3 = nodes[node].coordinates;
+            for (int i = 0; i < edge_count; i++) {
+                auto const &edge_id = triangle_edge_ids[i];
+                auto const &c1 = nodes[triangulation.source(edge_id)].coordinates;
+                auto const &c2 = nodes[triangulation.destination(edge_id)].coordinates;
+                if (c3 != c2 && c3 != c1 && c2 != c1) {
+                    auto line_dist = line_distance(c1, c2, c3);
+                    dist = std::min(dist, line_dist);
+                    dist = std::min(dist, distance(c2, c3));
+                    dist = std::min(dist, distance(c1, c3));
+                }
+                assert(is_infinity(dist) || (dist <= 1.01 * distance(c2, c3) && dist <= 1.01 * distance(c1, c3)));
+            }
+            dist = std::max(dist, 64.0 * std::numeric_limits<float>::min());
+            assert(!is_infinity(dist));
+
+            adjacent_edge_ids.clear();
+            triangle_edge_ids.clear();
+        }
+
+        out[node] = dist;
     }
 }
 
@@ -103,6 +104,8 @@ steiner_graph
 steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangulation_nodes,
                           steiner_graph::base_topology_type &&triangulation_edges,
                           std::vector<std::array<triangle_node_id_type, 3>> &&faces, double epsilon) {
+    assert(triangulation_nodes.size() == triangulation_edges.node_count());
+
     base_topology_type triangulation(std::move(triangulation_edges));
 
     auto poly = polyhedron<steiner_graph::base_topology_type, 3>::make_polyhedron(triangulation, std::move(faces));
@@ -145,9 +148,8 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangula
 }
 
 
-// TODO fix
 steiner_graph steiner_graph::make_graph(const steiner_graph &other, const subgraph<base_topology_type> &subgraph) {
-    base_topology_type::builder builder(subgraph.node_count());
+    base_topology_type::builder builder;
     std::unordered_map<triangle_node_id_type, bool> contained;
 
     // mark nodes from subgraph as contained
@@ -160,16 +162,16 @@ steiner_graph steiner_graph::make_graph(const steiner_graph &other, const subgra
         auto &&face = other.base_polyhedron().face_edges(i);
 
         std::vector<triangle_node_id_type> nodes;
-        nodes.emplace_back(other.base_graph().destination(face[0]));
-        nodes.emplace_back(other.base_graph().destination(face[1]));
-        nodes.emplace_back(other.base_graph().destination(face[2]));
         nodes.emplace_back(other.base_graph().source(face[0]));
         nodes.emplace_back(other.base_graph().source(face[1]));
         nodes.emplace_back(other.base_graph().source(face[2]));
+        nodes.emplace_back(other.base_graph().destination(face[0]));
+        nodes.emplace_back(other.base_graph().destination(face[1]));
+        nodes.emplace_back(other.base_graph().destination(face[2]));
         remove_duplicates(nodes);
 
         if (contained.contains(nodes[0]) && contained.contains(nodes[1]) && contained.contains(nodes[2])) {
-            faces.emplace_back(std::array<triangle_node_id_type, 3>{nodes[0], nodes[1], nodes[2]}); // insert original ids
+            faces.emplace_back( std::array<triangle_node_id_type, 3>{nodes[0], nodes[1], nodes[2]}); // insert original ids
         }
     }
 
@@ -183,31 +185,39 @@ steiner_graph steiner_graph::make_graph(const steiner_graph &other, const subgra
 
     // assign new node ids
     std::unordered_map<triangle_node_id_type, triangle_node_id_type> new_node_id;
+    std::vector<triangle_node_info_type> nodes;
     triangle_node_id_type node_count = 0;
     for (triangle_node_id_type id: subgraph.nodes) {
-        if (contained.contains(id) && contained[id])
+        if (contained.contains(id) && contained[id]) {
             new_node_id[id] = node_count++;
+            nodes.emplace_back(other.node(id));
+        }
     }
     contained.clear();
 
     // apply new node ids
     for (auto &triangle: faces) {
+        assert(new_node_id.contains(triangle[0]) && new_node_id.contains(triangle[1]) && new_node_id.contains(triangle[2]));
         triangle[0] = new_node_id[triangle[0]];
         triangle[1] = new_node_id[triangle[1]];
         triangle[2] = new_node_id[triangle[2]];
+        std::sort(triangle.begin(), triangle.end());
         assert(!is_none(triangle[0]) && !is_none(triangle[1]) && !is_none(triangle[2]));
     }
+    new_node_id.clear();
 
     // make bidirectional adjacency list
     builder.add_edges_from_triangulation(faces);
     auto list = base_topology_type::make_bidirectional(builder.get());
+    assert(list.node_count() == node_count);
 
-    std::vector<triangle_node_info_type> nodes(node_count);
-    for (triangle_node_id_type id: subgraph.nodes) {
-        if (new_node_id.contains(id) && !is_none(new_node_id[id]) && new_node_id.at(id) < node_count)
-            nodes.at(new_node_id[id]) = other.node(id);
+    // check that
+    for (auto const &triangle: faces) {
+        assert(list.has_edge(triangle[0], triangle[1]) || list.has_edge(triangle[1], triangle[0]));
+        assert(list.has_edge(triangle[0], triangle[2]) || list.has_edge(triangle[2], triangle[0]));
+        assert(list.has_edge(triangle[1], triangle[2]) || list.has_edge(triangle[2], triangle[1]));
     }
-    new_node_id.clear();
+
 
     return steiner_graph::make_graph(std::move(nodes), std::move(list), std::move(faces), other.epsilon());
 }
@@ -494,7 +504,8 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
 
     // face-crossing edges
     auto triangles = _M_polyhedron.edge_faces(src.edge);
-    for (unsigned char triangle_index = 0; triangle_index < polyhedron_type::FACE_COUNT_PER_EDGE; triangle_index++) [[unlikely]] {
+    for (unsigned char triangle_index = 0;
+         triangle_index < polyhedron_type::FACE_COUNT_PER_EDGE; triangle_index++) [[unlikely]] {
         if (is_none(triangles[triangle_index])) continue;
         auto &&triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
 
@@ -503,7 +514,7 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
                 continue;
 
             auto &&destination_steiner_info = steiner_info(base_edge_id);
-            if (base_edge_id == dest.edge && is_between(base_edge_id, 0, destination_steiner_info.node_count))
+            if (base_edge_id == dest.edge && is_in_range(base_edge_id, 0, destination_steiner_info.node_count))
                 return true;
         }
     }
