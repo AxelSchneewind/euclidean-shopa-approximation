@@ -137,10 +137,6 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &base,
     std::vector<std::array<int, face_count_per_edge>> edge_triangles;
     make_face_edges(base, faces, triangle_edges, edge_triangles);
 
-    // get the inverse edge for each edge
-    std::vector<edge_id_type> inverse_edges;
-    make_inverse_edges(base, inverse_edges);
-
     // make edges reachable from base nodes
     std::vector<edge_id_type> node_edges;
     std::vector<int> node_edge_offsets;
@@ -151,6 +147,7 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &base,
             // get edges and triangles adjacent to node
             for (auto&& edge: base.outgoing_edges(node)) {
                 auto edge_id = base.edge_id(node, edge.destination);
+                assert(!base.has_edge(edge.destination, node));
                 adjacent_edge_ids.push_back(edge_id);
 
                 for (auto triangle: edge_triangles[edge_id]) {
@@ -161,6 +158,7 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &base,
             }
             for (auto&& edge: base.incoming_edges(node)) {
                 auto edge_id = base.edge_id(edge.destination, node);
+                assert(!base.has_edge(node, edge.destination));
                 adjacent_edge_ids.push_back(edge_id);
 
                 for (auto triangle: edge_triangles[edge_id]) {
@@ -170,8 +168,8 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &base,
                 }
             }
 
-            // assert(adjacent_edge_ids.size() >= 2);
-            // assert(triangle_edge_ids.size() >= 6);
+            assert(adjacent_edge_ids.size() >= 2);
+            assert(triangle_edge_ids.size() >= 6);
 
             std::sort(triangle_edge_ids.begin(), triangle_edge_ids.end());
             std::sort(adjacent_edge_ids.begin(), adjacent_edge_ids.end());
@@ -195,7 +193,7 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &base,
     faces.clear();
 
     return polyhedron<BaseGraph, MaxNodesPerFace>(std::move(triangle_edges), std::move(edge_triangles),
-                                                  std::move(inverse_edges), std::move(node_edges),
+                                                  std::move(node_edges),
                                                   std::move(node_edge_offsets));
 }
 
@@ -203,32 +201,12 @@ template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
         std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&adjacent_edges,
         std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&adjacent_faces,
-        std::vector<edge_id_type> &&inverse_edges,
         std::vector<edge_id_type> &&node_edges,
         std::vector<int> &&node_face_offsets)
         : _M_face_info(std::move(adjacent_edges)),
-          _M_edge_info(),
           _M_node_edges_offsets(std::move(node_face_offsets)),
-          _M_node_edges(std::move(node_edges)) {
-
-    int i = 0;
-    while (!adjacent_faces.empty()) {
-        _M_edge_info.emplace_back(adjacent_faces.back(), inverse_edges.back());
-
-        adjacent_faces.pop_back();
-        inverse_edges.pop_back();
-
-        if ((i++) % (1024 * 1024) == 0) {
-            adjacent_edges.shrink_to_fit();
-            inverse_edges.shrink_to_fit();
-        }
-    }
-
-    adjacent_faces.clear();
-    inverse_edges.clear();
-
-    list_invert(_M_edge_info);
-
+          _M_node_edges(std::move(node_edges)),
+          _M_edge_info(std::move(adjacent_faces)) {
     // check integrity
     std::size_t num_edges = 3 * face_count(); // 3 edges per face
     std::size_t non_boundary_edges = edge_count() - boundary_edge_count();

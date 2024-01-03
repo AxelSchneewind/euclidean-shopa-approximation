@@ -87,10 +87,7 @@ public:
 private:
     static_assert(sizeof(std::array<edge_id_type, EDGE_COUNT_PER_FACE>) == EDGE_COUNT_PER_FACE * sizeof(edge_id_type));
 
-    struct edge_info_type {
-        std::array<face_id_type, FACE_COUNT_PER_EDGE> adjacent_faces;
-        edge_id_type inverse_edge;
-    };
+    using edge_info_type = std::array<face_id_type, FACE_COUNT_PER_EDGE>;
 
     // for each triangle
     std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> _M_face_info;
@@ -106,7 +103,6 @@ private:
 
     polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&adjacent_edges,
                std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&adjacent_faces,
-               std::vector<edge_id_type> &&inverse_edges,
                std::vector<edge_id_type> &&node_edges,
                std::vector<int> &&node_edge_offsets);
 
@@ -123,7 +119,7 @@ public:
     std::size_t boundary_edge_count() const {
         std::size_t result = 0;
         for (auto &&edge_info: _M_edge_info) {
-            result += is_none(edge_info.adjacent_faces[1]);
+            result += is_none(edge_info[1]);
         }
 
         return result;
@@ -138,7 +134,7 @@ public:
                                                                   std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &&faces);
 
     std::span<const face_id_type, FACE_COUNT_PER_EDGE> edge_faces(edge_id_type edge) const {
-        return {_M_edge_info[edge].adjacent_faces};
+        return {_M_edge_info[edge]};
     }
 
     std::span<const edge_id_type, EDGE_COUNT_PER_FACE> face_edges(face_id_type face) const {
@@ -158,16 +154,7 @@ public:
      * @return
      */
     edges_iterator_type edges(int edge) const {
-        return {*this, {_M_edge_info[edge].adjacent_faces}};
-    };
-
-    /**
-     * gets the id of the inverse edge for the given one
-     * @param edge
-     * @return
-     */
-    edge_id_type inverse_edge(edge_id_type edge) const {
-        return _M_edge_info[edge].inverse_edge;
+        return {*this, {_M_edge_info[edge]}};
     };
 };
 
