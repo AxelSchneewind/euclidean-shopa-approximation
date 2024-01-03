@@ -193,14 +193,14 @@ void Graph::GraphImplementation<steiner_graph>::write_subgraph_file(std::string 
     std::vector<steiner_graph::base_topology_type::edge_id_type> edges;
 
     auto &&all_nodes = graph.base_graph().node_ids();
-    for (auto node_id: all_nodes) {
+    for (auto&& node_id: all_nodes) {
         if (!is_in_rectangle(graph.node(node_id).coordinates, bottom_left, top_right))
             continue;
         if (nodes.size() > 1000000 || edges.size() > 200000000)
             break;
         nodes.emplace_back(node_id);
 
-        for (auto edge: graph.base_graph().outgoing_edges(node_id)) {
+        for (auto&& edge: graph.base_graph().outgoing_edges(node_id)) {
             if (!is_in_rectangle(graph.node(edge.destination).coordinates, bottom_left, top_right))
                 continue;
 
