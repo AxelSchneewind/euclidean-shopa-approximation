@@ -9,7 +9,7 @@
 
 // just to have the sizes somewhere and see when they change
 static_assert(steiner_graph::SIZE_PER_NODE == 20);
-static_assert(steiner_graph::SIZE_PER_EDGE == 56);
+static_assert(steiner_graph::SIZE_PER_EDGE == 52);
 
 static_assert(std_graph_t::SIZE_PER_NODE == 20);
 static_assert(std_graph_t::SIZE_PER_EDGE == 20);
@@ -28,8 +28,6 @@ main(int argc, char const *argv[]) {
     } else {
         std::cout << "mode (table, graph): " << std::flush;
         std::cin >> mode;
-        if (mode != "table" && mode != "graph")
-            return 1;
         std::cout << "graph file: " << std::flush;
         std::cin >> graph_path;
     }
