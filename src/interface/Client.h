@@ -74,13 +74,13 @@ public:
 
     void write_info(std::ostream &output) const {
         output << "time:                                 " << _result.duration()
-               << "\n nodes visited:                       " << _result.tree_forward().node_count() << " + "
+               << "\nnodes visited:                       " << _result.tree_forward().node_count() << " + "
                << _result.tree_backward().node_count()
                << "\ntimes pulled (num of nodes labelled): " << _result.pull_count()
                << "\ntimes pushed (num of edges relaxed):  " << _result.push_count();
         if (_result.route_found()) {
             output << "\npath:                                 "; // TODO print path
-            output << "\ncost:                                 " << _result.distance();
+            output << "\ncost:                                 " << _result.distance() << '\n';
         }
         output << std::flush;
     };

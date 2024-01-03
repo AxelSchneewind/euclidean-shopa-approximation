@@ -22,7 +22,6 @@ template<typename GraphT, typename RouterT>
 void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, long to) {
     _query_ptr = std::make_shared<QueryImplementation<GraphT>>(_graph, from, to);
 
-    std::cout << "computing route from node " << from << " to " << to << std::endl;
     _router.init(_query_ptr->from_internal(), _query_ptr->to_internal());
 
     // create thread to show progress
@@ -34,12 +33,7 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
             std::cout << "\rdistances: "
                       << std::setw(12) /*<< std::setprecision(3)*/ << _router.forward_distance()
                       << " (" << std::setw(12) /*<< std::setprecision(3)*/
-                      << _router.forward_current().value() << "), "
-                      << std::setw(12) /*<< std::setprecision(3)*/ << _router.backward_distance()
-                      << " (" << std::setw(12) /*<< std::setprecision(3)*/
-                      << _router.backward_current().value() << ")"
-                      << ", beeline: "
-                      << std::setw(12) << _query_ptr->beeline_distance();
+                      << _router.forward_current().value() << "), ";
 
             if constexpr (requires(RouterT::labels_type && l) { l.aggregate_count(); }) {
                 std::cout << ", node aggregates currently expanded: " << std::setw(10)

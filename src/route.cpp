@@ -93,10 +93,16 @@ main(int argc, char const *argv[]) {
         output_tree << std::flush;
         output_info << std::flush;
 
+        std::cout << "computing route...\n";
         if (dest_node >= 0)
             client.compute_route(src_node, dest_node);
         else
             client.compute_one_to_all(src_node);
+
+        client.write_query(std::cout);
+
+        if (!client.result().route_found())
+            continue;
 
         if (output_csv)
             client.write_csv(std::cout);

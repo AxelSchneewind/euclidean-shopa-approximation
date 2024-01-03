@@ -47,7 +47,8 @@ public:
     Graph beeline() const override  { return _beeline; };
     distance_t beeline_distance() const override { return _beeline_distance; }
 
-    void write(std::ostream& out) const override { out << _from << ',' << _to; }
+    void write(std::ostream& out) const override { out <<   "query:            " << _from << ',' << _to
+                                                       << "\nbeeline distance: " << beeline_distance(); }
 };
 
 class Query {
@@ -77,7 +78,7 @@ public:
     Graph beeline() const { return pimpl->beeline(); };
     distance_t beeline_distance() const { return pimpl->beeline_distance(); };
 
-    void write(std::ostream& out) const { out << pimpl->from() << ',' << pimpl->to(); };
+    void write(std::ostream& out) const { pimpl->write(out); out << std::endl; };
 
     long from() const { return pimpl->from(); }
     long to() const { return pimpl->to(); }
