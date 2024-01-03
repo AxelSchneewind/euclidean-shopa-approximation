@@ -75,17 +75,23 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     for (int i = 0; i < node_count; ++i) {
         if (connected[i]) {
             new_node_ids[i] = j++;
+            nodes[new_node_ids[i]] = nodes[i];
         } else {
             new_node_ids[i] = none_value<steiner_graph::triangle_node_id_type>;
         }
     }
+    node_count = j;
     connected.clear(); connected.shrink_to_fit();
+    nodes.resize(node_count); nodes.shrink_to_fit();
 
     // apply new node ids
     for (auto& triangle : faces) {
         triangle[0] = new_node_ids[triangle[0]];
         triangle[1] = new_node_ids[triangle[1]];
         triangle[2] = new_node_ids[triangle[2]];
+        assert(is_in_range(triangle[0], 0, node_count));
+        assert(is_in_range(triangle[1], 0, node_count));
+        assert(is_in_range(triangle[2], 0, node_count));
     }
     new_node_ids.clear(); new_node_ids.shrink_to_fit();
 
