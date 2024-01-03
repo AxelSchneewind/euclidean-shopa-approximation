@@ -9,6 +9,9 @@
 #include "formatters.h"
 #include "fmi_file_io.h"
 #include "file_io_impl.h"
+
+#include "../util/is_in_range.h"
+
 #include <iomanip>
 
 

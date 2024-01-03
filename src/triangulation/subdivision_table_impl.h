@@ -1,21 +1,10 @@
 #include "subdivision_table.h"
 
 #include "../graph/base_types.h"
+#include "../util/is_in_range.h"
 
 #include <vector>
 
-
-/**
- * checks min <= val < max
- * @tparam Min
- * @tparam Max
- * @tparam Value
- * @return
- */
-template<typename Min, typename Max, typename Value>
-bool is_between(Value val, Min min, Max max) {
-    return min <= val && min < max;
-}
 
 std::vector<float>
 subdivision_table::min_r_per_triangle_class(const std::vector<node_t> &nodes, const std::vector<float> &r_values,
@@ -182,19 +171,19 @@ subdivision_table::make_subdivision_info(const adjacency_list<int, std::nullptr_
         assert(count >= 2);
 
         // check that values are in bounds
-        if (!is_between(count, 2, std::numeric_limits<unsigned short>::max())
-            || !is_between(mid_value, 0, 1)
-            || !is_between(mid_index, 1, count)
-            || !is_between(r_first, 0, 1)
-            || !is_between(r_second, 0, 1)
-            || !is_between(index, 0, std::numeric_limits<unsigned char>::max())
-            || !is_between(index, 0, node_positions.size())
-            || !is_between(index_second, 0, std::numeric_limits<unsigned char>::max())
-            || !is_between(index_second, 0, node_positions.size())
-            || !is_between(first_start_index, 0, std::numeric_limits<unsigned short>::max())
-            || !is_between(first_start_index, 0, node_positions.size())
-            || !is_between(second_start_index, 0, std::numeric_limits<unsigned short>::max())
-            || !is_between(second_start_index, 0, node_positions.size()))
+        if (!is_in_range(count, 2, std::numeric_limits<unsigned short>::max())
+            || !is_in_range(mid_value, 0, 1)
+            || !is_in_range(mid_index, 1, count)
+            || !is_in_range(r_first, 0, 1)
+            || !is_in_range(r_second, 0, 1)
+            || !is_in_range(index, 0, std::numeric_limits<unsigned char>::max())
+            || !is_in_range(index, 0, node_positions.size())
+            || !is_in_range(index_second, 0, std::numeric_limits<unsigned char>::max())
+            || !is_in_range(index_second, 0, node_positions.size())
+            || !is_in_range(first_start_index, 0, std::numeric_limits<unsigned short>::max())
+            || !is_in_range(first_start_index, 0, node_positions.size())
+            || !is_in_range(second_start_index, 0, std::numeric_limits<unsigned short>::max())
+            || !is_in_range(second_start_index, 0, node_positions.size()))
             throw std::invalid_argument("some value does not fit");
 
         auto entry = subdivision_edge_info{};
