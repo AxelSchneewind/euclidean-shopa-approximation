@@ -40,7 +40,7 @@ const char *gengetopt_args_info_help[] = {
   "  -g, --graph-file=FILE        path to graph file (of type .fmi or .graph)",
   "  -o, --output-directory=FILE  path to output directory (where the subdirectory\n                                 with the output files should be created)\n                                 (default=`.')",
   "\ntriangulation:",
-  "  -e, --epsilon=DOUBLE         ε value to use for discretizing the\n                                 triangulation (if a .graph file is given)\n                                 (default=`0.5')",
+  "  -e, --epsilon=DOUBLE         ε value to use for discretizing the\n                                 triangulation (if a .graph file is given)\n                                 (default=`0.0')",
   "\nquery:",
   "  -q, --query=STRING           pair(s) of source and destination node ids\n                                 (either their ids, or their coordinates if\n                                 --coordinates is passed)",
   "      --coordinates            interpret the pair(s) of source and destination\n                                 nodes as their coordinates  (default=off)",
@@ -49,6 +49,7 @@ const char *gengetopt_args_info_help[] = {
   "  options for the command line output",
   "  -c, --csv-format             indicates that routing information should be\n                                 printed in the csv format  (default=off)",
   "  -p, --projection=ENUM        which projection to apply to coordinates when\n                                 writing to files  (possible\n                                 values=\"google_bing\", \"wgs84\", \"none\"\n                                 default=`none')",
+  "  -t, --tree                   generate graph file for search tree\n                                 (default=off)",
     0
 };
 
@@ -89,6 +90,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->stdin_given = 0 ;
   args_info->csv_format_given = 0 ;
   args_info->projection_given = 0 ;
+  args_info->tree_given = 0 ;
 }
 
 static
@@ -99,7 +101,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->graph_file_orig = NULL;
   args_info->output_directory_arg = gengetopt_strdup (".");
   args_info->output_directory_orig = NULL;
-  args_info->epsilon_arg = 0.5;
+  args_info->epsilon_arg = 0.0;
   args_info->epsilon_orig = NULL;
   args_info->query_arg = NULL;
   args_info->query_orig = NULL;
@@ -108,6 +110,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->csv_format_flag = 0;
   args_info->projection_arg = projection_arg_none;
   args_info->projection_orig = NULL;
+  args_info->tree_flag = 0;
   
 }
 
@@ -128,6 +131,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->stdin_help = gengetopt_args_info_help[10] ;
   args_info->csv_format_help = gengetopt_args_info_help[13] ;
   args_info->projection_help = gengetopt_args_info_help[14] ;
+  args_info->tree_help = gengetopt_args_info_help[15] ;
   
 }
 
@@ -368,6 +372,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "csv-format", 0, 0 );
   if (args_info->projection_given)
     write_into_file(outfile, "projection", args_info->projection_orig, cmdline_parser_projection_values);
+  if (args_info->tree_given)
+    write_into_file(outfile, "tree", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -631,12 +637,6 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
       error_occurred = 1;
     }
   
-  if (! args_info->epsilon_given)
-    {
-      fprintf (stderr, "%s: '--epsilon' ('-e') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error_occurred = 1;
-    }
-  
   if (! args_info->query_given)
     {
       fprintf (stderr, "%s: '--query' ('-q') option required%s\n", prog_name, (additional_error ? additional_error : ""));
@@ -648,11 +648,6 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   
   
   /* checks for dependences among options */
-  if (args_info->epsilon_given && ! args_info->graph_file_given)
-    {
-      fprintf (stderr, "%s: '--epsilon' ('-e') option depends on option 'graph-file'%s\n", prog_name, (additional_error ? additional_error : ""));
-      error_occurred = 1;
-    }
 
   return error_occurred;
 }
@@ -983,10 +978,11 @@ cmdline_parser_internal (
         { "stdin",	0, NULL, 'i' },
         { "csv-format",	0, NULL, 'c' },
         { "projection",	1, NULL, 'p' },
+        { "tree",	0, NULL, 't' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:o:e:q:icp:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:o:e:q:icp:t", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1031,7 +1027,7 @@ cmdline_parser_internal (
         
           if (update_arg( (void *)&(args_info->epsilon_arg), 
                &(args_info->epsilon_orig), &(args_info->epsilon_given),
-              &(local_args_info.epsilon_given), optarg, 0, "0.5", ARG_DOUBLE,
+              &(local_args_info.epsilon_given), optarg, 0, "0.0", ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
               "epsilon", 'e',
               additional_error))
@@ -1075,6 +1071,16 @@ cmdline_parser_internal (
               &(local_args_info.projection_given), optarg, cmdline_parser_projection_values, "none", ARG_ENUM,
               check_ambiguity, override, 0, 0,
               "projection", 'p',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 't':	/* generate graph file for search tree.  */
+        
+        
+          if (update_arg((void *)&(args_info->tree_flag), 0, &(args_info->tree_given),
+              &(local_args_info.tree_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "tree", 't',
               additional_error))
             goto failure;
         

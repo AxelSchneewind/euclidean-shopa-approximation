@@ -47,7 +47,7 @@ struct gengetopt_args_info
   char * output_directory_arg;	/**< @brief path to output directory (where the subdirectory with the output files should be created) (default='.').  */
   char * output_directory_orig;	/**< @brief path to output directory (where the subdirectory with the output files should be created) original value given at command line.  */
   const char *output_directory_help; /**< @brief path to output directory (where the subdirectory with the output files should be created) help description.  */
-  double epsilon_arg;	/**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) (default='0.5').  */
+  double epsilon_arg;	/**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) (default='0.0').  */
   char * epsilon_orig;	/**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) original value given at command line.  */
   const char *epsilon_help; /**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) help description.  */
   char ** query_arg;	/**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed).  */
@@ -64,6 +64,8 @@ struct gengetopt_args_info
   enum enum_projection projection_arg;	/**< @brief which projection to apply to coordinates when writing to files (default='none').  */
   char * projection_orig;	/**< @brief which projection to apply to coordinates when writing to files original value given at command line.  */
   const char *projection_help; /**< @brief which projection to apply to coordinates when writing to files help description.  */
+  int tree_flag;	/**< @brief generate graph file for search tree (default=off).  */
+  const char *tree_help; /**< @brief generate graph file for search tree help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -75,6 +77,7 @@ struct gengetopt_args_info
   unsigned int stdin_given ;	/**< @brief Whether stdin was given.  */
   unsigned int csv_format_given ;	/**< @brief Whether csv-format was given.  */
   unsigned int projection_given ;	/**< @brief Whether projection was given.  */
+  unsigned int tree_given ;	/**< @brief Whether tree was given.  */
 
 } ;
 
