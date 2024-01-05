@@ -23,7 +23,7 @@ private:
     table statistics;
 
 public:
-    Client() = default;
+    Client() : _graph(), _router(), _query(), _result(), statistics(COLUMNS) {statistics.new_line();};
 
     template<typename GraphT>
     Client(GraphT &&graph);
@@ -40,6 +40,8 @@ public:
         _router.compute_route(from, to);
         _query = _router.query();
         _result = _router.result();
+        _query.write(statistics);
+        _result.write(statistics);
     };
 
     Result &result() { return _result; }
@@ -73,8 +75,8 @@ public:
     void write_csv_header(std::ostream &output) const { format_header(statistics, output); };
 
     void write_info(std::ostream &output) const {
-        output << "time:                                 " << _result.duration()
-               << "\nnodes visited:                       " << _result.tree_forward().node_count() << " + "
+        output <<   "time:                                 " << _result.duration()
+               << "\nnodes visited:                        " << _result.tree_forward().node_count() << " + "
                << _result.tree_backward().node_count()
                << "\ntimes pulled (num of nodes labelled): " << _result.pull_count()
                << "\ntimes pushed (num of edges relaxed):  " << _result.push_count();
