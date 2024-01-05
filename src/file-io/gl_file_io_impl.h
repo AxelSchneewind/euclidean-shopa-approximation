@@ -85,7 +85,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
             f::write(output, base_indices[node]) << ' ';
             f::write(output, indices[dest]) << ' ';
 
-            // set line width and color depending on whether the edge is a base edge or not
+            // set line width and color depending on whether the edge is on a base edge or not
             if (graph.base_graph().source(dest.edge) == node || graph.base_graph().destination(dest.edge) == node)
                 output << 2 * line_width << ' ' << '2';
             else
@@ -93,9 +93,9 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
 
             f::write(output, '\n');
         }
-
     }
 
+    // write remaining edges
     for (auto node: graph.node_ids()) {
         auto &&edges = graph.outgoing_edges(node);
         for (auto edge: edges) {
@@ -110,7 +110,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
             f::write(output, indices[node]) << ' ';
             f::write(output, indices[dest]) << ' ';
 
-            // set line width and color depending on whether the edge is a base edge or not
+            // set line width and color depending on whether the edge is on a base edge or not
             if (node.edge == dest.edge || graph.is_base_node(node) || graph.is_base_node(dest))
                 output << 2 * line_width << ' ' << '2';
             else
