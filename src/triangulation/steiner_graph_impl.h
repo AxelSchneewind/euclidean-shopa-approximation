@@ -281,14 +281,14 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
     assert(base_edges_checked == _M_base_topology.edge_count());
 
     // count all outgoing edges of base nodes
-    for (auto node: base_graph().node_ids()) {
-        auto &&reachable_edges = _M_polyhedron.node_edges(node);
-        for (auto &&edge_id: reachable_edges) {
-            if (is_none(edge_id)) continue;
-            assert (_M_base_topology.source(edge_id) < _M_base_topology.destination(edge_id));
-            _M_edge_count += 2 * (steiner_info(edge_id).node_count - 2);
-        }
-    }
+    // for (auto node: base_graph().node_ids()) {
+    //     auto &&reachable_edges = _M_polyhedron.node_edges(node);
+    //     for (auto &&edge_id: reachable_edges) {
+    //         if (is_none(edge_id)) continue;
+    //         assert (_M_base_topology.source(edge_id) < _M_base_topology.destination(edge_id));
+    //         _M_edge_count += 2 * (steiner_info(edge_id).node_count - 2);
+    //     }
+    // }
 }
 
 
@@ -395,7 +395,7 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
 
             auto &&destination_steiner_info = steiner_info(base_edge_id);
 
-            for (short i = 0; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+            for (int i = 1; i < destination_steiner_info.node_count - 2; ++i) [[likely]] {
                 steiner_graph::node_id_type destination = {base_edge_id, i};
                 coordinate_t destination_coordinate = node(destination).coordinates;
 
@@ -406,7 +406,7 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
     }
 
     // compute distances (can be vectorized)
-    for (size_t e = 0; e < edges.size(); ++e) [[likely]] {
+    for (int e = 0; e < edges.size(); ++e) [[likely]] {
         edges[e].info.cost = distance(source_coordinate, destination_coordinates[e]);
     }
 
