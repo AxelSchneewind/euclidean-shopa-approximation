@@ -24,10 +24,12 @@ ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImp
           _path(std_graph_t::make_graph(graph, graph.make_subgraph(router.route()))),
           _tree_forward(std_graph_t::make_graph(graph, router.tree_forward())),
           _tree_backward(std_graph_t::make_graph(graph, router.tree_backward())),
-          _nodes_visited(_tree_forward.node_count() + _tree_backward.node_count()), _distance(router.distance()),
+          _nodes_visited(_tree_forward.node_count() + _tree_backward.node_count()),
+          _distance(router.route_found() ? router.distance() : infinity<typename GraphT::distance_type>),
           _duration(duration),
           _pull_count(router.forward_search().queue().pull_count() + router.backward_search().queue().pull_count()),
-          _push_count(router.forward_search().queue().push_count() + router.backward_search().queue().push_count())
+          _push_count(router.forward_search().queue().push_count() + router.backward_search().queue().push_count()),
+          _queue_max_size(router.forward_search().queue().max_size() + router.backward_search().queue().max_size())
           {}
 
 
