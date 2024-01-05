@@ -165,9 +165,8 @@ main(int argc, char const *argv[]) {
                       << ',' << angle_count[index] << '\n';
         }
         std::cout << std::flush;
-    } else if (mode == "node count per edge") {
+    } else if (mode == "node count per edge" || mode == "npe") {
         std::ifstream input(graph_path);
-
         auto graph = triangulation_file_io::read_steiner(input, epsilon);
 
         if (header)
@@ -176,6 +175,18 @@ main(int argc, char const *argv[]) {
         for (int e = 0; e < graph.base_graph().edge_count(); ++e) {
             auto &&steiner_info = graph.steiner_info(e);
             std::cout << e << ',' << steiner_info.node_count << '\n';
+        }
+        std::cout << std::flush;
+    } else if (mode == "radii") {
+        std::ifstream input(graph_path);
+        auto graph = triangulation_file_io::read_steiner(input, epsilon);
+
+        if (header)
+            std::cout << "edge,r1,r2\n";
+
+        for (int e = 0; e < graph.base_graph().edge_count(); ++e) {
+            auto &&steiner_info = graph.steiner_info(e);
+            std::cout << e << ',' << steiner_info.r_first << ',' << steiner_info.r_second << '\n';
         }
         std::cout << std::flush;
     }
