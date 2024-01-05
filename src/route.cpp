@@ -9,10 +9,10 @@
 
 
 int
-main(int argc, char const *argv[]) {
+main(int argc, char *argv[]) {
     gengetopt_args_info arguments;
 
-    int status = cmdline_parser(argc, (char **) argv, &arguments);
+    int status = cmdline_parser(argc, argv, &arguments);
     if (status != 0) {
         return 1;
     }
@@ -36,10 +36,10 @@ main(int argc, char const *argv[]) {
 
     // read graph
     Client client;
-    if (graph_file.ends_with(".graph"))
-        client.read_graph_file(graph_file, (double)epsilon, output_csv);
+    if (arguments.epsilon_given && graph_file.ends_with(".graph"))
+        client.read_graph_file(graph_file, epsilon);
     else
-        client.read_graph_file(graph_file, output_csv);
+        client.read_graph_file(graph_file);
 
 
     if (output_csv)
@@ -89,8 +89,6 @@ main(int argc, char const *argv[]) {
         std::ofstream output_tree(tree_file);
         std::ofstream output_info(info_file);
         output_beeline << std::flush;
-        output_route << std::flush;
-        output_tree << std::flush;
         output_info << std::flush;
 
         std::cout << "computing route...\n";
@@ -101,9 +99,6 @@ main(int argc, char const *argv[]) {
 
         client.write_query(std::cout);
 
-        if (!client.result().route_found())
-            continue;
-
         if (output_csv)
             client.write_csv(std::cout);
         else {
@@ -113,20 +108,28 @@ main(int argc, char const *argv[]) {
         if (arguments.projection_arg == enum_projection::projection_arg_google_bing) {
             client.result().path().project(Projection::WGS84_TO_GB);
             client.query().beeline().project(Projection::WGS84_TO_GB);
-            client.result().tree_forward().project(Projection::WGS84_TO_GB);
-            client.result().tree_backward().project(Projection::WGS84_TO_GB);
+            if (arguments.tree_flag) {
+                client.result().tree_forward().project(Projection::WGS84_TO_GB);
+                client.result().tree_backward().project(Projection::WGS84_TO_GB);
+            }
         } else if (arguments.projection_arg == enum_projection::projection_arg_wgs84) {
             client.result().path().project(Projection::GB_TO_WGS84);
             client.query().beeline().project(Projection::GB_TO_WGS84);
-            client.result().tree_forward().project(Projection::GB_TO_WGS84);
-            client.result().tree_backward().project(Projection::GB_TO_WGS84);
+            if (arguments.tree_flag) {
+                client.result().tree_forward().project(Projection::GB_TO_WGS84);
+                client.result().tree_backward().project(Projection::GB_TO_WGS84);
+            }
         }
 
         client.write_csv_header(output_info);
         client.write_csv(output_info);
+
+
         client.write_beeline_file(beeline_file);
         client.write_route_file(route_file);
-        client.write_tree_file(tree_file);
+
+        if (arguments.tree_flag)
+            client.write_tree_file(tree_file);
 
         output_route.close();
         output_beeline.close();
