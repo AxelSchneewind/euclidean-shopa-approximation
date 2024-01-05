@@ -39,22 +39,31 @@ private:
      * @param node
      * @return
      */
-    Graph::distance_type min_route_distance(Dijkstra::node_cost_pair_type __node) const;
+    Graph::distance_type min_route_distance(Dijkstra::node_cost_pair_type node) const;
+
+    /**
+     * TODO implement
+     */
+    void compute_one_to_all();
+    /**
+     * TODO move from compute_route()
+     */
+    void compute_one_to_one();
 
 public:
     static constexpr size_t SIZE_PER_NODE = 2 * Dijkstra::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE = 2 * Dijkstra::SIZE_PER_EDGE;
 
 
-    explicit router(Graph const &__graph);
+    explicit router(Graph const &graph);
 
-    router(const router &__other) = delete;
+    router(const router &other) = delete;
 
-    router(router &&__other) noexcept;
+    router(router &&other) noexcept;
 
-    router &operator=(const router &__other) = delete;
+    router &operator=(const router &other) = delete;
 
-    router &operator=(router &&__other) noexcept = default;
+    router &operator=(router &&other) noexcept = default;
 
     ~router() = default;
 
@@ -63,7 +72,7 @@ public:
      * @param start_node
      * @param target_node
      */
-    void init(typename Graph::node_id_type __start_node, typename Graph::node_id_type __target_node);
+    void init(typename Graph::node_id_type start_node, typename Graph::node_id_type target_node);
 
     /**
      * calculates a one to one route using bidirectional dijkstra. init() has to be called first
@@ -81,7 +90,7 @@ public:
      * @param node
      * @return
      */
-    distance_type distance(const typename Graph::node_id_type &__node) const;
+    distance_type distance(const typename Graph::node_id_type &node) const;
 
     distance_type forward_distance() const { return _forward_current.distance; };
 
