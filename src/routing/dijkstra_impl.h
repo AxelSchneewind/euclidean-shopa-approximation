@@ -150,13 +150,14 @@ typename G::distance_type dijkstra<G, Q, L, N, UseEdge>::min_path_length() const
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
 G::path_type dijkstra<G, Q, L, N, UseEdge>::path(node_id_type target) const {
-    if (!reached(target))
-        throw std::runtime_error("No route found");
-
     typename G::node_id_type fwd_node = target;
 
     auto result = std::vector<typename G::node_id_type>();
     result.push_back(fwd_node);
+
+    if (!reached(target))
+        return {std::move(result)};
+
 
     while (!is_none(fwd_node) && fwd_node != _M_start_node) {
         fwd_node = get_label(fwd_node).predecessor;
