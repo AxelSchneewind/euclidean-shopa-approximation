@@ -34,9 +34,16 @@ std::string_view table::get(std::size_t column) const {
     return values.back()[column];
 }
 
+// template<typename T>
+// void table::put(int column, T &&value) {
+//     values.back()[column] = std::format("{}", value);
+// }
+
 template<typename T>
 void table::put(int column, T &&value) {
-    values.back()[column] = std::format("{}", value);
+    std::stringstream sstream;
+    sstream << value;
+    values.back()[column] = sstream.str();
 }
 
 
