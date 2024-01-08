@@ -6,25 +6,25 @@
 // Euclidean distance
 double
 distance_euclidean(coordinate_t c1, coordinate_t c2) {
-    coordinate_t delta{c2.latitude - c1.latitude, c2.longitude - c1.longitude};
-    return std::sqrt(std::pow(delta.latitude, 2) + std::pow(delta.longitude, 2));
+    c2 -= c1;
+    return std::sqrt(std::pow(c2.latitude, 2) + std::pow(c2.longitude, 2));
 }
 
 inline double
-to_radians(double __degree) {
-    const double one_deg = (M_PI) / 180;
-    return one_deg * __degree;
+to_radians(double degree) {
+    constexpr double one_deg = (M_PI) / 180;
+    return one_deg * degree;
 }
 
 // exact distance on earths surface
 inline distance_t
-distance(coordinate_t __c1, coordinate_t __c2) {
+distance (coordinate_t c1, coordinate_t c2) {
     // for approximated distance (Euclidean distance), produces better results than haversine (seems to be very unstable)
-    return distance_euclidean(__c1, __c2);
+    return distance_euclidean(c1, c2);
 
     // // for exact distances
-    // auto dlat = to_radians(__c2.latitude - __c1.latitude);
-    // auto dlong = to_radians(__c2.longitude - __c1.longitude);
+    // auto dlat = to_radians(c2.latitude - c1.latitude);
+    // auto dlong = to_radians(c2.longitude - c1.longitude);
 
     // // haversine formula
     // auto ans = std::pow(std::sin(dlat / 2), 2) + std::cos(lat1) * std::cos(lat2) * std::pow(std::sin(dlong / 2), 2);
@@ -99,11 +99,11 @@ inner_angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coor
 
 
 inline double
-line_distance(coordinate_t __source, coordinate_t __destination, coordinate_t __point) {
-    double phi = inner_angle(__source, __destination, __source, __point);
+line_distance(coordinate_t source, coordinate_t destination, coordinate_t point) {
+    double phi = inner_angle(source, destination, source, point);
 
     // approximated distance
-    return std::sin(phi) * (__point - __source).length();
+    return std::sin(phi) * (point - source).length();
 }
 
 
