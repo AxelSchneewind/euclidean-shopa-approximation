@@ -5,6 +5,7 @@
 
 #include "../util/memory_usage.h"
 #include "../routing_impl.h"
+#include "Statistics.h"
 
 
 template<typename GraphT>
@@ -28,7 +29,7 @@ void Graph::GraphImplementation<steiner_graph>::write_graph_stats(std::ostream &
            << std::setw(12) << graph.base_graph().edge_count() << " edges stored explicitly (ε = "
            << graph.epsilon() << ")" << std::endl;
 
-    output << "    graph:  expected size per node: "
+    output << "expected size per node: "
            << std::setw(5) << steiner_graph::SIZE_PER_NODE << " and per edge "
            << std::setw(5) << steiner_graph::SIZE_PER_EDGE << " -> "
            << graph.base_graph().node_count() * steiner_graph::SIZE_PER_NODE / 1024 / 1024 << "MiB" << " + "
@@ -51,6 +52,28 @@ void Graph::GraphImplementation<GraphT>::write_graph_stats(std::ostream &output)
     process_mem_usage(vm, res);
     output << "memory usage with graph loaded: VM " << vm / 1024 << "MiB, RES " << res / 1024 << "MiB"
            << std::endl;
+}
+
+template<typename GraphT>
+void Graph::GraphImplementation<GraphT>::write_graph_stats(table &out) const {
+    out.put(Statistics::NODE_COUNT, graph.node_count());
+    out.put(Statistics::EDGE_COUNT, graph.edge_count());
+
+    out.put(Statistics::EPSILON, 0);
+
+    out.put(Statistics::STORED_NODE_COUNT, graph.node_count());
+    out.put(Statistics::STORED_EDGE_COUNT, graph.edge_count());
+}
+
+template<>
+void Graph::GraphImplementation<steiner_graph>::write_graph_stats(table &out) const {
+    out.put(Statistics::NODE_COUNT, graph.node_count());
+    out.put(Statistics::EDGE_COUNT, graph.edge_count());
+
+    out.put(Statistics::EPSILON, graph.epsilon());
+
+    out.put(Statistics::STORED_NODE_COUNT, graph.base_graph().node_count());
+    out.put(Statistics::STORED_EDGE_COUNT, graph.base_graph().edge_count());
 }
 
 

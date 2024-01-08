@@ -68,7 +68,7 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
     using f = stream_encoders::encode_text;
 
     size_t node_count = graph.node_count();
-    size_t edge_count = graph.edge_count() / 2; // as edges are only drawn once
+    size_t edge_count = graph.edge_count();
 
     f::write(output, node_count);
     f::write(output, '\n');
@@ -80,8 +80,7 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
     for (auto node: graph.base_graph().node_ids()) {
         base_indices[node] = index++;
         auto n = graph.node(node);
-        f::write(output, n.coordinates.latitude) << ' ';
-        f::write(output, n.coordinates.longitude);
+        f::write(output, n);
         f::write(output, '\n');
     }
 
@@ -94,24 +93,36 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
         } else {
             indices[node] = index++;
             auto n = graph.node(node);
-            f::write(output, n.coordinates.latitude) << ' ';
-            f::write(output, n.coordinates.longitude);
+            f::write(output, n);
             f::write(output, '\n');
         }
     }
 
     // write all outgoing edges of base nodes
     for (auto node: graph.base_graph().node_ids()) {
-        auto&& edges = graph.outgoing_edges(node);
-        for (auto edge: edges) {
-            auto dest = edge.destination;
-            assert(!graph.is_base_node(edge.destination));
+        {
+            auto &&edges = graph.outgoing_edges(node);
+            for (auto edge: edges) {
+                auto dest = edge.destination;
+                assert(!graph.is_base_node(edge.destination));
 
-            f::write(output, base_indices[node]) << ' ';
-            f::write(output, indices[dest]) << ' ';
-            f::write(output, distance(graph.node(node).coordinates, graph.node(dest).coordinates)) << " 0 0\n";
+                f::write(output, base_indices[node]) << ' ';
+                f::write(output, indices[dest]) << ' ';
+                f::write(output, distance(graph.node(node).coordinates, graph.node(dest).coordinates));
+                f::write(output, '\n');
+            }
+        }
+        {
+            auto &&edges = graph.incoming_edges(node);
+            for (auto edge: edges) {
+                auto dest = edge.destination;
+                assert(!graph.is_base_node(edge.destination));
 
-            f::write(output, '\n');
+                f::write(output, base_indices[node]) << ' ';
+                f::write(output, indices[dest]) << ' ';
+                f::write(output, distance(graph.node(node).coordinates, graph.node(dest).coordinates));
+                f::write(output, '\n');
+            }
         }
     }
 
@@ -122,13 +133,14 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
 
             if (graph.is_base_node(node)) continue;
 
-            // avoid inserting an edge twice
-            if (indices[node] >= indices[dest] || !graph.has_edge(dest, node))
-                continue;
+            // // avoid inserting an edge twice
+            //if (indices[node] >= indices[dest] || !graph.has_edge(dest, node))
+            //    continue;
 
             f::write(output, indices[node]) << ' ';
             f::write(output, indices[dest]) << ' ';
-            f::write(output, distance(graph.node(node).coordinates, graph.node(dest).coordinates)) << " 0 0\n";
+            f::write(output, distance(graph.node(node).coordinates, graph.node(dest).coordinates));
+            f::write(output, "\n");
         }
     }
 

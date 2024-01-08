@@ -67,7 +67,8 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges
         add_node(edges.back().destination);
         _edges.emplace_back(edges.back());
         edges.pop_back();
-        edges.shrink_to_fit();
+        if (_edges.size() == _edges.capacity())
+            edges.shrink_to_fit();
     }
 
     _offsets_valid = false;
@@ -111,7 +112,8 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edges
                 add_edge(tri[next], tri[i]);
         }
         faces.pop_back();
-        faces.shrink_to_fit();
+        if (_edges.size() == _edges.capacity())
+            faces.shrink_to_fit();
     }
 
     faces.clear();

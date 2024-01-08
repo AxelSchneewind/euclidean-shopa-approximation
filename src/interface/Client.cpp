@@ -11,53 +11,6 @@
 
 #include <thread>
 
-enum Statistics {
-    NODE_COUNT,
-    EDGE_COUNT,
-    STORED_NODE_COUNT,
-    STORED_EDGE_COUNT,
-    EPSILON,
-    MEMORY_USAGE_GRAPH,
-    MEMORY_USAGE_FINAL,
-    FROM,
-    TO,
-    FROM_INTERNAL,
-    TO_INTERNAL,
-    COST,
-    BEELINE_DISTANCE,
-    EPSILON_SATISFIED,
-    TREE_SIZE,
-    QUEUE_PULL_COUNT,
-    QUEUE_PUSH_COUNT,
-    QUEUE_MAX_SIZE,
-    TIME,
-    PATH,
-    NUM_COLUMNS
-};
-
-const std::array<std::string, NUM_COLUMNS> COLUMNS{
-        "NODE COUNT",
-        "EDGE COUNT",
-        "STORED NODE COUNT",
-        "STORED EDGE COUNT",
-        "EPSILON",
-        "MEMORY USAGE GRAPH",
-        "MEMORY USAGE FINAL",
-        "FROM",
-        "TO",
-        "FROM INTERNAL",
-        "TO INTERNAL",
-        "COST",
-        "BEELINE DISTANCE",
-        "EPSILON SATISFIED",
-        "TREE SIZE",
-        "QUEUE PULL COUNT",
-        "QUEUE PUSH COUNT",
-        "QUEUE MAX SIZE",
-        "TIME",
-        "PATH"
-};
-
 
 template<typename GraphT>
 Client::Client(GraphT &&__graph)
@@ -99,51 +52,65 @@ Client::Client(GraphT &&graph, RoutingT &&router)
 
 
 template<>
-void Client::read_graph_file(std::string path, bool output_csv) {
+void Client::read_graph_file(std::string path) {
+    std::cout << "reading graph from " << path << "..." << std::flush;
+
     std::ifstream input(path);
 
-    std::cout << "reading graph from " << path << "..." << std::flush;
+    double vm, res;
+    double vm_graph, res_graph;
+    process_mem_usage(vm, res);
 
     if (path.ends_with(".graph")) {
         _graph.read_graph_file(path, 0.5F);
+        process_mem_usage(vm_graph, res_graph);
         _router = {_graph};
     } else if (path.ends_with(".fmi")) {
         _graph.read_graph_file(path);
+        process_mem_usage(vm_graph, res_graph);
         _router = {_graph};
     } else if (path.ends_with(".sch")) {
         _graph.read_graph_file(path);
+        process_mem_usage(vm_graph, res_graph);
         _router = {_graph};
     } else if (path.ends_with(".gl")) {
         _graph.read_graph_file(path);
+        process_mem_usage(vm_graph, res_graph);
         _router = {_graph};
     } else {
         throw std::invalid_argument("unrecognized file ending");
     }
+    input.close();
 
     std::cout << "\b\b\b, done";
 
-// ...
-
-    input.close();
+    _graph.write_graph_stats(statistics);
+    statistics.put(Statistics::MEMORY_USAGE_GRAPH, (vm_graph - vm) / 1024);
 };
 
 template<>
-void Client::read_graph_file(std::string path, double epsilon, bool csv) {
+void Client::read_graph_file(std::string path, double epsilon) {
+    std::cout << "reading graph from " << path << "..." << std::flush;
     std::ifstream input(path);
 
-    std::cout << "reading graph from " << path << "..." << std::flush;
+    double vm, res;
+    double vm_graph, res_graph;
+    process_mem_usage(vm, res);
 
     if (path.ends_with(".graph")) {
         _graph.read_graph_file(path, epsilon);
+        process_mem_usage(vm_graph, res_graph);
         _router = {_graph};
     } else {
         throw std::invalid_argument("unrecognized file ending");
     }
-    // ...
+    input.close();
 
     std::cout << "\b\b\b, done";
 
-    input.close();
+    _graph.write_graph_stats(statistics);
+    statistics.put(Statistics::MEMORY_USAGE_GRAPH, (vm_graph - vm) / 1024);
+
 };
 
 // void Client::compute_one_to_all(int from, std::ostream &output) {

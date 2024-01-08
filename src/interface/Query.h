@@ -7,12 +7,14 @@
 
 #include "../graph/graph.h"
 #include "Graph.h"
+#include "Statistics.h"
 
 
 class QueryInterface {
 public:
     virtual ~QueryInterface() = default;
     virtual void write(std::ostream& out) const = 0;
+    virtual void write(table& out) const = 0;
 
     virtual long from() const = 0;
     virtual long to() const = 0;
@@ -49,6 +51,14 @@ public:
 
     void write(std::ostream& out) const override { out <<   "query:            " << _from << ',' << _to
                                                        << "\nbeeline distance: " << beeline_distance(); }
+
+    void write(table& out) const override {
+        out.put(Statistics::FROM, _from);
+        out.put(Statistics::FROM_INTERNAL, _from_internal);
+        out.put(Statistics::TO, _to);
+        out.put(Statistics::TO_INTERNAL, _to_internal);
+        out.put(Statistics::BEELINE_DISTANCE, beeline_distance());
+    }
 };
 
 class Query {
@@ -79,6 +89,7 @@ public:
     distance_t beeline_distance() const { return pimpl->beeline_distance(); };
 
     void write(std::ostream& out) const { pimpl->write(out); out << std::endl; };
+    void write(table& out) const { pimpl->write(out); };
 
     long from() const { return pimpl->from(); }
     long to() const { return pimpl->to(); }
@@ -109,8 +120,11 @@ public:
     virtual size_t edges_visited() const = 0;
     virtual size_t pull_count() const = 0;
     virtual size_t push_count() const = 0;
+    virtual size_t queue_max_size() const = 0;
 
     virtual std::chrono::duration<double, std::milli> duration() const = 0;
+
+    virtual void write(table& out) const = 0;
 };
 
 template<RoutableGraph GraphT>
@@ -130,6 +144,7 @@ private:
     std::size_t _edges_visited = 0;
     std::size_t _pull_count = 0;
     std::size_t _push_count = 0;
+    std::size_t _queue_max_size = 0;
 
     std::chrono::duration<double, std::milli> _duration;
 
@@ -137,7 +152,7 @@ public:
     ResultImplementation() = default;
 
     ResultImplementation(ResultImplementation const&) = default;
-    ResultImplementation(ResultImplementation &&) = default;
+    ResultImplementation(ResultImplementation &&)  noexcept = default;
 
     ResultImplementation& operator=(ResultImplementation const&) = default;
     ResultImplementation& operator=(ResultImplementation &&)  noexcept = default;
@@ -162,8 +177,19 @@ public:
     std::size_t edges_visited() const override { return _edges_visited; };
     std::size_t pull_count() const override { return _pull_count; };
     std::size_t push_count() const override { return _push_count; };
+    std::size_t queue_max_size() const override { return _queue_max_size; };
 
     std::chrono::duration<double, std::milli> duration() const override { return _duration; };
+
+    void write(table& out) const override {
+        out.put(Statistics::COST, distance());
+        out.put(Statistics::TREE_SIZE, nodes_visited());
+        // out.put(Statistics::PATH, path());
+        out.put(Statistics::TIME, duration());
+        out.put(Statistics::QUEUE_PULL_COUNT, pull_count());
+        out.put(Statistics::QUEUE_PUSH_COUNT, push_count());
+        out.put(Statistics::QUEUE_MAX_SIZE, queue_max_size());
+    }
 };
 
 class Result {
@@ -207,6 +233,8 @@ public:
     std::size_t edges_visited() const { return pimpl->edges_visited(); };
     std::size_t pull_count() const { return pimpl->pull_count(); };
     std::size_t push_count() const { return pimpl->push_count(); };
+
+    void write(table& out) const { pimpl->write(out); };
 
     std::chrono::duration<double, std::milli> duration() const { return pimpl->duration(); };
 };

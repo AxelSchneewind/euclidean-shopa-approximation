@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../util/csv.h"
 #include "../graph/base_types.h"
 #include "../file-io/triangulation_file_io.h"
 #include "../file-io/fmi_file_io.h"
@@ -7,6 +8,7 @@
 
 #include <memory>
 #include <fstream>
+
 
 
 enum class GraphType {
@@ -28,6 +30,7 @@ public:
     virtual void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const = 0;
 
     virtual void write_graph_stats(std::ostream &output) const = 0;
+    virtual void write_graph_stats(table &out) const = 0;
 
     virtual std::size_t node_count() const = 0;
 
@@ -65,6 +68,7 @@ private:
         void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const override;;
 
         void write_graph_stats(std::ostream &output) const override;
+        void write_graph_stats(table &out) const override;
 
         std::size_t node_count() const override;
 
@@ -105,7 +109,9 @@ public:
     void project(Projection projection) override { pimpl->project(projection); };
 
     void write_graph_file(std::string path) const override { pimpl->write_graph_file(path); }
+
     void write_graph_stats(std::ostream &output) const override { pimpl->write_graph_stats(output); };
+    void write_graph_stats(table& out) const override { pimpl->write_graph_stats(out); };
 
     void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const override { pimpl->write_subgraph_file(path, bottom_left, top_right); };
 

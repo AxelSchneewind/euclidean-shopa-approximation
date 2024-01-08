@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <vector>
 
 
 class table {
@@ -11,7 +12,6 @@ private:
     std::vector<std::vector<std::string>> values;
 
     std::size_t column_index(std::string_view c);
-
 
 public:
     table() = default;
