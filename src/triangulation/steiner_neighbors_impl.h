@@ -48,24 +48,23 @@ private:
             }
         }
 
-        // face-crossing edges
-        // auto &&triangle_edges = graph.base_polyhedron().node_edges(base_node_id);
-        // for (auto base_edge_id: triangle_edges) [[likely]] {
-        //     auto &&destination_steiner_info = graph.steiner_info(base_edge_id);
+        if constexpr (steiner_graph::face_crossing_from_base_nodes) {
+            // face-crossing edges
+            auto &&triangle_edges = graph.base_polyhedron().node_edges(base_node_id);
+            for (auto base_edge_id: triangle_edges) [[likely]] {
+                auto &&destination_steiner_info = graph.steiner_info(base_edge_id);
 
-        //     short i = 1;
-        //     for (; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
-        //         steiner_graph::node_id_type const destination{base_edge_id, i};
+                short i = 1;
+                for (; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+                    steiner_graph::node_id_type const destination{base_edge_id, i};
 
-        //         // TODO find out what breaks the labels reference here
-        //         // if (labels.reached(destination)) [[likely]] continue;
-
-        //         coordinate_t const destination_coordinate { graph.node(destination).coordinates };
-        //         assert (graph.has_edge(node_id, destination));
-        //         out.emplace_back(destination, node_id, node.distance);
-        //         destination_coordinates.emplace_back(destination_coordinate);
-        //     }
-        // }
+                    coordinate_t const destination_coordinate { graph.node(destination).coordinates };
+                    assert (graph.has_edge(node_id, destination));
+                    out.emplace_back(destination, node_id, node.distance);
+                    destination_coordinates.emplace_back(destination_coordinate);
+                }
+            }
+        }
 
         // compute distances (can be vectorized)
         for (unsigned int e = 0; e < out.size(); ++e) [[likely]] {

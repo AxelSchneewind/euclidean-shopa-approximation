@@ -118,6 +118,9 @@ public:
 
     using topology_type = steiner_graph;
 
+    // whether or not base nodes should have outgoing face crossing edges
+    static constexpr bool face_crossing_from_base_nodes { false };
+
     struct node_id_iterator_type {
     private:
         const steiner_graph *_M_graph_ptr;

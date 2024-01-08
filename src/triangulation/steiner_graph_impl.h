@@ -280,15 +280,17 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
     }
     assert(base_edges_checked == _M_base_topology.edge_count());
 
-    // count all outgoing edges of base nodes
-    // for (auto node: base_graph().node_ids()) {
-    //     auto &&reachable_edges = _M_polyhedron.node_edges(node);
-    //     for (auto &&edge_id: reachable_edges) {
-    //         if (is_none(edge_id)) continue;
-    //         assert (_M_base_topology.source(edge_id) < _M_base_topology.destination(edge_id));
-    //         _M_edge_count += 2 * (steiner_info(edge_id).node_count - 2);
-    //     }
-    // }
+    if constexpr (face_crossing_from_base_nodes) {
+        // count all outgoing edges of base nodes
+        for (auto node: base_graph().node_ids()) {
+            auto &&reachable_edges = _M_polyhedron.node_edges(node);
+            for (auto &&edge_id: reachable_edges) {
+                if (is_none(edge_id)) continue;
+                assert (_M_base_topology.source(edge_id) < _M_base_topology.destination(edge_id));
+                _M_edge_count += 2 * (steiner_info(edge_id).node_count - 2);
+            }
+        }
+    }
 }
 
 
@@ -307,19 +309,21 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type base_node_id)
     edges.clear();
     destination_coordinates.clear();
 
-    // NOTE: paper does not require these edges, but as bending only occurs at base nodes
-    // these edges allow for less outgoing edges per steiner node
-    // auto &&reachable_edges = _M_polyhedron.node_edges(base_node_id);
-    // for (auto &&e: reachable_edges) [[likely]] {
-    //     auto destination_steiner_info = steiner_info(e);
+    if constexpr (face_crossing_from_base_nodes) {
+        // NOTE: paper does not require these edges, but as bending only occurs at base nodes
+        // these edges allow for less outgoing edges per steiner node
+        auto &&reachable_edges = _M_polyhedron.node_edges(base_node_id);
+        for (auto &&e: reachable_edges) [[likely]] {
+            auto destination_steiner_info = steiner_info(e);
 
-    //     for (short i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
-    //         steiner_graph::node_id_type destination = {e, i};
-    //         coordinate_t destination_coordinate = node(destination).coordinates;
-    //         edges.push_back({destination, {}});
-    //         destination_coordinates.push_back(destination_coordinate);
-    //     }
-    // }
+            for (short i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+                steiner_graph::node_id_type destination = {e, i};
+                coordinate_t destination_coordinate = node(destination).coordinates;
+                edges.push_back({destination, {}});
+                destination_coordinates.push_back(destination_coordinate);
+            }
+        }
+    }
 
     for (auto &&e: _M_base_topology.outgoing_edges(base_node_id)) [[likely]] {
         assert (e.destination > base_node_id);
@@ -473,10 +477,12 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
                 return true;
         }
 
-        // for (auto edge: _M_polyhedron.node_edges(base_src)) {
-        //     if (dest.edge == edge)
-        //         return true;
-        // }
+        if constexpr (face_crossing_from_base_nodes) {
+            for (auto edge: _M_polyhedron.node_edges(base_src)) {
+                if (dest.edge == edge)
+                    return true;
+            }
+        }
     }
 
     if (is_base_node(dest) && src.steiner_index == 1) {
@@ -496,10 +502,12 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
                 return true;
         }
 
-        // for (auto edge: _M_polyhedron.node_edges(base_dest)) {
-        //     if (src.edge == edge)
-        //         return true;
-        // }
+        if constexpr (face_crossing_from_base_nodes) {
+            for (auto edge: _M_polyhedron.node_edges(base_dest)) {
+                if (src.edge == edge)
+                    return true;
+            }
+        }
     }
 
     // face-crossing edges
