@@ -115,6 +115,7 @@ void
 router<Graph, Dijkstra>::init(Graph::node_id_type start_node, Graph::node_id_type target_node) {
     _M_start_node = start_node;
     _M_target_node = target_node;
+    _M_mid_node = none_value<typename Graph::node_id_type>;
 
     _M_forward_search.init(_M_start_node, _M_target_node);
 
