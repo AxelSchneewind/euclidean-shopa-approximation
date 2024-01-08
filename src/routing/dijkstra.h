@@ -42,6 +42,10 @@ private:
     N _M_neighbors;
     UseEdge _M_use_edge;
 
+    std::size_t _push_count{0};
+    std::size_t _pull_count{0};
+    std::size_t _edges_checked{0};
+
     // add reachable (and not settled) nodes to active nodes in queue
     void expand(node_cost_pair_type node);
 
@@ -131,4 +135,10 @@ public:
      * @return
      */
     G::path_type path(node_id_type target) const;
+
+    std::size_t push_count() const {return _push_count;};
+    std::size_t pull_count() const {return _pull_count;};
+    std::size_t edges_checked() const {return _edges_checked;};
+
+
 };

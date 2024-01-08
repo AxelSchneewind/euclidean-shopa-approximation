@@ -67,6 +67,10 @@ dijkstra<G, Q, L, N, UseEdge>::init(node_id_type __start_node, node_id_type __ta
     if (!is_none(__start_node)) {
         _M_queue.push(__start_node, __start_node, 0);
     }
+
+    _pull_count = 0;
+    _push_count = 0;
+    _edges_checked = 0;
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
@@ -80,6 +84,7 @@ dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type node) {
     assert(!is_none(node.node));
     assert(node.node == _M_start_node || node.node != node.predecessor);
     _M_neighbors(node, node_cost_pairs);
+    _edges_checked += node_cost_pairs.size();
 
     int to_index = 0;
     for (int i = 0; i < node_cost_pairs.size(); i++) {
@@ -111,6 +116,7 @@ dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type node) {
 
     // push all
     node_cost_pairs.resize(to_index);
+    _push_count += to_index;
     _M_queue.push_range({node_cost_pairs.begin(), node_cost_pairs.end()});
 }
 
@@ -127,6 +133,7 @@ dijkstra<G, Q, L, N, UseEdge>::step() {
 
     // remove current node
     _M_queue.pop();
+    _pull_count += 1;
 
     // label current node
     _M_labels.label(ncp.node, ncp);
@@ -134,6 +141,7 @@ dijkstra<G, Q, L, N, UseEdge>::step() {
     // remove already settled nodes
     while (!_M_queue.empty() && reached(_M_queue.top().node) &&
            _M_queue.top().distance > _M_labels.get(_M_queue.top().node).distance) [[likely]] {
+        _pull_count += 1;
         _M_queue.pop();
     }
 }

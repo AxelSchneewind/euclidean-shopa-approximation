@@ -55,8 +55,6 @@ public:
 template<RoutableGraph Graph, typename NodeCostPair, typename Comp = Default>
 class dijkstra_queue : protected std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp> {
 private:
-    std::size_t pull_counter{0};
-    std::size_t push_counter{0};
     std::size_t _max_size{0};
 
     // count the number of push operations since last cleanup (bounds the number of duplicates currently present)
@@ -80,17 +78,12 @@ public:
             pop();
 
         counter = 0;
-
-        pull_counter = 0;
-        push_counter = 0;
         _max_size = 0;
     };
 
     void push(base_queue_type::value_type ncp) {
         assert(ncp.distance != infinity<decltype(ncp.distance)>);
         base_queue_type::push(ncp);
-
-        push_counter++;
 
         if constexpr (max_allowed_duplicates > 0) {
             // assumes that counter is the number of duplicates currently inserted
@@ -116,7 +109,6 @@ public:
 
     void pop() {
         _max_size = std::max(_max_size, base_queue_type::size());
-        pull_counter++;
         return base_queue_type::pop();
     }
 
@@ -157,10 +149,6 @@ public:
 
         std::make_heap(container.begin(), container.end(), base_queue_type::comp);
     }
-
-    size_t push_count() const { return push_counter; }
-
-    size_t pull_count() const { return pull_counter; }
 
     size_t max_size() const { return _max_size; }
 };
