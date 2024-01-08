@@ -105,37 +105,35 @@ main(int argc, char *argv[]) {
 
         if (arguments.projection_arg == enum_projection::projection_arg_google_bing) {
             client.query().beeline().project(Projection::WGS84_TO_GB);
-        } else if (arguments.projection_arg == enum_projection::projection_arg_wgs84) {
-            client.query().beeline().project(Projection::GB_TO_WGS84);
-        }
-        client.write_beeline_file(beeline_file);
-
-        if (!client.result().route_found())
-            continue;
-
-        if (arguments.projection_arg == enum_projection::projection_arg_google_bing) {
-            client.result().path().project(Projection::WGS84_TO_GB);
             if (arguments.tree_flag) {
                 client.result().tree_forward().project(Projection::WGS84_TO_GB);
             }
         } else if (arguments.projection_arg == enum_projection::projection_arg_wgs84) {
-            client.result().path().project(Projection::GB_TO_WGS84);
+            client.query().beeline().project(Projection::GB_TO_WGS84);
             if (arguments.tree_flag) {
                 client.result().tree_forward().project(Projection::GB_TO_WGS84);
             }
         }
+        client.write_beeline_file(beeline_file);
 
-        client.write_route_file(route_file);
+        if (arguments.projection_arg == enum_projection::projection_arg_google_bing) {
+            client.result().path().project(Projection::WGS84_TO_GB);
+        } else if (arguments.projection_arg == enum_projection::projection_arg_wgs84) {
+            client.result().path().project(Projection::GB_TO_WGS84);
+        }
 
         if (arguments.tree_flag)
             client.write_tree_file(tree_file);
-
-        output_route.close();
         output_beeline.close();
         output_tree.close();
         output_info.close();
-    }
 
+        if (!client.result().route_found())
+            continue;
+
+        client.write_route_file(route_file);
+        output_route.close();
+    }
 
     return 0;
 }
