@@ -58,12 +58,9 @@ public:
         std::string name = filename.substr(0, filename.find_first_of('.'));
         std::string suffix = filename.substr(filename.find_first_of('.'), filename.size());
 
-        std::string fwd{prefix + name + "_forward" + suffix};
-        std::string bwd{prefix + name + "_backward" + suffix};
+        std::string fwd{prefix + name + suffix};
         if (_result.tree_forward().node_count() < 1000000)
             _result.tree_forward().write_graph_file(fwd);
-        if (_result.tree_backward().node_count() < 1000000)
-            _result.tree_backward().write_graph_file(bwd);
     };
 
     void write_beeline_file(std::string path) const { _query.beeline().write_graph_file(path); };
@@ -73,14 +70,17 @@ public:
     void write_csv_header(std::ostream &output) const { format_header(statistics, output); };
 
     void write_info(std::ostream &output) const {
-        output << "time:                                 " << _result.duration()
-               << "\nnodes visited:                       " << _result.tree_forward().node_count() << " + "
-               << _result.tree_backward().node_count()
+        output << "\atime:                                 " << _result.duration()
+               << "\nnodes visited:                        " << _result.tree_forward().node_count()
                << "\ntimes pulled (num of nodes labelled): " << _result.pull_count()
-               << "\ntimes pushed (num of edges relaxed):  " << _result.push_count();
+               << "\ntimes pushed (num of edges relaxed):  " << _result.push_count()
+               << "\nedges checked (i.e. cost computed):   " << _result.edges_visited();
         if (_result.route_found()) {
-            output << "\npath:                                 "; // TODO print path
-            output << "\ncost:                                 " << _result.distance() << '\n';
+        output << "\npath:                                 "; // TODO print path
+        output << "\ncost:                                 " << _result.distance() << '\n';
+        } else {
+        output << "\npath:                                 not found"; // TODO print path
+        output << "\ncost:                                 inf\n";
         }
         output << std::flush;
     };

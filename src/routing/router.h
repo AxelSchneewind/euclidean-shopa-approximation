@@ -21,18 +21,14 @@ private:
     Graph const &_M_graph;
 
     Dijkstra _M_forward_search;
-    Dijkstra _M_backward_search;
 
     graph_type::node_id_type _M_start_node;
     graph_type::node_id_type _M_target_node;
     graph_type::node_id_type _M_mid_node;
 
     typename Dijkstra::node_cost_pair_type _forward_current;
-    typename Dijkstra::node_cost_pair_type _backward_current;
 
     void step_forward();
-
-    void step_backward();
 
     /**
      * gets the minimal distance a route via the given node can have
@@ -94,19 +90,11 @@ public:
 
     distance_type forward_distance() const { return _forward_current.distance; };
 
-    distance_type backward_distance() const { return _backward_current.distance; };
-
     typename Dijkstra::node_cost_pair_type forward_current() const { return _forward_current; };
-
-    typename Dijkstra::node_cost_pair_type backward_current() const { return _backward_current; };
 
     auto &&forward_labels() const { return _M_forward_search.labels(); }
 
-    auto &&backward_labels() const { return _M_backward_search.labels(); }
-
     auto &&forward_search() const { return _M_forward_search; }
-
-    auto &&backward_search() const { return _M_backward_search; }
 
     /**
      * checks if a valid route has been found
@@ -121,26 +109,8 @@ public:
     typename Graph::path_type route() const;
 
     /**
-     * returns the trees of the forward and backward search
+     * returns the trees of the search
      * @return
      */
     typename Graph::subgraph_type shortest_path_tree() const;
-
-    /**
-     * returns the tree of the forward search
-     * @return
-     */
-    typename Graph::subgraph_type tree_forward() const {
-        return _M_forward_search.shortest_path_tree();
-    }
-
-    typename Graph::subgraph_type tree_backward() const {
-        return _M_backward_search.shortest_path_tree();
-    };
-
-    /**
-     *
-     * returns the node where _M_forward_search and backward search met
-     */
-    typename Graph::node_id_type mid_node() const;
 };

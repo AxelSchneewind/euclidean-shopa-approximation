@@ -5,6 +5,13 @@
 #include "Graph.h"
 #include "Query.h"
 
+
+struct RoutingConfiguration {
+    bool use_a_star{false};
+    bool run_bidirectional{false};
+};
+
+
 class Router {
 
 private:
@@ -48,6 +55,7 @@ public:
     Router(Graph const& graph, RouterT&& router) : pimpl{graph, std::forward(router)} {};
 
     Router(Graph const& graph);
+    Router(Graph const& graph, RoutingConfiguration const&);
 
     void compute_route(int from, int to) { pimpl->compute_route(from, to); };
 

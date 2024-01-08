@@ -106,6 +106,7 @@ public:
     virtual Graph const& path() const = 0;
 
     virtual size_t nodes_visited() const = 0;
+    virtual size_t edges_visited() const = 0;
     virtual size_t pull_count() const = 0;
     virtual size_t push_count() const = 0;
 
@@ -126,6 +127,7 @@ private:
     Graph _path;
 
     std::size_t _nodes_visited = 0;
+    std::size_t _edges_visited = 0;
     std::size_t _pull_count = 0;
     std::size_t _push_count = 0;
 
@@ -157,6 +159,7 @@ public:
     Graph const& path() const override { return _path; };
 
     std::size_t nodes_visited() const override { return _nodes_visited; };
+    std::size_t edges_visited() const override { return _edges_visited; };
     std::size_t pull_count() const override { return _pull_count; };
     std::size_t push_count() const override { return _push_count; };
 
@@ -201,6 +204,7 @@ public:
     Graph const& path() const { return pimpl->path(); };
 
     std::size_t nodes_visited() const { return pimpl->nodes_visited(); };
+    std::size_t edges_visited() const { return pimpl->edges_visited(); };
     std::size_t pull_count() const { return pimpl->pull_count(); };
     std::size_t push_count() const { return pimpl->push_count(); };
 

@@ -22,12 +22,13 @@ ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImp
         : _query(query),
           _route_found(router.route_found()),
           _path(std_graph_t::make_graph(graph, graph.make_subgraph(router.route()))),
-          _tree_forward(std_graph_t::make_graph(graph, router.tree_forward())),
-          _tree_backward(std_graph_t::make_graph(graph, router.tree_backward())),
-          _nodes_visited(_tree_forward.node_count() + _tree_backward.node_count()), _distance(router.distance()),
+          _tree_forward(std_graph_t::make_graph(graph, router.shortest_path_tree())),
+          _tree_backward(),
+          _nodes_visited(_tree_forward.node_count()), _distance(router.distance()),
           _duration(duration),
-          _pull_count(router.forward_search().queue().pull_count() + router.backward_search().queue().pull_count()),
-          _push_count(router.forward_search().queue().push_count() + router.backward_search().queue().push_count())
+          _pull_count(router.forward_search().pull_count()),
+          _push_count(router.forward_search().push_count()),
+          _edges_visited(router.forward_search().edges_checked())
           {}
 
 
