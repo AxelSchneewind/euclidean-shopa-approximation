@@ -48,7 +48,7 @@ const char *gengetopt_args_info_help[] = {
   "\noutput:",
   "  options for the command line output",
   "  -c, --csv-format             indicates that routing information should be\n                                 printed in the csv format  (default=off)",
-  "  -p, --projection=ENUM        which projection to apply to coordinates when\n                                 writing to files  (possible\n                                 values=\"google_bing\", \"wgs84\", \"none\"\n                                 default=`none')",
+  "  -p, --projection=ENUM        which projection to apply to coordinates when\n                                 writing to files  (possible values=\"none\",\n                                 \"google_bing\", \"wgs84\" default=`none')",
     0
 };
 
@@ -71,7 +71,7 @@ cmdline_parser_internal (int argc, char **argv, struct gengetopt_args_info *args
 static int
 cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error);
 
-const char *cmdline_parser_projection_values[] = {"google_bing", "wgs84", "none", 0}; /*< Possible values for projection. */
+const char *cmdline_parser_projection_values[] = {"none", "google_bing", "wgs84", 0}; /*< Possible values for projection. */
 
 static char *
 gengetopt_strdup (const char *s);

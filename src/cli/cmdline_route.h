@@ -34,7 +34,7 @@ extern "C" {
 #define CMDLINE_PARSER_VERSION "1.0"
 #endif
 
-enum enum_projection { projection__NULL = -1, projection_arg_google_bing = 0, projection_arg_wgs84, projection_arg_none };
+enum enum_projection { projection__NULL = -1, projection_arg_none = 0, projection_arg_google_bing, projection_arg_wgs84 };
 
 /** @brief Where the command line options are stored */
 struct gengetopt_args_info
