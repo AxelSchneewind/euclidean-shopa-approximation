@@ -88,18 +88,18 @@ private:
     using labels_type = node_info_array<typename G::triangle_edge_id_type, unsigned short, label_type>;
     // using labels_type = compact_node_info_container<typename G::triangle_edge_id_type, unsigned short, char, label_type>;
 
-    G const &_M_graph;
+    G const &_graph;
 
-    std::vector<bool> _M_edge_touched;
+    std::vector<bool> _edge_touched;
 
-    std::vector<label_type> _M_base_labels;
-    labels_type _M_labels;
+    std::vector<label_type> _base_labels;
+    labels_type _labels;
 
 public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::unique_ptr<std::vector<Label>>);
 
-    steiner_labels(G const &__graph);
+    steiner_labels(G const &graph);
 
     ~steiner_labels() = default;
 
@@ -108,11 +108,11 @@ public:
     steiner_labels &operator=(steiner_labels &&) noexcept = default;
 
     // init for given query
-    void init(node_id_type __start_node, node_id_type __target_node);
+    void init(node_id_type start_node, node_id_type target_node);
 
-    Label get(node_id_type __node) const;
+    Label get(node_id_type node) const;
 
     label_iterator_type all_visited() const;
 
-    void label(node_id_type __node, Label __label);
+    void label(node_id_type const& node, Label const& label);
 };
