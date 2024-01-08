@@ -10,12 +10,12 @@ private:
     using node_id_type = G::node_id_type;
     using distance_type = G::distance_type;
 
-    G const &_M_graph;
+    G const &_graph;
 
-    std::vector<node_id_type> _M_touched;
+    std::vector<node_id_type> _touched;
 
-    std::vector<Label> _M_labels;
-    std::vector<bool> _M_node_labelled; // TODO remove
+    std::vector<Label> _labels;
+    std::vector<bool> _node_labelled;
 
 public:
     using label_type = Label;
@@ -32,13 +32,13 @@ public:
     node_labels &operator=(node_labels &&) noexcept = default;
 
     // init for given query
-    void init(node_id_type __start_node, node_id_type __target_node);
+    void init(node_id_type start_node, node_id_type target_node);
 
-    bool reached(node_id_type __node) const;
+    bool reached(node_id_type node) const;
 
-    Label get(node_id_type __node) const;
+    Label get(node_id_type node) const;
 
     std::span<const node_id_type> all_visited() const;
 
-    void label(node_id_type __node, Label __label);
+    void label(node_id_type const& node, Label const& label);
 };
