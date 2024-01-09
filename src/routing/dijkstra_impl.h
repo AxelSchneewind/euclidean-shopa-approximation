@@ -186,10 +186,7 @@ G::path_type dijkstra<G, Q, L, N, UseEdge>::path(node_id_type target) const {
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
-G::subgraph_type dijkstra<G, Q, L, N, UseEdge>::shortest_path_tree() const {
-    constexpr std::size_t max_node_count = std::numeric_limits<int>::max();
-    constexpr std::size_t max_edge_count = std::numeric_limits<int>::max();
-
+G::subgraph_type dijkstra<G, Q, L, N, UseEdge>::shortest_path_tree(int max_node_count) const {
     std::vector<typename G::node_id_type> nodes;
     std::vector<typename G::edge_id_type> edges;
 
@@ -199,7 +196,7 @@ G::subgraph_type dijkstra<G, Q, L, N, UseEdge>::shortest_path_tree() const {
     // add nodes and edges that have been visited
     auto &&visited = labels().all_visited();
     for (auto const& node_id: visited) {
-        if (nodes.size() >= max_node_count || edges.size() >= max_edge_count)
+        if (nodes.size() >= max_node_count || edges.size() >= max_node_count)
             break;
 
         if (!reached(node_id) || labels().get(node_id).distance >= current().value())
