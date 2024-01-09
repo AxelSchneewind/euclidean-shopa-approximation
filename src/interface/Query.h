@@ -189,6 +189,7 @@ public:
         out.put(Statistics::QUEUE_PULL_COUNT, pull_count());
         out.put(Statistics::QUEUE_PUSH_COUNT, push_count());
         out.put(Statistics::QUEUE_MAX_SIZE, queue_max_size());
+        out.put(Statistics::EDGES_CHECKED, edges_visited());
     }
 };
 

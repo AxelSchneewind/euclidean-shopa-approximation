@@ -1,7 +1,6 @@
 #pragma once
 
 
-
 enum Statistics {
     NODE_COUNT,
     EDGE_COUNT,
@@ -21,30 +20,32 @@ enum Statistics {
     QUEUE_PULL_COUNT,
     QUEUE_PUSH_COUNT,
     QUEUE_MAX_SIZE,
+    EDGES_CHECKED,
     TIME,
     PATH,
     NUM_COLUMNS
 };
 
 const std::array<std::string, NUM_COLUMNS> COLUMNS{
-        "NODE COUNT",
-        "EDGE COUNT",
-        "STORED NODE COUNT",
-        "STORED EDGE COUNT",
-        "EPSILON",
-        "MEMORY USAGE GRAPH",
-        "MEMORY USAGE FINAL",
-        "FROM",
-        "TO",
-        "FROM INTERNAL",
-        "TO INTERNAL",
-        "COST",
-        "BEELINE DISTANCE",
-        "EPSILON SATISFIED",
-        "TREE SIZE",
-        "QUEUE PULL COUNT",
-        "QUEUE PUSH COUNT",
-        "QUEUE MAX SIZE",
-        "TIME",
-        "PATH"
+    "NODE COUNT",
+    "EDGE COUNT",
+    "STORED NODE COUNT",
+    "STORED EDGE COUNT",
+    "EPSILON",
+    "MEMORY USAGE GRAPH",
+    "MEMORY USAGE FINAL",
+    "FROM",
+    "TO",
+    "FROM INTERNAL",
+    "TO INTERNAL",
+    "COST",
+    "BEELINE DISTANCE",
+    "EPSILON SATISFIED",
+    "TREE SIZE",
+    "QUEUE PULL COUNT",
+    "QUEUE PUSH COUNT",
+    "QUEUE MAX SIZE",
+    "EDGES_CHECKED",
+    "TIME",
+    "PATH"
 };

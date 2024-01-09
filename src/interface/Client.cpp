@@ -110,80 +110,20 @@ void Client::read_graph_file(std::string path, double epsilon) {
 
     _graph.write_graph_stats(statistics);
     statistics.put(Statistics::MEMORY_USAGE_GRAPH, (vm_graph - vm) / 1024);
-
 };
 
-// void Client::compute_one_to_all(int from, std::ostream &output) {
-//     query = std::make_unique<Query<steiner_graph>>(make_query(from));
-//     // using distance_labels = frontier_labels<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>, label_type<steiner_graph>>;
-//     using distance_labels = steiner_labels<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
-//     using distance_queue = dijkstra_queue<steiner_graph, node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type>>;
-//     // using distance_dijkstra = dijkstra<steiner_graph, distance_queue, distance_labels, default_neighbors<steiner_graph>, use_all_edges<steiner_graph>>;
-//     using distance_dijkstra = dijkstra<steiner_graph, distance_queue, distance_labels, steiner_neighbors<steiner_graph, distance_labels>, use_all_edges<steiner_graph>>;
-//
-//     double max_dist = 0.4;
-//
-//     std_graph_t::node_id_type last_node = none_value<std_graph_t::node_id_type>;
-//     distance_dijkstra distances(graph);
-//     //distances.labels().set_frontier_width(0.5);
-//
-//     distances.init(query->from);
-//
-//     std::chrono::time_point<std::chrono::high_resolution_clock> before, after;
-//
-//     std::thread status([&]() -> void {
-//         double vm, res;
-//         while (distances.current().distance < max_dist) {
-//             if (output_csv) {
-//
-//             } else {
-//                 process_mem_usage(vm, res);
-//                 std::cout << "\rdistance: " << std::setw(10) << std::setprecision(3) << distances.current().distance;
-//                           // << ", node aggregates currently expanded (in labels): ";
-//                           // << std::setw(10) << distances.labels().aggregate_count();
-//                 std::cout << ", memory usage : VM " << std::setw(9) << vm / 1024 << "MiB, RES "
-//                           << std::setw(9) << res / 1024 << std::flush;
-//             }
-//
-//             usleep(50000);
-//         }
-//     });
-//
-//     before = std::chrono::high_resolution_clock::now();
-//     while (distances.current().distance < max_dist) [[likely]] {
-//         distances.step();
-//
-//         auto ncp = distances.current();
-//         if (ncp.node.steiner_index == 0) [[unlikely]] {
-//             steiner_graph::triangle_node_id_type base_node_id = graph.base_graph().source(ncp.node.edge);
-//             steiner_graph::triangle_node_id_type pred_node_id = graph.base_graph().source(ncp.predecessor.edge);
-//
-//             if (base_node_id != last_node) {
-//                 output << base_node_id << ',' << ncp.distance << '\n';
-//                 last_node = base_node_id;
-//             }
-//         }
-//     }
-//     after = std::chrono::high_resolution_clock::now();
-//
-//
-//     steiner_graph::path_type path {graph, std::vector<steiner_graph::node_id_type>()};
-//     auto tree = distances.shortest_path_tree();
-//     result = std::make_unique<Result<steiner_graph>>(*query, router.route_found(), max_dist, max_dist, tree,
-//                                                      path, tree.node_count(), after - before);
-//
-//
-//     statistics.put(Statistics::QUEUE_PULL_COUNT, distances.queue().pull_count());
-//     statistics.put(Statistics::QUEUE_PUSH_COUNT, distances.queue().push_count());
-//     statistics.put(Statistics::QUEUE_MAX_SIZE, distances.queue().max_size());
-//
-//     if (!output_csv) {
-//         std::cout << "\nqueue was pulled from "
-//                   << distances.queue().pull_count() << " times, pushed to "
-//                   << distances.queue().push_count() << " times, and had a maximum size of "
-//                   << distances.queue().max_size() << " elements" << std::endl;
-//     }
-//
-//     status.join();
-// }
-
+void Client::write_info(std::ostream& output) const {
+    output << "\atime:                                 " << statistics.get(TIME)
+           << "\nnodes visited:                        " << statistics.get(TREE_SIZE)
+           << "\ntimes pulled (num of nodes labelled): " << statistics.get(QUEUE_PULL_COUNT)
+           << "\ntimes pushed (num of edges relaxed):  " << statistics.get(QUEUE_PUSH_COUNT)
+           << "\nedges checked (i.e. cost computed):   " << statistics.get(EDGES_CHECKED);
+    if (_result.route_found()) {
+    output << "\npath:                                 some long path"; // TODO print path
+    output << "\ncost:                                 " << statistics.get(Statistics::COST) << '\n';
+    } else {
+    output << "\npath:                                 not found";
+    output << "\ncost:                                 inf\n";
+    }
+    output << std::flush;
+}
