@@ -123,6 +123,7 @@ std::size_t Graph::GraphImplementation<GraphT>::node_count() const {
 template<typename GraphT>
 void Graph::GraphImplementation<GraphT>::write_graph_file(std::string path) const {
     std::ofstream output(path);
+
     if (path.ends_with(".fmi"))
         fmi_file_io::write(output, graph);
     else if (path.ends_with(".steiner.fmi"))
@@ -131,6 +132,18 @@ void Graph::GraphImplementation<GraphT>::write_graph_file(std::string path) cons
         triangulation_file_io::write(output, graph);
     else if (path.ends_with(".gl"))
         gl_file_io::write(output, graph);
+
+    output.close();
+}
+
+template<typename GraphT>
+void Graph::GraphImplementation<GraphT>::write_graph_file(std::string path, int color, int linewidth) const {
+    std::ofstream output(path);
+
+    if (path.ends_with(".gl"))
+        gl_file_io::write(output, graph, linewidth, color);
+    else
+        throw std::invalid_argument("This overload can only be used for writing .gl files");
 
     output.close();
 }

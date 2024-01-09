@@ -26,6 +26,7 @@ public:
     virtual void project(Projection projection) = 0;
 
     virtual void write_graph_file(std::string path) const = 0;
+    virtual void write_graph_file(std::string path, int color, int linewidth) const = 0;
 
     virtual void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const = 0;
 
@@ -33,7 +34,6 @@ public:
     virtual void write_graph_stats(table &out) const = 0;
 
     virtual std::size_t node_count() const = 0;
-
     virtual std::size_t edge_count() const = 0;
 
     virtual coordinate_t node_coordinates(long node_id) const = 0;
@@ -64,6 +64,7 @@ private:
         void project(Projection projection) override;
 
         void write_graph_file(std::string path) const override;
+        void write_graph_file(std::string path, int color, int linewidth) const override;
 
         void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const override;;
 
@@ -109,6 +110,7 @@ public:
     void project(Projection projection) override { pimpl->project(projection); };
 
     void write_graph_file(std::string path) const override { pimpl->write_graph_file(path); }
+    void write_graph_file(std::string path, int color, int linewidth) const override { pimpl->write_graph_file(path, color, linewidth); }
 
     void write_graph_stats(std::ostream &output) const override { pimpl->write_graph_stats(output); };
     void write_graph_stats(table& out) const override { pimpl->write_graph_stats(out); };
