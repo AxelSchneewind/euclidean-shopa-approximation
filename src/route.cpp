@@ -76,7 +76,7 @@ main(int argc, char *argv[]) {
             break;
         }
 
-        // setup writer for graphs to show
+        // setup writers for graphs to show
         std::string eps_string = epsilon == 0 ? "exact" : std::format("{:_>5d}", (int) (epsilon * 10000));
         std::string target_directory = std::format("{}/{}_{}_{}", output_directory, src_node, dest_node, eps_string);
         std::string beeline_file = std::format("{}/beeline.gl", target_directory);
@@ -102,6 +102,7 @@ main(int argc, char *argv[]) {
         client.write_csv(output_info);
 
         client.write_info(std::cout);
+        std::cout << std::endl;
 
         if (arguments.projection_arg == enum_projection::projection_arg_google_bing) {
             client.query().beeline().project(Projection::WGS84_TO_GB);
@@ -116,12 +117,6 @@ main(int argc, char *argv[]) {
         }
         client.write_beeline_file(beeline_file);
 
-        if (arguments.projection_arg == enum_projection::projection_arg_google_bing) {
-            client.result().path().project(Projection::WGS84_TO_GB);
-        } else if (arguments.projection_arg == enum_projection::projection_arg_wgs84) {
-            client.result().path().project(Projection::GB_TO_WGS84);
-        }
-
         if (arguments.tree_flag)
             client.write_tree_file(tree_file);
         output_beeline.close();
@@ -130,6 +125,12 @@ main(int argc, char *argv[]) {
 
         if (!client.result().route_found())
             continue;
+
+        if (arguments.projection_arg == enum_projection::projection_arg_google_bing) {
+            client.result().path().project(Projection::WGS84_TO_GB);
+        } else if (arguments.projection_arg == enum_projection::projection_arg_wgs84) {
+            client.result().path().project(Projection::GB_TO_WGS84);
+        }
 
         client.write_route_file(route_file);
         output_route.close();
