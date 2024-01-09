@@ -4,43 +4,62 @@
 #include "Router.h"
 
 
-Router::Router(const Graph &graph) {
+Router::Router(const Graph&graph) {
     switch (graph.type()) {
         case GraphType::STEINER_GRAPH_DIRECTED:
         case GraphType::STEINER_GRAPH_UNDIRECTED:
-            pimpl = std::make_unique<RouterImplementation < steiner_graph, steiner_routing_t>> (graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
+            pimpl = std::make_unique<RouterImplementation<steiner_graph, steiner_routing_t>>(
+                graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
             break;
         case GraphType::STD_GRAPH_DIRECTED:
         case GraphType::STD_GRAPH_UNDIRECTED:
-            pimpl = std::make_unique<RouterImplementation < std_graph_t, a_star_routing_t>> (graph.get<std_graph_t>(), a_star_routing_t(graph.get<std_graph_t>()));
+            pimpl = std::make_unique<RouterImplementation<std_graph_t, a_star_routing_t>>(
+                graph.get<std_graph_t>(), a_star_routing_t(graph.get<std_graph_t>()));
             break;
     }
 }
 
-Router::Router(const Graph &graph, RoutingConfiguration const& config)
-    : _config (config)
-{
+Router::Router(const Graph&graph, RoutingConfiguration const&config)
+    : _config(config) {
     switch (graph.type()) {
         case GraphType::STEINER_GRAPH_DIRECTED:
         case GraphType::STEINER_GRAPH_UNDIRECTED:
-            if (!_config.bidirectional && _config.compact_labels)
-            {
-                if (!_config.use_a_star)
-                {
-                    pimpl = std::make_unique<RouterImplementation < steiner_graph, steiner_routing_t>> (graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
-                } else
-                {
-                    pimpl = std::make_unique<RouterImplementation < steiner_graph, steiner_routing_t>> (graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
+            if (_config.use_a_star) {
+                using node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type,
+                    a_star_info>;
+                using queue_t = a_star_queue<steiner_graph, node_cost_pair>;
+                using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
+                using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
+                if (!_config.bidirectional && _config.compact_labels) {
+                    using steiner_routing_t = router<steiner_graph, dijkstra>;
+                    pimpl = std::make_unique<RouterImplementation<steiner_graph, steiner_routing_t>>(
+                        graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
                 }
-
-            } else
-            {
-                throw std::invalid_argument("This configuration is not supported yet");
+                else {
+                    using steiner_routing_t = bidirectional_router<steiner_graph, dijkstra>;
+                    pimpl = std::make_unique<RouterImplementation<steiner_graph, steiner_routing_t>>(
+                        graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
+                }
+            }
+            else {
+                using node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>;
+                using queue_t = dijkstra_queue<steiner_graph, node_cost_pair>;
+                using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
+                using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<
+                    steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
+                if (!_config.bidirectional && !_config.compact_labels) {
+                    using steiner_routing_t = bidirectional_router<steiner_graph, dijkstra>;
+                    pimpl = std::make_unique<RouterImplementation<steiner_graph, steiner_routing_t>>(
+                        graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
+                }
+                else {
+                }
             }
             break;
         case GraphType::STD_GRAPH_DIRECTED:
         case GraphType::STD_GRAPH_UNDIRECTED:
-            pimpl = std::make_unique<RouterImplementation < std_graph_t, a_star_routing_t>> (graph.get<std_graph_t>(), a_star_routing_t(graph.get<std_graph_t>()));
+            pimpl = std::make_unique<RouterImplementation<std_graph_t, a_star_routing_t>>(
+                graph.get<std_graph_t>(), a_star_routing_t(graph.get<std_graph_t>()));
             break;
     }
 }
@@ -58,19 +77,19 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
             double vm, res;
             process_mem_usage(vm, res);
             std::cout << "\rdistances: "
-                      << std::setw(12) /*<< std::setprecision(3)*/ << _router.forward_distance()
-                      << " (" << std::setw(12) /*<< std::setprecision(3)*/
-                      << _router.forward_current().value() << "), ";
+                    << std::setw(12) /*<< std::setprecision(3)*/ << _router.forward_distance()
+                    << " (" << std::setw(12) /*<< std::setprecision(3)*/
+                    << _router.forward_current().value() << "), ";
 
-            if constexpr (requires(RouterT::labels_type && l) { l.aggregate_count(); }) {
+            if constexpr (requires(RouterT::labels_type&&l) { l.aggregate_count(); }) {
                 std::cout << "node aggregates currently expanded: " << std::setw(10)
-                          << _router.forward_labels().aggregate_count() +
-                             _router.backward_labels().aggregate_count();
+                        << _router.forward_labels().aggregate_count() +
+                        _router.backward_labels().aggregate_count();
             }
 
             std::cout << "memory usage : VM " << std::setw(9) << vm / 1024 << "MiB, RES " << std::setw(9)
-                      << res / 1024
-                      << "MiB" << std::flush;
+                    << res / 1024
+                    << "MiB" << std::flush;
             usleep(100000);
         }
 
