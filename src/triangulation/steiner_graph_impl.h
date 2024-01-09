@@ -468,7 +468,7 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
         }
     }
 
-    if (is_base_node(src) && dest.steiner_index == steiner_info(dest.edge).node_count - 2) {
+    if (is_base_node(src)) {
         auto base_src = base_node_id(src);
         for (auto edge: _M_base_topology.incoming_edges(base_src)) {
             auto edge_id = _M_base_topology.edge_id(edge.destination, base_src);
@@ -494,7 +494,7 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
         }
     }
 
-    if (is_base_node(dest) && src.steiner_index == steiner_info(src.edge).node_count - 2) {
+    if (is_base_node(dest)) {
         auto base_dest = base_node_id(dest);
         for (auto edge: _M_base_topology.incoming_edges(base_dest)) {
             auto edge_id = _M_base_topology.edge_id(edge.destination, base_dest);
@@ -511,20 +511,22 @@ steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_
     }
 
     // face-crossing edges
-    auto triangles = _M_polyhedron.edge_faces(src.edge);
-    for (unsigned char triangle_index = 0;
-         triangle_index < polyhedron_type::FACE_COUNT_PER_EDGE; triangle_index++) [[unlikely]] {
-        if (is_none(triangles[triangle_index])) continue;
-        auto &&triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
+    if constexpr (face_crossing_from_base_nodes) {
+        auto triangles = _M_polyhedron.edge_faces(src.edge);
+        for (unsigned char triangle_index = 0;
+             triangle_index < polyhedron_type::FACE_COUNT_PER_EDGE; triangle_index++) [[unlikely]] {
+                 if (is_none(triangles[triangle_index])) continue;
+                 auto &&triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
 
-        for (auto const &base_edge_id: triangle_edges) [[likely]] {
-            if (base_edge_id == src.edge) [[unlikely]]
-                continue;
+                 for (auto const &base_edge_id: triangle_edges) [[likely]] {
+                     if (base_edge_id == src.edge) [[unlikely]]
+                         continue;
 
-            auto &&destination_steiner_info = steiner_info(base_edge_id);
-            if (base_edge_id == dest.edge && is_in_range(base_edge_id, 0, destination_steiner_info.node_count))
-                return true;
-        }
+                     auto &&destination_steiner_info = steiner_info(base_edge_id);
+                     if (base_edge_id == dest.edge && is_in_range(base_edge_id, 0, destination_steiner_info.node_count))
+                         return true;
+                 }
+             }
     }
 
     return false;
@@ -584,7 +586,7 @@ bool steiner_graph::is_base_node(steiner_graph::node_id_type id) const {
 
 steiner_graph::triangle_node_id_type steiner_graph::base_node_id(steiner_graph::node_id_type id) const {
     assert(is_base_node(id));
-    return id.steiner_index < steiner_info(id.edge).node_count / 2 ? base_graph().source(id.edge)
+    return id.steiner_index < steiner_info(id.edge).mid_index ? base_graph().source(id.edge)
                                                                    : base_graph().destination(id.edge);
 }
 
@@ -592,12 +594,12 @@ steiner_graph::node_id_type steiner_graph::from_base_node_id(int node) const {
     if (is_none(node)) [[unlikely]]
         return none_value<node_id_type>;
 
-    for (auto edge: _M_base_topology.outgoing_edges(node)) {
+    for (auto edge: _M_base_topology.outgoing_edges(node)) [[likely]] {
         auto e_id = _M_base_topology.edge_id(node, edge.destination);
         return {e_id, 0};
     }
 
-    for (auto edge: _M_base_topology.incoming_edges(node)) {
+    for (auto edge: _M_base_topology.incoming_edges(node)) [[likely]] {
         auto e_id = _M_base_topology.edge_id(edge.destination, node);
         return node_id_type(e_id, steiner_info(e_id).node_count - 1U);
     }

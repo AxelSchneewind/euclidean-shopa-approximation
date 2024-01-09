@@ -119,7 +119,7 @@ public:
     using topology_type = steiner_graph;
 
     // whether or not base nodes should have outgoing face crossing edges
-    static constexpr bool face_crossing_from_base_nodes { false };
+    static constexpr bool face_crossing_from_base_nodes { true };
 
     struct node_id_iterator_type {
     private:
@@ -220,7 +220,7 @@ public:
 
     size_t face_count() const { return _M_polyhedron.face_count(); }
 
-    float epsilon() const { return _M_epsilon; }
+    double epsilon() const { return _M_epsilon; }
 
     node_id_iterator_type node_ids() const;
 
