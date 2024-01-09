@@ -57,14 +57,16 @@ def plot_cumulative(data, x_column, y_column):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 3:
         exit(-1);
 
     file = sys.argv[1]
     x = sys.argv[2]
-    y = sys.argv[3]
-
     data = read(file)
-    plot(data, x, y)
-    # plot_sorted(data, y)
+
+    if len(sys.argv) < 4:
+        plot_sorted(data, x)
+    else:
+        y = sys.argv[3]
+        plot(data, x, y)
 

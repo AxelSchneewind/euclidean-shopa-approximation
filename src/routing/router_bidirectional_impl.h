@@ -71,16 +71,12 @@ bidirectional_router<Graph, Dijkstra>::compute_route() {
     bool done = false;
     std::size_t step_count = 0;
     while (!done) {
-        auto dist = std::min(distance(), 2 * ::distance(base::_graph.node(base::_start_node).coordinates,
-                                                        base::_graph.node(base::_target_node).coordinates));
-        bool const fwd_done =
-                base::_forward_search.queue_empty() || min_route_distance(base::_forward_search.current()) > dist;
+        auto dist = distance();
+        bool const fwd_done = base::_forward_search.queue_empty() || min_route_distance(base::_forward_search.current()) > dist;
         bool const bwd_done = _backward_search.queue_empty() || min_route_distance(_backward_search.current()) > dist;
 
         // check if no better route can be found
-        if (fwd_done && bwd_done) {
-            done = true;
-        }
+        done |= fwd_done && bwd_done;
 
         if (!fwd_done) {
             step_forward();

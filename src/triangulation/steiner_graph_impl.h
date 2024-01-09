@@ -586,7 +586,7 @@ bool steiner_graph::is_base_node(steiner_graph::node_id_type id) const {
 
 steiner_graph::triangle_node_id_type steiner_graph::base_node_id(steiner_graph::node_id_type id) const {
     assert(is_base_node(id));
-    return id.steiner_index < steiner_info(id.edge).mid_index ? base_graph().source(id.edge)
+    return id.steiner_index <= steiner_info(id.edge).mid_index ? base_graph().source(id.edge)
                                                                    : base_graph().destination(id.edge);
 }
 

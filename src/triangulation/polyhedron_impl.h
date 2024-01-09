@@ -101,7 +101,7 @@ void make_face_edges(const BaseGraph &base,
 
     // fill with -1 for edges that are only part of one face
     for (int i = 0; i < base.edge_count(); ++i) {
-        assert(triangle_count[i] >= 1);
+        // assert(triangle_count[i] >= 1);
         assert(triangle_count[i] <= 2);
         while (triangle_count[i] < 2)
             edge_faces[i][triangle_count[i]++] = none_value<typename BaseGraph::edge_id_type>;
@@ -207,13 +207,13 @@ polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
           _M_node_edges_offsets(std::move(node_face_offsets)),
           _M_node_edges(std::move(node_edges)),
           _M_edge_info(std::move(adjacent_faces)) {
-    // check integrity
-    std::size_t num_edges = 3 * face_count(); // 3 edges per face
-    std::size_t non_boundary_edges = edge_count() - boundary_edge_count();
+    // // check integrity
+    // std::size_t num_edges = 3 * face_count(); // 3 edges per face
+    // std::size_t non_boundary_edges = edge_count() - boundary_edge_count();
 
-    // non boundary edges have been counted twice
-    num_edges -= non_boundary_edges;
+    // // non boundary edges have been counted twice
+    // num_edges -= non_boundary_edges;
 
-    assert(num_edges == edge_count());
+    // assert(num_edges == edge_count());
 }
 

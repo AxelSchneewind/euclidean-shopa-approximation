@@ -22,7 +22,7 @@ BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: true
 ColumnLimit: 120
 ConstructorInitializerIndentWidth: 2
-ContinuationIndentWidth: 2
+ContinuationIndentWidth: 4
 ForEachMacros: [
   'FOR_ALL_BB_FN',
   'FOR_ALL_EH_REGION',

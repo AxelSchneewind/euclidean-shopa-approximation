@@ -41,7 +41,7 @@ if (GENGETOPT)
             SOURCES src/cli/prune_graph.ggo
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 else (GENGETOPT)
-    message("gengetopt needs to be installed to modify and generate the command line argument parser")
+    message("gengetopt needs to be installed to modify and generate the command line argument parser, falling back to precompiled (possibly out of date) command line parsing")
 endif (GENGETOPT)
 
 
