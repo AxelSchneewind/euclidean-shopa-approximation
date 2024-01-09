@@ -28,14 +28,14 @@ public:
         std::array<std::span<const int, EDGE_COUNT_PER_FACE>, 2> faces;
 
     public:
-        edges_iterator_type(const polyhedron<BaseGraph, MaxNodesPerFace> &poly, std::array<face_id_type, 2> faces)
-                : face_index(0),
-                  edge_index(0),
-                  face_count(1 + (!is_none(faces[1]) ? 1 : 0)),
-                  faces({std::span(poly._M_face_info[faces[0]]), std::span(poly._M_face_info[faces[1]])}) {
+        edges_iterator_type(const polyhedron<BaseGraph, MaxNodesPerFace>&poly, std::array<face_id_type, 2> faces)
+            : face_index(0),
+              edge_index(0),
+              face_count((!is_none(faces[0])) + (!is_none(faces[1]))),
+              faces{std::span(poly._M_face_info[!is_none(faces[0]) ? faces[0] : 0]), std::span(poly._M_face_info[!is_none(faces[1]) ? faces[1] : 0])} {
         };
 
-        edges_iterator_type &begin() { return *this; };
+        edges_iterator_type& begin() { return *this; };
 
         struct end_type {
         };
@@ -58,8 +58,8 @@ public:
             return face_index != face_count;
         }
 
-        edges_iterator_type &operator++() {
-            edges_iterator_type &result = *this;
+        edges_iterator_type& operator++() {
+            edges_iterator_type&result = *this;
 
             edge_index++;
             if (edge_index >= EDGE_COUNT_PER_FACE) {
@@ -70,7 +70,7 @@ public:
             return result;
         };
 
-        edges_iterator_type &operator++(int) {
+        edges_iterator_type& operator++(int) {
             edge_index++;
             if (edge_index >= EDGE_COUNT_PER_FACE) {
                 edge_index = 0;
@@ -100,11 +100,10 @@ private:
     std::vector<int> _M_node_edges_offsets;
 
 
-
-    polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> &&adjacent_edges,
-               std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&adjacent_faces,
-               std::vector<edge_id_type> &&node_edges,
-               std::vector<int> &&node_edge_offsets);
+    polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>>&&adjacent_edges,
+               std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>>&&adjacent_faces,
+               std::vector<edge_id_type>&&node_edges,
+               std::vector<int>&&node_edge_offsets);
 
 public:
     static constexpr size_t SIZE_PER_NODE = 0;
@@ -118,7 +117,7 @@ public:
 
     std::size_t boundary_edge_count() const {
         std::size_t result = 0;
-        for (auto &&edge_info: _M_edge_info) {
+        for (auto&&edge_info: _M_edge_info) {
             result += is_none(edge_info[1]);
         }
 
@@ -130,8 +129,10 @@ public:
      * @param base
      * @return
      */
-    static polyhedron<BaseGraph, MaxNodesPerFace> make_polyhedron(const BaseGraph &base,
-                                                                  std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &&faces);
+    static polyhedron<BaseGraph, MaxNodesPerFace> make_polyhedron(const BaseGraph&base,
+                                                                  std::vector<std::array<typename
+                                                                      BaseGraph::node_id_type, MaxNodesPerFace>>&&
+                                                                  faces);
 
     std::span<const face_id_type, FACE_COUNT_PER_EDGE> edge_faces(edge_id_type edge) const {
         return {_M_edge_info[edge]};
@@ -142,9 +143,10 @@ public:
     }
 
     std::span<const edge_id_type, std::dynamic_extent> node_edges(node_id_type node) const {
-        return {_M_node_edges.begin() + _M_node_edges_offsets[node],
-                _M_node_edges.begin() + _M_node_edges_offsets[node + 1]};
-
+        return {
+            _M_node_edges.begin() + _M_node_edges_offsets[node],
+            _M_node_edges.begin() + _M_node_edges_offsets[node + 1]
+        };
     }
 
     /**
@@ -157,5 +159,3 @@ public:
         return {*this, {_M_edge_info[edge]}};
     };
 };
-
-
