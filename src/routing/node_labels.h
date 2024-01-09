@@ -10,7 +10,7 @@ private:
     using node_id_type = G::node_id_type;
     using distance_type = G::distance_type;
 
-    G const &_graph;
+    G const&_graph;
 
     std::vector<node_id_type> _touched;
 
@@ -23,13 +23,15 @@ public:
     static constexpr size_t SIZE_PER_NODE = sizeof(Label) + 1;
     static constexpr size_t SIZE_PER_EDGE = 0;
 
-    explicit node_labels(G const &d);
+    explicit node_labels(G const&d);
 
     ~node_labels() = default;
 
-    node_labels(node_labels &&) noexcept = default;
+    node_labels(node_labels&&) noexcept = default;
 
-    node_labels &operator=(node_labels &&) noexcept = default;
+    node_labels(G const& g, node_labels&& other) noexcept : _graph(g), _touched(std::move(other._touched)), _labels(std::move(other._labels)), _node_labelled(std::move(other._node_labelled)) {};
+
+    node_labels& operator=(node_labels&&) noexcept = default;
 
     // init for given query
     void init(node_id_type start_node, node_id_type target_node);
@@ -40,5 +42,5 @@ public:
 
     std::span<const node_id_type> all_visited() const;
 
-    void label(node_id_type const& node, Label const& label);
+    void label(node_id_type const&node, Label const&label);
 };

@@ -59,7 +59,12 @@ public:
     // constructs a dijkstra object for the given graph
     explicit dijkstra(G const &graph)
             : _M_graph(graph), _M_queue{_M_graph},
-              _M_labels{_M_graph}, _M_neighbors{_M_graph, _M_labels}, _M_use_edge{_M_graph} {};
+              _M_labels(_M_graph), _M_neighbors{_M_graph, _M_labels}, _M_use_edge{_M_graph} {};
+
+   //  TODO
+    explicit dijkstra(G const &graph, dijkstra&& other)
+            : _M_graph(graph), _M_queue{std::move(other._M_queue)},
+              _M_labels(_M_graph, std::move(other._M_labels)), _M_neighbors(_M_graph, _M_labels), _M_use_edge{_M_graph} {};
 
     explicit dijkstra(G const &graph, Q &&queue, L &&labels, N &&__neighbors, UseEdge &&__use_edge)
             : _M_graph(graph), _M_queue(std::move(queue)),
@@ -72,11 +77,11 @@ public:
 
     dijkstra &operator=(dijkstra const &other) = delete;
 
-    typename G::distance_type min_path_length() const;
+    distance_type min_path_length() const;
 
-    typename G::node_id_type source() const { return _M_start_node; }
+    node_id_type source() const { return _M_start_node; }
 
-    typename G::node_id_type target() const { return _M_target_node; }
+    node_id_type target() const { return _M_target_node; }
 
     const Q &queue() const { return _M_queue; }
 
@@ -86,7 +91,7 @@ public:
 
     L &labels() { return _M_labels; }
 
-    L::label_type get_label(G::node_id_type node) const { return _M_labels.get(node); }
+    typename L::label_type get_label(node_id_type node) const { return _M_labels.get(node); }
 
     /**
      * init one to one
@@ -118,7 +123,7 @@ public:
      * @param node
      * @return
      */
-    bool reached(typename G::node_id_type node) const;
+    bool reached(node_id_type node) const;
 
 
     /**
@@ -139,6 +144,4 @@ public:
     std::size_t push_count() const {return _push_count;};
     std::size_t pull_count() const {return _pull_count;};
     std::size_t edges_checked() const {return _edges_checked;};
-
-
 };

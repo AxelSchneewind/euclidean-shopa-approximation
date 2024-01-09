@@ -34,7 +34,7 @@ public:
         ++inner;
         if (inner == inner.end()) {
             ++outer; ++index;
-            while(!(*outer) && outer != outer_end) {
+            while(outer != outer_end && !(*outer)) {
                 ++outer; ++index;
             }
 
@@ -48,7 +48,7 @@ public:
         ++inner;
         if (inner == inner.end()) {
             ++outer; ++index;
-            while(!(*outer) && outer != outer_end) {
+            while(outer != outer_end && !(*outer)) {
                 ++outer; ++index;
             }
 
@@ -103,7 +103,18 @@ public:
 
     ~steiner_labels() = default;
 
-    steiner_labels(steiner_labels &&) noexcept = default;
+    steiner_labels(steiner_labels &&other) noexcept
+        : _graph(other._graph)
+        , _edge_touched(std::move(other._edge_touched))
+        , _base_labels(std::move(other._base_labels))
+        , _labels(std::move(other._labels)) {};
+
+    steiner_labels(G const& graph, steiner_labels &&other) noexcept
+        : _graph(graph)
+        , _edge_touched(std::move(other._edge_touched))
+        , _base_labels(std::move(other._base_labels))
+        , _labels(std::move(other._labels)) {};
+
 
     steiner_labels &operator=(steiner_labels &&) noexcept = default;
 

@@ -8,6 +8,7 @@
 #include "../graph/unidirectional_adjacency_list.h"
 #include "../triangulation/steiner_labels.h"
 
+#include <cassert>
 #include <queue>
 #include <vector>
 
