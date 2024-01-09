@@ -15,7 +15,6 @@ if (DOXYGEN_FOUND)
 
     # request to configure the file
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-    message("Doxygen build started")
 
     # note the option ALL which allows to build the docs together with the application
     add_custom_target(doc_doxygen ALL
@@ -27,16 +26,18 @@ else (DOXYGEN_FOUND)
     message("Doxygen needs to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
 
+string(TIMESTAMP VERSION_TIMESTAMP %Y%m%d-%I%M)
+
 # gengetopt
 find_program(GENGETOPT gengetopt)
 if (GENGETOPT)
     add_custom_target(cmdline_route ALL
-            COMMAND ${GENGETOPT} -i src/cli/route.ggo -F cmdline_route --output-dir src/cli
+            COMMAND ${GENGETOPT} -i src/cli/route.ggo -F cmdline_route --set-version=${VERSION_TIMESTAMP} --output-dir src/cli
             SOURCES src/cli/route.ggo
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
     add_custom_target(cmdline_prune_graph ALL
-            COMMAND ${GENGETOPT} -i src/cli/prune_graph.ggo -F cmdline_prune_graph --output-dir src/cli
+            COMMAND ${GENGETOPT} -i src/cli/prune_graph.ggo -F cmdline_prune_graph --set-version=${VERSION_TIMESTAMP} --output-dir src/cli
             SOURCES src/cli/prune_graph.ggo
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 else (GENGETOPT)
@@ -45,7 +46,7 @@ endif (GENGETOPT)
 
 
 set(CMAKE_CXX_FLAGS "") # -Wall -Wextra
-set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check") #-D_GLIBCXX_DEBUG
 
 # performance options
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native") # -ffast-math
