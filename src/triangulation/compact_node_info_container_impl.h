@@ -25,7 +25,7 @@ Info compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, I
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
 bool
 compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::is_expanded(AggregateId agg_id) const {
-    return aggregate_info_ptr.contains(agg_id) && aggregate_info_ptr.at(agg_id);
+    return aggregate_info_ptr.contains(agg_id) && aggregate_info_ptr[agg_id];
 }
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
