@@ -79,7 +79,8 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
             std::cout << "\rdistances: "
                     << std::setw(12) /*<< std::setprecision(3)*/ << _router.forward_distance()
                     << " (" << std::setw(12) /*<< std::setprecision(3)*/
-                    << _router.forward_current().value() << "), ";
+                    << _router.forward_current().value() << "), of "
+                    << _query_ptr->beeline_distance() << ", ";
 
             if constexpr (requires(RouterT::labels_type&&l) { l.aggregate_count(); }) {
                 std::cout << "node aggregates currently expanded: " << std::setw(10)
