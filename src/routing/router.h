@@ -15,19 +15,23 @@ class router {
 public:
     using graph_type = Graph;
     using search_type = Dijkstra;
-    using labels_type = search_type::labels_type;
-    using distance_type  = Graph::distance_type;
+    using labels_type = typename search_type::labels_type;
+    using node_id_type = typename graph_type::node_id_type;
+    using distance_type = typename graph_type::distance_type;
+
+    using node_cost_pair_type = typename search_type::node_cost_pair_type;
+protected:
+    graph_type const&_graph;
+
+    search_type _forward_search;
+
+    node_id_type _start_node;
+    node_id_type _target_node;
+    node_id_type _mid_node;
+
+    node_cost_pair_type _forward_current;
+
 private:
-    Graph const &_M_graph;
-
-    Dijkstra _M_forward_search;
-
-    graph_type::node_id_type _M_start_node;
-    graph_type::node_id_type _M_target_node;
-    graph_type::node_id_type _M_mid_node;
-
-    typename Dijkstra::node_cost_pair_type _forward_current;
-
     void step_forward();
 
     /**
@@ -35,12 +39,13 @@ private:
      * @param node
      * @return
      */
-    Graph::distance_type min_route_distance(Dijkstra::node_cost_pair_type node) const;
+    distance_type min_route_distance(node_cost_pair_type node) const;
 
     /**
      * TODO implement
      */
     void compute_one_to_all();
+
     /**
      * TODO move from compute_route()
      */
@@ -50,16 +55,15 @@ public:
     static constexpr size_t SIZE_PER_NODE = 2 * Dijkstra::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE = 2 * Dijkstra::SIZE_PER_EDGE;
 
+    explicit router(Graph const&graph);
 
-    explicit router(Graph const &graph);
+    router(const router&other) = delete;
 
-    router(const router &other) = delete;
+    router(router&&other) noexcept;
 
-    router(router &&other) noexcept;
+    router& operator=(const router&other) = delete;
 
-    router &operator=(const router &other) = delete;
-
-    router &operator=(router &&other) noexcept = default;
+    router& operator=(router&&other) noexcept = default;
 
     ~router() = default;
 
@@ -68,7 +72,7 @@ public:
      * @param start_node
      * @param target_node
      */
-    void init(typename Graph::node_id_type start_node, typename Graph::node_id_type target_node);
+    void init(node_id_type start_node, node_id_type target_node);
 
     /**
      * calculates a one to one route using bidirectional dijkstra. init() has to be called first
@@ -86,15 +90,15 @@ public:
      * @param node
      * @return
      */
-    distance_type distance(const typename Graph::node_id_type &node) const;
+    distance_type distance(const node_id_type& node) const;
 
     distance_type forward_distance() const { return _forward_current.distance; };
 
-    typename Dijkstra::node_cost_pair_type forward_current() const { return _forward_current; };
+    node_cost_pair_type forward_current() const { return _forward_current; };
 
-    auto &&forward_labels() const { return _M_forward_search.labels(); }
+    auto&& forward_labels() const { return _forward_search.labels(); }
 
-    auto &&forward_search() const { return _M_forward_search; }
+    auto&& forward_search() const { return _forward_search; }
 
     /**
      * checks if a valid route has been found
