@@ -49,7 +49,7 @@ router<Graph, Dijkstra>::compute_route() {
     std::size_t step_count = 0;
     while (!done) {
         done = _forward_search.queue_empty();
-        done |= !is_infinity(_forward_search.get_label(_target_node).distance);
+        done |= _forward_search.reached(_target_node);
         done |= !is_none(_mid_node);
 
         step_forward();
