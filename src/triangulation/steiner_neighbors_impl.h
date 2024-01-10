@@ -189,9 +189,8 @@ private:
         // find first predecessor on different edge
         auto other_face_crossing_predecessor = node_id;
         auto face_crossing_predecessor = reached_from;
-        while (!graph.is_base_node(face_crossing_predecessor) || face_crossing_predecessor.edge == node_id.edge &&
-               face_crossing_predecessor !=
-               other_face_crossing_predecessor) [[likely]]
+        while (face_crossing_predecessor != other_face_crossing_predecessor &&
+                (!graph.is_base_node(face_crossing_predecessor) || face_crossing_predecessor.edge == node_id.edge)) [[likely]]
         {
             other_face_crossing_predecessor = face_crossing_predecessor;
             face_crossing_predecessor = labels.get(face_crossing_predecessor).predecessor;
