@@ -2,8 +2,8 @@
 
 #include "cli/cmdline_route.h"
 
-#include <format>
 #include <fstream>
+#include <sstream>
 
 #include <filesystem>
 
@@ -83,12 +83,16 @@ main(int argc, char *argv[]) {
         }
 
         // setup writers for graphs to show
-        std::string eps_string = epsilon == 0 ? "exact" : std::format("{:_>5d}", (int) (epsilon * 10000));
-        std::string target_directory = std::format("{}/{}_{}_{}", output_directory, src_node, dest_node, eps_string);
-        std::string beeline_file = std::format("{}/beeline.gl", target_directory);
-        std::string route_file = std::format("{}/path.gl", target_directory);
-        std::string tree_file = std::format("{}/tree.gl", target_directory);
-        std::string info_file = std::format("{}/info.csv", target_directory);
+        std::stringstream target_dir_builder;
+        target_dir_builder <<  output_directory << "/" << src_node << "_" << dest_node;
+        if (epsilon == 0)
+            target_dir_builder << "exact";
+        else target_dir_builder<< ((int) (epsilon * 10000));
+        std::string target_directory = target_dir_builder.str();
+        std::string beeline_file = target_directory + "/beeline.gl";
+        std::string route_file = target_directory + "/path.gl";
+        std::string tree_file =  target_directory + "/tree.gl";
+        std::string info_file =  target_directory + "/info.csv";
         std::filesystem::create_directory(target_directory);
         std::ofstream output_beeline(beeline_file);
         std::ofstream output_route(route_file);
