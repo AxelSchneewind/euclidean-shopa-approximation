@@ -23,6 +23,8 @@ option "csv-format" c "indicates that routing information should be printed in t
 option "projection" p "which projection to apply to coordinates when writing to files" values="none","google_bing","wgs84" enum default="none" optional
 option "tree" t "generate graph file for search tree" flag off
 
+section "routing algorithms"
+option "astar" a "use A* heuristic to speed up routing" flag on
 
 # option <long> <short> "<desc>"
 # 	{details="<detailed description>"}

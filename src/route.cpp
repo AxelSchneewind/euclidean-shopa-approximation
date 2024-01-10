@@ -36,7 +36,7 @@ main(int argc, char *argv[]) {
 
     RoutingConfiguration config;
     config.bidirectional = false;
-    config.use_a_star = true;
+    config.use_a_star = arguments.astar_flag;
     config.live_status = true;
 
     // read graph

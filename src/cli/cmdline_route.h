@@ -66,6 +66,8 @@ struct gengetopt_args_info
   const char *projection_help; /**< @brief which projection to apply to coordinates when writing to files help description.  */
   int tree_flag;	/**< @brief generate graph file for search tree (default=off).  */
   const char *tree_help; /**< @brief generate graph file for search tree help description.  */
+  int astar_flag;	/**< @brief use A* heuristic to speed up routing (default=on).  */
+  const char *astar_help; /**< @brief use A* heuristic to speed up routing help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -78,6 +80,7 @@ struct gengetopt_args_info
   unsigned int csv_format_given ;	/**< @brief Whether csv-format was given.  */
   unsigned int projection_given ;	/**< @brief Whether projection was given.  */
   unsigned int tree_given ;	/**< @brief Whether tree was given.  */
+  unsigned int astar_given ;	/**< @brief Whether astar was given.  */
 
 } ;
 
