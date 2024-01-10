@@ -63,7 +63,9 @@ if (GENGETOPT)
             COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/prune_graph.ggo -F cmdline_prune_graph --output-dir=src/cli --set-version=${VERSION}
             SOURCES src/cli/prune_graph.ggo
             DEPENDS version
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            VERBATIM)
+
 else (GENGETOPT)
     message("gengetopt needs to be installed to modify and generate the command line argument parser, falling back to precompiled (possibly out of date) command line parsing")
 endif (GENGETOPT)
