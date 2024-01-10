@@ -127,3 +127,14 @@ void Client::write_info(std::ostream& output) const {
     }
     output << std::flush;
 }
+
+void Client::write_tree_file(std::string path) const {
+    std::string prefix(path.substr(0, path.find_last_of('/') + 1));
+    std::string filename = path.substr(path.find_last_of('/'));
+    std::string name = filename.substr(0, filename.find_first_of('.'));
+    std::string suffix = filename.substr(filename.find_first_of('.'), filename.size());
+
+    std::string fwd{prefix + name + suffix};
+    if (_result.tree_forward().node_count() <= max_tree_size)
+        _result.tree_forward().write_graph_file(fwd, tree_color, 1);
+}

@@ -26,6 +26,8 @@ private:
     int path_color = 5;
     int beeline_color = 1;
 
+    std::size_t max_tree_size = 50000000;
+
 public:
     Client() : _graph(), _router(), _query(), _result(), statistics(COLUMNS) { statistics.new_line(); };
 
@@ -62,16 +64,7 @@ public:
 
     void write_route_file(std::string path) const { _result.path().write_graph_file(path, path_color, 2); };
 
-    void write_tree_file(std::string path) const {
-        std::string prefix(path.substr(0, path.find_last_of('/') + 1));
-        std::string filename = path.substr(path.find_last_of('/'));
-        std::string name = filename.substr(0, filename.find_first_of('.'));
-        std::string suffix = filename.substr(filename.find_first_of('.'), filename.size());
-
-        std::string fwd{prefix + name + suffix};
-        if (_result.tree_forward().node_count() <= 10000000)
-            _result.tree_forward().write_graph_file(fwd, tree_color, 1);
-    };
+    void write_tree_file(std::string path) const;;
 
     void write_beeline_file(std::string path) const { _query.beeline().write_graph_file(path, beeline_color, 1); };
 
