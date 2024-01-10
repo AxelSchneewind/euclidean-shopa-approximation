@@ -73,8 +73,8 @@ using std_dijkstra = dijkstra<std_graph_t, default_queue_t, default_labels_t, de
 using a_star_dijkstra = dijkstra<std_graph_t, a_star_queue_t, a_star_labels_t, default_neighbors<std_graph_t>,
     use_all_edges<std_graph_t>>;
 
-using std_routing_t = router<std_graph_t, std_dijkstra>;
-using a_star_routing_t = router<std_graph_t, a_star_dijkstra>;
+using std_routing_t = bidirectional_router<std_graph_t, std_dijkstra>;
+using a_star_routing_t = bidirectional_router<std_graph_t, a_star_dijkstra>;
 
 using default_ch_labels_t = node_labels<ch_graph_t, label_type<ch_graph_t>>;
 using default_ch_queue_t = dijkstra_queue<ch_graph_t, default_node_cost_pair, Default>;

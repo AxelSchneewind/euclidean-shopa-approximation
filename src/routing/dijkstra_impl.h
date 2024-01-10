@@ -110,7 +110,7 @@ dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type node) {
             assert (_M_graph.has_edge(successor.predecessor, successor_node));
 
             auto preliminary_label = successor;
-            preliminary_label.predecessor = none_value<typename G::node_id_type>;
+            // preliminary_label.predecessor = none_value<typename G::node_id_type>;
             _M_labels.label(successor_node, preliminary_label);
         }
     }

@@ -31,7 +31,7 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_VERSION
 /** @brief the program version */
-#define CMDLINE_PARSER_VERSION "20240109-1207"
+#define CMDLINE_PARSER_VERSION "1.0"
 #endif
 
 enum enum_projection { projection__NULL = -1, projection_arg_none = 0, projection_arg_google_bing, projection_arg_wgs84 };

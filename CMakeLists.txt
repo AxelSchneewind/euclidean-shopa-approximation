@@ -6,6 +6,16 @@ set(CMAKE_CXX_COMPILER g++)
 
 include_directories(include)
 
+
+add_custom_target(version
+        COMMAND echo -n "" > version.txt
+        COMMAND git rev-parse --short HEAD >> version.txt
+        # COMMAND date +%Y%m%d:%H%M >> version.txt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "make version name"
+        VERBATIM)
+
+
 # doxygen
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
@@ -26,19 +36,23 @@ else (DOXYGEN_FOUND)
     message("Doxygen needs to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
 
-string(TIMESTAMP VERSION_TIMESTAMP %Y%m%d-%I%M)
-
 # gengetopt
 find_program(GENGETOPT gengetopt)
 if (GENGETOPT)
     add_custom_target(cmdline_route ALL
-            COMMAND ${GENGETOPT} -i src/cli/route.ggo -F cmdline_route --set-version=${VERSION_TIMESTAMP} --output-dir src/cli
+            COMMAND cp src/cli/route.ggo ${CMAKE_BINARY_DIR}/route.ggo
+            COMMAND echo -n "version\"1.0\"" >> ${CMAKE_BINARY_DIR}/route.ggo
+            # COMMAND cat ${CMAKE_BINARY_DIR}/version.txt >> ${CMAKE_BINARY_DIR}/route.ggo
+            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/route.ggo -F cmdline_route --output-dir=src/cli  #--set-version=${VERSION}
             SOURCES src/cli/route.ggo
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+            DEPENDS version
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            VERBATIM)
 
     add_custom_target(cmdline_prune_graph ALL
-            COMMAND ${GENGETOPT} -i src/cli/prune_graph.ggo -F cmdline_prune_graph --set-version=${VERSION_TIMESTAMP} --output-dir src/cli
+            COMMAND ${GENGETOPT} -i src/cli/prune_graph.ggo -F cmdline_prune_graph --output-dir=src/cli --set-version=${VERSION}
             SOURCES src/cli/prune_graph.ggo
+            DEPENDS version
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 else (GENGETOPT)
     message("gengetopt needs to be installed to modify and generate the command line argument parser, falling back to precompiled (possibly out of date) command line parsing")
@@ -49,7 +63,7 @@ set(CMAKE_CXX_FLAGS "") # -Wall -Wextra
 set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check") #-D_GLIBCXX_DEBUG
 
 # performance options
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native") # -ffast-math
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native -ffast-math") # -ffast-math
 
 add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
 

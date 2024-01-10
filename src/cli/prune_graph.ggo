@@ -1,9 +1,7 @@
 package "Routing"
-version "1.0"
 purpose ""
 usage "prune_graph -g graph_file.graph -o output_file.graph -x 0 -X 1 -y 0 -Y 1"
 description "computes the shortest path for each given pair of source and destination node."
-versiontext "1.0"
 
 args ""
 

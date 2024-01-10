@@ -1,5 +1,4 @@
 package "Routing"
-version "1.0"
 purpose ""
 usage "route --graph-file /path/to/graph-file --output-directory /path/to/results-directory --epsilon 0.5 -q src0,dest0,..."
 description "computes the shortest path for each given pair of source and destination node."

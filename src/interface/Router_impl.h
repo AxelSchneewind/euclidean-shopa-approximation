@@ -13,8 +13,8 @@ Router::Router(const Graph&graph) {
             break;
         case GraphType::STD_GRAPH_DIRECTED:
         case GraphType::STD_GRAPH_UNDIRECTED:
-            pimpl = std::make_unique<RouterImplementation<std_graph_t, a_star_routing_t>>(
-                graph.get<std_graph_t>(), a_star_routing_t(graph.get<std_graph_t>()));
+            pimpl = std::make_unique<RouterImplementation<std_graph_t, std_routing_t>>(
+                graph.get<std_graph_t>(), std_routing_t(graph.get<std_graph_t>()));
             break;
     }
 }

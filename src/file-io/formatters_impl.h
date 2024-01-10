@@ -115,6 +115,7 @@ namespace stream_encoders {
     encode_text::read(std::istream &input) {
         adjacency_list_edge<node_id_t, edge_t> result{};
         input >> result.source >> result.destination >> result.info.cost;
+	input.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         return result;
     }
 
@@ -123,6 +124,7 @@ namespace stream_encoders {
     encode_text::read(std::istream &input) {
         adjacency_list_edge<node_id_t, ch_edge_t> result{};
         input >> result.source >> result.destination >> result.info.cost;
+	input.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         return result;
     }
 
@@ -131,6 +133,7 @@ namespace stream_encoders {
     encode_text::read(std::istream &input) {
         adjacency_list_edge<node_id_t, gl_edge_t> result{};
         input >> result.source >> result.destination >> result.info.color >> result.info.line_width;
+	input.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         return result;
     }
 
@@ -148,6 +151,7 @@ namespace stream_encoders {
     encode_text::read<std::array<int, 3>>(std::istream &input) {
         std::array<int, 3> result;
         input >> result[0] >> result[1] >> result[2];
+	input.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         return result;
     }
 
@@ -164,6 +168,7 @@ namespace stream_encoders {
     encode_text::read(std::istream &input) {
         std::array<unsigned long, 3> result;
         input >> result[0] >> result[1] >> result[2];
+	input.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         return result;
     }
 

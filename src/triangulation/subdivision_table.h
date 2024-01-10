@@ -16,8 +16,8 @@ public:
     static constexpr unsigned char step_count = 254;
 
     // assume that each angle is at least 5 degrees
-    static constexpr double min_angle = (M_PI_2 / 90) *  5;
-    static constexpr double max_angle = (M_PI_2 / 90) * 85;
+    static constexpr double min_angle = (M_PI_2 / 90) *  1;
+    static constexpr double max_angle = (M_PI_2 / 90) * 89;
 
     static constexpr double step_size = (max_angle - min_angle) / (step_count - 1);
 

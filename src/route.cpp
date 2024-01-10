@@ -88,7 +88,6 @@ main(int argc, char *argv[]) {
         std::ofstream output_route(route_file);
         std::ofstream output_tree(tree_file);
         std::ofstream output_info(info_file);
-        output_beeline << std::flush;
         output_info << std::flush;
 
         std::cout << "computing route...\n";
@@ -119,9 +118,6 @@ main(int argc, char *argv[]) {
 
         if (arguments.tree_flag)
             client.write_tree_file(tree_file);
-        output_beeline.close();
-        output_tree.close();
-        output_info.close();
 
         if (!client.result().route_found())
             continue;
@@ -133,7 +129,6 @@ main(int argc, char *argv[]) {
         }
 
         client.write_route_file(route_file);
-        output_route.close();
     }
 
     return 0;
