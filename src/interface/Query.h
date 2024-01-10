@@ -20,6 +20,7 @@ public:
     virtual long to() const = 0;
 
     virtual long max_tree_size() const = 0;
+    virtual void set_max_tree_size(long size) = 0;
 
     virtual Graph beeline() const = 0;
     virtual distance_t beeline_distance() const = 0;
@@ -37,7 +38,7 @@ private:
     Graph _beeline;
     distance_t _beeline_distance;
 
-    long _max_tree_size = 10000000;
+    long _max_tree_size = 0;
 
 public:
     QueryImplementation();
@@ -49,7 +50,8 @@ public:
     node_id_type from_internal() const { return _from_internal; }
     node_id_type to_internal() const { return _to_internal; }
 
-    virtual long max_tree_size() const { return _max_tree_size; };
+    long max_tree_size() const override { return _max_tree_size; };
+    void set_max_tree_size(long s) override { _max_tree_size = s; }
 
     Graph beeline() const override  { return _beeline; };
     distance_t beeline_distance() const override { return _beeline_distance; }
