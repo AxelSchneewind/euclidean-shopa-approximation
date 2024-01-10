@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.22)
 project(routing)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -14,7 +14,6 @@ add_custom_target(version
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "make version name"
         VERBATIM)
-
 
 # doxygen
 find_package(Doxygen)
@@ -71,7 +70,7 @@ else (GENGETOPT)
 endif (GENGETOPT)
 
 
-set(CMAKE_CXX_FLAGS "") # -Wall -Wextra
+set(CMAKE_CXX_FLAGS "--std=c++20") # -Wall -Wextra
 set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check") #-D_GLIBCXX_DEBUG
 
 # performance options
@@ -105,6 +104,5 @@ endif(GENGETOPT)
 # installation
 set(CMAKE_INSTALL_PREFIX /opt/routing)
 install(TARGETS route subdivision_stats make_gl prune_graph project_graph RUNTIME DESTINATION bin)
-
 
 include(CPack)

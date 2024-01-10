@@ -85,8 +85,7 @@ router<Graph, Dijkstra>::route() const {
     if (is_none(_mid_node))
         return path<Graph>();
 
-    auto path_fwd = _forward_search.path(_mid_node);
-    return path_fwd;
+    return _forward_search.path(_mid_node);
 };
 
 template<typename Graph, typename Dijkstra>

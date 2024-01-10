@@ -4,7 +4,7 @@
 #include "polyhedron.h"
 
 #include <vector>
-#include <stdfloat>
+#include <float.h>
 #include <cstdint>
 #include <cmath>
 #include <cstdint>

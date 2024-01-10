@@ -46,6 +46,14 @@ void table::put(int column, T &&value) {
     values.back()[column] = sstream.str();
 }
 
+template<>
+void table::put(int column, std::chrono::duration<double, std::milli> &&value) {
+    std::stringstream sstream;
+    sstream << value << "ms";
+    values.back()[column] = sstream.str();
+}
+
+
 
 template<typename Columns>
 void format_header(table const &values, std::ostream &out, Columns &&columns) {

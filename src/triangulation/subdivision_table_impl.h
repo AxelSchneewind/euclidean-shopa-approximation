@@ -11,7 +11,7 @@ subdivision_table::min_r_per_triangle_class(const std::vector<node_t> &nodes, co
                                             const std::vector<triangle> &faces) {
     std::vector<float> min_r(M_PI / step_size, infinity<float>);
 
-    for (auto face: faces) {
+    for (auto&& face: faces) {
         for (int node_index = 0; node_index < 3; ++node_index) {
             auto c1 = nodes[face[node_index]].coordinates;
             auto c2 = nodes[face[(node_index + 1) % 3]].coordinates;

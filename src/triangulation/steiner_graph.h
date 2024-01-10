@@ -2,7 +2,6 @@
 
 #include "subdivision_table.h"
 #include "../graph/subgraph.h"
-#include <format>
 
 template<typename EdgeId, typename IntraEdgeId>
 struct steiner_node_id {
@@ -33,12 +32,12 @@ struct steiner_node_id {
     }
 };
 
-template<typename E, typename I>
-struct std::formatter<steiner_node_id<E, I>> : std::formatter<std::string> {
-    auto format(steiner_node_id<E, I> p, format_context &ctx) const {
-        return formatter<string>::format(std::format("{}:{}", p.edge, p.steiner_index), ctx);
-    }
-};
+// template<typename E, typename I>
+// struct std::formatter<steiner_node_id<E, I>> : std::formatter<std::string> {
+//     auto format(steiner_node_id<E, I> p, format_context &ctx) const {
+//         return formatter<string>::format(std::format("{}:{}", p.edge, p.steiner_index), ctx);
+//     }
+// };
 
 template<typename E, typename I>
 struct std::hash<steiner_node_id<E, I>> {
@@ -80,12 +79,12 @@ struct std::hash<steiner_edge_id<N>> {
 };
 
 
-template<typename N>
-struct std::formatter<steiner_edge_id<N>> : std::formatter<std::string> {
-    auto format(steiner_edge_id<N> p, format_context &ctx) const {
-        return formatter<string>::format(std::format("({},{})", p.source, p.destination), ctx);
-    }
-};
+// template<typename N>
+// struct std::formatter<steiner_edge_id<N>> : std::formatter<std::string> {
+//     auto format(steiner_edge_id<N> p, format_context &ctx) const {
+//         return formatter<string>::format(std::format("({},{})", p.source, p.destination), ctx);
+//     }
+// };
 
 /**
  * provides access to a virtual graph derived from a base graph

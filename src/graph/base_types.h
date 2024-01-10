@@ -3,6 +3,7 @@
 #include <limits>
 #include <vector>
 #include <complex>
+#include <array>
 
 
 using node_id_t = int;
