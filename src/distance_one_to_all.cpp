@@ -31,7 +31,7 @@ int main(int argc, const char *argv[]) {
 
     std::chrono::duration<double, std::milli> duration = after - before;
 
-    std::cout << "Time: " << duration << std::endl;
+    std::cout << "Time: " << duration.count() << "ms" << std::endl;
 
     output.close();
 }
