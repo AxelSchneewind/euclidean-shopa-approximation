@@ -84,7 +84,7 @@ main(int argc, char *argv[]) {
 
         // setup writers for graphs to show
         std::stringstream target_dir_builder;
-        target_dir_builder <<  output_directory << "/" << src_node << "_" << dest_node;
+        target_dir_builder <<  output_directory << "/" << src_node << "_" << dest_node << "_";
         if (epsilon == 0)
             target_dir_builder << "exact";
         else target_dir_builder<< ((int) (epsilon * 10000));
