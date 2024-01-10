@@ -41,16 +41,26 @@ find_program(GENGETOPT gengetopt)
 if (GENGETOPT)
     add_custom_target(cmdline_route ALL
             COMMAND cp src/cli/route.ggo ${CMAKE_BINARY_DIR}/route.ggo
-            COMMAND echo -n "version\"1.0\"" >> ${CMAKE_BINARY_DIR}/route.ggo
-            # COMMAND cat ${CMAKE_BINARY_DIR}/version.txt >> ${CMAKE_BINARY_DIR}/route.ggo
+            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/route.ggo
             COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/route.ggo -F cmdline_route --output-dir=src/cli  #--set-version=${VERSION}
             SOURCES src/cli/route.ggo
             DEPENDS version
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             VERBATIM)
 
+    add_custom_target(cmdline_find_nodes ALL
+            COMMAND cp src/cli/find_nodes.ggo ${CMAKE_BINARY_DIR}/find_nodes.ggo
+            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/find_nodes.ggo
+            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/find_nodes.ggo -F cmdline_find_nodes --output-dir=src/cli  #--set-version=${VERSION}
+            SOURCES src/cli/find_nodes.ggo
+            DEPENDS version
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            VERBATIM)
+
     add_custom_target(cmdline_prune_graph ALL
-            COMMAND ${GENGETOPT} -i src/cli/prune_graph.ggo -F cmdline_prune_graph --output-dir=src/cli --set-version=${VERSION}
+            COMMAND cp src/cli/prune_graph.ggo ${CMAKE_BINARY_DIR}/prune_graph.ggo
+            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/prune_graph.ggo
+            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/prune_graph.ggo -F cmdline_prune_graph --output-dir=src/cli --set-version=${VERSION}
             SOURCES src/cli/prune_graph.ggo
             DEPENDS version
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -66,6 +76,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check") #-D_GLIBCXX_DEBUG
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native -ffast-math") # -ffast-math
 
 add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
+add_executable(find_nodes src/find_nodes.cpp src/cli/cmdline_find_nodes.c)
 
 # compile implementation into one library file
 add_library(routing src/interface/Client.cpp)
@@ -86,6 +97,7 @@ add_executable(subdivision_stats src/subdivision_stats.cpp)
 if (GENGETOPT)
     add_dependencies(route cmdline_route)
     add_dependencies(prune_graph cmdline_prune_graph)
+    add_dependencies(find_nodes cmdline_find_nodes)
 endif(GENGETOPT)
 
 # installation
