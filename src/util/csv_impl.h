@@ -49,7 +49,7 @@ void table::put(int column, T &&value) {
 template<>
 void table::put(int column, std::chrono::duration<double, std::milli> &&value) {
     std::stringstream sstream;
-    sstream << value << "ms";
+    sstream << value.count() << "ms";
     values.back()[column] = sstream.str();
 }
 
