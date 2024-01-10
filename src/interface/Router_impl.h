@@ -28,20 +28,24 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
                 using node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type,
                     a_star_info>;
                 using queue_t = a_star_queue<steiner_graph, node_cost_pair>;
-                using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
-                using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
-                if (!_config.bidirectional && _config.compact_labels) {
+                if (_config.compact_labels) {   // map based labels
+                    using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>; // TODO
+                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
+                    if (!_config.bidirectional) { // unidirectional routing
+                        using steiner_routing_t = router<steiner_graph, dijkstra>;
+                        pimpl = std::make_unique<RouterImplementation < steiner_graph, steiner_routing_t>> ( graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
+                    } else { // bidirectional routing
+                        using steiner_routing_t = bidirectional_router<steiner_graph, dijkstra>;
+                        pimpl = std::make_unique<RouterImplementation < steiner_graph, steiner_routing_t>> ( graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
+                    }
+                } else { // array-based labels
+                    using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>; // TODO
+                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
                     using steiner_routing_t = router<steiner_graph, dijkstra>;
                     pimpl = std::make_unique<RouterImplementation<steiner_graph, steiner_routing_t>>(
                         graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
                 }
-                else {
-                    using steiner_routing_t = bidirectional_router<steiner_graph, dijkstra>;
-                    pimpl = std::make_unique<RouterImplementation<steiner_graph, steiner_routing_t>>(
-                        graph.get<steiner_graph>(), steiner_routing_t(graph.get<steiner_graph>()));
-                }
-            }
-            else {
+            } else {
                 using node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>;
                 using queue_t = dijkstra_queue<steiner_graph, node_cost_pair>;
                 using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
@@ -58,8 +62,11 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
             break;
         case GraphType::STD_GRAPH_DIRECTED:
         case GraphType::STD_GRAPH_UNDIRECTED:
-            pimpl = std::make_unique<RouterImplementation<std_graph_t, a_star_routing_t>>(
-                graph.get<std_graph_t>(), a_star_routing_t(graph.get<std_graph_t>()));
+            if (_config.use_a_star) {
+                pimpl = std::make_unique<RouterImplementation < std_graph_t, a_star_routing_t>> ( graph.get<std_graph_t>(), a_star_routing_t(graph.get<std_graph_t>()));
+            } else { // don't use A*
+                pimpl = std::make_unique<RouterImplementation < std_graph_t, std_routing_t>> ( graph.get<std_graph_t>(), std_routing_t(graph.get<std_graph_t>()));
+            }
             break;
     }
 }

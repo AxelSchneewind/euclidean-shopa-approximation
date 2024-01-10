@@ -53,10 +53,6 @@ private:
     std::unique_ptr<RouterInterface> pimpl;
     RoutingConfiguration _config;
 
-    template<typename RouterT>
-    Router(Graph const&graph, RouterT&&router) : pimpl{graph, std::forward<RouterT>(router)} {
-    };
-
 public:
     Router() = default;
 

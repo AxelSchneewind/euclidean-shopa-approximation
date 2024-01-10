@@ -122,18 +122,18 @@ public:
      * returns the trees of the forward and backward search
      * @return
      */
-    typename Graph::subgraph_type shortest_path_tree() const;
+    typename Graph::subgraph_type shortest_path_tree(size_t max_tree_size = 10000000) const;
 
     /**
      * returns the tree of the forward search
      * @return
      */
-    typename Graph::subgraph_type tree_forward() const {
-        return base::_forward_search.shortest_path_tree();
+    typename Graph::subgraph_type tree_forward(size_t max_tree_size = 5000000) const {
+        return base::_forward_search.shortest_path_tree(max_tree_size);
     }
 
-    typename Graph::subgraph_type tree_backward() const {
-        return _backward_search.shortest_path_tree();
+    typename Graph::subgraph_type tree_backward(size_t max_tree_size = 5000000) const {
+        return _backward_search.shortest_path_tree(max_tree_size);
     };
 
     /**

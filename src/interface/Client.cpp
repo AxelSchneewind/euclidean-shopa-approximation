@@ -64,25 +64,23 @@ void Client::read_graph_file(std::string path) {
     if (path.ends_with(".graph")) {
         _graph.read_graph_file(path, 0.5F);
         process_mem_usage(vm_graph, res_graph);
-        _router = {_graph};
     } else if (path.ends_with(".fmi")) {
         _graph.read_graph_file(path);
         process_mem_usage(vm_graph, res_graph);
-        _router = {_graph};
     } else if (path.ends_with(".sch")) {
         _graph.read_graph_file(path);
         process_mem_usage(vm_graph, res_graph);
-        _router = {_graph};
     } else if (path.ends_with(".gl")) {
         _graph.read_graph_file(path);
         process_mem_usage(vm_graph, res_graph);
-        _router = {_graph};
     } else {
         throw std::invalid_argument("unrecognized file ending");
     }
     input.close();
 
     std::cout << "\b\b\b, done";
+
+    _router = {_graph, _routing_config};
 
     _graph.write_graph_stats(statistics);
     statistics.put(Statistics::MEMORY_USAGE_GRAPH, (vm_graph - vm) / 1024);

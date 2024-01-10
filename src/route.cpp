@@ -34,8 +34,14 @@ main(int argc, char *argv[]) {
     graph_file = arguments.graph_file_arg;
     output_directory = arguments.output_directory_arg;
 
+    RoutingConfiguration config;
+    config.bidirectional = false;
+    config.use_a_star = true;
+    config.live_status = true;
+
     // read graph
     Client client;
+    client.configure(config);
     if (arguments.epsilon_given && graph_file.ends_with(".graph"))
         client.read_graph_file(graph_file, epsilon);
     else

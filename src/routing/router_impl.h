@@ -91,8 +91,8 @@ router<Graph, Dijkstra>::route() const {
 
 template<typename Graph, typename Dijkstra>
 typename Graph::subgraph_type
-router<Graph, Dijkstra>::shortest_path_tree() const {
-    auto tree_fwd = _forward_search.shortest_path_tree();
+router<Graph, Dijkstra>::shortest_path_tree(size_t max_tree_size) const {
+    auto tree_fwd = _forward_search.shortest_path_tree(max_tree_size);
 
     // filter_nodes(tree_fwd, [&](auto node) -> bool {
     //     return _forward_search.get_label(node).distance + ::distance(_graph.node(node).coordinates, _graph.node(_target_node).coordinates) <= distance();

@@ -123,9 +123,9 @@ bidirectional_router<Graph, Dijkstra>::route() const {
 
 template<typename Graph, typename Dijkstra>
 Graph::subgraph_type
-bidirectional_router<Graph, Dijkstra>::shortest_path_tree() const {
-    auto tree_fwd = base::_forward_search.shortest_path_tree();
-    auto tree_bwd = _backward_search.shortest_path_tree();
+bidirectional_router<Graph, Dijkstra>::shortest_path_tree(size_t max_tree_size) const {
+    auto tree_fwd = base::_forward_search.shortest_path_tree(max_tree_size / 2);
+    auto tree_bwd = _backward_search.shortest_path_tree(max_tree_size / 2);
 
     // filter_nodes(tree_fwd, [&](auto node) -> bool {
     //     return _forward_search.get_label(node).distance + ::distance(_graph.node(node).coordinates, _graph.node(_target_node).coordinates) <= distance();

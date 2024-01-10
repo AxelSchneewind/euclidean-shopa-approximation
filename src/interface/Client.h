@@ -15,6 +15,7 @@ class Client {
 public:
 private:
     Graph _graph;
+    RoutingConfiguration _routing_config;
     Router _router;
 
     Query _query;
@@ -41,6 +42,8 @@ public:
     void read_graph_file(std::string path, Args... args);
 
     void write_graph_file(std::string path) const { _graph.write_graph_file(path); }
+
+    void configure(RoutingConfiguration& config) { _routing_config = config; }
 
     void compute_route(int from, int to) {
         _router.compute_route(from, to);
