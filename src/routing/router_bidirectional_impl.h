@@ -28,8 +28,8 @@ bidirectional_router<Graph, Dijkstra>::bidirectional_router(Graph const&graph)
 
 template<typename Graph, typename Dijkstra>
 bidirectional_router<Graph, Dijkstra>::bidirectional_router(bidirectional_router&&routing) noexcept
-    : base(std::move(routing)),
-      _backward_search(std::move(routing._backward_search)) {
+        : base(routing._graph),
+          _backward_search(base::_graph, std::move(routing._backward_search)) {
     routing._mid_node = none_value<typename Graph::node_id_type>;
 }
 
