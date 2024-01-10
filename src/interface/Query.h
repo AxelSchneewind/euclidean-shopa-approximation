@@ -66,11 +66,9 @@ public:
     }
 };
 
-class Query {
-private:
-    std::shared_ptr<QueryInterface> pimpl;
+class Query : public Base<QueryInterface> {
 public:
-    Query() : pimpl(nullptr) {}
+    Query() = default;
 
     Query(Query const&) = default;
     Query(Query &&) noexcept = default;
@@ -78,26 +76,27 @@ public:
     Query& operator=(Query const&) = default;
     Query& operator=(Query &&) noexcept = default;
 
-    Query(std::shared_ptr<QueryInterface> other) : pimpl(std::move(other)) {}
+    template<typename GraphT>
+    Query(QueryImplementation<GraphT> const& impl) : Base<QueryInterface>(impl) {}
 
     template<typename GraphT>
-    Query(QueryImplementation<GraphT> const& impl) : pimpl(std::make_shared<QueryImplementation<GraphT>>(impl)) {}
+    Query(QueryImplementation<GraphT> && impl) : Base<QueryInterface>(std::move(impl)) {}
 
     template<typename GraphT>
-    Query(QueryImplementation<GraphT> && impl) : pimpl(std::make_shared<QueryImplementation<GraphT>>(std::move(impl))) {}
+    Query(std::shared_ptr<QueryImplementation<GraphT>> impl) : Base<QueryInterface>(std::move(impl)) {}
 
     template<typename GraphT>
-    Query(GraphT& graph, long from, long to) : pimpl{graph, from, to} {}
+    Query(GraphT& graph, long from, long to) : Base<QueryInterface>(QueryImplementation<GraphT>{graph, from, to}) {}
 
 
-    Graph beeline() const { return pimpl->beeline(); };
-    distance_t beeline_distance() const { return pimpl->beeline_distance(); };
+    Graph beeline() const { return impl->beeline(); };
+    distance_t beeline_distance() const { return impl->beeline_distance(); };
 
-    void write(std::ostream& out) const { pimpl->write(out); out << std::endl; };
-    void write(table& out) const { pimpl->write(out); };
+    void write(std::ostream& out) const { impl->write(out); out << std::endl; };
+    void write(table& out) const { impl->write(out); };
 
-    long from() const { return pimpl->from(); }
-    long to() const { return pimpl->to(); }
+    long from() const { return impl->from(); }
+    long to() const { return impl->to(); }
 };
 
 
@@ -198,9 +197,7 @@ public:
     }
 };
 
-class Result {
-private:
-    std::shared_ptr<ResultInterface> pimpl;
+class Result : public Base<ResultInterface>{
 public:
     Result() = default;
 
@@ -211,36 +208,36 @@ public:
     Result& operator=(Result const&) noexcept =  default;
 
     template <typename GraphT>
-    Result(ResultImplementation<GraphT> const&impl) : pimpl(std::make_shared<ResultImplementation<GraphT>>(impl)){};
+    Result(ResultImplementation<GraphT> const&impl) : Base<ResultInterface>(impl){};
 
     template <typename GraphT>
-    Result(ResultImplementation<GraphT> &&impl) : pimpl(std::make_shared<ResultImplementation<GraphT>>(std::move(impl))){};
+    Result(ResultImplementation<GraphT> &&impl) : Base<ResultInterface>(std::move(impl)){};
 
     template <typename GraphT>
-    Result(std::shared_ptr<ResultImplementation<GraphT>> impl) : pimpl(std::move(impl)){};
+    Result(std::shared_ptr<ResultImplementation<GraphT>> impl) : Base<ResultInterface>(std::move(impl)){};
 
     template <typename GraphT, typename RouterT>
     Result(GraphT const& graph, QueryImplementation<GraphT> query, RouterT const& router, std::chrono::duration<double, std::milli> duration);
 
-    Query query() const { return pimpl->query(); };
+    Query query() const { return impl->query(); };
 
-    bool route_found() const { return pimpl->route_found(); };
+    bool route_found() const { return impl->route_found(); };
 
-    distance_t distance() const { return pimpl->distance(); };
+    distance_t distance() const { return impl->distance(); };
 
-    Graph & tree_forward() { return pimpl->tree_forward(); };
-    Graph & tree_backward() { return pimpl->tree_backward(); };
-    Graph & path() { return pimpl->path(); };
-    Graph const& tree_forward() const { return pimpl->tree_forward(); };
-    Graph const& tree_backward() const { return pimpl->tree_backward(); };
-    Graph const& path() const { return pimpl->path(); };
+    Graph & tree_forward() { return impl->tree_forward(); };
+    Graph & tree_backward() { return impl->tree_backward(); };
+    Graph & path() { return impl->path(); };
+    Graph const& tree_forward() const { return impl->tree_forward(); };
+    Graph const& tree_backward() const { return impl->tree_backward(); };
+    Graph const& path() const { return impl->path(); };
 
-    std::size_t nodes_visited() const { return pimpl->nodes_visited(); };
-    std::size_t edges_visited() const { return pimpl->edges_visited(); };
-    std::size_t pull_count() const { return pimpl->pull_count(); };
-    std::size_t push_count() const { return pimpl->push_count(); };
+    std::size_t nodes_visited() const { return impl->nodes_visited(); };
+    std::size_t edges_visited() const { return impl->edges_visited(); };
+    std::size_t pull_count() const { return impl->pull_count(); };
+    std::size_t push_count() const { return impl->push_count(); };
 
-    void write(table& out) const { pimpl->write(out); };
+    void write(table& out) const { impl->write(out); };
 
-    std::chrono::duration<double, std::milli> duration() const { return pimpl->duration(); };
+    std::chrono::duration<double, std::milli> duration() const { return impl->duration(); };
 };

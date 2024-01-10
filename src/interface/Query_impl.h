@@ -11,7 +11,7 @@
 template<typename GraphT, typename RouterT>
 Result::Result(GraphT const &graph, QueryImplementation<GraphT> query, RouterT const &router,
                std::chrono::duration<double, std::milli> duration)
-        : pimpl(graph, std::move(query), router, duration) {};
+        : Base<ResultInterface>(ResultImplementation<GraphT> (graph, std::move(query), router, duration)) {};
 
 
 template<RoutableGraph GraphT>

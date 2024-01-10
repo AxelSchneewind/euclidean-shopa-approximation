@@ -275,19 +275,19 @@ void Graph::read_graph_file(std::string path, double epsilon, Args... args) {
     std::ifstream input(path);
 
     if (path.ends_with(".graph") && epsilon != 0.0)
-        pimpl = std::make_unique<GraphImplementation < steiner_graph>>
+        impl = std::make_unique<GraphImplementation < steiner_graph>>
     (triangulation_file_io::read_steiner(input, epsilon));
     else if (path.ends_with(".graph"))
-        pimpl = std::make_unique<GraphImplementation < std_graph_t>>
+        impl = std::make_unique<GraphImplementation < std_graph_t>>
     (triangulation_file_io::read<std_graph_t>(input));
     else if (path.ends_with(".fmi"))
-        pimpl = std::make_unique<GraphImplementation < std_graph_t>>
+        impl = std::make_unique<GraphImplementation < std_graph_t>>
     (fmi_file_io::read<std_graph_t>(input));
     else if (path.ends_with(".sch"))
-        pimpl = std::make_unique<GraphImplementation < ch_graph_t>>
+        impl = std::make_unique<GraphImplementation < ch_graph_t>>
     (fmi_file_io::read<ch_graph_t>(input));
     else if (path.ends_with(".gl"))
-        pimpl = std::make_unique<GraphImplementation < gl_graph_t>>
+        impl = std::make_unique<GraphImplementation < gl_graph_t>>
     (fmi_file_io::read<gl_graph_t>(input));
     else
     throw std::invalid_argument("unrecognized file ending");
@@ -303,15 +303,15 @@ void Graph::read_graph_file(std::string path, Args... args) {
     std::ifstream input(path);
 
     if (path.ends_with(".graph")) {
-        pimpl = std::make_unique<GraphImplementation < steiner_graph>> (triangulation_file_io::read_steiner(input, 0.5F));
+        impl = std::make_unique<GraphImplementation < steiner_graph>> (triangulation_file_io::read_steiner(input, 0.5F));
     } else if (path.ends_with(".fmi"))
-        pimpl = std::make_unique<GraphImplementation < std_graph_t>> (fmi_file_io::read<std_graph_t>(input));
+        impl = std::make_unique<GraphImplementation < std_graph_t>> (fmi_file_io::read<std_graph_t>(input));
     else if (path.ends_with(".sch"))
-        pimpl = std::make_unique<GraphImplementation < ch_graph_t>> (fmi_file_io::read<ch_graph_t>(input));
+        impl = std::make_unique<GraphImplementation < ch_graph_t>> (fmi_file_io::read<ch_graph_t>(input));
     else if (path.ends_with(".gl"))
-        pimpl = std::make_unique<GraphImplementation < gl_graph_t>> (fmi_file_io::read<gl_graph_t>(input));
+        impl = std::make_unique<GraphImplementation < gl_graph_t>> (fmi_file_io::read<gl_graph_t>(input));
     else
-    throw std::invalid_argument("unrecognized file ending");
+        throw std::invalid_argument("unrecognized file ending");
 
 // ...
 

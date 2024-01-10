@@ -14,7 +14,7 @@
 
 template<typename GraphT>
 Client::Client(GraphT &&__graph)
-        : _graph{std::forward(__graph)}, _router{_graph.get<GraphT const&>()}, statistics{COLUMNS} {
+        : _graph{std::forward(__graph)}, _router{_graph.get_implementation<GraphT const&>()}, statistics{COLUMNS} {
     statistics.new_line();
 
     if constexpr (requires(GraphT graph) { graph.epsilon(); graph.base_graph(); }) {

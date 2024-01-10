@@ -30,7 +30,7 @@ private:
     std::size_t max_tree_size = 50000000;
 
 public:
-    Client() : _graph(), _router(), _query(), _result(), statistics(COLUMNS) { statistics.new_line(); };
+    Client() : statistics(COLUMNS) { statistics.new_line(); };
 
     template<typename GraphT>
     Client(GraphT&&graph);
@@ -45,7 +45,7 @@ public:
 
     void configure(RoutingConfiguration& config) { _routing_config = config; }
 
-    void compute_route(int from, int to) {
+    void compute_route(long from, long to) {
         _router.compute_route(from, to);
         _query = _router.query();
         _result = _router.result();
