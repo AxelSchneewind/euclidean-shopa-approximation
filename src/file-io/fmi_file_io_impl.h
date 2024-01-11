@@ -27,7 +27,6 @@ fmi_file_io::read(std::istream &input_size, std::istream &input_nodes, std::istr
 
     typename Graph::adjacency_list_type::builder builder;
     builder.add_edges(std::move(edges));
-    builder.insert_backward_edges();
 
     auto list = Graph::adjacency_list_type::make_bidirectional_undirected(std::move(builder.get()));
     auto adj_list = typename Graph::adjacency_list_type(std::move(list));

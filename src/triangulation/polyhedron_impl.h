@@ -168,16 +168,15 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(const BaseGraph &base,
                 }
             }
 
-            assert(adjacent_edge_ids.size() >= 2);
-            assert(triangle_edge_ids.size() >= 6);
-
             std::sort(triangle_edge_ids.begin(), triangle_edge_ids.end());
             std::sort(adjacent_edge_ids.begin(), adjacent_edge_ids.end());
 
             // get edges that are only reachable via a triangle
             remove_duplicates_sorted(triangle_edge_ids);
             remove_duplicates_sorted(adjacent_edge_ids);
-            int edge_count = set_minus_sorted<int>(triangle_edge_ids, adjacent_edge_ids, triangle_edge_ids);
+            int edge_count = 0;
+            if(!triangle_edge_ids.empty())
+                set_minus_sorted<int>(triangle_edge_ids, adjacent_edge_ids, triangle_edge_ids);
 
             node_edge_offsets.push_back(node_edges.size());
             for (auto&& e: triangle_edge_ids)

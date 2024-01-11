@@ -61,40 +61,6 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     file_io::read_nodes<steiner_graph::node_info_type, f>(input_nodes, {nodes.begin(), nodes.end()});
     file_io::read_triangles<steiner_graph::base_topology_type::node_id_type, f>(input_triangles, {faces.begin(), faces.end()});
 
-    // check for unconnected nodes
-    std::vector<bool> connected(node_count, false);
-    for (auto&& triangle : faces) {
-        connected[triangle[0]] = true;
-        connected[triangle[1]] = true;
-        connected[triangle[2]] = true;
-    }
-
-    // make new node ids
-    std::vector<steiner_graph::triangle_node_id_type> new_node_ids(node_count);
-    int j = 0;
-    for (int i = 0; i < node_count; ++i) {
-        if (connected[i]) {
-            new_node_ids[i] = j++;
-            nodes[new_node_ids[i]] = nodes[i];
-        } else {
-            new_node_ids[i] = none_value<steiner_graph::triangle_node_id_type>;
-        }
-    }
-    node_count = j;
-    connected.clear(); connected.shrink_to_fit();
-    nodes.resize(node_count); nodes.shrink_to_fit();
-
-    // apply new node ids
-    for (auto& triangle : faces) {
-        triangle[0] = new_node_ids[triangle[0]];
-        triangle[1] = new_node_ids[triangle[1]];
-        triangle[2] = new_node_ids[triangle[2]];
-        assert(is_in_range(triangle[0], 0, node_count));
-        assert(is_in_range(triangle[1], 0, node_count));
-        assert(is_in_range(triangle[2], 0, node_count));
-    }
-    new_node_ids.clear(); new_node_ids.shrink_to_fit();
-
     steiner_graph::adjacency_list_type::builder adj_list_builder;
     adj_list_builder.add_edges_from_triangulation(faces);
 
