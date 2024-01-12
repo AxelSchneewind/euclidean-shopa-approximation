@@ -3,6 +3,8 @@
 
 #include "graph/geometry.h"
 #include "graph/geometry_impl.h"
+#include "graph/adjacency_list.h"
+#include "graph/unidirectional_adjacency_list.h"
 
 #include "cli/cmdline_prune_graph.h"
 
@@ -27,7 +29,7 @@ int main(int argc, char *argv[]) {
     coordinate_t bottom_left{args.minY_arg, args.minX_arg };
     coordinate_t top_right{args.maxY_arg, args.maxX_arg};
 
-    if (graph_file.ends_with(".graph") && graph_file.ends_with(".graph")) {
+    if (graph_file.ends_with(".graph") && output_file.ends_with(".graph")) {
         std::size_t node_count, face_count;
         input >> node_count;
         input >> face_count;
@@ -90,5 +92,66 @@ int main(int argc, char *argv[]) {
         output << node_count << '\n' << face_count <<'\n';
         file_io::write_nodes<node_t>(output, {nodes.begin(), nodes.end()});
         file_io::write_triangles<node_id_t>(output, {triangles.begin(), triangles.end()});
+    }
+    if (graph_file.ends_with(".fmi")) {
+        std::size_t node_count, edge_count;
+        input >> node_count;
+        input >> edge_count;
+
+        std::vector<node_t> nodes(node_count);
+        file_io::read_nodes<node_t>(input, { nodes.begin(), nodes.end() });
+
+	using edge_type = adjacency_list_edge<node_id_t, edge_t>;
+        std::vector<edge_type> edges(edge_count);
+        file_io::read_edges<edge_type>(input, {edges.begin(), edges.end()});
+
+        // find edges in selected area and their respective nodes
+        std::unordered_map<int, bool> contained;
+        edge_count = 0;
+        for (int i = 0; i < edges.size(); ++i) {
+            if (is_in_rectangle(nodes[edges[i].source].coordinates, bottom_left, top_right) &&
+                is_in_rectangle(nodes[edges[i].destination].coordinates, bottom_left, top_right)) {
+
+                contained[edges[i].source] = true;
+                contained[edges[i].destination] = true;
+
+                edges[edge_count++] = edges[i];
+            }
+        }
+        edges.resize(edge_count);
+        edges.shrink_to_fit();
+
+        // assign new node ids
+        std::unordered_map<node_id_t, node_id_t> new_node_id;
+        node_count = 0;
+        for (int id = 0; id < nodes.size(); id++) {
+            if (contained.contains(id) && contained[id])
+                new_node_id[id] = node_count++;
+        }
+        contained.clear();
+
+        // apply new node ids
+        for (auto &edge : edges) {
+            assert(new_node_id.contains(face[0]) && new_node_id.contains(face[1]) && new_node_id.contains(face[2]));
+
+            edge.source = new_node_id[edge.source];
+            edge.destination = new_node_id[edge.destination];
+        }
+
+        // reorder node information
+        for (int i = 0; i < nodes.size(); ++i) {
+            if (new_node_id.contains(i)) {
+                assert(new_node_id[i] <= i);
+                nodes.at(new_node_id[i]) = nodes[i];
+            }
+        }
+        nodes.resize(node_count);
+        nodes.shrink_to_fit();
+        new_node_id.clear();
+
+        // write pruned graph file
+        output << node_count << '\n' << edge_count <<'\n';
+        file_io::write_nodes<node_t>(output, {nodes.begin(), nodes.end()});
+        file_io::write_edges<edge_type>(output, {edges.begin(), edges.end()});
     }
 }
