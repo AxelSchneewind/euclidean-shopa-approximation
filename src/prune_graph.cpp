@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 
         // apply new node ids
         for (auto &edge : edges) {
-            assert(new_node_id.contains(face[0]) && new_node_id.contains(face[1]) && new_node_id.contains(face[2]));
+            assert(new_node_id.contains(edge.source) && new_node_id.contains(edge.destination));
 
             edge.source = new_node_id[edge.source];
             edge.destination = new_node_id[edge.destination];
