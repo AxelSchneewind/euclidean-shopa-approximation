@@ -7,6 +7,7 @@ set(CMAKE_CXX_COMPILER g++)
 include_directories(include)
 
 
+# make file containing a version name
 add_custom_target(version
         COMMAND echo -n "" > version.txt
         COMMAND git rev-parse --short HEAD >> version.txt
@@ -27,7 +28,7 @@ if (DOXYGEN_FOUND)
 
     # note the option ALL which allows to build the docs together with the application
     add_custom_target(doc_doxygen ALL
-            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT} -q
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "Generating API documentation with Doxygen"
             VERBATIM)
@@ -71,11 +72,12 @@ endif (GENGETOPT)
 
 
 set(CMAKE_CXX_FLAGS "--std=c++20") # -Wall -Wextra
-set(CMAKE_CXX_FLAGS_DEBUG "-g -fbounds-check") #-D_GLIBCXX_DEBUG
+set(CMAKE_CXX_FLAGS_DEBUG "-g") #-D_GLIBCXX_DEBUG
 
 # performance options
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native -ffast-math") # -ffast-math
 
+# 
 add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
 add_executable(find_nodes src/find_nodes.cpp src/cli/cmdline_find_nodes.c)
 
@@ -103,6 +105,6 @@ endif(GENGETOPT)
 
 # installation
 set(CMAKE_INSTALL_PREFIX /opt/routing)
-install(TARGETS route subdivision_stats make_gl prune_graph project_graph RUNTIME DESTINATION bin)
+install(TARGETS route subdivision_stats make_gl prune_graph project_graph find_nodes RUNTIME DESTINATION bin)
 
 include(CPack)
