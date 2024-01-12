@@ -175,7 +175,9 @@ public:
     steiner_graph(std::vector<node_info_type> &&triangulation_nodes,
                   adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&triangulation_edges,
                   polyhedron<base_topology_type, 3> &&triangles,
-                  subdivision_table &&table, double epsilon);
+                  subdivision_table &&table,
+                  std::vector<bool> && is_base_node,
+                  double epsilon);
 
 
     static constexpr size_t SIZE_PER_NODE =
@@ -189,10 +191,12 @@ private:
     size_t _M_edge_count;
 
     // the epsilon value used for discretization
-    float _M_epsilon;
+    double _M_epsilon;
 
     // store triangulation here
     std::vector<node_info_type> _M_base_nodes;
+    std::vector<bool> _M_is_boundary_node;
+
     base_topology_type _M_base_topology;
 
     // store subdivision table here
@@ -231,8 +235,10 @@ public:
     node_info_type& node(triangle_node_id_type id) { return _M_base_nodes[id]; };
 
     bool is_base_node(node_id_type id) const;
+    bool is_boundary_node(triangle_node_id_type id) const;
     bool is_base_neighboring_node(node_id_type id) const { return id.steiner_index == 1 || id.steiner_index ==
                                                                                                   steiner_info(id.edge).node_count - 2;};
+    bool is_boundary_edge(triangle_edge_id_type id) const;
 
     triangle_node_id_type base_node_id(node_id_type id) const;
 
