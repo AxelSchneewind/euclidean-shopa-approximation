@@ -93,7 +93,7 @@ main(int argc, char *argv[]) {
         std::string route_file = target_directory + "/path.gl";
         std::string tree_file =  target_directory + "/tree.gl";
         std::string info_file =  target_directory + "/info.csv";
-        std::filesystem::create_directory(target_directory);
+        std::filesystem::create_directories(target_directory);
         std::ofstream output_beeline(beeline_file);
         std::ofstream output_route(route_file);
         std::ofstream output_tree(tree_file);
