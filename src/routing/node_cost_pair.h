@@ -1,62 +1,108 @@
 #include <memory>
 
-template <typename NodeId, typename Distance, typename Info = void> struct node_cost_pair
-{
-  NodeId node;
-  NodeId predecessor;
-  Distance distance;
-  Info info;
+template<typename NodeId, typename Distance, typename Info = void>
+struct node_cost_pair {
+private:
+    NodeId _node;
+    NodeId _predecessor;
+    Distance _distance;
+    Info _info;
 
-  using info_type = Info;
+public:
+    using info_type = Info;
 
-  node_cost_pair () = default;
-  node_cost_pair (NodeId node, NodeId predecessor, Distance distance, Info info)
-    : node (node), predecessor (predecessor), distance (distance), info (info){};
-  node_cost_pair (NodeId node, NodeId predecessor, Distance distance)
-    : node (node), predecessor (predecessor), distance (distance){};
+    constexpr node_cost_pair() = default;
 
-  node_cost_pair (node_cost_pair &&) noexcept = default;
-  node_cost_pair &operator= (node_cost_pair &&) noexcept = default;
+    constexpr node_cost_pair(NodeId node, NodeId predecessor, Distance distance, Info info)
+            : _node(node), _predecessor(predecessor), _distance(distance), _info(info) {};
 
-  node_cost_pair (node_cost_pair const &) noexcept = default;
-  node_cost_pair &operator= (node_cost_pair const &) noexcept = default;
+    node_cost_pair(NodeId node, NodeId predecessor, Distance distance)
+            : _node(node), _predecessor(predecessor), _distance(distance) {};
 
-  bool operator== (node_cost_pair<NodeId, Distance, Info> const &) const = default;
+    node_cost_pair(node_cost_pair &&) noexcept = default;
 
-  Distance min_distance () const { return info.min_distance (); };
+    node_cost_pair &operator=(node_cost_pair &&) noexcept = default;
 
-  Distance value () const { return info.value (); }
+    node_cost_pair(node_cost_pair const &) noexcept = default;
+
+    node_cost_pair &operator=(node_cost_pair const &) noexcept = default;
+
+    bool operator==(node_cost_pair<NodeId, Distance, Info> const &) const = default;
+
+    Info& info() { return _info; }
+    Info const& info() const { return _info; }
+
+    NodeId &node() { return _node; }
+
+    NodeId const &node() const { return _node; }
+
+    NodeId &predecessor() { return _predecessor; }
+
+    NodeId const &predecessor() const { return _predecessor; }
+
+    Distance &distance() { return _distance; }
+
+    Distance const &distance() const { return _distance; }
+
+    auto min_distance() { return _info.min_distance(); };
+
+    auto min_distance() const { return _info.min_distance(); }
+
+    auto& value() { return _info.value(); }
+
+    auto const& value() const { return _info.value(); }
 };
 
-template <typename NodeId, typename Distance> struct node_cost_pair<NodeId, Distance, void>
-{
-  NodeId node;
-  NodeId predecessor;
-  Distance distance;
+template<typename NodeId, typename Distance>
+struct node_cost_pair<NodeId, Distance, void> {
+private:
+    NodeId _node;
+    NodeId _predecessor;
+    Distance _distance;
+public:
 
-  using info_type = void;
+    using info_type = void;
 
-  node_cost_pair () = default;
-  node_cost_pair (NodeId node, NodeId predecessor, Distance distance)
-    : node (node), predecessor (predecessor), distance (distance){};
+    node_cost_pair() = default;
 
-  node_cost_pair (node_cost_pair &&) noexcept = default;
-  node_cost_pair &operator= (node_cost_pair &&) noexcept = default;
+    constexpr node_cost_pair(NodeId node, NodeId predecessor, Distance distance)
+            : _node(node), _predecessor(predecessor), _distance(distance) {};
 
-  node_cost_pair (node_cost_pair const &) noexcept = default;
-  node_cost_pair &operator= (node_cost_pair const &) noexcept = default;
+    node_cost_pair(node_cost_pair &&) noexcept = default;
 
-  bool operator== (node_cost_pair<NodeId, Distance> const &) const = default;
+    node_cost_pair &operator=(node_cost_pair &&) noexcept = default;
 
-  Distance min_distance () const { return distance; };
+    node_cost_pair(node_cost_pair const &) noexcept = default;
 
-  Distance value () const { return distance; }
+    node_cost_pair &operator=(node_cost_pair const &) noexcept = default;
+
+    bool operator==(node_cost_pair<NodeId, Distance> const &) const = default;
+
+    NodeId &node() { return _node; }
+
+    NodeId const &node() const { return _node; }
+
+    NodeId &predecessor() { return _predecessor; }
+
+    NodeId const &predecessor() const { return _predecessor; }
+
+    Distance &distance() { return _distance; }
+
+    Distance const &distance() const { return _distance; }
+
+    Distance &min_distance() { return _distance; };
+
+    Distance min_distance() const { return _distance; }
+
+    Distance &value() { return _distance; }
+
+    Distance const& value() const { return _distance; }
 };
 
-template <typename NodeId, typename Distance, typename Info>
-node_cost_pair<NodeId, Distance, Info> none_value<node_cost_pair<NodeId, Distance, Info>>
-    = { none_value<NodeId>, none_value<NodeId>, infinity<Distance>, none_value<Info> };
+template<typename NodeId, typename Distance, typename Info>
+constexpr node_cost_pair<NodeId, Distance, Info> none_value<node_cost_pair<NodeId, Distance, Info>>
+        = {none_value<NodeId>, none_value<NodeId>, infinity<Distance>, none_value<Info>};
 
-template <typename NodeId, typename Distance>
-node_cost_pair<NodeId, Distance> none_value<node_cost_pair<NodeId, Distance>>
-    = { none_value<NodeId>, none_value<NodeId>, infinity<Distance> };
+template<typename NodeId, typename Distance>
+constexpr node_cost_pair<NodeId, Distance> none_value<node_cost_pair<NodeId, Distance>>
+        = {none_value<NodeId>, none_value<NodeId>, infinity<Distance>};

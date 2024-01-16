@@ -62,7 +62,7 @@ using cost_t = double;
 using distance_t = double;
 
 template<typename T>
-constexpr T none_value;
+constexpr std::remove_cvref_t<T> none_value;
 
 template<>
 constexpr long none_value<long> = -1;
@@ -78,7 +78,7 @@ constexpr bool is_none(T val) { return val == none_value<T>; }
 
 
 template<typename T>
-constexpr T infinity = std::numeric_limits<T>::max();
+constexpr std::remove_cvref_t<T> infinity = std::numeric_limits<std::remove_cvref_t<T>>::max();
 
 template<typename T>
 constexpr bool is_infinity(T val) { return val == infinity<T>; }

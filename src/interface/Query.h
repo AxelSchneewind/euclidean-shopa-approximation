@@ -38,7 +38,7 @@ private:
     Graph _beeline;
     distance_t _beeline_distance;
 
-    long _max_tree_size = 0;
+    long _max_tree_size = 100000000;
 
 public:
     QueryImplementation();

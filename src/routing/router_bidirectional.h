@@ -90,9 +90,9 @@ public:
      */
     distance_type distance(const node_id_type&node) const;
 
-    distance_type forward_distance() const { return base::_forward_current.distance; };
+    distance_type forward_distance() const { return base::_forward_current.distance(); };
 
-    distance_type backward_distance() const { return _backward_current.distance; };
+    distance_type backward_distance() const { return _backward_current.distance(); };
 
     node_cost_pair_type forward_current() const { return base::_forward_current; };
 

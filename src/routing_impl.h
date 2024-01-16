@@ -29,21 +29,37 @@
 
 template<RoutableGraph G>
 struct label_type {
-    G::distance_type distance;
-    G::node_id_type predecessor;
-
-    constexpr label_type(G::distance_type distance, G::node_id_type predecessor) : distance(distance),
-        predecessor(predecessor) {
+private:
+    typename G::distance_type _distance;
+    typename G::node_id_type _predecessor;
+public:
+    constexpr label_type(G::distance_type distance, G::node_id_type predecessor) : _distance(distance),
+                                                                                   _predecessor(predecessor) {
     };
 
-    constexpr label_type() : distance(infinity<typename G::distance_type>),
-                             predecessor(none_value<typename G::node_id_type>) {
+    constexpr label_type() : _distance(infinity<typename G::distance_type>),
+                             _predecessor(none_value<typename G::node_id_type>) {
     };
 
     template<typename NCP>
-        requires HasDistance<NCP, typename G::distance_type> && HasPredecessor<NCP, typename G::node_id_type>
-    label_type(NCP ncp) : distance{ncp.distance}, predecessor{ncp.predecessor} {
+    requires HasDistance<NCP> && HasPredecessor<NCP>
+    label_type(NCP const &ncp) : _distance{ncp.distance()}, _predecessor{ncp.predecessor()} {};
+
+    template<typename NCP>
+    requires HasDistance<NCP> && HasPredecessor<NCP>
+    label_type &operator=(NCP const &ncp) {
+        _distance = ncp.distance();
+        _predecessor = ncp.predecessor();
+        return *this;
     };
+
+    typename G::distance_type &distance() { return _distance; };
+
+    typename G::node_id_type &predecessor() { return _predecessor; };
+
+    typename G::distance_type const &distance() const { return _distance; };
+
+    typename G::node_id_type const &predecessor() const { return _predecessor; };
 };
 
 template<RoutableGraph Graph>
@@ -69,9 +85,9 @@ using a_star_queue_t = a_star_queue<std_graph_t, a_star_node_cost_pair>;
 using a_star_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
 
 using std_dijkstra = dijkstra<std_graph_t, default_queue_t, default_labels_t, default_neighbors<std_graph_t>,
-    use_all_edges<std_graph_t>>;
+        use_all_edges<std_graph_t>>;
 using a_star_dijkstra = dijkstra<std_graph_t, a_star_queue_t, a_star_labels_t, default_neighbors<std_graph_t>,
-    use_all_edges<std_graph_t>>;
+        use_all_edges<std_graph_t>>;
 
 using std_routing_t = bidirectional_router<std_graph_t, std_dijkstra>;
 using a_star_routing_t = bidirectional_router<std_graph_t, a_star_dijkstra>;
@@ -79,16 +95,16 @@ using a_star_routing_t = bidirectional_router<std_graph_t, a_star_dijkstra>;
 using default_ch_labels_t = node_labels<ch_graph_t, label_type<ch_graph_t>>;
 using default_ch_queue_t = dijkstra_queue<ch_graph_t, default_node_cost_pair, Default>;
 using ch_dijkstra = dijkstra<ch_graph_t, default_ch_queue_t, default_ch_labels_t, default_neighbors<ch_graph_t>,
-    use_upward_edges<ch_graph_t>>;
+        use_upward_edges<ch_graph_t>>;
 using ch_routing_t = router<ch_graph_t, ch_dijkstra>;
 
 
 using steiner_a_star_node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type,
-    a_star_info>;
+        a_star_info>;
 using steiner_node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>;
 
 using steiner_queue_t = dijkstra_queue<steiner_graph, steiner_node_cost_pair>;
 using steiner_labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
 using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, steiner_labels_t, steiner_neighbors<steiner_graph,
-    steiner_labels_t>, use_all_edges<steiner_graph>>;
+        steiner_labels_t>, use_all_edges<steiner_graph>>;
 using steiner_routing_t = router<steiner_graph, steiner_dijkstra>;

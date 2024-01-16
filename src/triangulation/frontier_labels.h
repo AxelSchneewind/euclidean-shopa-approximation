@@ -10,35 +10,41 @@
 
 
 template<typename T>
-concept DistanceNodeCostPair = HasDistance<T, steiner_graph::distance_type> && HasNode<T, steiner_graph::node_id_type>;
+concept DistanceNodeCostPair = HasDistance<T> && HasNode<T>;
 
 
 // TODO move somewhere else
 struct distance_label {
+public:
     using distance_type = steiner_graph::distance_type;
+private:
+    distance_type _distance;
+public:
 
-    distance_type distance;
     static constexpr steiner_graph::node_id_type predecessor = none_value<steiner_graph::node_id_type>;
 
-    constexpr distance_label() : distance(infinity<distance_type>) {}
+    constexpr distance_label() : _distance(infinity<distance_type>) {}
 
-    constexpr distance_label(distance_type dist) : distance(dist) {}
-
-    template<typename NCP>
-    requires HasDistance<NCP, distance_type>
-    constexpr distance_label(NCP ncp) : distance(ncp.distance) {}
-
-    constexpr distance_label(distance_type distance, steiner_graph::node_id_type) : distance(distance) {}
+    constexpr distance_label(distance_type dist) : _distance(dist) {}
 
     template<typename NCP>
-    requires HasDistance<NCP, distance_type>
+    requires HasDistance<NCP>
+    constexpr distance_label(NCP ncp) : _distance(ncp.distance()) {}
+
+    constexpr distance_label(distance_type distance, steiner_graph::node_id_type) : _distance(distance) {}
+
+    template<typename NCP>
+    requires HasDistance<NCP>
     operator NCP() {
         return {
                 none_value<steiner_graph::node_id_type>,
                 none_value<steiner_graph::node_id_type>,
-                distance,
+                _distance,
         };
     }
+
+    distance_type& distance() { return _distance; }
+    distance_type const& distance() const { return _distance; }
 };
 
 template<>
@@ -50,7 +56,7 @@ constexpr distance_label none_value<distance_label> = {infinity<steiner_graph::d
  * only stores labels for relevant nodes in a graph with steiner points
  * @tparam NodeCostPair
  */
-template<DistanceNodeCostPair NodeCostPair, HasDistance<steiner_graph::distance_type> Label = distance_label>
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label = distance_label>
 class frontier_labels {
 public:
     using node_id_type = steiner_graph::node_id_type;
@@ -127,7 +133,7 @@ public:
 
     bool reached(node_id_type __node) const {
         return _M_expanded_node_aggregates.node_count(__node.edge) > 0 &&
-               !is_infinity(_M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index).distance);
+               !is_infinity(_M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index).distance());
     }
 
     label_type get(node_id_type __node) const {

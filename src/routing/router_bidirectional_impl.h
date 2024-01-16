@@ -39,13 +39,13 @@ bidirectional_router<Graph, Dijkstra>::step_forward() {
     assert(!base::_forward_search.queue_empty());
 
     base::_forward_current = base::_forward_search.current();
-    assert(!is_none(base::_forward_current.node));
+    assert(!is_none(base::_forward_current.node()));
 
     base::_forward_search.step();
 
     // check if searches met and provide best result so far
-    if (_backward_search.reached(base::_forward_current.node) && distance(base::_forward_current.node) < distance()) {
-        base::_mid_node = base::_forward_current.node;
+    if (_backward_search.reached(base::_forward_current.node()) && distance(base::_forward_current.node()) < distance()) {
+        base::_mid_node = base::_forward_current.node();
     }
 }
 
@@ -55,13 +55,13 @@ bidirectional_router<Graph, Dijkstra>::step_backward() {
     assert(!_backward_search.queue_empty());
 
     _backward_current = _backward_search.current();
-    assert(!is_none(_backward_current.node));
+    assert(!is_none(_backward_current.node()));
 
     _backward_search.step();
 
     // check if searches met and provide best result yet
-    if (base::_forward_search.reached(_backward_current.node) && distance(_backward_current.node) < distance()) {
-        base::_mid_node = _backward_current.node;
+    if (base::_forward_search.reached(_backward_current.node()) && distance(_backward_current.node()) < distance()) {
+        base::_mid_node = _backward_current.node();
     }
 }
 
@@ -96,7 +96,7 @@ bidirectional_router<Graph, Dijkstra>::distance(const node_id_type& node) const 
         !_backward_search.reached(node)) {
         return infinity<typename Graph::distance_type>;
     }
-    return base::_forward_search.get_label(node).distance + _backward_search.get_label(node).distance;
+    return base::_forward_search.get_label(node).distance() + _backward_search.get_label(node).distance();
 }
 
 template<typename Graph, typename Dijkstra>
@@ -105,7 +105,7 @@ bidirectional_router<Graph, Dijkstra>::distance() const {
     if (is_none(base::_mid_node)) {
         return infinity<typename Graph::distance_type>;
     }
-    return base::_forward_search.get_label(base::_mid_node).distance + _backward_search.get_label(base::_mid_node).distance;
+    return base::_forward_search.get_label(base::_mid_node).distance() + _backward_search.get_label(base::_mid_node).distance();
 }
 
 template<typename Graph, typename Dijkstra>
@@ -115,7 +115,7 @@ bidirectional_router<Graph, Dijkstra>::route() const {
         return path<Graph>();
 
     auto path_fwd = base::_forward_search.path(base::_mid_node);
-    auto path_bwd = _backward_search.path(_backward_search.get_label(base::_mid_node).predecessor);
+    auto path_bwd = _backward_search.path(_backward_search.get_label(base::_mid_node).predecessor());
     path_bwd.invert();
 
     return path<Graph>::concat(path_fwd, path_bwd);
@@ -128,10 +128,10 @@ bidirectional_router<Graph, Dijkstra>::shortest_path_tree(size_t max_tree_size) 
     auto tree_bwd = _backward_search.shortest_path_tree(max_tree_size / 2);
 
     // filter_nodes(tree_fwd, [&](auto node) -> bool {
-    //     return _forward_search.get_label(node).distance + ::distance(_graph.node(node).coordinates, _graph.node(_target_node).coordinates) <= distance();
+    //     return _forward_search.get_label(node).distance() + ::distance(_graph.node(node).coordinates, _graph.node(_target_node).coordinates) <= distance();
     // });
     // filter_nodes(tree_bwd, [&](auto node) -> bool {
-    //     return _backward_search.get_label(node).distance + ::distance(_graph.node(node).coordinates, _graph.node(_start_node).coordinates) <= distance();
+    //     return _backward_search.get_label(node).distance() + ::distance(_graph.node(node).coordinates, _graph.node(_start_node).coordinates) <= distance();
     // });
 
     return subgraphs_union<Graph>(tree_fwd, tree_bwd);

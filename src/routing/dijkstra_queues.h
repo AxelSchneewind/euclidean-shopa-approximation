@@ -48,7 +48,7 @@ public:
 
     template<typename NodeCostPair>
     constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
-        return n1.distance > n2.distance;
+        return n1.distance() > n2.distance();
     };
 };
 
@@ -81,9 +81,9 @@ public:
         _max_size = 0;
     };
 
-    void push(base_queue_type::value_type ncp) {
-        assert(ncp.distance != infinity<decltype(ncp.distance)>);
-        base_queue_type::push(ncp);
+    void push(base_queue_type::value_type const& ncp) {
+        assert(ncp.distance() != infinity<decltype(ncp.distance())>);
+        base_queue_type::emplace(ncp);
 
         if constexpr (max_allowed_duplicates > 0) {
             // assumes that counter is the number of duplicates currently inserted
@@ -101,7 +101,7 @@ public:
     }
 
     void push_range(std::span<NodeCostPair, std::dynamic_extent> __nodes) {
-        for (auto ncp: __nodes)
+        for (auto&& ncp: __nodes)
             push(ncp);
     }
 
@@ -151,39 +151,4 @@ public:
     }
 
     size_t max_size() const { return _max_size; }
-};
-
-
-template<typename Info>
-struct aggregate_node_cost_pair {
-    steiner_graph::base_topology_type::edge_id_type aggregate_id;
-    steiner_graph::distance_type distance;
-    Info info;
-
-    aggregate_node_cost_pair() = default;
-
-    aggregate_node_cost_pair(steiner_graph::base_topology_type::edge_id_type aggregate_id,
-                             steiner_graph::distance_type distance, Info info)
-            : aggregate_id{aggregate_id}, distance{distance}, info{info} {};
-
-    steiner_graph::distance_type value() const { return info.value(); }
-};
-
-template<>
-struct aggregate_node_cost_pair<void> {
-    steiner_graph::base_topology_type::edge_id_type aggregate_id;
-    steiner_graph::distance_type distance;
-
-    aggregate_node_cost_pair() = default;
-
-    aggregate_node_cost_pair(steiner_graph::base_topology_type::edge_id_type aggregate_id,
-                             steiner_graph::distance_type distance)
-            : aggregate_id{aggregate_id}, distance{distance} {};
-
-    template<typename Info>
-    aggregate_node_cost_pair(steiner_graph::base_topology_type::edge_id_type aggregate_id,
-                             steiner_graph::distance_type distance, Info info)
-            : aggregate_node_cost_pair(aggregate_id, distance) {};
-
-    steiner_graph::distance_type value() const { return distance; }
 };

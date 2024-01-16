@@ -4,19 +4,19 @@
 #include <memory>
 
 
-template<typename T, typename DistanceType>
-concept HasDistance =requires(T t){
-    { t.distance } -> std::convertible_to<DistanceType>;
+template<typename T>
+concept HasDistance = requires(T t) {
+    t.distance();
 };
 
-template<typename T, typename NodeIdType>
-concept HasPredecessor =requires(T t){
-    { t.predecessor } -> std::convertible_to<NodeIdType>;
+template<typename T>
+concept HasPredecessor = requires(T t){
+    t.predecessor();
 };
 
-template<typename T, typename NodeIdType>
+template<typename T>
 concept HasNode = requires(T t){
-    { t.node } -> std::convertible_to<NodeIdType>;
+    t.node();
 };
 
 
@@ -88,6 +88,7 @@ concept DijkstraQueue = std::move_constructible<Q> && std::copy_constructible<Q>
 
 template<typename L, typename NodeId, typename NodeCostPair, typename Label>
 concept DijkstraLabels = requires(L l, NodeId node, NodeCostPair ncp, Label label) {
+    requires std::convertible_to<NodeCostPair, Label>;
     l.get(node);
     l.label(node, label);
 };

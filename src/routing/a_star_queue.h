@@ -6,25 +6,26 @@
 
 
 struct a_star_info {
+private:
     // value from a* heuristic (distance + minimal remaining distance)
     distance_t _value;
 
+public:
     constexpr a_star_info() : _value{none_value<distance_t>} {}
 
-    constexpr a_star_info(distance_t _value) : _value{_value} {}
+    constexpr a_star_info(distance_t value) : _value{value} {}
 
     bool operator==(a_star_info const &) const = default;
 
     distance_t min_distance() const { return _value; };
 
-    distance_t value() const { return _value; }
+    distance_t const& value() const { return _value; }
 
     distance_t &value() { return _value; }
 };
 
 template<>
 constexpr a_star_info none_value<a_star_info> = {infinity<distance_t>};
-
 
 struct A_Star {
 public:
@@ -53,9 +54,9 @@ public:
             : dijkstra_queue<Graph, NodeCostPair, Comp>(__graph, __comp), _M_graph(__graph) {}
 
     void push(Graph::node_id_type __node, Graph::node_id_type __predecessor, distance_t __dist) {
-        NodeCostPair ncp(__node, __predecessor, __dist,
-                         {__dist + distance(_M_target_coordinates, _M_graph.node(__node).coordinates)});
-        base_queue_type::push(ncp);
+        NodeCostPair ncp(__node, __predecessor, __dist);
+        ncp.value() = __dist + distance(_M_target_coordinates, _M_graph.node(__node).coordinates);
+        base_queue_type::emplace(ncp);
     }
 
     void init(Graph::node_id_type /*__start_node*/, Graph::node_id_type __target_node) {
@@ -71,17 +72,16 @@ public:
         // get coordinates
         coordinates.resize(__nodes.size());
         for (int i = 0; i < __nodes.size(); ++i) {
-            coordinates[i] = _M_graph.node(__nodes[i].node).coordinates;
+            coordinates[i] = _M_graph.node(__nodes[i].node()).coordinates;
         }
 
         // can be vectorized
         for (int i = 0; i < __nodes.size(); ++i) {
-            __nodes[i].info.value() =
-                    __nodes[i].distance + factor * distance(_M_target_coordinates, coordinates[i]);
+            __nodes[i].info().value() = __nodes[i].distance() + factor * distance(_M_target_coordinates, coordinates[i]);
         }
 
-        for (auto ncp: __nodes)
-            base_queue_type::push(ncp);
+        for (auto&& ncp: __nodes)
+            base_queue_type::emplace(ncp);
     }
 
     void set_target(coordinate_t coordinates) {

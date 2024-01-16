@@ -47,7 +47,7 @@ node_labels<G, N>::reached(node_labels<G, N>::node_id_type node) const {
 
 template<RoutableGraph G, typename N>
 void
-node_labels<G, N>::label(node_id_type const& node, node_labels<G, N>::label_type const& label) {
+node_labels<G, N>::label(node_id_type const& node, N const& label) {
     if (!_node_labelled[node]) {
         _touched.emplace_back(node);
         _node_labelled[node] = true;

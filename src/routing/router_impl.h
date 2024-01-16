@@ -31,9 +31,9 @@ router<Graph, Dijkstra>::router(router&&routing) noexcept
 template<typename Graph, typename Dijkstra>
 void
 router<Graph, Dijkstra>::step_forward() {
-    assert(!is_none(_forward_current.node));
+    assert(!is_none(_forward_current.node()));
     // TODO check why this is never true
-    if (_forward_current.node == _target_node)
+    if (_forward_current.node() == _target_node)
         _mid_node = _target_node;
 
     assert(!_forward_search.queue_empty());
@@ -67,7 +67,7 @@ router<Graph, Dijkstra>::distance(const Graph::node_id_type&node) const {
     if (is_none(node) || !_forward_search.reached(node)) {
         return infinity<typename Graph::distance_type>;
     }
-    return _forward_search.get_label(node).distance;
+    return _forward_search.get_label(node).distance();
 }
 
 template<typename Graph, typename Dijkstra>
@@ -76,7 +76,7 @@ router<Graph, Dijkstra>::distance() const {
     if (is_none(_mid_node)) {
         return infinity<typename Graph::distance_type>;
     }
-    return _forward_search.get_label(_mid_node).distance;
+    return _forward_search.get_label(_mid_node).distance();
 }
 
 template<typename Graph, typename Dijkstra>
@@ -94,7 +94,7 @@ router<Graph, Dijkstra>::shortest_path_tree(size_t max_tree_size) const {
     auto tree_fwd = _forward_search.shortest_path_tree(max_tree_size);
 
     // filter_nodes(tree_fwd, [&](auto node) -> bool {
-    //     return _forward_search.get_label(node).distance + ::distance(_graph.node(node).coordinates, _graph.node(_target_node).coordinates) <= distance();
+    //     return _forward_search.get_label(node).distance() + ::distance(_graph.node(node).coordinates, _graph.node(_target_node).coordinates) <= distance();
     // });
 
     return tree_fwd;
