@@ -47,8 +47,7 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
                         graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()));
                 }
             } else {
-                using node_cost_pair = geometric_node_cost_pair<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type,
-                        a_star_info>, steiner_graph>;
+                using node_cost_pair = geometric_node_cost_pair<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>, steiner_graph>;
                 // using node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>;
                 using queue_t = dijkstra_queue<steiner_graph, node_cost_pair>;
                 using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
