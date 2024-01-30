@@ -274,25 +274,24 @@ template<typename... Args>
 void Graph::read_graph_file(std::string path, double epsilon, Args... args) {
     std::ifstream input(path);
 
-    if (path.ends_with(".graph") && epsilon != 0.0)
-        impl = std::make_unique<GraphImplementation < steiner_graph>>
-    (triangulation_file_io::read_steiner(input, epsilon));
-    else if (path.ends_with(".graph"))
-        impl = std::make_unique<GraphImplementation < std_graph_t>>
-    (triangulation_file_io::read<std_graph_t>(input));
-    else if (path.ends_with(".fmi"))
-        impl = std::make_unique<GraphImplementation < std_graph_t>>
-    (fmi_file_io::read<std_graph_t>(input));
-    else if (path.ends_with(".sch"))
-        impl = std::make_unique<GraphImplementation < ch_graph_t>>
-    (fmi_file_io::read<ch_graph_t>(input));
-    else if (path.ends_with(".gl"))
-        impl = std::make_unique<GraphImplementation < gl_graph_t>>
-    (fmi_file_io::read<gl_graph_t>(input));
-    else
-    throw std::invalid_argument("unrecognized file ending");
+    if (input.fail()){
+        throw std::invalid_argument("graph file can't be read from");
+    }
 
-// ...
+    if (path.ends_with(".graph") && epsilon != 0.0)
+        impl = std::make_unique<GraphImplementation < steiner_graph>> (triangulation_file_io::read_steiner(input, epsilon));
+    else if (path.ends_with(".graph"))
+        impl = std::make_unique<GraphImplementation < std_graph_t>> (triangulation_file_io::read<std_graph_t>(input));
+    else if (path.ends_with(".fmi"))
+        impl = std::make_unique<GraphImplementation < std_graph_t>> (fmi_file_io::read<std_graph_t>(input));
+    else if (path.ends_with(".sch"))
+        impl = std::make_unique<GraphImplementation < ch_graph_t>> (fmi_file_io::read<ch_graph_t>(input));
+    else if (path.ends_with(".gl"))
+        impl = std::make_unique<GraphImplementation < gl_graph_t>> (fmi_file_io::read<gl_graph_t>(input));
+    // ...
+    else
+        throw std::invalid_argument("unrecognized file ending");
+
 
     input.close();
 }
@@ -302,6 +301,10 @@ template<typename... Args>
 void Graph::read_graph_file(std::string path, Args... args) {
     std::ifstream input(path);
 
+    if (input.fail()){
+        throw std::invalid_argument("graph file can't be read from");
+    }
+
     if (path.ends_with(".graph")) {
         impl = std::make_unique<GraphImplementation < steiner_graph>> (triangulation_file_io::read_steiner(input, 0.5F));
     } else if (path.ends_with(".fmi"))
@@ -310,10 +313,10 @@ void Graph::read_graph_file(std::string path, Args... args) {
         impl = std::make_unique<GraphImplementation < ch_graph_t>> (fmi_file_io::read<ch_graph_t>(input));
     else if (path.ends_with(".gl"))
         impl = std::make_unique<GraphImplementation < gl_graph_t>> (fmi_file_io::read<gl_graph_t>(input));
+    // ...
     else
         throw std::invalid_argument("unrecognized file ending");
 
-// ...
 
     input.close();
 }
