@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <memory>
 #include "Graph.h"
 #include "Query.h"
@@ -9,7 +8,7 @@
 struct RoutingConfiguration {
     bool use_a_star{true};
     bool bidirectional{false};
-    bool compact_labels{false};
+    bool compact_labels{true};
     bool live_status {true};
 };
 

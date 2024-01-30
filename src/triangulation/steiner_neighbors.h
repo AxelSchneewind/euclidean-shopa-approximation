@@ -4,6 +4,9 @@
 
 #include <cmath>
 #include <concepts>
+#include <cstddef>
+#include <math.h>
+#include <vector>
 
 template<typename NodeCostPair, typename Graph>
 concept HasFaceCrossingPredecessor =requires { typename Graph::node_id_type; }
@@ -45,11 +48,11 @@ private:
     Graph const &_graph;
     Labels const &_labels;
 
-    double const _spanner_angle;
-    double const _spanner_angle_cos;
+    double _spanner_angle;
+    double _spanner_angle_cos;
 
-    double const _max_angle;
-    double const _max_angle_cos;
+    double _max_angle;
+    double _max_angle_cos;
 
     coordinate_t _source_coordinate;
 
@@ -71,7 +74,6 @@ private:
     template<typename NodeCostPair>
     typename Graph::node_id_type
     find_min_angle_neighbor(typename Graph::base_topology_type::edge_id_type const &edge_id,
-                            double const &max_angle_cos,
                             coordinate_t const &direction);
 
     template<typename NodeCostPair>
@@ -116,4 +118,12 @@ public:
 
     template<typename NodeCostPair>
     void operator()(NodeCostPair const &node, std::vector<NodeCostPair> &out);
+
+    std::size_t base_node_count() const { return _base_node_count; };
+    std::size_t boundary_node_count() const { return _boundary_node_count; };
+    std::size_t steiner_point_count() const { return _steiner_point_count; };
+
+    std::size_t base_node_neighbor_count() const { return _base_node_neighbor_count; };
+    std::size_t boundary_node_neighbor_count() const { return _boundary_node_neighbor_count; };
+    std::size_t steiner_point_neighbor_count() const { return _steiner_point_neighbor_count; };
 };

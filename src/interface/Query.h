@@ -146,11 +146,20 @@ private:
     Graph _tree_backward;
     Graph _path;
 
-    std::size_t _nodes_visited = 0;
-    std::size_t _edges_visited = 0;
-    std::size_t _pull_count = 0;
-    std::size_t _push_count = 0;
-    std::size_t _queue_max_size = 0;
+    std::size_t _nodes_visited{0};
+    std::size_t _edges_visited{0};
+    std::size_t _pull_count{0};
+    std::size_t _push_count{0};
+    std::size_t _queue_max_size{0};
+
+    std::size_t _base_node_count{0};
+    std::size_t _boundary_node_count{0};
+    std::size_t _steiner_point_count{0};
+
+    std::size_t _base_node_neighbor_count{0};
+    std::size_t _boundary_node_neighbor_count{0};
+    std::size_t _steiner_point_neighbor_count{0};
+
 
     std::chrono::duration<double, std::milli> _duration;
 
@@ -187,17 +196,9 @@ public:
 
     std::chrono::duration<double, std::milli> duration() const override { return _duration; };
 
-    void write(table& out) const override {
-        out.put(Statistics::COST, distance());
-        out.put(Statistics::TREE_SIZE, nodes_visited());
-        // out.put(Statistics::PATH, path());
-        out.put(Statistics::TIME, duration());
-        out.put(Statistics::QUEUE_PULL_COUNT, pull_count());
-        out.put(Statistics::QUEUE_PUSH_COUNT, push_count());
-        out.put(Statistics::QUEUE_MAX_SIZE, queue_max_size());
-        out.put(Statistics::EDGES_CHECKED, edges_visited());
-    }
+    void write(table& out) const override;
 };
+
 
 class Result : public Base<ResultInterface>{
 public:
@@ -239,7 +240,7 @@ public:
     std::size_t pull_count() const { return impl->pull_count(); };
     std::size_t push_count() const { return impl->push_count(); };
 
-    void write(table& out) const { impl->write(out); };
-
     std::chrono::duration<double, std::milli> duration() const { return impl->duration(); };
+
+    void write(table& out) const { impl->write(out); };
 };
