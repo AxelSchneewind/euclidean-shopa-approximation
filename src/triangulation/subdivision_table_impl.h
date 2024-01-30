@@ -110,11 +110,11 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
         double length = distance(c2, c1);
 
         // relative value where the mid-point (with max distance to other edges) lies between node1 and node2
-        double mid_value = 1 / (1 + std::sin(angle1) / std::sin(angle2));
+        double mid_position = 1 / (1 + std::sin(angle1) / std::sin(angle2));
         {
             double mid_value_second = 1 / (1 + std::sin(angle2) / std::sin(angle1));
-            assert(std::abs(mid_value + mid_value_second - 1.0) < 0.001);
-            assert(mid_value < 1 && mid_value > 0);
+            assert(std::abs(mid_position + mid_value_second - 1.0) < 0.001);
+            assert(mid_position < 1 && mid_position > 0);
         }
 
         // distance values have been computed already, convert to r(v) relative to this edges length
@@ -137,7 +137,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
                 left_start_index++;
 
             left_last_index = left_start_index;
-            while (left_last_index < left_node_positions.size() && left_node_positions[left_last_index] < mid_value)
+            while (left_last_index < left_node_positions.size() && left_node_positions[left_last_index] < mid_position)
                 left_last_index++;
             assert(left_start_index < left_last_index + 3);
             assert(left_last_index - left_start_index >= 0);
@@ -156,7 +156,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
 
             right_last_index = right_start_index;
             while (right_last_index < right_node_positions.size() &&
-                   right_node_positions[right_last_index] < (1 - mid_value))
+                   right_node_positions[right_last_index] < (1 - mid_position))
                 right_last_index++;
             assert(right_start_index < right_last_index + 3);
             assert(right_last_index - right_start_index >= 0);
@@ -166,23 +166,23 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
         // number of points on first half of edge
         auto mid_index = (left_last_index - left_start_index) + 2;
         // remove point at r(v) if already over on other half of the edge
-        if (r_first >= mid_value) {
-            r_first = mid_value;
+        if (r_first >= mid_position) {
+            r_first = mid_position;
             mid_index--;
         }
 
         // number of points (points on first half + mid_node + points on second half + c2 + (c2 + r(c2)))
         auto count = mid_index + (right_last_index - right_start_index) + 2 + 1;
         // remove point at r(v) if already over on other half of the edge
-        if (r_second >= 1 - mid_value) {
-            r_second = 1 - mid_value;
+        if (r_second >= 1 - mid_position) {
+            r_second = 1 - mid_position;
             count--;
         }
         assert(count >= 2);
 
         // check that values are in bounds
         if (!is_in_range(count, 2, max_steiner_count_per_edge)
-            || !is_in_range(mid_value, 0, 1)
+            || !is_in_range(mid_position, 0, 1)
             || !is_in_range(mid_index, 1, count)
             || !is_in_range(r_first, 0, 1)
             || !is_in_range(r_second, 0, 1)
@@ -194,7 +194,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
 
         result.emplace_back();
         auto &entry = result.back();
-        entry.mid_position = mid_value;
+        entry.mid_position = mid_position;
         entry.mid_index = mid_index;
         entry.node_count = count;
         entry.r_first = r_first;
