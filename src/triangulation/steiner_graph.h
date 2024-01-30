@@ -95,7 +95,7 @@ public:
     using triangle_node_id_type = node_id_t;
     using triangle_edge_id_type = edge_id_t;
 
-    using intra_edge_id_type = short int;
+    using intra_edge_id_type = int;
 
     using node_id_type = steiner_node_id<triangle_edge_id_type, intra_edge_id_type>;
     using edge_id_type = steiner_edge_id<node_id_type>;
