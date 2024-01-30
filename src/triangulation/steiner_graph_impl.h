@@ -3,6 +3,7 @@
 #include "steiner_graph.h"
 
 #include "subdivision_table_impl.h"
+#include "subdivision_info_impl.h"
 #include "polyhedron_impl.h"
 
 
@@ -150,13 +151,13 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangula
     }
     assert(min_r_value <= 0.5);
 
-    auto table = subdivision_table::precompute(epsilon, min_r_value);
-    auto subdivision_info = subdivision_table::make_subdivision_info(triangulation, triangulation_nodes, poly,
-                                                                     table,
+    // auto table = subdivision_info_type::precompute(epsilon, min_r_value);
+    auto subdivision_info = subdivision_info_type::make_subdivision_info(triangulation, triangulation_nodes, poly,
+                                                                     // table,
                                                                      r_values, epsilon);
     r_values.clear();
 
-    subdivision_table s_table{std::move(table), std::move(subdivision_info)};
+    subdivision_info_type s_table{/*std::move(table),*/ std::move(subdivision_info)};
 
     return {std::move(triangulation_nodes),
             std::move(triangulation),
@@ -258,7 +259,7 @@ steiner_graph::steiner_graph(steiner_graph &&other) noexcept
 steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triangulation_nodes,
                              adjacency_list<steiner_graph::triangle_node_id_type, steiner_graph::triangle_edge_info_type> &&triangulation_edges,
                              polyhedron<base_topology_type, 3> &&triangles,
-                             subdivision_table &&table,
+                             steiner_graph::subdivision_info_type &&table,
                              std::vector<bool>&& is_boundary_node,
                              double epsilon)
         :
@@ -341,7 +342,7 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type base_node_id)
             for (short i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
                 steiner_graph::node_id_type destination = {e, i};
                 coordinate_t destination_coordinate = node(destination).coordinates;
-                edges.push_back({destination, {}});
+                edges.emplace_back(destination);
                 destination_coordinates.push_back(destination_coordinate);
             }
         }
@@ -353,7 +354,7 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type base_node_id)
         auto e_id = _M_base_topology.edge_id(base_node_id, e.destination);
         steiner_graph::node_id_type destination = {e_id, 1};
         coordinate_t destination_coordinate = node(destination).coordinates;
-        edges.push_back({destination, {}});
+        edges.emplace_back(destination);
         destination_coordinates.push_back(destination_coordinate);
     }
     for (auto &&e: _M_base_topology.incoming_edges(base_node_id)) [[likely]] {
@@ -362,7 +363,7 @@ steiner_graph::outgoing_edges(steiner_graph::triangle_node_id_type base_node_id)
         auto e_id = _M_base_topology.edge_id(e.destination, base_node_id);
         steiner_graph::node_id_type destination(e_id, steiner_info(e_id).node_count - 2U);
         coordinate_t destination_coordinate = node(destination).coordinates;
-        edges.push_back({destination, {}});
+        edges.emplace_back(destination);
         destination_coordinates.push_back(destination_coordinate);
     }
 
@@ -397,7 +398,7 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
     if (node_id.steiner_index < _steiner_info.node_count - 1) [[likely]] {
         steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index + 1);
         coordinate_t destination_coordinate = node(destination).coordinates;
-        edges.push_back({destination, {}});
+        edges.emplace_back(destination);
         destination_coordinates.push_back(destination_coordinate);
     }
 
@@ -405,7 +406,7 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
     if (node_id.steiner_index > 0) [[likely]] {
         steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index - 1);
         coordinate_t destination_coordinate = node(destination).coordinates;
-        edges.push_back({destination, {}});
+        edges.emplace_back(destination);
         destination_coordinates.push_back(destination_coordinate);
     }
 
@@ -425,7 +426,7 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
                 steiner_graph::node_id_type destination = {base_edge_id, i};
                 coordinate_t destination_coordinate = node(destination).coordinates;
 
-                edges.push_back({destination, {}});
+                edges.emplace_back(destination);
                 destination_coordinates.push_back(destination_coordinate);
             }
         }
@@ -440,7 +441,7 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
 }
 
 steiner_graph::node_info_type steiner_graph::node(steiner_graph::node_id_type id) const {
-    return {node_coordinates(id)};
+    return node_coordinates(id);
 }
 
 steiner_graph::node_id_type steiner_graph::source(steiner_graph::edge_id_type id) {
@@ -579,12 +580,12 @@ steiner_graph::distance_type steiner_graph::path_length(const path_type &route) 
     return result;
 }
 
-subdivision_table::subdivision_edge_info const &
+steiner_graph::subdivision_info_type::subdivision_edge_info const &
 steiner_graph::steiner_info(steiner_graph::triangle_edge_id_type id) const {
     return _M_table.edge(id);
 }
 
-subdivision_table::subdivision_edge_info &
+steiner_graph::subdivision_info_type::subdivision_edge_info &
 steiner_graph::steiner_info(steiner_graph::triangle_edge_id_type id) {
     return _M_table.edge(id);
 }

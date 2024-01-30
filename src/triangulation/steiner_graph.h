@@ -1,7 +1,8 @@
 #pragma once
 
-#include "subdivision_table.h"
 #include "../graph/subgraph.h"
+#include "subdivision_table.h"
+#include "subdivision_info.h"
 
 template<typename EdgeId, typename IntraEdgeId>
 struct steiner_node_id {
@@ -103,7 +104,7 @@ public:
     using edge_info_type = edge_t;
 
     using triangle_node_info_type = node_t;
-    using triangle_edge_info_type = std::nullptr_t;
+    using triangle_edge_info_type = void;
 
     using base_topology_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
     using adjacency_list_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
@@ -116,6 +117,8 @@ public:
     using subgraph_type = subgraph<steiner_graph>;
 
     using topology_type = steiner_graph;
+
+    using subdivision_info_type = subdivision;
 
     // whether base nodes should have outgoing face crossing edges
     static constexpr bool face_crossing_from_base_nodes { true };
@@ -175,16 +178,16 @@ public:
     steiner_graph(std::vector<node_info_type> &&triangulation_nodes,
                   adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&triangulation_edges,
                   polyhedron<base_topology_type, 3> &&triangles,
-                  subdivision_table &&table,
+                  subdivision_info_type &&table,
                   std::vector<bool> && is_base_node,
                   double epsilon);
 
 
     static constexpr size_t SIZE_PER_NODE =
             sizeof(node_info_type) + base_topology_type::SIZE_PER_NODE + polyhedron_type::SIZE_PER_NODE +
-            subdivision_table::SIZE_PER_NODE;
+            subdivision_info_type::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE =
-            base_topology_type::SIZE_PER_EDGE + polyhedron_type::SIZE_PER_EDGE + subdivision_table::SIZE_PER_EDGE;
+            base_topology_type::SIZE_PER_EDGE + polyhedron_type::SIZE_PER_EDGE + subdivision_info_type::SIZE_PER_EDGE;
 
 private:
     size_t _M_node_count;
@@ -200,7 +203,7 @@ private:
     base_topology_type _M_base_topology;
 
     // store subdivision table here
-    subdivision_table _M_table;
+    subdivision_info_type _M_table;
 
     // for each edge, store the id of the 2 nodes that make up the adjacent triangles
     polyhedron_type _M_polyhedron;
@@ -211,7 +214,7 @@ private:
 public:
     node_id_type from_base_node_id(base_topology_type::node_id_type __node) const;
 
-    const subdivision_table &subdivision_info() const { return _M_table; }
+    const subdivision_info_type &subdivision_info() const { return _M_table; }
 
     const base_topology_type &base_graph() const { return _M_base_topology; }
 
@@ -248,8 +251,8 @@ public:
 
     edge_info_type edge(edge_id_type id) const;
 
-    subdivision_table::subdivision_edge_info const& steiner_info(triangle_edge_id_type id) const;
-    subdivision_table::subdivision_edge_info & steiner_info(triangle_edge_id_type id) ;
+    subdivision_info_type::subdivision_edge_info const& steiner_info(triangle_edge_id_type id) const;
+    subdivision_info_type::subdivision_edge_info & steiner_info(triangle_edge_id_type id) ;
 
     edge_id_type edge_id(node_id_type src, node_id_type dest) const;
 
