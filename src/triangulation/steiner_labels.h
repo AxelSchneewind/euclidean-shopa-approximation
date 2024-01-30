@@ -85,8 +85,8 @@ private:
     using node_id_type = G::node_id_type;
     using distance_type = G::distance_type;
 
-    using labels_type = node_info_array<typename G::triangle_edge_id_type, unsigned short, label_type>;
-    // using labels_type = compact_node_info_container<typename G::triangle_edge_id_type, unsigned short, char, label_type>;
+    // using labels_type = node_info_array<typename G::triangle_edge_id_type, unsigned short, label_type>;
+    using labels_type = compact_node_info_container<typename G::triangle_edge_id_type, unsigned short, char, label_type>;
 
     G const &_graph;
 
