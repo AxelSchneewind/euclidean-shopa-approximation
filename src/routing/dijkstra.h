@@ -88,6 +88,7 @@ public:
     Q &queue() { return _M_queue; }
 
     const L &labels() const { return _M_labels; }
+    const N &neighbors() const { return _M_neighbors; }
 
     L &labels() { return _M_labels; }
 
