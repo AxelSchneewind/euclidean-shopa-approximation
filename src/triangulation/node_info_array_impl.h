@@ -54,7 +54,7 @@ node_info_array<EdgeId, IntraEdgeId, Info>::node_info_array(const std::vector<in
         : offsets(offsets), default_value(default_value), node_info_list(offsets.back(), default_value) {}
 
 template<typename EdgeId, typename IntraEdgeId, typename Info>
-node_info_array<EdgeId, IntraEdgeId, Info>::node_info_array(std::vector<index_type> &&offsets, Info default_value) : offsets(std::move(offsets)), default_value(default_value), node_info_list(offsets.back(), default_value) {}
+node_info_array<EdgeId, IntraEdgeId, Info>::node_info_array(std::vector<index_type> &&offsets, Info default_value) : offsets(std::move(offsets)), default_value(default_value), node_info_list(this->offsets.back(), default_value) {}
 
 template<typename EdgeId, typename IntraEdgeId, typename Info>
 node_info_array<EdgeId, IntraEdgeId, Info>::index_type node_info_array<EdgeId, IntraEdgeId, Info>::offset(edge_id_type edge_id) const {
