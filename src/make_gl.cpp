@@ -28,14 +28,14 @@ main(int argc, char const *argv[]) {
 
     int color, linewidth;
     if (argc > 3)
-        linewidth = std::stoi(argv[4]);
+        linewidth = std::stoi(argv[3]);
     else {
         std::cout << "output linewidth: " << std::flush;
         std::cin >> linewidth;
     }
 
     if (argc > 4)
-        color = std::stoi(argv[5]);
+        color = std::stoi(argv[4]);
     else {
         std::cout << "output color: " << std::flush;
         std::cin >> color;
@@ -46,8 +46,8 @@ main(int argc, char const *argv[]) {
     std::ifstream input(filename, std::ios::in);
     std::ofstream output(filename_out, std::ios::out);
 
-    std::string_view input_file_ending(&filename.at(filename.find_first_of('.')));
-    std::string_view output_file_ending(&filename_out.at(filename_out.find_first_of('.')));
+    std::string_view input_file_ending(&filename.at(filename.find_last_of('.')));
+    std::string_view output_file_ending(&filename_out.at(filename_out.find_last_of('.')));
 
     if (input_file_ending == ".graph") {
         std::vector<node_t> nodes;
@@ -82,9 +82,9 @@ main(int argc, char const *argv[]) {
                 std::cin >> epsilon;
             }
 
-            unidirectional_adjacency_list<node_id_t, nullptr_t>::adjacency_list_builder builder;
+            unidirectional_adjacency_list<node_id_t>::adjacency_list_builder builder;
             builder.add_edges_from_triangulation(faces);
-            auto steiner_edges = adjacency_list<node_id_t, nullptr_t>::make_bidirectional(builder.get());
+            auto steiner_edges = adjacency_list<node_id_t>::make_bidirectional(builder.get());
             auto g = steiner_graph::make_graph(std::move(nodes), std::move(steiner_edges), std::move(faces), epsilon);
 
             gl_file_io::write(output, g, linewidth, color);
