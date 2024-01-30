@@ -10,13 +10,6 @@
 #include "../routing/dijkstra_concepts.h"
 #include "../util/counting_iterator.h"
 
-template<typename NodeId, typename E = void>
-struct internal_adjacency_list_edge {
-    // TODO rename members and add getters
-    NodeId destination;
-    E info;
-};
-
 
 template<typename NodeId, typename E = void>
 struct adjacency_list_edge {
@@ -27,9 +20,21 @@ struct adjacency_list_edge {
     bool operator==(const adjacency_list_edge &) const = default;
 
     bool operator!=(const adjacency_list_edge &) const = default;
-
-    operator internal_adjacency_list_edge<NodeId, E>() const { return {destination, info}; }
 };
+
+template<typename NodeId, typename E = void>
+struct internal_adjacency_list_edge {
+    // TODO rename members and add getters
+    NodeId destination;
+    E info;
+
+    template <typename OtherN, typename OtherE>
+    internal_adjacency_list_edge(adjacency_list_edge<OtherN, OtherE> const& other) : destination{other.destination}, info{other.info} {}
+
+    template <typename OtherN>
+    internal_adjacency_list_edge(OtherN const& other) : destination{other} {}
+};
+
 
 template<typename NodeId>
 struct internal_adjacency_list_edge<NodeId, void> {
@@ -37,19 +42,26 @@ struct internal_adjacency_list_edge<NodeId, void> {
 
     internal_adjacency_list_edge() = default;
 
-    internal_adjacency_list_edge(NodeId destination) : destination(destination) {}
+    template<typename... Args>
+    internal_adjacency_list_edge(NodeId destination, Args...  /*ignore*/) : destination(destination) {}
+
+    template <typename OtherN, typename OtherE>
+    internal_adjacency_list_edge(adjacency_list_edge<OtherN, OtherE> const& other) : destination{other.destination} {}
+
+    template <typename OtherN>
+    internal_adjacency_list_edge(OtherN const& other) : destination{other} {}
 };
 
 template<typename NodeId>
 struct adjacency_list_edge<NodeId, void> {
     NodeId source;
     NodeId destination;
-    static constexpr std::nullptr_t info = nullptr;
 
     adjacency_list_edge() = default;
 
-    adjacency_list_edge(NodeId source, NodeId destination, std::nullptr_t /*info*/) : source(source),
-                                                                                  destination(destination) {}
+    template<typename... Args>
+    adjacency_list_edge(NodeId source, NodeId destination, Args...  /*ignore*/) : source(source),
+                                                                             destination(destination) {}
 
     bool operator==(const adjacency_list_edge &) const = default;
 
@@ -63,7 +75,7 @@ struct adjacency_list_edge<NodeId, void> {
  * @tparam NodeId the type by which nodes are identified
  * @tparam E information stored on each edge
  */
-template<typename NodeId, typename E>
+template<typename NodeId, typename E = void>
 class unidirectional_adjacency_list {
 public:
     using edge_index_type = edge_id_t;
@@ -92,7 +104,8 @@ public:
 
         adjacency_list_builder(const adjacency_list_builder &other) = default;
 
-        adjacency_list_builder(size_t node_count) : _node_count(node_count), _edge_count(0), _offsets_valid(false), _edges_sorted(false) { _edges.reserve(_node_count); };
+        adjacency_list_builder(size_t node_count) : _node_count(node_count), _edge_count(0), _offsets_valid(false),
+                                                    _edges_sorted(false) { _edges.reserve(_node_count); };
 
         ~adjacency_list_builder() = default;
 
@@ -100,34 +113,43 @@ public:
 
         adjacency_list_builder &operator=(const adjacency_list_builder &) = default;
 
-        edge_type& edge(std::size_t index) { _offsets_valid = false; _edges_sorted = false; return _edges[index]; }
+        edge_type &edge(std::size_t index) {
+            _offsets_valid = false;
+            _edges_sorted = false;
+            return _edges[index];
+        }
 
         void sort_edges();
+
         void remove_duplicates();
 
         void remove_unconnected_nodes();
 
         template<std::predicate<node_id_type> NodePredicate>
-        void filter_nodes(NodePredicate&& node_predicate);
+        void filter_nodes(NodePredicate &&node_predicate);
 
         template<std::predicate<edge_info_type> EdgePredicate>
-        void filter_edges(EdgePredicate&& edge_predicate);
+        void filter_edges(EdgePredicate &&edge_predicate);
 
         void reorder_nodes(std::span<node_id_type> new_node_ids);
 
-        std::span<edge_type, std::dynamic_extent> edges() { return {_edges.begin(), _edges.end()};}
+        std::span<edge_type, std::dynamic_extent> edges() { return {_edges.begin(), _edges.end()}; }
 
-        void add_edges_from_triangulation(std::vector<std::array<node_id_type, 3>> const& faces);
-        void add_edges_from_triangulation(std::vector<std::array<node_id_type, 3>> && faces);
+        void add_edges_from_triangulation(std::vector<std::array<node_id_type, 3>> const &faces);
 
-        void add_edges(std::vector<edge_type> const& edges);
-        void add_edges(std::vector<edge_type> && edges);
+        void add_edges_from_triangulation(std::vector<std::array<node_id_type, 3>> &&faces);
+
+        void add_edges(std::vector<edge_type> const &edges);
+
+        void add_edges(std::vector<edge_type> &&edges);
 
         void add_node(NodeId node);
 
-        void add_edge(adjacency_list_edge<NodeId, E> const& edge) { _edges.emplace_back(edge); };
+        void add_edge(adjacency_list_edge<NodeId, E> const &edge) { _edges.emplace_back(edge); };
 
-        void add_edge(NodeId source, NodeId destination, E info);
+        template<typename... Args>
+        void add_edge(NodeId source, NodeId destination, Args&&... info_args);
+
         void add_edge(NodeId source, NodeId destination);
 
         void insert_backward_edges();
@@ -264,7 +286,6 @@ public:
 
     bool operator==(const unidirectional_adjacency_list<NodeId, E> &other);
 };
-
 
 
 template<typename NodeId, typename E>

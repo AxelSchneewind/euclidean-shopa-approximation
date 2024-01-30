@@ -9,7 +9,7 @@
  * stores a topology and provides O(1) access to incoming and outgoing edges for any node
  * @tparam E the information stored for each node
  */
-template<typename NodeId, typename E>
+template<typename NodeId, typename E = void>
 class adjacency_list {
 public:
     using node_id_type = NodeId;
