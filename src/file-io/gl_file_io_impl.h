@@ -96,15 +96,15 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
     }
 
     // write remaining edges
-    for (auto node: graph.node_ids()) {
+    for (auto&& node: graph.node_ids()) {
         auto &&edges = graph.outgoing_edges(node);
-        for (auto edge: edges) {
+        for (auto&& edge: edges) {
             auto dest = edge.destination;
 
             if (graph.is_base_node(node) || graph.is_base_node(dest)) continue;
 
             // avoid inserting an edge twice
-            if (indices[node] >= indices[dest] || !graph.has_edge(dest, node))
+            if (indices[node] >= indices[dest] && graph.has_edge(dest, node))
                 continue;
 
             f::write(output, indices[node]) << ' ';
