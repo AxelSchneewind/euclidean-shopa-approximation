@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <fstream>
 #include <string>
 
@@ -10,8 +11,8 @@
 
 int
 main(int argc, char const *argv[]) {
-    std::string filename;
-    std::string filename_out;
+    std::filesystem::path filename;
+    std::filesystem::path filename_out;
     if (argc > 1)
         filename = std::string(argv[1]);
     else {
@@ -46,8 +47,8 @@ main(int argc, char const *argv[]) {
     std::ifstream input(filename, std::ios::in);
     std::ofstream output(filename_out, std::ios::out);
 
-    std::string_view input_file_ending(&filename.at(filename.find_last_of('.')));
-    std::string_view output_file_ending(&filename_out.at(filename_out.find_last_of('.')));
+    auto const& input_file_ending = filename.extension();
+    auto const& output_file_ending = filename_out.extension();
 
     if (input_file_ending == ".graph") {
         std::vector<node_t> nodes;
@@ -73,7 +74,7 @@ main(int argc, char const *argv[]) {
             edge.info.line_width = linewidth;
         }
 
-        if (output_file_ending == ".steiner.gl") {
+        if (output_file_ending == ".steiner_gl") {
             double epsilon;
             if (argc > 5)
                 epsilon = std::stof(argv[3]);
