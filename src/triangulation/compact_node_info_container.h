@@ -58,7 +58,7 @@ private:
     std::span<Info, std::dynamic_extent> get(AggregateId agg_id);
     std::span<const Info, std::dynamic_extent> get(AggregateId agg_id) const;
 
-    Info get(AggregateId agg_id, IntraAggregateId intra_id) const;
+    Info const& get(AggregateId agg_id, IntraAggregateId intra_id) const;
     Info& get(AggregateId agg_id, IntraAggregateId intra_id);
 
     AggregateInfo get_aggregate_info(AggregateId agg_id);
@@ -75,7 +75,7 @@ public:
 
     info_type& node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id);
 
-    info_type node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id) const;
+    info_type const& node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id) const;
 
     std::span<info_type> node_infos(edge_id_type edge_id);
 

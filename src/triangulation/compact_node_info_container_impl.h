@@ -7,14 +7,14 @@
 #include "node_info_container.h"
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
-Info
+Info const&
 compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::node_info(edge_id_type edge_id,
                                                                                            intra_edge_id_type intra_edge_id) const {
     return get(edge_id, intra_edge_id);
 }
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
-Info compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::get(AggregateId agg_id,
+Info const& compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::get(AggregateId agg_id,
                                                                                           IntraAggregateId intra_id) const {
     if (!is_expanded(agg_id)) return default_info;
 
