@@ -9,7 +9,7 @@
 
 // just to have the sizes somewhere and see when they change
 static_assert(steiner_graph::SIZE_PER_NODE == 20);
-static_assert(steiner_graph::SIZE_PER_EDGE == 52);
+static_assert(steiner_graph::SIZE_PER_EDGE == 56);
 
 static_assert(std_graph_t::SIZE_PER_NODE == 20);
 static_assert(std_graph_t::SIZE_PER_EDGE == 20);
@@ -91,7 +91,7 @@ main(int argc, char const *argv[]) {
                   << ',' << graph.base_polyhedron().boundary_edge_count()
                   << ',' << graph.base_polyhedron().face_count()
                   << ',' << graph.node_count()
-                  << ',' << graph.edge_count() / 2 << '\n';
+                  << ',' << graph.edge_count() << '\n';
     } else if (mode == "angles") {
         std::ifstream input(graph_path);
 
