@@ -13,28 +13,30 @@
 
 class subdivision {
 private:
-    using steiner_index_type = unsigned int;
+    using steiner_index_type = int;
     static constexpr steiner_index_type max_steiner_count_per_edge = std::numeric_limits<steiner_index_type>::max() / 2;
 
 public:
     static constexpr double min_angle = 0x1.p-24;
 
     struct subdivision_edge_info {
+        // r(v), relative to this edge
+        float r_first;
+
         // relative position of the points with the highest distance to other edges
         float mid_position;
 
-        // r(v), relative to this edge
-        float r_first;
+        // r(w)
         float r_second;
 
         // number of steiner points on this edge (counting the source and if present, middle nodes), >= 2
-        unsigned int node_count;
+        steiner_index_type node_count;
 
         // which classes of edges this one belongs to (first and second half)
         double base_first;
         double base_second;
 
-        unsigned int mid_index;
+        steiner_index_type mid_index;
 
         bool operator==(const subdivision_edge_info &other) const = default;
     };
