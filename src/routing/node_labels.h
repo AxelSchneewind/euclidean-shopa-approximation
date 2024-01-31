@@ -39,8 +39,20 @@ public:
     bool reached(node_id_type node) const;
 
     Label get(node_id_type node) const;
+    Label& at(node_id_type node);
+    Label const& at(node_id_type node) const;
 
     std::span<const node_id_type> all_visited() const;
 
     void label(node_id_type const&node, Label const&label);
 };
+
+template<RoutableGraph G, typename Label>
+Label &node_labels<G, Label>::at(node_id_type node) {
+    return _labels[node];
+}
+
+template<RoutableGraph G, typename Label>
+Label const&node_labels<G, Label>::at(node_id_type node) const {
+    return _labels[node];
+}

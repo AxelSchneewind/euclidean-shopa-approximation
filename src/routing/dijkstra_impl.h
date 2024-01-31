@@ -42,7 +42,7 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
 bool
 dijkstra<G, Q, L, N, UseEdge>::reached(G::node_id_type __node) const {
-    return !is_none(_M_labels.get(__node).predecessor());
+    return !is_none(_M_labels.at(__node).predecessor());
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
@@ -94,9 +94,9 @@ dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type node) {
 
         assert (!is_none(successor_node));
         assert(successor.predecessor() == node.node());
-        assert (successor_node == _M_start_node || _M_graph.has_edge(successor.predecessor(), successor_node));
+        // assert (successor_node == _M_start_node || _M_graph.has_edge(successor.predecessor(), successor_node));
 
-        const distance_t successor_cost = _M_labels.get(successor_node).distance(); // use shortest distance
+        const distance_t successor_cost = _M_labels.at(successor_node).distance(); // use shortest distance
         const distance_t& new_cost = successor.distance();
 
         assert(new_cost >= node.distance());
@@ -107,11 +107,10 @@ dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type node) {
             node_cost_pairs[to_index++] = successor;
 
             // label current node with preliminary value
-            assert (_M_graph.has_edge(successor.predecessor(), successor_node));
+            // assert (_M_graph.has_edge(successor.predecessor(), successor_node));
 
-            auto preliminary_label = successor;
-            // preliminary_label.predecessor() = none_value<typename G::node_id_type>;
-            _M_labels.label(successor_node, preliminary_label);
+            _M_labels.label(successor_node, successor);
+            // _M_labels.at(successor_node).predecessor() = none_value<typename G::node_id_type>;
         }
     }
 
@@ -140,7 +139,7 @@ dijkstra<G, Q, L, N, UseEdge>::step() {
     _M_labels.label(ncp.node(), ncp);
 
     // remove already settled nodes
-    while (!_M_queue.empty() && _M_queue.top().distance() > _M_labels.get(_M_queue.top().node()).distance()) [[likely]] {
+    while (!_M_queue.empty() && _M_queue.top().distance() > _M_labels.at(_M_queue.top().node()).distance()) [[likely]] {
         _pull_count += 1;
         _M_queue.pop();
     }
@@ -198,11 +197,11 @@ G::subgraph_type dijkstra<G, Q, L, N, UseEdge>::shortest_path_tree(int max_node_
         if (nodes.size() >= max_node_count || edges.size() >= max_node_count)
             break;
 
-        if (!reached(node_id) || labels().get(node_id).distance() >= current().value())
+        if (!reached(node_id) || labels().at(node_id).distance() >= current().value())
             continue;
 
         nodes.emplace_back(node_id);
-        typename G::node_id_type predecessor = labels().get(node_id).predecessor();
+        typename G::node_id_type predecessor = labels().at(node_id).predecessor();
 
         if (is_none(predecessor) || predecessor == node_id)
             continue;

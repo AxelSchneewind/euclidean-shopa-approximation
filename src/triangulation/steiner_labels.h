@@ -123,6 +123,9 @@ public:
 
     Label get(node_id_type node) const;
 
+    Label& at(node_id_type node);
+    Label const& at(node_id_type node) const;
+
     label_iterator_type all_visited() const;
 
     void label(node_id_type const& node, Label const& label);

@@ -51,6 +51,33 @@ steiner_labels<G, N>::get(steiner_labels<G, N>::node_id_type node) const {
 }
 
 template<RoutableGraph G, typename N>
+N const&
+steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) const {
+    assert(!is_none(node));
+    if (_graph.is_base_node(node)) [[unlikely]]
+    {
+        assert(!is_none(_graph.base_node_id(node)));
+        return _base_labels[_graph.base_node_id(node)];
+    }
+
+    return _labels.node_info(node.edge, node.steiner_index - 1);
+}
+
+template<RoutableGraph G, typename N>
+N &
+steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) {
+    assert(!is_none(node));
+    if (_graph.is_base_node(node)) [[unlikely]]
+    {
+        assert(!is_none(_graph.base_node_id(node)));
+        return _base_labels[_graph.base_node_id(node)];
+    }
+
+    return _labels.node_info(node.edge, node.steiner_index - 1);
+}
+
+
+template<RoutableGraph G, typename N>
 void
 steiner_labels<G, N>::label(node_id_type const&node, N const&label) {
     auto const&edge_id = node.edge;
