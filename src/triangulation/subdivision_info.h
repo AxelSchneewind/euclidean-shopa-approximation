@@ -17,7 +17,7 @@ private:
     static constexpr steiner_index_type max_steiner_count_per_edge = std::numeric_limits<steiner_index_type>::max() / 2;
 
 public:
-    static constexpr double min_angle = 0x1.p-24;
+    static constexpr double min_angle = 0x1.p-6;
 
     struct subdivision_edge_info {
         // r(v), relative to this edge
