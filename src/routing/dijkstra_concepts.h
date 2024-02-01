@@ -89,6 +89,6 @@ concept DijkstraQueue = std::move_constructible<Q> && std::copy_constructible<Q>
 template<typename L, typename NodeId, typename NodeCostPair, typename Label>
 concept DijkstraLabels = requires(L l, NodeId node, NodeCostPair ncp, Label label) {
     requires std::convertible_to<NodeCostPair, Label>;
-    l.get(node);
+    l.at(node);
     l.label(node, label);
 };

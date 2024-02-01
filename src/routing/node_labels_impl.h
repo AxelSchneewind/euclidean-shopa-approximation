@@ -3,14 +3,6 @@
 #include "node_labels.h"
 
 
-template<RoutableGraph G, typename NodeCostPair>
-node_labels<G, NodeCostPair>::label_type
-node_labels<G, NodeCostPair>::get(node_id_type node) const {
-    assert(!is_none(node));
-    return _labels[node];
-}
-
-
 template<RoutableGraph G, typename N>
 std::span<const typename node_labels<G, N>::node_id_type>
 node_labels<G, N>::all_visited() const {

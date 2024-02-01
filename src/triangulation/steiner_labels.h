@@ -121,8 +121,6 @@ public:
     // init for given query
     void init(node_id_type start_node, node_id_type target_node);
 
-    Label get(node_id_type node) const;
-
     Label& at(node_id_type node);
     Label const& at(node_id_type node) const;
 

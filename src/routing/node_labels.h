@@ -38,7 +38,6 @@ public:
 
     bool reached(node_id_type node) const;
 
-    Label get(node_id_type node) const;
     Label& at(node_id_type node);
     Label const& at(node_id_type node) const;
 

@@ -22,7 +22,7 @@ typename Graph::node_id_type steiner_neighbors<Graph, Labels>::find_face_crossin
                && face_crossing_predecessor != closer_face_crossing_predecessor
                 ) [[likely]] {
             closer_face_crossing_predecessor = face_crossing_predecessor;
-            face_crossing_predecessor = _labels.get(face_crossing_predecessor).predecessor();
+            face_crossing_predecessor = _labels.at(face_crossing_predecessor).predecessor();
         }
         return face_crossing_predecessor;
     }
