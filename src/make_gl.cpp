@@ -77,7 +77,7 @@ main(int argc, char const *argv[]) {
         if (output_file_ending == ".steiner_gl") {
             double epsilon;
             if (argc > 5)
-                epsilon = std::stof(argv[3]);
+                epsilon = std::stof(argv[5]);
             else {
                 std::cout << "epsilon: ";
                 std::cin >> epsilon;
