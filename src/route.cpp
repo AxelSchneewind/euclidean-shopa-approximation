@@ -17,14 +17,8 @@ main(int argc, char *argv[]) {
         return 1;
     }
 
-    if (arguments.help_given != 0) {
-        std::cout << arguments.help_help << std::endl;
-        return 0;
-    }
-
-
-    std::string graph_file;
-    std::string output_directory;
+    std::filesystem::path graph_file;
+    std::filesystem::path output_directory;
     double epsilon = arguments.epsilon_arg;
 
     bool nodes_by_coordinates = arguments.coordinates_flag;
@@ -38,15 +32,15 @@ main(int argc, char *argv[]) {
     config.bidirectional = false;
     config.use_a_star = arguments.astar_flag;
     config.live_status = true;
+    config.tree_size = (arguments.tree_given) * arguments.tree_arg;
 
     // read graph
     Client client;
     client.configure(config);
-    if (arguments.epsilon_given && graph_file.ends_with(".graph"))
+    if (arguments.epsilon_given && graph_file.extension() == ".graph")
         client.read_graph_file(graph_file, epsilon);
     else
         client.read_graph_file(graph_file);
-
 
     if (output_csv)
         client.write_csv_header(std::cout);
@@ -84,7 +78,7 @@ main(int argc, char *argv[]) {
 
         // setup writers for graphs to show
         std::stringstream target_dir_builder;
-        target_dir_builder <<  output_directory << "/" << src_node << "_" << dest_node << "_";
+        target_dir_builder <<  output_directory.string() << "/" << src_node << "_" << dest_node << "_";
         if (epsilon == 0)
             target_dir_builder << "exact";
         else target_dir_builder<< ((int) (epsilon * 10000));
@@ -115,18 +109,18 @@ main(int argc, char *argv[]) {
 
         if (arguments.projection_arg == enum_projection::projection_arg_google_bing) {
             client.query().beeline().project(Projection::WGS84_TO_GB);
-            if (arguments.tree_flag) {
+            if (config.tree_size) {
                 client.result().tree_forward().project(Projection::WGS84_TO_GB);
             }
         } else if (arguments.projection_arg == enum_projection::projection_arg_wgs84) {
             client.query().beeline().project(Projection::GB_TO_WGS84);
-            if (arguments.tree_flag) {
+            if (config.tree_size) {
                 client.result().tree_forward().project(Projection::GB_TO_WGS84);
             }
         }
         client.write_beeline_file(beeline_file);
 
-        if (arguments.tree_flag)
+        if (config.tree_size)
             client.write_tree_file(tree_file);
 
         if (!client.result().route_found())
