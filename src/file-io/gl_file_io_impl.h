@@ -78,7 +78,10 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
         auto &&edges = graph.outgoing_edges(node);
         for (auto&& edge: edges) {
             auto dest = edge.destination;
-            assert(!graph.is_base_node(edge.destination));
+
+            // avoid inserting an edge twice
+            if (base_indices[node] > indices[dest] && graph.has_edge(dest, graph.from_base_node_id(node)))
+                continue;
 
             f::write(output, base_indices[node]) << ' ';
             f::write(output, indices[dest]) << ' ';
