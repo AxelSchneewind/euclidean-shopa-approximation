@@ -221,7 +221,7 @@ public:
      * @return
      */
     counter<edge_index_type> edge_ids() const {
-        return {edge_count()};
+        return {(edge_index_type)edge_count()};
     }
 
     /**
