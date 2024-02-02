@@ -75,15 +75,15 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         }
 
         // distance values have been computed already, convert to r(v) relative to this edges length
-        double factor = std::min(epsilon, 1.0) / 5;
-        double r_first = factor * (r_values[node1] / length);
+        double factor = epsilon / 5;
+        double r_first  = factor * (r_values[node1] / length);
         double r_second = factor * (r_values[node2] / length);
-        r_first = std::clamp(r_first, min_r_value, 0.25);
-        r_second = std::clamp(r_second, min_r_value, 0.25);
+        r_first  = std::max(r_first, min_r_value);
+        r_second = std::max(r_second, min_r_value);
 
         // the base for computing relative node positions
-        double base_first = std::clamp(1.0 + epsilon * std::sin(angle1), min_base, 2.0);
-        double base_second = std::clamp(1.0 + epsilon * std::sin(angle2), min_base, 2.0);
+        double base_first = std::clamp(1.0 + epsilon * std::sin(angle1), min_base, 10.0);
+        double base_second = std::clamp(1.0 + epsilon * std::sin(angle2), min_base, 10.0);
 
         // get interval in first half that is between r and mid_value
         size_t left_count;
@@ -142,7 +142,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         // number of points on first half of edge
         auto mid_index = left_count + 1; // c1, steiner points
         // remove point at r(v) if already over on other half of the edge
-        if (r_first >= mid_position && left_count > 0) {
+        if (r_first >= mid_position) {
             mid_index--;
         }
         {
@@ -154,7 +154,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         // number of points (points on first half + mid_node + points on second half + c2
         auto count = 1 + left_count + 1 + right_count + 1;
         // remove point at r(v) if already over on other half of the edge
-        if (r_second >= 1 - mid_position && right_count > 0) {
+        if (r_second >= 1 - mid_position) {
             count = mid_index + 2;
         }
         assert(count >= 2);
@@ -162,9 +162,9 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         // check that values are in bounds
         if (!is_in_range(count, 2, max_steiner_count_per_edge)
             || !is_in_range(mid_position, 0.0, 1.0)
-            || !is_in_range(mid_index, 1, count - 1)
-            || !is_in_range(r_first,  0, 0.5)
-            || !is_in_range(r_second, 0, 0.5)
+            || !is_in_range(mid_index, 0, count - 1)
+            || !is_in_range(r_first,  0, std::numeric_limits<float>::infinity())
+            || !is_in_range(r_second, 0, std::numeric_limits<float>::infinity())
             || !is_in_range(left_count,  0, max_steiner_count_per_edge / 2)
             || !is_in_range(right_count, 0, max_steiner_count_per_edge / 2))
             throw std::invalid_argument("some value does not fit");
