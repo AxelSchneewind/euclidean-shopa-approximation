@@ -21,6 +21,8 @@ struct coordinate_t {
 
     double length() const { return std::sqrt(latitude * latitude + longitude * longitude); }
 
+    double zero() const { return latitude == 0 && longitude == 0; }
+
     coordinate_t operator+(const coordinate_t &second) const {
         return {latitude + second.latitude, longitude + second.longitude};
     }
