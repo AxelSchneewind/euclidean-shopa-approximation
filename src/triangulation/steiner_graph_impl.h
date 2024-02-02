@@ -106,13 +106,15 @@ void make_boundary_nodes(const std::vector<steiner_graph::node_info_type> &nodes
                      const steiner_graph::polyhedron_type &polyhedron, std::vector<bool> &out) {
     assert(nodes.size() == triangulation.node_count());
 
-    out.resize(triangulation.node_count());
+    out.resize(triangulation.node_count(), false);
 
+    // a vertex is a boundary vertex if there exists an edge that only has one adjacent face
     for (int i = 0; i < triangulation.edge_count(); i++) {
         auto&& src = triangulation.source(i);
         auto&& dest = triangulation.destination(i);
-        out[src] = out[src] | is_none(polyhedron.edge_faces(i)[1]);
-        out[dest] = out[dest] | is_none(polyhedron.edge_faces(i)[1]);
+        bool one_adjacent_face = is_none(polyhedron.edge_faces(i)[1]);
+        out[src] = out[src] || one_adjacent_face;
+        out[dest] = out[dest] || one_adjacent_face;
     }
 }
 
@@ -474,7 +476,7 @@ steiner_graph::edge_id(steiner_graph::node_id_type src, steiner_graph::node_id_t
 // TODO fix
 bool
 steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_type dest) const {
-    //return true;
+    return true;
     assert(_M_base_topology.source(src.edge) < _M_base_topology.destination(src.edge));
     assert(_M_base_topology.source(dest.edge) < _M_base_topology.destination(dest.edge));
 
@@ -615,7 +617,7 @@ bool steiner_graph::is_boundary_node(steiner_graph::triangle_node_id_type id) co
 }
 
 bool steiner_graph::is_boundary_edge(steiner_graph::triangle_edge_id_type id) const {
-    return _M_is_boundary_node[_M_base_topology.source(id)];
+    return _M_is_boundary_node[_M_base_topology.destination(id)] && _M_is_boundary_node[_M_base_topology.source(id)];
 }
 
 steiner_graph::triangle_node_id_type steiner_graph::base_node_id(steiner_graph::node_id_type id) const {
