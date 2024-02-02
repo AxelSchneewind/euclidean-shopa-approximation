@@ -41,9 +41,15 @@ public:
                              _predecessor(none_value<typename G::node_id_type>) {
     };
 
+    // TODO remove these constructors and instead use a template parameter for conversion in node_labels classes
     template<typename NCP>
     requires HasDistance<NCP> && HasPredecessor<NCP>
     label_type(NCP const &ncp) : _distance{ncp.distance()}, _predecessor{ncp.predecessor()} {};
+
+    // enable this if the resulting tree should link each edge with the predecessor that set its direction
+    // template<typename NCP>
+    // requires HasDistance<NCP> && HasPredecessor<NCP> && HasFaceCrossingPredecessor<NCP, G>
+    // label_type(NCP const &ncp) : _distance{ncp.distance()}, _predecessor{ncp.face_crossing_predecessor()} {};
 
     template<typename NCP>
     requires HasDistance<NCP> && HasPredecessor<NCP>
@@ -57,9 +63,9 @@ public:
 
     typename G::node_id_type &predecessor() { return _predecessor; };
 
-    typename G::distance_type const &distance() const { return _distance; };
+    typename G::distance_type const& distance() const { return _distance; };
 
-    typename G::node_id_type const &predecessor() const { return _predecessor; };
+    typename G::node_id_type const& predecessor() const { return _predecessor; };
 };
 
 template<RoutableGraph Graph>

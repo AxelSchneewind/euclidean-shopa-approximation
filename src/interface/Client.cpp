@@ -112,18 +112,28 @@ void Client::read_graph_file(std::string path, double epsilon) {
 };
 
 void Client::write_info(std::ostream& output) const {
-    output << "\atime:                                 " << statistics.get(TIME)
-           << "\nnodes visited:                        " << statistics.get(TREE_SIZE)
-           << "\ntimes pulled (num of nodes labelled): " << statistics.get(QUEUE_PULL_COUNT)
-           << "\ntimes pushed (num of edges relaxed):  " << statistics.get(QUEUE_PUSH_COUNT)
-           << "\nedges checked (i.e. cost computed):   " << statistics.get(EDGES_CHECKED);
     if (_result.route_found()) {
-    output << "\npath:                                 some long path"; // TODO print path
-    output << "\ncost:                                 " << statistics.get(Statistics::COST) << '\n';
+    output << "\acost:                                     " << statistics.get(Statistics::COST);
+    output << "\npath:                                     some long path"; // TODO print path
     } else {
-    output << "\npath:                                 not found";
-    output << "\ncost:                                 inf\n";
+    output << "\acost:                                     inf";
+    output << "\npath:                                     not found";
     }
+
+    output << "\ntime:                                     " << statistics.get(TIME)
+           << "\nsearch stats:                             "
+           << "\n    nodes visited:                        " << statistics.get(TREE_SIZE)
+           << "\n    times pulled (num of nodes labelled): " << statistics.get(QUEUE_PULL_COUNT)
+           << "\n    times pushed (num of edges relaxed):  " << statistics.get(QUEUE_PUSH_COUNT)
+           << "\n    edges checked (i.e. cost computed):   " << statistics.get(EDGES_CHECKED)
+           << "\ntree pruning stats:                       "
+           << "\n    vertices visited:                     " << statistics.get(NEIGHBORS_BASE_NODE_COUNT)
+           << "\n    vertex neighbors:                     " << statistics.get(NEIGHBORS_BASE_NODE_NEIGHBORS_COUNT)
+           << "\n    boundary vertices visited:            " << statistics.get(NEIGHBORS_BOUNDARY_NODE_COUNT)
+           << "\n    boundary vertex neighbors:            " << statistics.get(NEIGHBORS_BOUNDARY_NODE_NEIGHBORS_COUNT)
+           << "\n    steiner points visited:               " << statistics.get(NEIGHBORS_STEINER_POINT_COUNT)
+           << "\n    steiner point neighbors:              " << statistics.get(NEIGHBORS_STEINER_POINT_NEIGHBORS_COUNT);
+
     output << std::flush;
 }
 
