@@ -3,6 +3,7 @@
 #include "../graph/adjacency_list.h"
 #include "polyhedron.h"
 
+#include <cassert>
 #include <limits>
 #include <vector>
 #include <float.h>
@@ -16,8 +17,12 @@ private:
     using steiner_index_type = int;
     static constexpr steiner_index_type max_steiner_count_per_edge = std::numeric_limits<steiner_index_type>::max() / 2;
 
+    // some hard bounds to ensure that no unexpected stuff happens due to numerical issues
+    static constexpr double min_base = 0x1.0001p0;
+    static constexpr double min_r_value = 0x1.0p-4;
+
 public:
-    static constexpr double min_angle = 0x1.p-6;
+    static constexpr double min_angle = 0x1.p-16;
 
     struct subdivision_edge_info {
         // r(v), relative to this edge

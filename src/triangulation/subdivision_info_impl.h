@@ -5,6 +5,7 @@
 #include "subdivision_info.h"
 
 
+#include <algorithm>
 #include <limits>
 #include <stdexcept>
 #include <vector>
@@ -26,8 +27,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         auto node2 = triangulation.destination(i);
 
         // get coordinates
-        auto c1 = nodes[node1].coordinates;
-        auto c2 = nodes[node2].coordinates;
+        auto const& c1 = nodes[node1].coordinates;
+        auto const& c2 = nodes[node2].coordinates;
 
         // get minimal angle for node1 and node2
         // treat angles > 90 degrees like 90 degrees
@@ -58,10 +59,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
             if (a2 < angle2)
                 angle2 = a2;
         }
-        angle1 = std::max(angle1, min_angle);
-        angle2 = std::max(angle2, min_angle);
-        angle1 = std::min(angle1, M_PI_2);
-        angle2 = std::min(angle2, M_PI_2);
+        angle1 = std::clamp(angle1, min_angle, M_PI_2);
+        angle2 = std::clamp(angle2, min_angle, M_PI_2);
         angle3 = M_PI - angle2 - angle1;
 
         // length |e| of the edge
@@ -79,20 +78,22 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         double factor = std::min(epsilon, 1.0) / 5;
         double r_first = factor * (r_values[node1] / length);
         double r_second = factor * (r_values[node2] / length);
-        assert(r_first >= 0 && r_second >= 0);
-        assert(r_first <= 1.0 && r_second <= 1.0);
+        r_first = std::clamp(r_first, min_r_value, 0.25);
+        r_second = std::clamp(r_second, min_r_value, 0.25);
 
         // the base for computing relative node positions
-        double base_first = (1.0 + epsilon * std::sin(angle1));
-        double base_second = (1.0 + epsilon * std::sin(angle2));
+        double base_first = std::clamp(1.0 + epsilon * std::sin(angle1), min_base, 2.0);
+        double base_second = std::clamp(1.0 + epsilon * std::sin(angle2), min_base, 2.0);
 
         // get interval in first half that is between r and mid_value
         size_t left_count;
         {
+            // exponential search
             left_count = 1;
             while (left_count < max_steiner_count_per_edge / 4 && std::pow(base_first, left_count) * r_first < mid_position)
                 left_count *= 2;
 
+            // binary search
             size_t max_count = left_count + 1;
             left_count /= 2;
             while (max_count > left_count) {
@@ -102,11 +103,11 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
                     max_count = (max_count + left_count) / 2;
             }
 
+            // sanity check
             assert(left_count >= 0);
-
             auto relative = std::pow(base_first, (left_count-1)) * r_first;
-            assert(left_count >= max_steiner_count_per_edge / 4 || relative >= r_first - 0.002F);
-            assert(left_count >= max_steiner_count_per_edge / 4 || relative <= mid_position + 0.002F);
+            assert(left_count == 0 || left_count >= max_steiner_count_per_edge / 4 || relative >= r_first - 0.002F);
+            assert(left_count == 0 || left_count >= max_steiner_count_per_edge / 4 || relative <= mid_position + 0.002F);
             relative = std::pow(base_first, (left_count)) * r_first;
             assert(left_count >= max_steiner_count_per_edge / 4 || relative >= mid_position - 0.002F);
         }
@@ -114,10 +115,12 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         // get interval in second edge half that is between r and mid_value
         size_t right_count;
         {
+            // exponential search
             right_count = 1;
             while (right_count < max_steiner_count_per_edge / 4 && std::pow(base_second, right_count) * r_second < (1 - mid_position))
                 right_count *= 2;
 
+            // binary search
             size_t max_count = right_count + 1;
             right_count /= 2;
             while (max_count > right_count) {
@@ -127,11 +130,11 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
                     max_count = (max_count + right_count) / 2;
             }
 
+            // sanity check
             assert(right_count >= 0);
-
             auto relative = std::pow(base_second, (right_count - 1)) * r_second;
-            assert(right_count >= max_steiner_count_per_edge / 4 || relative >= r_second - 0.002F);
-            assert(right_count >= max_steiner_count_per_edge / 4 || relative <= (1 - mid_position) + 0.002F);
+            assert(right_count == 0 || right_count >= max_steiner_count_per_edge / 4 || relative >= r_second - 0.002F);
+            assert(right_count == 0 || right_count >= max_steiner_count_per_edge / 4 || relative <= (1 - mid_position) + 0.002F);
             relative = std::pow(base_second, (right_count)) * r_second;
             assert(right_count >= max_steiner_count_per_edge / 4 || relative >= (1 - mid_position) - 0.002F);
         }
@@ -139,14 +142,14 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         // number of points on first half of edge
         auto mid_index = left_count + 1; // c1, steiner points
         // remove point at r(v) if already over on other half of the edge
-        if (r_first >= mid_position) {
+        if (r_first >= mid_position && left_count > 0) {
             r_first = mid_position;
             mid_index--;
         }
         {
-            auto relative = std::pow(base_first, (mid_index - 2)) * r_first;
-            assert(relative >= r_first - 0.002F);
-            assert(relative <= mid_position + 0.002F);
+            auto relative = std::pow(base_first, mid_index - 2) * r_first;
+            assert(mid_index < 2 || relative >= r_first - 0.002F);
+            assert(mid_index < 2 || relative <= mid_position + 0.002F);
         }
 
         // number of points (points on first half + mid_node + points on second half + c2
@@ -164,8 +167,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
             || !is_in_range(mid_index, 1, count)
             || !is_in_range(r_first,  0, 0.5)
             || !is_in_range(r_second, 0, 0.5)
-            || !is_in_range(left_count,  0, max_steiner_count_per_edge)
-            || !is_in_range(right_count, 0, max_steiner_count_per_edge))
+            || !is_in_range(left_count,  0, max_steiner_count_per_edge / 2)
+            || !is_in_range(right_count, 0, max_steiner_count_per_edge / 2))
             throw std::invalid_argument("some value does not fit");
 
         result.emplace_back();
@@ -203,24 +206,27 @@ subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, 
     // if (steiner_index == info.node_count - 2) [[unlikely]]
     //     return interpolate_linear(c2, c1, info.r_second);
 
-
-    if (steiner_index < info.mid_index) {
+    if (steiner_index < info.mid_index) [[likely]] {
         auto index = steiner_index - 1;
         assert(index >= 0);
 
         auto &&relative = std::pow(info.base_first, index) * info.r_first;
+        assert(index != 0 || relative == info.r_first);
         assert(relative >= info.r_first - 0.002F);
         assert(relative <= info.mid_position + 0.002F);
         return interpolate_linear(c1, c2, relative);
-    } else {
+    }
+    // if (steiner_index > info.mid_index) [[likely]] {
         auto index = info.node_count - steiner_index - 2;
         assert(index >= 0);
 
         auto &&relative = std::pow(info.base_second, index) * info.r_second;
+        assert(steiner_index != info.node_count - 2 || index == 0);
+        assert(index != 0 || relative == info.r_second);
         assert(relative >= info.r_second - 0.002F);
         assert(relative <= 1.0F - info.mid_position + 0.002F);
         return interpolate_linear(c2, c1, relative);
-    }
+    // }
 }
 
 subdivision::subdivision_edge_info &subdivision::edge(edge_id_t edge) {
