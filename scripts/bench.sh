@@ -36,17 +36,17 @@ QUERY=${QUERY::-1}
 
 echo "######################## computing exact values: #########################"
 echo "############################ exact values: ###############################" >> out.log
-echo "$ROUTER --graph-file $VISIBILITY_GRAPH --output-directory $VISIBILITY_RESULTS --query $QUERY -t$TREE_SIZE
+echo "$ROUTER --graph-file $VISIBILITY_GRAPH --output-directory $VISIBILITY_RESULTS --query $QUERY -t$TREE_SIZE"
 $ROUTER --graph-file $VISIBILITY_GRAPH --output-directory $VISIBILITY_RESULTS --query $QUERY -e 0.0 -t$TREE_SIZE
 
 echo "##################### computing approximate values: ######################"
 echo "########################## approximate values: ###########################" >> out.log
-echo "$ROUTER --graph-file $TRIANGULATION_GRAPH --output-directory $TRIANGULATION_RESULTS --epsilon 0.5 --query $QUERY -p wgs84 -a on -t$TREE_SIZE
+echo "$ROUTER --graph-file $TRIANGULATION_GRAPH --output-directory $TRIANGULATION_RESULTS --epsilon 0.5 --query $QUERY -p wgs84 -a on -t$TREE_SIZE"
 $ROUTER --graph-file $TRIANGULATION_GRAPH --output-directory $TRIANGULATION_RESULTS --epsilon 0.5 --query $QUERY -p wgs84 -a on -t$TREE_SIZE
 
 echo "##### computing approximate values without subdividing triangulation: #####"
 echo "######################### raw approximate values: #########################" >> out.log
-echo "$ROUTER --graph-file $TRIANGULATION_GRAPH --output-directory $TRIANGULATION_RAW_RESULTS --epsilon inf --query $QUERY -p wgs84 -a on -t$TREE_SIZE
+echo "$ROUTER --graph-file $TRIANGULATION_GRAPH --output-directory $TRIANGULATION_RAW_RESULTS --epsilon inf --query $QUERY -p wgs84 -a on -t$TREE_SIZE"
 $ROUTER --graph-file $TRIANGULATION_GRAPH --output-directory $TRIANGULATION_RAW_RESULTS --epsilon inf --query $QUERY -p wgs84 -a on -t$TREE_SIZE
 
 
@@ -55,3 +55,4 @@ $ROUTER --graph-file $TRIANGULATION_GRAPH --output-directory $TRIANGULATION_RAW_
 # render_graph $(echo ${"$(echo $TRIANGULATION_RESULTS/*/path.gl)"//\ /\ -gf\ })
 # render_graph $(echo ${"$(echo $TRIANGULATION_RAW_RESULTS/*/path.gl)"//\ /\ -gf\ })
 # render_graph $(echo ${"$(echo $VISIBILITY_RESULTS/*/path.gl)"//\ /\ -gf\ })
+#
