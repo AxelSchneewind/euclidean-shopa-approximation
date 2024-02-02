@@ -391,11 +391,11 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
 
     // make list of edges (i.e. destination/cost pairs)
     coordinate_t source_coordinate = node(node_id).coordinates;
-    auto &&_steiner_info = steiner_info(node_id.edge);
+    auto &&info = steiner_info(node_id.edge);
     auto &&triangles = _M_polyhedron.edge_faces(node_id.edge);
 
     // for neighboring node on own edge
-    if (node_id.steiner_index < _steiner_info.node_count - 1) [[likely]] {
+    if (node_id.steiner_index < info.node_count - 1) [[likely]] {
         steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index + 1);
         coordinate_t destination_coordinate = node(destination).coordinates;
         edges.emplace_back(destination);
@@ -414,17 +414,18 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
     for (unsigned char triangle_index = 0; triangle_index < 2; triangle_index++) [[unlikely]] {
         if (is_none(triangles[triangle_index])) continue;
 
-        auto triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
+        auto&& triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
 
-        for (auto base_edge_id: triangle_edges) [[likely]] {
+        for (auto&& base_edge_id: triangle_edges) [[likely]] {
             if (base_edge_id == node_id.edge) [[unlikely]]
                 continue;
 
             auto &&destination_steiner_info = steiner_info(base_edge_id);
 
-            for (int i = 1; i < destination_steiner_info.node_count - 2; ++i) [[likely]] {
+            for (int i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
                 steiner_graph::node_id_type destination = {base_edge_id, i};
                 coordinate_t destination_coordinate = node(destination).coordinates;
+                assert(has_edge(destination, node_id));
 
                 edges.emplace_back(destination);
                 destination_coordinates.push_back(destination_coordinate);
@@ -473,6 +474,7 @@ steiner_graph::edge_id(steiner_graph::node_id_type src, steiner_graph::node_id_t
 // TODO fix
 bool
 steiner_graph::has_edge(steiner_graph::node_id_type src, steiner_graph::node_id_type dest) const {
+    //return true;
     assert(_M_base_topology.source(src.edge) < _M_base_topology.destination(src.edge));
     assert(_M_base_topology.source(dest.edge) < _M_base_topology.destination(dest.edge));
 
