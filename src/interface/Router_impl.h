@@ -3,22 +3,6 @@
 #include <thread>
 #include "Router.h"
 
-
-Router::Router(const Graph&graph) {
-    switch (graph.type()) {
-        case GraphType::STEINER_GRAPH_DIRECTED:
-        case GraphType::STEINER_GRAPH_UNDIRECTED:
-            impl = std::make_unique<RouterImplementation<steiner_graph, steiner_routing_t>>(
-                graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()));
-            break;
-        case GraphType::STD_GRAPH_DIRECTED:
-        case GraphType::STD_GRAPH_UNDIRECTED:
-            impl = std::make_unique<RouterImplementation<std_graph_t, std_routing_t>>(
-                graph.get_implementation<std_graph_t>(), std_routing_t(graph.get_implementation<std_graph_t>()));
-            break;
-    }
-}
-
 Router::Router(const Graph&graph, RoutingConfiguration const&config)
     : _config(config) {
     switch (graph.type()) {
@@ -34,17 +18,17 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
                     using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
                     if (!_config.bidirectional) { // unidirectional routing
                         using steiner_routing_t = router<steiner_graph, dijkstra>;
-                        impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>( graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()));
+                        impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>( graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
                     } else { // bidirectional routing
                         using steiner_routing_t = bidirectional_router<steiner_graph, dijkstra>;
-                        impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>> ( graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()));
+                        impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>> ( graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
                     }
                 } else { // array-based labels
                     using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>; // TODO
                     using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
                     using steiner_routing_t = router<steiner_graph, dijkstra>;
                     impl = std::make_shared<RouterImplementation<steiner_graph, steiner_routing_t>>(
-                        graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()));
+                        graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
                 }
             } else {
                 using node_cost_pair = geometric_node_cost_pair<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>, steiner_graph>;
@@ -56,7 +40,7 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
                 if (!_config.bidirectional && !_config.compact_labels) {
                     using steiner_routing_t = router<steiner_graph, dijkstra>;
                     impl = std::make_shared<RouterImplementation<steiner_graph, steiner_routing_t>>(
-                        graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()));
+                        graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
                 }
                 else {
                 }
@@ -65,9 +49,9 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
         case GraphType::STD_GRAPH_DIRECTED:
         case GraphType::STD_GRAPH_UNDIRECTED:
             if (_config.use_a_star) {
-                impl = std::make_shared<RouterImplementation < std_graph_t, a_star_routing_t>> ( graph.get_implementation<std_graph_t>(), a_star_routing_t(graph.get_implementation<std_graph_t>()));
+                impl = std::make_shared<RouterImplementation < std_graph_t, a_star_routing_t>> ( graph.get_implementation<std_graph_t>(), a_star_routing_t(graph.get_implementation<std_graph_t>()), _config);
             } else { // don't use A*
-                impl = std::make_shared<RouterImplementation < std_graph_t, std_routing_t>> ( graph.get_implementation<std_graph_t>(), std_routing_t(graph.get_implementation<std_graph_t>()));
+                impl = std::make_shared<RouterImplementation < std_graph_t, std_routing_t>> ( graph.get_implementation<std_graph_t>(), std_routing_t(graph.get_implementation<std_graph_t>()), _config);
             }
             break;
     }
@@ -75,7 +59,7 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
 
 template<typename GraphT, typename RouterT>
 void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, long to) {
-    QueryImplementation<GraphT> query_impl(_graph, from, to);
+    QueryImplementation<GraphT> query_impl(_graph, from, to, _config);
     Query query(std::make_shared<QueryImplementation<GraphT>>(query_impl));
     perform_query(query);
 }

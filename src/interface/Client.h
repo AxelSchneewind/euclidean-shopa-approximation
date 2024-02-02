@@ -7,6 +7,7 @@
 #include "../triangulation/steiner_graph.h"
 #include "../file-io/triangulation_file_io.h"
 #include "../util/csv.h"
+#include "RoutingConfig.h"
 
 #include <fstream>
 #include <memory>
@@ -27,8 +28,6 @@ private:
     int path_color = 5;
     int beeline_color = 1;
 
-    std::size_t max_tree_size = 50000000;
-
 public:
     Client() : statistics(COLUMNS) { statistics.new_line(); };
 
@@ -43,7 +42,7 @@ public:
 
     void write_graph_file(std::string path) const { _graph.write_graph_file(path); }
 
-    void configure(RoutingConfiguration& config) { _routing_config = config; }
+    void configure(RoutingConfiguration const& config) { _routing_config = config; }
 
     void compute_route(long from, long to) {
         _router.compute_route(from, to);

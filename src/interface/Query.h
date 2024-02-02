@@ -2,12 +2,14 @@
 
 #include <chrono>
 #include <iostream>
+#include <ratio>
 
 #include "../graph/base_types.h"
 
 #include "../graph/graph.h"
 #include "Graph.h"
 #include "Statistics.h"
+#include "RoutingConfig.h"
 
 
 class QueryInterface {
@@ -19,8 +21,7 @@ public:
     virtual long from() const = 0;
     virtual long to() const = 0;
 
-    virtual long max_tree_size() const = 0;
-    virtual void set_max_tree_size(long size) = 0;
+    virtual RoutingConfiguration const& config() const = 0;
 
     virtual Graph beeline() const = 0;
     virtual distance_t beeline_distance() const = 0;
@@ -38,11 +39,11 @@ private:
     Graph _beeline;
     distance_t _beeline_distance;
 
-    long _max_tree_size = 100000000;
+    RoutingConfiguration _configuration;
 
 public:
     QueryImplementation();
-    QueryImplementation(GraphT const& graph, long from, long to);
+    QueryImplementation(GraphT const& graph, long from, long to, RoutingConfiguration const& config);
 
     long from() const override { return _from; }
     long to() const override { return _to; }
@@ -50,8 +51,9 @@ public:
     node_id_type from_internal() const { return _from_internal; }
     node_id_type to_internal() const { return _to_internal; }
 
-    long max_tree_size() const override { return _max_tree_size; };
-    void set_max_tree_size(long s) override { _max_tree_size = s; }
+    RoutingConfiguration const& config() const override { return _configuration; }
+
+    long max_tree_size() const { return _configuration.tree_size; };
 
     Graph beeline() const override  { return _beeline; };
     distance_t beeline_distance() const override { return _beeline_distance; }
@@ -88,14 +90,15 @@ public:
     Query(std::shared_ptr<QueryImplementation<GraphT>> impl) : Base<QueryInterface>(std::move(impl)) {}
 
     template<typename GraphT>
-    Query(GraphT& graph, long from, long to) : Base<QueryInterface>(QueryImplementation<GraphT>{graph, from, to}) {}
-
+    Query(GraphT& graph, long from, long to, RoutingConfiguration const& config) : Base<QueryInterface>(QueryImplementation<GraphT>{graph, from, to, config}) {}
 
     Graph beeline() const { return impl->beeline(); };
     distance_t beeline_distance() const { return impl->beeline_distance(); };
 
     void write(std::ostream& out) const { impl->write(out); out << std::endl; };
     void write(table& out) const { impl->write(out); };
+
+    RoutingConfiguration const& config() const { return impl->config(); }
 
     long from() const { return impl->from(); }
     long to() const { return impl->to(); }

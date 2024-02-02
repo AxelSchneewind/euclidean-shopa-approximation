@@ -60,17 +60,19 @@ std_graph_t make_beeline(GraphT const &graph, typename GraphT::node_id_type from
 }
 
 template<RoutableGraph GraphT>
-QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to)
+QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to, RoutingConfiguration const& config)
         : _from(from), _to(to), _from_internal(from), _to_internal(to),
           _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates)),
-          _beeline(make_beeline(graph, _from_internal, _to_internal)) {};
+          _beeline(make_beeline(graph, _from_internal, _to_internal)),
+          _configuration(config) {};
 
 template<>
-QueryImplementation<steiner_graph>::QueryImplementation(steiner_graph const &graph, long from, long to)
+QueryImplementation<steiner_graph>::QueryImplementation(steiner_graph const &graph, long from, long to, RoutingConfiguration const& config)
         : _from(from), _to(to), _from_internal(graph.from_base_node_id(from)),
           _to_internal(graph.from_base_node_id(to)),
           _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates)),
-          _beeline(make_beeline(graph, _from_internal, _to_internal)) {};
+          _beeline(make_beeline(graph, _from_internal, _to_internal)),
+          _configuration(config) {};
 
 template<RoutableGraph GraphT>
 QueryImplementation<GraphT>::QueryImplementation() : _from_internal{none_value<node_id_type>},

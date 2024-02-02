@@ -5,13 +5,6 @@
 #include "Query.h"
 
 
-struct RoutingConfiguration {
-    bool use_a_star{true};
-    bool bidirectional{false};
-    bool compact_labels{true};
-    bool live_status {true};
-};
-
 class RouterInterface {
 public:
     virtual ~RouterInterface() = default;
@@ -42,7 +35,7 @@ private:
     public:
         ~RouterImplementation() = default;
 
-        RouterImplementation(GraphT const&graph, RouterT&&router) : _graph(graph), _router(std::move(router)) { };
+        RouterImplementation(GraphT const&graph, RouterT&&router, RoutingConfiguration const& config) : _graph(graph), _router(std::move(router)), _config(config) { };
 
         void compute_route(long from, long to) override;
         void perform_query(Query const& query) override;
@@ -55,8 +48,6 @@ private:
 
 public:
     Router() = default;
-
-    Router(Graph const&graph);
 
     Router(Graph const&graph, RoutingConfiguration const&);
 
