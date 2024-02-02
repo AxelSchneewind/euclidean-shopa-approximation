@@ -64,7 +64,8 @@ struct gengetopt_args_info
   enum enum_projection projection_arg;	/**< @brief which projection to apply to coordinates when writing to files (default='none').  */
   char * projection_orig;	/**< @brief which projection to apply to coordinates when writing to files original value given at command line.  */
   const char *projection_help; /**< @brief which projection to apply to coordinates when writing to files help description.  */
-  int tree_flag;	/**< @brief generate graph file for search tree (default=off).  */
+  int tree_arg;	/**< @brief generate graph file for search tree (default='06062001').  */
+  char * tree_orig;	/**< @brief generate graph file for search tree original value given at command line.  */
   const char *tree_help; /**< @brief generate graph file for search tree help description.  */
   int astar_flag;	/**< @brief use A* heuristic to speed up routing (default=on).  */
   const char *astar_help; /**< @brief use A* heuristic to speed up routing help description.  */

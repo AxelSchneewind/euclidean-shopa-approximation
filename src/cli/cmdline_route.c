@@ -49,7 +49,7 @@ const char *gengetopt_args_info_help[] = {
   "  options for the command line output",
   "  -c, --csv-format             indicates that routing information should be\n                                 printed in the csv format  (default=off)",
   "  -p, --projection=ENUM        which projection to apply to coordinates when\n                                 writing to files  (possible values=\"none\",\n                                 \"google_bing\", \"wgs84\" default=`none')",
-  "  -t, --tree                   generate graph file for search tree\n                                 (default=off)",
+  "  -t, --tree[=INT]             generate graph file for search tree\n                                 (default=`06062001')",
   "\nrouting algorithms:",
   "  -a, --astar                  use A* heuristic to speed up routing\n                                 (default=on)",
     0
@@ -58,6 +58,7 @@ const char *gengetopt_args_info_help[] = {
 typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
+  , ARG_INT
   , ARG_DOUBLE
   , ARG_ENUM
 } cmdline_parser_arg_type;
@@ -113,7 +114,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->csv_format_flag = 0;
   args_info->projection_arg = projection_arg_none;
   args_info->projection_orig = NULL;
-  args_info->tree_flag = 0;
+  args_info->tree_arg = 06062001;
+  args_info->tree_orig = NULL;
   args_info->astar_flag = 1;
   
 }
@@ -279,6 +281,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->epsilon_orig));
   free_multiple_string_field (args_info->query_given, &(args_info->query_arg), &(args_info->query_orig));
   free_string_field (&(args_info->projection_orig));
+  free_string_field (&(args_info->tree_orig));
   
   
 
@@ -378,7 +381,7 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
   if (args_info->projection_given)
     write_into_file(outfile, "projection", args_info->projection_orig, cmdline_parser_projection_values);
   if (args_info->tree_given)
-    write_into_file(outfile, "tree", 0, 0 );
+    write_into_file(outfile, "tree", args_info->tree_orig, 0);
   if (args_info->astar_given)
     write_into_file(outfile, "astar", 0, 0 );
   
@@ -653,6 +656,12 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   if (check_multiple_option_occurrences(prog_name, args_info->query_given, args_info->query_min, args_info->query_max, "'--query' ('-q')"))
      error_occurred = 1;
   
+  if (! args_info->tree_given)
+    {
+      fprintf (stderr, "%s: '--tree' ('-t') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error_occurred = 1;
+    }
+  
   
   /* checks for dependences among options */
 
@@ -739,6 +748,9 @@ int update_arg(void *field, char **orig_field,
   case ARG_FLAG:
     *((int *)field) = !*((int *)field);
     break;
+  case ARG_INT:
+    if (val) *((int *)field) = strtol (val, &stop_char, 0);
+    break;
   case ARG_DOUBLE:
     if (val) *((double *)field) = strtod (val, &stop_char);
     break;
@@ -759,6 +771,7 @@ int update_arg(void *field, char **orig_field,
 
   /* check numeric conversion */
   switch(arg_type) {
+  case ARG_INT:
   case ARG_DOUBLE:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
@@ -872,6 +885,7 @@ void update_multiple_arg(void *field, char ***orig_field,
     *orig_field = (char **) realloc (*orig_field, (field_given + prev_given) * sizeof (char *));
 
     switch(arg_type) {
+    case ARG_INT:
     case ARG_ENUM:
       *((int **)field) = (int *)realloc (*((int **)field), (field_given + prev_given) * sizeof (int)); break;
     case ARG_DOUBLE:
@@ -887,6 +901,8 @@ void update_multiple_arg(void *field, char ***orig_field,
         tmp = list;
         
         switch(arg_type) {
+        case ARG_INT:
+          (*((int **)field))[i + field_given] = tmp->arg.int_arg; break;
         case ARG_DOUBLE:
           (*((double **)field))[i + field_given] = tmp->arg.double_arg; break;
         case ARG_ENUM:
@@ -903,6 +919,7 @@ void update_multiple_arg(void *field, char ***orig_field,
   } else { /* set the default value */
     if (default_value && ! field_given) {
       switch(arg_type) {
+      case ARG_INT:
       case ARG_ENUM:
         if (! *((int **)field)) {
           *((int **)field) = (int *)malloc (sizeof (int));
@@ -985,12 +1002,12 @@ cmdline_parser_internal (
         { "stdin",	0, NULL, 'i' },
         { "csv-format",	0, NULL, 'c' },
         { "projection",	1, NULL, 'p' },
-        { "tree",	0, NULL, 't' },
+        { "tree",	2, NULL, 't' },
         { "astar",	0, NULL, 'a' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:o:e:q:icp:ta", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:o:e:q:icp:t::a", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1086,9 +1103,11 @@ cmdline_parser_internal (
         case 't':	/* generate graph file for search tree.  */
         
         
-          if (update_arg((void *)&(args_info->tree_flag), 0, &(args_info->tree_given),
-              &(local_args_info.tree_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "tree", 't',
+          if (update_arg( (void *)&(args_info->tree_arg), 
+               &(args_info->tree_orig), &(args_info->tree_given),
+              &(local_args_info.tree_given), optarg, 0, "06062001", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "tree", 't',
               additional_error))
             goto failure;
         
