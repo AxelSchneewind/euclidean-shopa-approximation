@@ -143,7 +143,6 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         auto mid_index = left_count + 1; // c1, steiner points
         // remove point at r(v) if already over on other half of the edge
         if (r_first >= mid_position && left_count > 0) {
-            r_first = mid_position;
             mid_index--;
         }
         {
@@ -155,16 +154,15 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         // number of points (points on first half + mid_node + points on second half + c2
         auto count = 1 + left_count + 1 + right_count + 1;
         // remove point at r(v) if already over on other half of the edge
-        if (r_second >= 1 - mid_position) {
-            r_second = 1 - mid_position;
-            count--;
+        if (r_second >= 1 - mid_position && right_count > 0) {
+            count = mid_index + 2;
         }
         assert(count >= 2);
 
         // check that values are in bounds
         if (!is_in_range(count, 2, max_steiner_count_per_edge)
             || !is_in_range(mid_position, 0.0, 1.0)
-            || !is_in_range(mid_index, 1, count)
+            || !is_in_range(mid_index, 1, count - 1)
             || !is_in_range(r_first,  0, 0.5)
             || !is_in_range(r_second, 0, 0.5)
             || !is_in_range(left_count,  0, max_steiner_count_per_edge / 2)
