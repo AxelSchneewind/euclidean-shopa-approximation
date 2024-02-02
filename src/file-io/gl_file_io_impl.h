@@ -18,15 +18,15 @@ std::ostream &gl_file_io::write(std::ostream &output, const Graph &graph, int li
     f::write(output, edge_count);
     f::write(output, '\n');
 
-    for (auto node: graph.node_ids()) {
+    for (auto&& node: graph.node_ids()) {
         auto&& n = graph.node(node);
         f::write(output, n);
         f::write(output, '\n');
     }
 
-    for (auto node: graph.node_ids()) {
-        for (auto edge: graph.outgoing_edges(node)) {
-            auto& dest = edge.destination;
+    for (auto&& node: graph.node_ids()) {
+        for (auto&& edge: graph.outgoing_edges(node)) {
+            auto const& dest = edge.destination;
 
             // avoid inserting an edge twice
             if (node >= dest && graph.has_edge(dest, node))
@@ -47,7 +47,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
     using f = stream_encoders::encode_text;
 
     size_t node_count = graph.node_count();
-    size_t edge_count = graph.edge_count();
+    size_t edge_count = graph.edge_count() / 2;
 
     f::write(output, node_count);
     f::write(output, '\n');
@@ -56,18 +56,16 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
 
     size_t index = 0;
     std::unordered_map<steiner_graph::base_topology_type::node_id_type, size_t> base_indices;
-    for (auto node: graph.base_graph().node_ids()) {
+    for (auto&& node: graph.base_graph().node_ids()) {
         base_indices[node] = index++;
         auto&& n = graph.node(node);
         f::write(output, n) << '\n';
     }
 
     std::unordered_map<steiner_graph::node_id_type, size_t> indices;
-    for (auto node: graph.node_ids()) {
-        if (node.steiner_index == 0) {
-            indices[node] = base_indices[graph.base_graph().source(node.edge)];
-        } else if (node.steiner_index == graph.steiner_info(node.edge).node_count - 1) {
-            indices[node] = base_indices[graph.base_graph().destination(node.edge)];
+    for (auto&& node: graph.node_ids()) {
+        if (graph.is_base_node(node)) {
+            indices[node] = base_indices[graph.base_node_id(node)];
         } else {
             indices[node] = index++;
             auto&& n = graph.node(node);
@@ -76,9 +74,9 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
     }
 
     // write all outgoing edges of base nodes
-    for (auto node: graph.base_graph().node_ids()) {
+    for (auto&& node: graph.base_graph().node_ids()) {
         auto &&edges = graph.outgoing_edges(node);
-        for (auto edge: edges) {
+        for (auto&& edge: edges) {
             auto dest = edge.destination;
             assert(!graph.is_base_node(edge.destination));
 
@@ -104,7 +102,7 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
             if (graph.is_base_node(node) || graph.is_base_node(dest)) continue;
 
             // avoid inserting an edge twice
-            if (indices[node] >= indices[dest] && graph.has_edge(dest, node))
+            if (indices[node] > indices[dest] && graph.has_edge(dest, node))
                 continue;
 
             f::write(output, indices[node]) << ' ';
