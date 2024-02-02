@@ -32,8 +32,8 @@ public:
     A_Star() {};
 
     template<typename NodeCostPair>
-    constexpr bool operator()(const NodeCostPair &__n1, const NodeCostPair &__n2) {
-        return __n1.value() > __n2.value();
+    constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
+        return n1.value() > n2.value();
     };
 };
 
@@ -43,49 +43,49 @@ template<typename Graph, typename NodeCostPair, typename Comp = A_Star> requires
 class a_star_queue : public dijkstra_queue<Graph, NodeCostPair, Comp> {
 private:
     using base_queue_type = dijkstra_queue<Graph, NodeCostPair, Comp>;
-    Graph const &_M_graph;
-    coordinate_t _M_target_coordinates;
+    Graph const &_graph;
+    coordinate_t _target_coordinate;
     static constexpr double factor = 1.0; // must be <= 1 for correctness
 
 public:
     using value_type = NodeCostPair;
 
-    a_star_queue(Graph const &__graph, Comp __comp = Comp{})
-            : dijkstra_queue<Graph, NodeCostPair, Comp>(__graph, __comp), _M_graph(__graph) {}
+    a_star_queue(Graph const &graph, Comp comp = Comp{})
+            : dijkstra_queue<Graph, NodeCostPair, Comp>(graph, comp), _graph(graph) {}
 
-    void push(Graph::node_id_type __node, Graph::node_id_type __predecessor, distance_t __dist) {
-        NodeCostPair ncp(__node, __predecessor, __dist);
-        ncp.value() = __dist + distance(_M_target_coordinates, _M_graph.node(__node).coordinates);
+    void push(Graph::node_id_type node, Graph::node_id_type predecessor, distance_t dist) {
+        NodeCostPair ncp(node, predecessor, dist);
+        ncp.value() = dist + distance(_target_coordinate, _graph.node(node).coordinates);
         base_queue_type::emplace(ncp);
     }
 
-    void init(Graph::node_id_type /*__start_node*/, Graph::node_id_type __target_node) {
+    void init(Graph::node_id_type /*start_node*/, Graph::node_id_type target_node) {
         while (!dijkstra_queue<Graph, NodeCostPair, Comp>::empty())
             dijkstra_queue<Graph, NodeCostPair, Comp>::pop();
 
-        _M_target_coordinates = _M_graph.node(__target_node).coordinates;
+        _target_coordinate = _graph.node(target_node).coordinates;
     }
 
-    void push_range(std::span<NodeCostPair, std::dynamic_extent> __nodes) {
+    void push_range(std::span<NodeCostPair, std::dynamic_extent> nodes) {
         static std::vector<coordinate_t> coordinates;
 
         // get coordinates
-        coordinates.resize(__nodes.size());
-        for (int i = 0; i < __nodes.size(); ++i) {
-            coordinates[i] = _M_graph.node(__nodes[i].node()).coordinates;
+        coordinates.resize(nodes.size());
+        for (int i = 0; i < nodes.size(); ++i) {
+            coordinates[i] = _graph.node(nodes[i].node()).coordinates;
         }
 
         // can be vectorized
-        for (int i = 0; i < __nodes.size(); ++i) {
-            __nodes[i].info().value() = __nodes[i].distance() + factor * distance(_M_target_coordinates, coordinates[i]);
+        for (int i = 0; i < nodes.size(); ++i) {
+            nodes[i].info().value() = nodes[i].distance() + factor * distance(_target_coordinate, coordinates[i]);
         }
 
-        for (auto&& ncp: __nodes)
+        for (auto&& ncp: nodes)
             base_queue_type::emplace(ncp);
     }
 
     void set_target(coordinate_t coordinates) {
-        _M_target_coordinates = coordinates;
+        _target_coordinate = coordinates;
     }
 };
 
