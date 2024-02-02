@@ -34,15 +34,22 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
                 using node_cost_pair = geometric_node_cost_pair<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>, steiner_graph>;
                 // using node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>;
                 using queue_t = dijkstra_queue<steiner_graph, node_cost_pair>;
-                using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
-                using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<
-                    steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
-                if (!_config.bidirectional && !_config.compact_labels) {
+                if (_config.compact_labels) {   // map based labels
+                    using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>; // TODO
+                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
+                    if (!_config.bidirectional) { // unidirectional routing
+                        using steiner_routing_t = router<steiner_graph, dijkstra>;
+                        impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>( graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
+                    } else { // bidirectional routing
+                        using steiner_routing_t = bidirectional_router<steiner_graph, dijkstra>;
+                        impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>> ( graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
+                    }
+                } else { // array-based labels
+                    using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>; // TODO
+                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
                     using steiner_routing_t = router<steiner_graph, dijkstra>;
                     impl = std::make_shared<RouterImplementation<steiner_graph, steiner_routing_t>>(
                         graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
-                }
-                else {
                 }
             }
             break;
@@ -54,6 +61,10 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
                 impl = std::make_shared<RouterImplementation < std_graph_t, std_routing_t>> ( graph.get_implementation<std_graph_t>(), std_routing_t(graph.get_implementation<std_graph_t>()), _config);
             }
             break;
+    }
+
+    if (!impl) {
+        throw std::invalid_argument("No implementation available for the given config");
     }
 }
 
