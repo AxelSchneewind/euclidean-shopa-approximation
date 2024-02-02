@@ -92,9 +92,10 @@ dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type node) {
         auto const& successor = node_cost_pairs[i];
         node_id_type const& successor_node = successor.node();
 
-        assert (!is_none(successor_node));
+        assert(!is_none(successor_node));
         assert(successor.predecessor() == node.node());
-        // assert (successor_node == _M_start_node || _M_graph.has_edge(successor.predecessor(), successor_node));
+        assert(successor.distance() > 0);
+        assert (successor_node == _M_start_node || _M_graph.has_edge(successor.predecessor(), successor_node));
 
         const distance_t successor_cost = _M_labels.at(successor_node).distance(); // use shortest distance
         const distance_t& new_cost = successor.distance();
@@ -107,10 +108,10 @@ dijkstra<G, Q, L, N, UseEdge>::expand(node_cost_pair_type node) {
             node_cost_pairs[to_index++] = successor;
 
             // label current node with preliminary value
-            // assert (_M_graph.has_edge(successor.predecessor(), successor_node));
+            assert (_M_graph.has_edge(successor.predecessor(), successor_node));
 
             _M_labels.label(successor_node, successor);
-            // _M_labels.at(successor_node).predecessor() = none_value<typename G::node_id_type>;
+            _M_labels.at(successor_node).predecessor() = none_value<typename G::node_id_type>;
         }
     }
 

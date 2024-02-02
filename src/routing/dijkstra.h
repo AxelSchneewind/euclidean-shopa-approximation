@@ -92,7 +92,7 @@ public:
 
     L &labels() { return _M_labels; }
 
-    typename L::label_type get_label(node_id_type node) const { return _M_labels.get(node); }
+    typename L::label_type const& get_label(node_id_type node) const { return _M_labels.at(node); }
 
     /**
      * init one to one
