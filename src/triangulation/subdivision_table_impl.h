@@ -32,19 +32,18 @@ subdivision_table::precompute(double epsilon, double min_relative_r_value) {
     std::vector<edge_class> triangle_classes;
 
     for (int index = 0; index < step_count; ++index) {
-        double angle = class_angle(index);
+        long double angle = class_angle(index);
         assert(class_index(angle) <= index);
-        double sine = std::sin(angle);
+        long double sine = std::sin(angle);
 
         triangle_classes.emplace_back();
 
-        double relative = min_relative_r_value;
-        double edge_distance = 0.0;
+        long double base = 1.0l + epsilon * sine;
+        long double relative = min_relative_r_value;
 
-        while (relative < 1.0) {
+        for (size_t i = 0; i < std::numeric_limits<size_t>::max() / 2 && relative < 1.0; i++) {
+             relative = std::pow(base, i) * min_relative_r_value;
             triangle_classes.back().node_positions.emplace_back(relative);
-            edge_distance = sine * relative;
-            relative += epsilon * edge_distance;
         }
     }
 
