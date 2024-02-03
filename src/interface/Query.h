@@ -58,8 +58,8 @@ public:
     Graph beeline() const override  { return _beeline; };
     distance_t beeline_distance() const override { return _beeline_distance; }
 
-    void write(std::ostream& out) const override { out <<   "query:                                " << _from << ',' << _to
-                                                       << "\nbeeline distance:                     " << beeline_distance(); }
+    void write(std::ostream& out) const override { out <<   "query:                                    " << _from << ',' << _to
+                                                       << "\nbeeline distance:                         " << beeline_distance(); }
 
     void write(table& out) const override {
         out.put(Statistics::FROM, _from);

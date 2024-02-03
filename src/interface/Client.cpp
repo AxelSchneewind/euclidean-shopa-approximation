@@ -134,7 +134,7 @@ void Client::write_info(std::ostream& output) const {
            << "\n    steiner points visited:               " << statistics.get(NEIGHBORS_STEINER_POINT_COUNT)
            << "\n    steiner point neighbors:              " << statistics.get(NEIGHBORS_STEINER_POINT_NEIGHBORS_COUNT);
 
-    output << std::flush;
+    output <<"\n\n" << std::flush;
 }
 
 void Client::write_tree_file(std::string path) const {
