@@ -22,11 +22,11 @@ GraphType Graph::GraphImplementation<steiner_graph>::type() const {
 template<>
 void Graph::GraphImplementation<steiner_graph>::write_graph_stats(std::ostream &output) const {
     output << "\r\agraph has "
-           << std::setw(12) << graph.node_count() << " nodes and "
-           << std::setw(12) << graph.edge_count() << " edges"
+           << std::setw(16) << graph.node_count() << " nodes and "
+           << std::setw(16) << graph.edge_count() << " edges"
            <<   "\n     with "
-           << std::setw(12) << graph.base_graph().node_count() << " nodes and "
-           << std::setw(12) << graph.base_graph().edge_count() << " edges stored explicitly (ε = "
+           << std::setw(16) << graph.base_graph().node_count() << " nodes and "
+           << std::setw(16) << graph.base_graph().edge_count() << " edges stored explicitly (ε = "
            << graph.epsilon() << ")" << std::endl;
 
     output << "expected size per node: "
