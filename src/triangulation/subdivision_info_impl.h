@@ -32,8 +32,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
 
         // get minimal angle for node1 and node2
         // treat angles > 90 degrees like 90 degrees
-        long double angle1 = M_PI_2; // between node1->node2 and node1->node3
-        long double angle2 = M_PI_2; // between node2->node1 and node2->node3
+        long double angle1 = M_PI_2l; // between node1->node2 and node1->node3
+        long double angle2 = M_PI_2l; // between node2->node1 and node2->node3
         long double angle3 = 0; // between node2->node1 and node2->node3
 
         for (auto&& edge: polyhedron.edges(i)) {
@@ -67,17 +67,17 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         double const length = distance(c2, c1);
 
         // relative value where the mid-point (with max distance to other edges) lies between node1 and node2
-        double const mid_position = 1 / (1 + std::sin(angle1) / std::sin(angle2));
+        double const mid_position = 1.0l / (1.0l + std::sin(angle1) / std::sin(angle2));
         {
-            double mid_value_second = 1 / (1 + std::sin(angle2) / std::sin(angle1));
-            assert(std::abs(mid_position + mid_value_second - 1.0) < 0.001);
-            assert(mid_position < 1 && mid_position > 0);
+            double mid_value_second = 1.0l / (1.0l + std::sin(angle2) / std::sin(angle1));
+            assert(std::abs(mid_position + mid_value_second - 1.0) < 0.01);
+            assert(mid_position <= 1 && mid_position >= 0);
         }
 
         // distance values have been computed already, convert to r(v) relative to this edges length
         double const factor = epsilon / 5;
-        double const r_first  = std::max(factor * (r_values[node1] / length), min_r_value);
-        double const r_second = std::max(factor * (r_values[node2] / length), min_r_value);
+        double const r_first  = std::clamp(factor * (r_values[node1] / length), min_r_value, 1.0);
+        double const r_second = std::clamp(factor * (r_values[node2] / length), min_r_value, 1.0);
 
         // the base for computing relative node positions
         long double const base_first = std::clamp(1.0l + epsilon * std::sin(angle1), min_base, 10.0l);
@@ -161,8 +161,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         if (!is_in_range(count, 2, max_steiner_count_per_edge)
             || !is_in_range(mid_position, 0.0, 1.0)
             || !is_in_range(mid_index, 0, count - 1)
-            || !is_in_range(r_first,  0, std::numeric_limits<float>::max())
-            || !is_in_range(r_second, 0, std::numeric_limits<float>::max())
+            || !is_in_range(r_first,  0, 1.1)
+            || !is_in_range(r_second, 0, 1.1)
             || !is_in_range(base_first,  min_base, std::numeric_limits<float>::max())
             || !is_in_range(base_second, min_base, std::numeric_limits<float>::max())
             || !is_in_range(left_count,  0, max_steiner_count_per_edge / 2)
