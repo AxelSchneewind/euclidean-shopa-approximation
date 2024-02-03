@@ -47,7 +47,7 @@ struct std::hash<steiner_node_id<E, I>> {
 
 
 template<typename E, typename I>
-constexpr steiner_node_id none_value<steiner_node_id<E, I>> = {none_value<E>, none_value<I>};
+constexpr steiner_node_id<E,I> none_value<steiner_node_id<E, I>> = {none_value<E>, none_value<I>};
 
 template<typename E, typename I>
 std::ostream &operator<<(std::ostream &output, steiner_node_id<E, I> id);
@@ -95,11 +95,6 @@ public:
     using triangle_node_id_type = node_id_t;
     using triangle_edge_id_type = edge_id_t;
 
-    using intra_edge_id_type = int;
-
-    using node_id_type = steiner_node_id<triangle_edge_id_type, intra_edge_id_type>;
-    using edge_id_type = steiner_edge_id<node_id_type>;
-
     using node_info_type = node_t;
     using edge_info_type = edge_t;
 
@@ -110,15 +105,20 @@ public:
     using adjacency_list_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
 
     using polyhedron_type = polyhedron<base_topology_type, 3>;
+    using topology_type = steiner_graph;
+
+    using subdivision_info_type = subdivision;
+
+    using intra_edge_id_type = typename subdivision_info_type::steiner_index_type;
+
+    using node_id_type = steiner_node_id<triangle_edge_id_type, intra_edge_id_type>;
+    using edge_id_type = steiner_edge_id<node_id_type>;
 
     using distance_type = distance_t;
 
     using path_type = path<steiner_graph>;
     using subgraph_type = subgraph<steiner_graph>;
 
-    using topology_type = steiner_graph;
-
-    using subdivision_info_type = subdivision;
 
     // whether base nodes should have outgoing face crossing edges
     static constexpr bool face_crossing_from_base_nodes { true };

@@ -279,7 +279,7 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
     std::size_t base_edges_checked = 0;
     for (auto &&base_node_id: _M_base_topology.node_ids()) {
         for (auto &&edge: _M_base_topology.outgoing_edges(base_node_id)) {
-            auto edge_id = _M_base_topology.edge_id(base_node_id, edge.destination);
+            const auto edge_id = _M_base_topology.edge_id(base_node_id, edge.destination);
             base_edges_checked++;
 
             // make sure each base node is only contained once
@@ -307,9 +307,8 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
 
     if constexpr (face_crossing_from_base_nodes) {
         // count all outgoing edges of base nodes
-        for (auto node: base_graph().node_ids()) {
-            auto &&reachable_edges = _M_polyhedron.node_edges(node);
-            for (auto &&edge_id: reachable_edges) {
+        for (auto&& node: base_graph().node_ids()) {
+            for (auto &&reachable_edges = _M_polyhedron.node_edges(node); auto &&edge_id: reachable_edges) {
                 if (is_none(edge_id)) continue;
                 assert (_M_base_topology.source(edge_id) < _M_base_topology.destination(edge_id));
                 _M_edge_count += 2 * (steiner_info(edge_id).node_count - 2);
