@@ -78,10 +78,3 @@ $ROUTER --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR_RAW" --epsilo
 compute "$AEGS_TRIANGULATION_GRAPH" "$AEGS_VISIBILITY_GRAPH" 20
 compute "$PATA_TRIANGULATION_GRAPH" "$PATA_VISIBILITY_GRAPH" 20
 compute "$MEDI_TRIANGULATION_GRAPH" "$MEDI_VISIBILITY_GRAPH" 20
-
-
-# to display all paths/beelines at once
-# render_graph $(echo ${"$(echo $TRIANGULATION_RESULTS/*/path.gl)"//\ /\ -gf\ })
-# render_graph $(echo ${"$(echo $TRIANGULATION_RAW_RESULTS/*/path.gl)"//\ /\ -gf\ })
-# render_graph $(echo ${"$(echo $VISIBILITY_RESULTS/*/path.gl)"//\ /\ -gf\ })
-#
