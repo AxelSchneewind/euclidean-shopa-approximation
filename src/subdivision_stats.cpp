@@ -9,7 +9,7 @@
 
 // just to have the sizes somewhere and see when they change
 static_assert(steiner_graph::SIZE_PER_NODE == 20);
-static_assert(steiner_graph::SIZE_PER_EDGE == 56);
+static_assert(steiner_graph::SIZE_PER_EDGE == 64);
 
 static_assert(std_graph_t::SIZE_PER_NODE == 20);
 static_assert(std_graph_t::SIZE_PER_EDGE == 20);
@@ -54,14 +54,15 @@ main(int argc, char const *argv[]) {
     if (argc > 4)
         header = true;
 
-    const double min_inner_angle = M_PI / 720; // 1/4º
-    const double min_r_value = std::sin(min_inner_angle) * (1/ (1 + std::sin(min_inner_angle) / std::sin(M_PI - min_inner_angle)));
-    auto table = subdivision_table::precompute(epsilon, min_r_value);
-
     if (mode == "table") {
         if (header)
             std::cout << "epsilon,angle,number of points,points\n";
         int index = 0;
+
+        const double min_inner_angle = M_PI / 720; // 1/4º
+        const double min_r_value = std::sin(min_inner_angle) * (1/ (1 + std::sin(min_inner_angle) / std::sin(M_PI - min_inner_angle)));
+        auto const table = subdivision_table::precompute(epsilon, min_r_value);
+
         for (auto const& triangle_class: table) {
             std::cout << epsilon << "," << std::setw(10) << subdivision_table::class_angle(index) << ","
                       << triangle_class.node_positions.size() << ",";
