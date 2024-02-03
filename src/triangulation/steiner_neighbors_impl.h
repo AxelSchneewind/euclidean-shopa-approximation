@@ -143,7 +143,6 @@ void steiner_neighbors<Graph, Labels>::from_start_node(const NodeCostPair &node,
         steiner_graph::node_id_type destination{e_id, 1};
         if (destination != node.predecessor()) [[likely]] {
             assert(_graph.has_edge(node_id, destination));
-            assert(!_graph.is_base_node(destination));
             out.emplace_back(destination, node_id, node.distance());
             _destination_coordinates.emplace_back(_graph.node(destination).coordinates);
         }
@@ -154,7 +153,6 @@ void steiner_neighbors<Graph, Labels>::from_start_node(const NodeCostPair &node,
         steiner_graph::node_id_type destination(e_id, _graph.steiner_info(e_id).node_count - 2);
         if (destination != node.predecessor()) [[likely]] {
             assert(_graph.has_edge(node_id, destination));
-            assert(!_graph.is_base_node(destination));
             out.emplace_back(destination, node.node(), node.distance());
             _destination_coordinates.emplace_back(_graph.node(destination).coordinates);
         }
@@ -183,7 +181,6 @@ void steiner_neighbors<Graph, Labels>::from_boundary_node(const NodeCostPair &no
         steiner_graph::node_id_type destination{e_id, 1};
         if (destination != node.predecessor()) [[likely]] {
             assert(_graph.has_edge(node_id, destination));
-            assert(!_graph.is_base_node(destination));
             out.emplace_back(destination, node_id, node.distance());
             _destination_coordinates.emplace_back(_graph.node(destination).coordinates);
         }
@@ -194,7 +191,6 @@ void steiner_neighbors<Graph, Labels>::from_boundary_node(const NodeCostPair &no
         steiner_graph::node_id_type destination(e_id, _graph.steiner_info(e_id).node_count - 2);
         if (destination != node.predecessor()) [[likely]] {
             assert(_graph.has_edge(node_id, destination));
-            assert(!_graph.is_base_node(destination));
             out.emplace_back(destination, node.node(), node.distance());
             _destination_coordinates.emplace_back(_graph.node(destination).coordinates);
         }
