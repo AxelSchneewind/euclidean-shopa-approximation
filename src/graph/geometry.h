@@ -13,7 +13,7 @@ to_radians(double degrees);
 
 // exact distance on earths surface
 distance_t
-distance(coordinate_t __c1, coordinate_t __c2);
+distance(coordinate_t c1, coordinate_t c2);
 
 /**
  * angle in radians
@@ -34,11 +34,12 @@ angle(coordinate_t dir0, coordinate_t dir1);
 inline double
 inner_angle(coordinate_t dir0, coordinate_t dir1);
 
+[[gnu::hot]]
 inline double
-angle_cos(coordinate_t dir0, coordinate_t dir1);
+angle_cos(coordinate_t const& dir0, coordinate_t const& dir1);
 
 inline double
-line_distance(coordinate_t __source, coordinate_t __destination, coordinate_t __point);
+line_distance(coordinate_t source, coordinate_t destination, coordinate_t point);
 
 
 /**
@@ -49,7 +50,7 @@ line_distance(coordinate_t __source, coordinate_t __destination, coordinate_t __
  * @return
  */
 inline coordinate_t
-interpolate_linear(coordinate_t __source, coordinate_t __destination, double __relative);
+interpolate_linear(coordinate_t source, coordinate_t destination, double relative);
 
 
 void WGS84toGoogleBing(double lat, double lon, double &x, double &y);

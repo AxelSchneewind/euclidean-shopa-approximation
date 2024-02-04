@@ -67,7 +67,7 @@ inner_angle(coordinate_t dir0, coordinate_t dir1) {
 
 
 inline double
-angle_cos(coordinate_t dir0, coordinate_t dir1) {
+angle_cos(coordinate_t const& dir0, coordinate_t const& dir1) {
     // use dot product
     auto const AB = dir0 * dir1;
     return AB / (dir0.length() * dir1.length());
