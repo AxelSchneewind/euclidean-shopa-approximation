@@ -32,7 +32,7 @@ public:
             : face_index(0),
               edge_index(0),
               face_count((!is_none(faces[0])) + (!is_none(faces[1]))),
-              faces{std::span(poly._M_face_info[!is_none(faces[0]) ? faces[0] : 0]), std::span(poly._M_face_info[!is_none(faces[1]) ? faces[1] : 0])} {
+              faces{std::span(poly._face_info[!is_none(faces[0]) ? faces[0] : 0]), std::span(poly._face_info[!is_none(faces[1]) ? faces[1] : 0])} {
         };
 
         edges_iterator_type& begin() { return *this; };
@@ -88,20 +88,35 @@ private:
     static_assert(sizeof(std::array<edge_id_type, EDGE_COUNT_PER_FACE>) == EDGE_COUNT_PER_FACE * sizeof(edge_id_type));
 
     using edge_info_type = std::array<face_id_type, FACE_COUNT_PER_EDGE>;
+    using edge_link_type = std::array<edge_id_type, (EDGE_COUNT_PER_FACE - 1) * FACE_COUNT_PER_EDGE>;
+
+    std::size_t _boundary_node_count;
+    std::size_t _boundary_edge_count;
+
+    [[gnu::hot]]
+    std::vector<bool> _is_boundary_edge;
+    [[gnu::hot]]
+    std::vector<bool> _is_boundary_node;
 
     // for each triangle
-    std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> _M_face_info;
+    std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> _face_info;
 
     // for each edge
-    std::vector<edge_info_type> _M_edge_info;
+    std::vector<edge_info_type> _edge_info;
+    [[gnu::hot]]
+    std::vector<edge_link_type> _edge_links;
 
     // for each node, store edges that are reachable by crossing a face
-    std::vector<edge_id_type> _M_node_edges;
-    std::vector<int> _M_node_edges_offsets;
+    [[gnu::hot]]
+    std::vector<edge_id_type> _node_edges;
+    [[gnu::hot]]
+    std::vector<int> _node_edges_offsets;
 
 
     polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>>&&adjacent_edges,
                std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>>&&adjacent_faces,
+               std::vector<bool>&& is_boundary_node,
+               std::vector<bool>&& is_boundary_edge,
                std::vector<edge_id_type>&&node_edges,
                std::vector<int>&&node_edge_offsets);
 
@@ -109,53 +124,57 @@ public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(edge_info_type);
 
-    std::size_t node_count() const { return _M_node_edges_offsets.size() - 1; }
+    std::size_t node_count() const { return _node_edges_offsets.size() - 1; }
 
-    std::size_t edge_count() const { return _M_edge_info.size(); }
+    std::size_t edge_count() const { return _edge_info.size(); }
 
-    std::size_t face_count() const { return _M_face_info.size(); }
+    std::size_t face_count() const { return _face_info.size(); }
 
     std::size_t boundary_edge_count() const {
-        std::size_t result = 0;
-        for (auto&&edge_info: _M_edge_info) {
-            result += is_none(edge_info[1]);
-        }
+        return _boundary_node_count;
+   }
 
-        return result;
+    bool is_boundary_edge(node_id_type node) const {
+        return _is_boundary_edge[node];
+    }
+
+    bool is_boundary_node(node_id_type node) const {
+        return _is_boundary_node[node];
     }
 
     /**
-     * makes a polyhedron object from the given base graph
-     * @param base
      * @return
      */
-    static polyhedron<BaseGraph, MaxNodesPerFace> make_polyhedron(const BaseGraph&base,
-                                                                  std::vector<std::array<typename
-                                                                      BaseGraph::node_id_type, MaxNodesPerFace>>&&
-                                                                  faces);
+    static polyhedron make_polyhedron(BaseGraph const&triangulation_edges,
+                                    std::vector<std::array<node_id_type, MaxNodesPerFace>> &&faces);
 
     std::span<const face_id_type, FACE_COUNT_PER_EDGE> edge_faces(edge_id_type edge) const {
-        return {_M_edge_info[edge]};
+        return {_edge_info[edge]};
     }
 
     std::span<const edge_id_type, EDGE_COUNT_PER_FACE> face_edges(face_id_type face) const {
-        return {_M_face_info[face]};
+        return {_face_info[face]};
     }
 
     std::span<const edge_id_type, std::dynamic_extent> node_edges(node_id_type node) const {
         return {
-            _M_node_edges.begin() + _M_node_edges_offsets[node],
-            _M_node_edges.begin() + _M_node_edges_offsets[node + 1]
+            _node_edges.begin() + _node_edges_offsets[node],
+            _node_edges.begin() + _node_edges_offsets[node + 1]
         };
     }
 
     /**
-     * gets edges that belong to the faces bordering this edge (including the given edge itself)
-     * does not include the inverse to the given edge
+     * gets edges that belong to the faces bordering this edge
      * @param edge
      * @return
      */
-    edges_iterator_type edges(int edge) const {
-        return {*this, {_M_edge_info[edge]}};
+    std::span<const edge_id_type, std::dynamic_extent> edges(edge_id_type edge) const {
+        assert(!is_none(edge));
+        if (_is_boundary_edge[edge]) {
+            assert(is_none(_edge_links[edge][EDGE_COUNT_PER_FACE - 1]));
+            return {_edge_links[edge].begin(), _edge_links[edge].begin() + (EDGE_COUNT_PER_FACE - 1)};
+        } else {
+            return {_edge_links[edge].begin(), _edge_links[edge].end()};
+        }
     };
 };

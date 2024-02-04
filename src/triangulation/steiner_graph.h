@@ -179,7 +179,6 @@ public:
                   adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&triangulation_edges,
                   polyhedron<base_topology_type, 3> &&triangles,
                   subdivision_info_type &&table,
-                  std::vector<bool> && is_base_node,
                   double epsilon);
 
 
@@ -198,7 +197,6 @@ private:
 
     // store triangulation here
     std::vector<node_info_type> _M_base_nodes;
-    std::vector<bool> _M_is_boundary_node;
 
     base_topology_type _M_base_topology;
 
@@ -209,6 +207,9 @@ private:
     polyhedron_type _M_polyhedron;
 
     // computes the coordinates of a node with given id
+    [[gnu::pure]]
+    [[gnu::hot]]
+    [[gnu::always_inline]]
     coordinate_t node_coordinates(node_id_type __id) const;
 
 public:

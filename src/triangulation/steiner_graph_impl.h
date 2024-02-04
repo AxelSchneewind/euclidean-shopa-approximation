@@ -47,6 +47,7 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
     std::vector<steiner_graph::triangle_edge_id_type> adjacent_edge_ids;
     std::vector<steiner_graph::triangle_edge_id_type> triangle_edge_ids;
     for (int node = 0; node < triangulation.node_count(); ++node) {
+        adjacent_edge_ids.emplace_back(none_value<steiner_graph::triangle_edge_id_type>);
         // get edges and triangles adjacent to node
         for (auto&& edge: triangulation.outgoing_edges(node)) {
             auto edge_id = triangulation.edge_id(node, edge.destination);
@@ -101,23 +102,6 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
 }
 
 
-void make_boundary_nodes(const std::vector<steiner_graph::node_info_type> &nodes,
-                     const steiner_graph::base_topology_type &triangulation,
-                     const steiner_graph::polyhedron_type &polyhedron, std::vector<bool> &out) {
-    assert(nodes.size() == triangulation.node_count());
-
-    out.resize(triangulation.node_count(), false);
-
-    // a vertex is a boundary vertex if there exists an edge that only has one adjacent face
-    for (int i = 0; i < triangulation.edge_count(); i++) {
-        auto&& src = triangulation.source(i);
-        auto&& dest = triangulation.destination(i);
-        bool one_adjacent_face = is_none(polyhedron.edge_faces(i)[1]);
-        out[src] = out[src] || one_adjacent_face;
-        out[dest] = out[dest] || one_adjacent_face;
-    }
-}
-
 steiner_graph
 steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangulation_nodes,
                           steiner_graph::base_topology_type &&triangulation_edges,
@@ -130,9 +114,6 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangula
 
     std::vector<double> r_values;
     make_node_radii(triangulation_nodes, triangulation, poly, r_values);
-
-    std::vector<bool> is_boundary_node;
-    make_boundary_nodes(triangulation_nodes, triangulation, poly, is_boundary_node);
 
     const double min_inner_angle = M_PI / 180; // 1º
     const double minimal_relative_radius =
@@ -165,7 +146,6 @@ steiner_graph::make_graph(std::vector<steiner_graph::node_info_type> &&triangula
             std::move(triangulation),
             std::move(poly),
             std::move(s_table),
-            std::move(is_boundary_node),
             epsilon};
 }
 
@@ -250,7 +230,6 @@ steiner_graph::steiner_graph(steiner_graph &&other) noexcept
           _M_edge_count(other._M_edge_count),
           _M_epsilon(other._M_epsilon),
           _M_base_nodes(std::move(other._M_base_nodes)),
-          _M_is_boundary_node(std::move(other._M_is_boundary_node)),
           _M_base_topology(std::move(other._M_base_topology)),
           _M_table(std::move(other._M_table)),
           _M_polyhedron(std::move(other._M_polyhedron)) {
@@ -262,14 +241,12 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
                              adjacency_list<steiner_graph::triangle_node_id_type, steiner_graph::triangle_edge_info_type> &&triangulation_edges,
                              polyhedron<base_topology_type, 3> &&triangles,
                              steiner_graph::subdivision_info_type &&table,
-                             std::vector<bool>&& is_boundary_node,
                              double epsilon)
         :
         _M_node_count(0),
         _M_edge_count(0),
         _M_epsilon(epsilon),
         _M_base_nodes(std::move(triangulation_nodes)),
-        _M_is_boundary_node(std::move(is_boundary_node)),
         _M_base_topology(std::move(triangulation_edges)),
         _M_table(std::move(table)),
         _M_polyhedron(std::move(triangles)) {
@@ -612,11 +589,11 @@ bool steiner_graph::is_base_node(steiner_graph::node_id_type id) const {
 }
 
 bool steiner_graph::is_boundary_node(steiner_graph::triangle_node_id_type id) const {
-    return _M_is_boundary_node[id];
+     return _M_polyhedron.is_boundary_node(id);
 }
 
 bool steiner_graph::is_boundary_edge(steiner_graph::triangle_edge_id_type id) const {
-    return _M_is_boundary_node[_M_base_topology.destination(id)] && _M_is_boundary_node[_M_base_topology.source(id)];
+    return _M_polyhedron.is_boundary_edge(id);
 }
 
 steiner_graph::triangle_node_id_type steiner_graph::base_node_id(steiner_graph::node_id_type id) const {
