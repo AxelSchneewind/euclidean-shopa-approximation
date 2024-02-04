@@ -12,10 +12,13 @@ PATA_TRIANGULATION_GRAPH=/opt/routing/graphs/pata/pata-ref.graph
 MEDI_VISIBILITY_GRAPH=/opt/routing/graphs/medi/medi-ref-visibility.fmi
 MEDI_TRIANGULATION_GRAPH=/opt/routing/graphs/medi/medi-ref.graph
 
+TOY_VISIBILITY_GRAPH=/opt/routing/graphs/toy/toy-vis.fmi
+TOY_TRIANGULATION_GRAPH=/opt/routing/graphs/toy/toy.graph
+
 # maximum tree size to write to files (0 to disable tree output)
 TREE_SIZE=0
 
-# toggle A* here
+# toggle A* here (on/off)
 ASTAR=on
 
 #
@@ -73,8 +76,15 @@ echo " ################# computing approximate values without subdividing triang
 echo "$ROUTER --graph-file $GRAPH_FILE --output-directory $OUTPUT_DIR_RAW --epsilon inf --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
 $ROUTER --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR_RAW" --epsilon inf --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
 
+CSV_RESULTS="results/$GRAPH_NAME/results.csv"
+csvstack "results/$GRAPH_NAME"/*/*/"info.csv" > "$CSV_RESULTS"
+sed -e 's/ms//g' -i "$CSV_RESULTS"
+echo "$(csvsort -c EPSILON,FROM,TO "$CSV_RESULTS")" > "$CSV_RESULTS"
+
 }
 
-compute "$AEGS_TRIANGULATION_GRAPH" "$AEGS_VISIBILITY_GRAPH" 20
-compute "$PATA_TRIANGULATION_GRAPH" "$PATA_VISIBILITY_GRAPH" 20
-compute "$MEDI_TRIANGULATION_GRAPH" "$MEDI_VISIBILITY_GRAPH" 20
+compute "$TOY_TRIANGULATION_GRAPH" "$TOY_VISIBILITY_GRAPH" 6
+# compute "$AEGS_TRIANGULATION_GRAPH" "$AEGS_VISIBILITY_GRAPH" 20
+# compute "$PATA_TRIANGULATION_GRAPH" "$PATA_VISIBILITY_GRAPH" 20
+# compute "$MEDI_TRIANGULATION_GRAPH" "$MEDI_VISIBILITY_GRAPH" 20
+
