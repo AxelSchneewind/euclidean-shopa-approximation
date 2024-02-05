@@ -313,6 +313,47 @@ steiner_neighbors<Graph, Labels>::add_min_angle_neighbor(const NodeCostPair&node
     }
 }
 
+
+//a rough approximation for the  function b^e for b = (1+eps)
+template <typename B, typename E>
+B pow_approximation(B const& base, E const& exponent) {
+    return (exponent * (base - 1.0)) + 1.0;
+}
+
+//template <typename E>
+//float pow_approximation(float const& base, E const& exponent) {
+//    std::uint32_t _base = reinterpret_cast<std::uint32_t const&>(base);
+//    std::uint32_t _exp_sign = reinterpret_cast<std::uint32_t const&>(base);
+//
+//    constexpr std::uint32_t mask_mantissa = 0x007FFFFF;
+//    constexpr std::uint32_t mask_exp_sign = 0xFF800000;
+//
+//    _base &= mask_mantissa;
+//    _exp_sign &= mask_exp_sign;
+//
+//    _base *= exponent;
+//    _base |= _exp_sign;
+//
+//    return reinterpret_cast<float const&>(_base);
+//}
+//template <typename E>
+//double pow_approximation(double const& base, E const& exponent) {
+//    std::uint64_t _base = reinterpret_cast<std::uint64_t const&>(base);
+//    std::uint64_t _exp_sign = reinterpret_cast<std::uint64_t const&>(base);
+//
+//    constexpr std::uint64_t mask_mantissa = 0x000FFFFFFFFFFFFF;
+//    constexpr std::uint64_t mask_exp_sign = 0xFFF0000000000000;
+//
+//    _base &= mask_mantissa;
+//    _exp_sign &= mask_exp_sign;
+//
+//    _base *= exponent;
+//    _base |= _exp_sign;
+//
+//    return reinterpret_cast<double const&>(_base);
+//}
+
+
 template<typename Graph, typename Labels>
 steiner_neighbors<Graph, Labels>::node_id_type
 steiner_neighbors<Graph, Labels>::find_min_angle_neighbor(const base_edge_id_type&edge_id, const coordinate_t&direction, double&cos) {
@@ -358,17 +399,11 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbor(const base_edge_id_typ
     }
 
     // depending on which half of the edge is used, compute a factor for selecting the next m-value
-    bool right_half = (diff >= 0.0);
-    // const float right_factor = std::log2((right_half) ? destination_steiner_info.base_second : destination_steiner_info.base_first);
-    // const float left_factor  = (1 - right_factor);
-    const float right_factor = 0.5;
-    const float left_factor  = 0.5;
+    bool const right_half = (diff >= 0.0);
+    float const base = (right_half) ? destination_steiner_info.base_second : destination_steiner_info.base_first;
+    float const log_base_inv = 1 / std::log(base);
 
     while (l < r && std::isnormal(diff)) [[likely]] {
-        // compute weighted m-value
-        m = std::clamp((intra_edge_id_type)(left_factor*l + right_factor*r), l, r);
-        assert (l >= r || (l <= m && m <= r));
-
         // update node ids
         destination_next.steiner_index = m + 1;
         destination.steiner_index = m;
@@ -393,10 +428,26 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbor(const base_edge_id_typ
         diff -= cos2;
 
         // update range
-        int right = (diff > 0.0);
-        int left = !right;
+        bool right = (diff > 0.0);
+        bool left = !right;
         l = right * (m + 1) + left * l;
         r = left * (m - 1) + right * r;
+
+        // naive method for m-value : 8566117 iterations (for aegaeis-ref, 57200 -> 5146, eps = 0.2)
+        // m = (l+r) / 2;
+
+        // compute improved m-value, 6609402 iterations, can possibly be further improved
+        intra_edge_id_type step = std::ceil((std::log(1 + pow_approximation(base, r - l)) - 1) * log_base_inv);
+                    // go right
+        m = right ? ((right_half)
+                    ? (r - step)
+                    : ((l + r) / 2))
+                    // go left
+                  : ((right_half)
+                    ? ((l + r) / 2)
+                    : (l + step));
+        m = std::clamp(m, l, r);
+        assert (l >= r || (l <= m && m <= r));
 
         _steiner_point_angle_test_count++;
     }
