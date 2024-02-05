@@ -316,8 +316,8 @@ steiner_neighbors<Graph, Labels>::add_min_angle_neighbor(const NodeCostPair&node
 
 //a rough approximation for the  function b^e for b = (1+eps)
 template <typename B, typename E>
-B pow_approximation(B const& base, E const& exponent) {
-    return (exponent * (base - 1.0)) + 1.0;
+B pow_approximation(B const& base, B const& ln_base, E const& exponent) {
+    return (exponent * ln_base * (base - 1.0)) + 1.0;
 }
 
 //template <typename E>
@@ -359,6 +359,7 @@ steiner_neighbors<Graph, Labels>::node_id_type
 steiner_neighbors<Graph, Labels>::find_min_angle_neighbor(const base_edge_id_type&edge_id, const coordinate_t&direction, double&cos) {
     assert(direction.longitude != 0 || direction.latitude != 0);
     auto&&destination_steiner_info = _graph.steiner_info(edge_id);
+    _steiner_point_angle_test_count++;
 
     // binary search for node with minimal angle using the derivative over the angle depending on steiner index
     using intra_edge_id_type = typename node_id_type::intra_edge_id_type;
@@ -398,12 +399,33 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbor(const base_edge_id_typ
         diff -= cos2;
     }
 
+    // update range
+    bool right = (diff > 0.0);
+    bool left = !right;
+    l = right * (m + 1) + left * l;
+    r = left * (m - 1) + right * r;
+
     // depending on which half of the edge is used, compute a factor for selecting the next m-value
-    bool const right_half = (diff >= 0.0);
+    bool  const right_half = (diff >= 0.0);
     float const base = (right_half) ? destination_steiner_info.base_second : destination_steiner_info.base_first;
+    float const ln_base = std::log(base);
     float const log_base_inv = 1 / std::log(base);
 
-    while (l < r && std::isnormal(diff)) [[likely]] {
+    //
+    intra_edge_id_type step = std::ceil((std::log((1 + pow_approximation(base, ln_base, r - l)) / 2)) * log_base_inv);
+    assert(step >= 0);
+    // step = std::max(step, (r-l)/2);
+    // go right
+    m = right ? ((right_half)
+                 ? (r - step)
+                 : ((l + r) / 2))
+        // go left
+              : ((right_half)
+                 ? ((l + r) / 2)
+                 : (l + step));
+    m = std::clamp(m, l, r);
+
+    while (l < r && std::isnormal(diff) && std::fabs(diff) <= _max_angle_cos) [[likely]] {
         // update node ids
         destination_next.steiner_index = m + 1;
         destination.steiner_index = m;
@@ -433,19 +455,22 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbor(const base_edge_id_typ
         l = right * (m + 1) + left * l;
         r = left * (m - 1) + right * r;
 
-        // naive method for m-value : 8566117 iterations (for aegaeis-ref, 57200 -> 5146, eps = 0.2)
+        // naive method for m-value : 58502219 iterations (for aegaeis-ref, 57200 -> 5146, eps = 0.05)
         // m = (l+r) / 2;
 
-        // compute improved m-value, 6609402 iterations, can possibly be further improved
-        intra_edge_id_type step = std::ceil((std::log(1 + pow_approximation(base, r - l)) - 1) * log_base_inv);
+        // compute improved m-value,  36603010 iterations, can possibly be further improved
+        // TODO fix
+        step = std::ceil((std::log((1 + pow_approximation(base, ln_base, r - l)) / 2)) * log_base_inv);
+        assert(step >= 0);
+        // step = std::max(step, (r-l)/2);
                     // go right
-        m = right ? ((right_half)
-                    ? (r - step)
-                    : ((l + r) / 2))
+        m = right ? (/*(right_half)
+                    ?*/ (r - step)
+                    /*: ((l + r) / 2)*/)
                     // go left
-                  : ((right_half)
-                    ? ((l + r) / 2)
-                    : (l + step));
+                  : (/*(right_half)
+                    ? ((l + r) / 2)*/
+                    /*:*/ (l + step));
         m = std::clamp(m, l, r);
         assert (l >= r || (l <= m && m <= r));
 
