@@ -36,7 +36,8 @@ ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImp
           _steiner_point_count{0},
           _base_node_neighbor_count{0},
           _boundary_node_neighbor_count{0},
-          _steiner_point_neighbor_count{0} {
+          _steiner_point_neighbor_count{0},
+          _steiner_point_angle_check_count{0} {
   if constexpr (requires (typename RouterT::search_type::neighbor_getter_type const& n) { n.base_node_count(); }) {
       _base_node_count = router.forward_search().neighbors().base_node_count();
       _boundary_node_count = router.forward_search().neighbors().boundary_node_count();
@@ -44,6 +45,7 @@ ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImp
       _base_node_neighbor_count = router.forward_search().neighbors().base_node_neighbor_count();
       _boundary_node_neighbor_count = router.forward_search().neighbors().boundary_node_neighbor_count();
       _steiner_point_neighbor_count = router.forward_search().neighbors().steiner_point_neighbor_count();
+      _steiner_point_angle_check_count = router.forward_search().neighbors().steiner_point_angle_test_count();
   }
 };
 
@@ -98,4 +100,5 @@ void ResultImplementation<GraphT>::write(table &out) const {
     out.put(Statistics::NEIGHBORS_BOUNDARY_NODE_NEIGHBORS_COUNT, _boundary_node_neighbor_count);
     out.put(Statistics::NEIGHBORS_STEINER_POINT_COUNT, _steiner_point_count);
     out.put(Statistics::NEIGHBORS_STEINER_POINT_NEIGHBORS_COUNT, _steiner_point_neighbor_count);
+    out.put(Statistics::NEIGHBORS_STEINER_POINT_ANGLE_CHECK_COUNT, _steiner_point_angle_check_count);
 }

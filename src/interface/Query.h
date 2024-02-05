@@ -162,6 +162,7 @@ private:
     std::size_t _base_node_neighbor_count{0};
     std::size_t _boundary_node_neighbor_count{0};
     std::size_t _steiner_point_neighbor_count{0};
+    std::size_t _steiner_point_angle_check_count{0};
 
 
     std::chrono::duration<double, std::milli> _duration;

@@ -132,7 +132,8 @@ void Client::write_info(std::ostream& output) const {
            << "\n    boundary vertices visited:            " << statistics.get(NEIGHBORS_BOUNDARY_NODE_COUNT)
            << "\n    boundary vertex neighbors:            " << statistics.get(NEIGHBORS_BOUNDARY_NODE_NEIGHBORS_COUNT)
            << "\n    steiner points visited:               " << statistics.get(NEIGHBORS_STEINER_POINT_COUNT)
-           << "\n    steiner point neighbors:              " << statistics.get(NEIGHBORS_STEINER_POINT_NEIGHBORS_COUNT);
+           << "\n    steiner point neighbors:              " << statistics.get(NEIGHBORS_STEINER_POINT_NEIGHBORS_COUNT)
+           << "\n    steiner point search iterations:      " << statistics.get(NEIGHBORS_STEINER_POINT_ANGLE_CHECK_COUNT);
 
     output <<"\n\n" << std::flush;
 }
