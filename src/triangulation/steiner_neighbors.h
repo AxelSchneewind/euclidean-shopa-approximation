@@ -58,6 +58,7 @@ private:
     // buffer for coordinates
     std::vector<coordinate_t> _destination_coordinates;
 
+    // statistics
     std::size_t _base_node_count{0};
     std::size_t _boundary_node_count{0};
     std::size_t _steiner_point_count{0};
@@ -65,6 +66,8 @@ private:
     std::size_t _base_node_neighbor_count{0};
     std::size_t _boundary_node_neighbor_count{0};
     std::size_t _steiner_point_neighbor_count{0};
+
+    std::size_t _steiner_point_angle_test_count{0};
 
     using node_id_type = typename Graph::node_id_type;
     using base_node_id_type = typename Graph::base_topology_type::node_id_type;
@@ -78,7 +81,6 @@ private:
     void on_edge_neighbors(NodeCostPair const &node, std::vector<NodeCostPair> &out);
 
 
-    template<typename NodeCostPair>
     [[gnu::hot]]
     [[gnu::always_inline]]
     node_id_type
@@ -145,4 +147,5 @@ public:
     std::size_t base_node_neighbor_count() const { return _base_node_neighbor_count; };
     std::size_t boundary_node_neighbor_count() const { return _boundary_node_neighbor_count; };
     std::size_t steiner_point_neighbor_count() const { return _steiner_point_neighbor_count; };
+    std::size_t steiner_point_angle_test_count() const { return _steiner_point_angle_test_count; };
 };

@@ -303,7 +303,7 @@ steiner_neighbors<Graph, Labels>::add_min_angle_neighbor(const NodeCostPair&node
     assert(direction.longitude != 0 || direction.latitude != 0);
 
     double cos;
-    auto next = find_min_angle_neighbor<NodeCostPair>(edge_id, direction, cos);
+    auto next = find_min_angle_neighbor(edge_id, direction, cos);
 
     // add edge with minimal angle
     if (cos >= max_angle_cos) [[unlikely]] {
@@ -314,25 +314,68 @@ steiner_neighbors<Graph, Labels>::add_min_angle_neighbor(const NodeCostPair&node
 }
 
 template<typename Graph, typename Labels>
-template<typename NodeCostPair>
 steiner_neighbors<Graph, Labels>::node_id_type
 steiner_neighbors<Graph, Labels>::find_min_angle_neighbor(const base_edge_id_type&edge_id, const coordinate_t&direction, double&cos) {
     assert(direction.longitude != 0 || direction.latitude != 0);
     auto&&destination_steiner_info = _graph.steiner_info(edge_id);
 
     // binary search for node with minimal angle using the derivative over the angle depending on steiner index
-    typename node_id_type::intra_edge_id_type l = 1;
-    typename node_id_type::intra_edge_id_type r = destination_steiner_info.node_count - 2;
-    typename node_id_type::intra_edge_id_type m = (r + l) / 2;
+    using intra_edge_id_type = typename node_id_type::intra_edge_id_type;
+    intra_edge_id_type l = 1;
+    intra_edge_id_type r = destination_steiner_info.node_count - 2;
+    intra_edge_id_type m = destination_steiner_info.mid_index;
     double diff = 1.0;
     double cos2 = 1.0;
 
     steiner_graph::node_id_type destination{edge_id, m};
     steiner_graph::node_id_type destination_next{edge_id, m + 1};
-    while (l < r && std::isnormal(diff)) [[likely]] {
+
+    if (l >= r) [[unlikely]]
+        return destination;
+
+    coordinate_t direction_next;
+    coordinate_t direction_current;
+    // first check
+    {
         // get coordinates
-        coordinate_t direction_next = _graph.node(destination_next).coordinates;
-        coordinate_t direction_current = _graph.node(destination).coordinates;
+        direction_next = _graph.node(destination_next).coordinates;
+        direction_current = _graph.node(destination).coordinates;
+
+        // make directions from source
+        assert(direction_next != _source_coordinate);
+        assert(direction_current != _source_coordinate);
+        direction_next -= _source_coordinate;
+        direction_current -= _source_coordinate;
+
+        // compute cos values (can hopefully be vectorized)
+        diff = angle_cos(direction, direction_next);
+        cos2 = angle_cos(direction, direction_current);
+        assert(diff == 0 || std::isnormal(diff));
+        assert(cos2 == 0 || std::isnormal(cos2));
+
+        // keep difference of cosines
+        diff -= cos2;
+    }
+
+    // depending on which half of the edge is used, compute a factor for selecting the next m-value
+    bool right_half = (diff >= 0.0);
+    // const float right_factor = std::log2((right_half) ? destination_steiner_info.base_second : destination_steiner_info.base_first);
+    // const float left_factor  = (1 - right_factor);
+    const float right_factor = 0.5;
+    const float left_factor  = 0.5;
+
+    while (l < r && std::isnormal(diff)) [[likely]] {
+        // compute weighted m-value
+        m = std::clamp((intra_edge_id_type)(left_factor*l + right_factor*r), l, r);
+        assert (l >= r || (l <= m && m <= r));
+
+        // update node ids
+        destination_next.steiner_index = m + 1;
+        destination.steiner_index = m;
+
+        // get coordinates
+        direction_next = _graph.node(destination_next).coordinates;
+        direction_current = _graph.node(destination).coordinates;
 
         // make directions from source
         assert(direction_next != _source_coordinate);
@@ -354,16 +397,14 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbor(const base_edge_id_typ
         int left = !right;
         l = right * (m + 1) + left * l;
         r = left * (m - 1) + right * r;
-        m = (l + r) / 2;
 
-        // update node ids
-        destination_next.steiner_index = m + 1;
-        destination.steiner_index = m;
+        _steiner_point_angle_test_count++;
     }
     assert(diff == 0 || std::isnormal(diff));
+    assert(m >= 0 && m < destination_steiner_info.node_count);
 
     // store cos value
-    cos = diff + cos2;
+    cos = angle_cos(direction, direction_current);
 
     return destination;
 }
