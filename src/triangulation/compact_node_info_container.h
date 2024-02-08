@@ -30,7 +30,7 @@ private:
     // std::vector<aggregate> aggregate_info;
     // std::unordered_map<AggregateId, info_index_type> aggregate_info_index;
     std::unordered_map<AggregateId, std::unique_ptr<aggregate>> aggregate_info_ptr;
-    std::vector<size_t> offsets;
+    std::vector<size_t> _offsets;
 
     size_t _edge_count;
     size_t _node_count;

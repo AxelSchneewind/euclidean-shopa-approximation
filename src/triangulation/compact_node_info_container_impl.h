@@ -68,8 +68,8 @@ Info &
 compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::node_info(edge_id_type edge_id,
                                                                                            intra_edge_id_type intra_edge_id) {
     if (!is_expanded(edge_id)) {
-        auto &&of = offsets[edge_id];
-        auto &&ofn = offsets[edge_id + 1];
+        auto &&of = _offsets[edge_id];
+        auto &&ofn = _offsets[edge_id + 1];
         expand(edge_id, ofn - of);
     }
     return get(edge_id, intra_edge_id);
@@ -146,7 +146,7 @@ void compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, I
 
     _node_count -= aggregate_info_ptr[agg_id]->info.size();
     _edge_count--;
-    aggregate_info_ptr[agg_id] = nullptr;
+    aggregate_info_ptr[agg_id].reset();
 
     assert(!is_expanded(agg_id));
 }
@@ -173,13 +173,13 @@ compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>:
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
 compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::compact_node_info_container(
         std::vector<size_t> &&offsets, AggregateInfo default_aggregate_info, Info default_info)
-        : default_aggregate_info(default_aggregate_info), offsets(std::move(offsets)), default_info(default_info),
+        : default_aggregate_info(default_aggregate_info), _offsets(std::move(offsets)), default_info(default_info),
           _edge_count(0), _node_count(0), default_span{default_info} {}
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
 compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::compact_node_info_container(
         const std::vector<size_t> &offsets, AggregateInfo default_aggregate_info, Info default_info)
-        : default_aggregate_info(default_aggregate_info), offsets(offsets), default_info(default_info),
+        : default_aggregate_info(default_aggregate_info), _offsets(offsets), default_info(default_info),
           default_span{default_info} {}
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
