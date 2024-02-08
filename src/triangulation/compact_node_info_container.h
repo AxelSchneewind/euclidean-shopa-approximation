@@ -58,7 +58,9 @@ private:
     std::span<Info, std::dynamic_extent> get(AggregateId agg_id);
     std::span<const Info, std::dynamic_extent> get(AggregateId agg_id) const;
 
+    [[gnu::hot]]
     Info const& get(AggregateId agg_id, IntraAggregateId intra_id) const;
+    [[gnu::hot]]
     Info& get(AggregateId agg_id, IntraAggregateId intra_id);
 
     AggregateInfo get_aggregate_info(AggregateId agg_id);
@@ -66,10 +68,12 @@ private:
     void clear();
 
 public:
+    [[gnu::hot]]
     void expand(AggregateId agg_id, IntraAggregateId count);
 
     void erase(AggregateId agg_id);
 
+    [[gnu::hot]]
     bool is_expanded(AggregateId agg_id) const;
 
 

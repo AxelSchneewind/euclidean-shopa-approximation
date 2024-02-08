@@ -145,17 +145,21 @@ public:
     /**
      * @return
      */
+    [[gnu::cold]]
     static polyhedron make_polyhedron(BaseGraph const&triangulation_edges,
                                     std::vector<std::array<node_id_type, MaxNodesPerFace>> &&faces);
 
+    [[gnu::hot]]
     std::span<const face_id_type, FACE_COUNT_PER_EDGE> edge_faces(edge_id_type edge) const {
         return {_edge_info[edge]};
     }
 
+    [[gnu::hot]]
     std::span<const edge_id_type, EDGE_COUNT_PER_FACE> face_edges(face_id_type face) const {
         return {_face_info[face]};
     }
 
+    [[gnu::hot]]
     std::span<const edge_id_type, std::dynamic_extent> node_edges(node_id_type node) const {
         return {
             _node_edges.begin() + _node_edges_offsets[node],
@@ -168,6 +172,7 @@ public:
      * @param edge
      * @return
      */
+    [[gnu::hot]]
     std::span<const edge_id_type, std::dynamic_extent> edges(edge_id_type edge) const {
         assert(!is_none(edge));
         if (_is_boundary_edge[edge]) {

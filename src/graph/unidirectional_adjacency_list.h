@@ -93,6 +93,7 @@ public:
         bool _edges_sorted;
         bool _offsets_valid;
 
+        [[gnu::cold]]
         void make_offsets();
 
     public:
@@ -154,6 +155,7 @@ public:
 
         void insert_backward_edges();
 
+        [[gnu::cold]]
         unidirectional_adjacency_list<NodeId, E> get();
     };
 
@@ -259,6 +261,7 @@ public:
      * @param dest
      * @return the index, or -1 otherwise
      */
+    [[gnu::hot]]
     inline edge_index_type edge_id(NodeId source, NodeId dest) const;
 
     /**
@@ -266,6 +269,7 @@ public:
      * @param source
      * @return
      */
+    [[gnu::hot]]
     inline edge_index_type edge_id(NodeId source) const;
 
     /**
@@ -274,6 +278,7 @@ public:
      * @param dest
      * @return
      */
+    [[gnu::hot]]
     inline bool has_edge(NodeId source, NodeId dest) const;
 
     /**

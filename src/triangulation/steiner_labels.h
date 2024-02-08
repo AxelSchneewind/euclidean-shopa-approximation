@@ -73,6 +73,7 @@ public:
 };
 
 
+// TODO add template parameter for switching between array- and map-based data structure
 template<RoutableGraph G, typename Label>
 class steiner_labels {
 public:
@@ -119,12 +120,17 @@ public:
     steiner_labels &operator=(steiner_labels &&) noexcept = default;
 
     // init for given query
+    [[gnu::cold]]
     void init(node_id_type start_node, node_id_type target_node);
 
+    [[gnu::hot]]
     Label& at(node_id_type node);
+    [[gnu::hot]]
     Label const& at(node_id_type node) const;
 
+    [[gnu::cold]]
     label_iterator_type all_visited() const;
 
+    [[gnu::hot]]
     void label(node_id_type const& node, Label const& label);
 };

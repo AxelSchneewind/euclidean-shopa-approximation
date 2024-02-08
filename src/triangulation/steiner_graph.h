@@ -279,10 +279,12 @@ public:
 
     subgraph_type make_subgraph(const path_type &route) const;
 
+    [[gnu::cold]]
     static steiner_graph make_graph(std::vector<steiner_graph::node_info_type> &&triangulation_nodes,
                                     steiner_graph::base_topology_type &&triangulation_edges,
                                     std::vector<std::array<triangle_node_id_type, 3>> &&faces, double epsilon);
 
+    [[gnu::cold]]
     static steiner_graph make_graph(steiner_graph const& other, subgraph<base_topology_type> const& subgraph);
 
 };
