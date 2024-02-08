@@ -67,7 +67,7 @@ struct gengetopt_args_info
   int tree_arg;	/**< @brief generate graph file for search tree (default='06062001').  */
   char * tree_orig;	/**< @brief generate graph file for search tree original value given at command line.  */
   const char *tree_help; /**< @brief generate graph file for search tree help description.  */
-  int astar_flag;	/**< @brief use A* heuristic to speed up routing (default=on).  */
+  int astar_flag;	/**< @brief use A* heuristic to speed up routing (default=off).  */
   const char *astar_help; /**< @brief use A* heuristic to speed up routing help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */

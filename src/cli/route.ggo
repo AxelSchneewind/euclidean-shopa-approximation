@@ -24,7 +24,7 @@ option "projection" p "which projection to apply to coordinates when writing to 
 option "tree" t "generate graph file for search tree" int default="06062001" argoptional
 
 section "routing algorithms"
-option "astar" a "use A* heuristic to speed up routing" flag on
+option "astar" a "use A* heuristic to speed up routing" flag off
 
 # option <long> <short> "<desc>"
 # 	{details="<detailed description>"}

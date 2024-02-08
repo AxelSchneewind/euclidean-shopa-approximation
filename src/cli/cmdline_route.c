@@ -51,7 +51,7 @@ const char *gengetopt_args_info_help[] = {
   "  -p, --projection=ENUM        which projection to apply to coordinates when\n                                 writing to files  (possible values=\"none\",\n                                 \"google_bing\", \"wgs84\" default=`none')",
   "  -t, --tree[=INT]             generate graph file for search tree\n                                 (default=`06062001')",
   "\nrouting algorithms:",
-  "  -a, --astar                  use A* heuristic to speed up routing\n                                 (default=on)",
+  "  -a, --astar                  use A* heuristic to speed up routing\n                                 (default=off)",
     0
 };
 
@@ -116,7 +116,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->projection_orig = NULL;
   args_info->tree_arg = 06062001;
   args_info->tree_orig = NULL;
-  args_info->astar_flag = 1;
+  args_info->astar_flag = 0;
   
 }
 
