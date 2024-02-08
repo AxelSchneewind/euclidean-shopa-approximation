@@ -74,9 +74,11 @@ private:
     using base_edge_id_type = typename Graph::base_topology_type::edge_id_type;
 
     [[gnu::hot]]
+    [[gnu::always_inline]]
     bool ignore_edge(base_edge_id_type const& edge_id, coordinate_t const& direction);
 
     template<typename NodeCostPair>
+    [[gnu::hot]]
     [[gnu::always_inline]]
     void on_edge_neighbors(NodeCostPair const &node, std::vector<NodeCostPair> &out);
 
@@ -124,9 +126,9 @@ private:
 public:
     steiner_neighbors(Graph const &graph, Labels const &labels)
             : _graph(graph), _labels(labels),
-              _spanner_angle{std::clamp(M_PI_2 * graph.epsilon(), 0.0, M_PI)},
+              _spanner_angle{std::clamp(M_PI * graph.epsilon(), 0.0, M_PI)},
               _spanner_angle_cos{std::cos(_spanner_angle)},
-              _max_angle{std::clamp(M_PI_2 * graph.epsilon() * 1.1, _spanner_angle, M_PI)},
+              _max_angle{std::clamp(M_PI_2 * graph.epsilon(), std::numeric_limits<double>::min(), M_PI)},
               _max_angle_cos{std::cos(_max_angle)} { }
 
     template<typename... Args>
