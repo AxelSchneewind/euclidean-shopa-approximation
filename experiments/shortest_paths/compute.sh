@@ -77,9 +77,11 @@ echo "$ROUTER --graph-file $GRAPH_FILE --output-directory $OUTPUT_DIR_RAW --epsi
 $ROUTER --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR_RAW" --epsilon inf --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
 
 CSV_RESULTS="results/$GRAPH_NAME/results.csv"
-csvstack "results/$GRAPH_NAME"/*/*/"info.csv" > "$CSV_RESULTS"
+cat "results/$GRAPH_NAME"/*/*/"info.csv" > "$CSV_RESULTS"
+sed -e '1p;/,NODE.*/d' -i "$CSV_RESULTS"
 sed -e 's/ms//g' -i "$CSV_RESULTS"
-echo "$(csvsort -c EPSILON,FROM,TO "$CSV_RESULTS")" > "$CSV_RESULTS"
+sed -e 's/ms//g' -i "$CSV_RESULTS"
+# echo "$(csvsort -c EPSILON,FROM,TO "$CSV_RESULTS")" > "$CSV_RESULTS"
 
 }
 
