@@ -61,32 +61,43 @@ done
 QUERY=${QUERY::-1}
 
 # run shortest path computations
+echo " ################# computing approximate values without subdividing triangulation:  ################# "
+echo "$ROUTER --graph-file $GRAPH_FILE --output-directory $OUTPUT_DIR_RAW --epsilon inf --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
+$ROUTER --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR_RAW" --epsilon inf --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
+
 echo " ##################################### computing exact values:  ##################################### "
 echo "$ROUTER --graph-file $GRAPH_FILE_VISIBILITY --output-directory $OUTPUT_DIR_VIS -e 0.0 --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
 $ROUTER --graph-file "$GRAPH_FILE_VISIBILITY" --output-directory "$OUTPUT_DIR_VIS" -e 0.0 --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
 
-EPSILONS=("1.0" "0.5" "0.2")
+EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02" "0.01")
 for eps in "${EPSILONS[@]}"; do
 echo " ########################## computing approximate values for epsilon=$eps: ########################## "
 echo "$ROUTER --graph-file $GRAPH_FILE --output-directory $OUTPUT_DIR --epsilon $eps --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
 $ROUTER --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR" --epsilon "$eps" --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
 done
 
-echo " ################# computing approximate values without subdividing triangulation:  ################# "
-echo "$ROUTER --graph-file $GRAPH_FILE --output-directory $OUTPUT_DIR_RAW --epsilon inf --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
-$ROUTER --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR_RAW" --epsilon inf --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
+}
 
+process_results() {
+GRAPH_FILE=$1
 CSV_RESULTS="results/$GRAPH_NAME/results.csv"
+
+GRAPH_NAME=$(basename "$GRAPH_FILE")
+GRAPH_NAME=${GRAPH_NAME%.graph}
+
 cat "results/$GRAPH_NAME"/*/*/"info.csv" > "$CSV_RESULTS"
 sed -e '1p;/,NODE.*/d' -i "$CSV_RESULTS"
 sed -e 's/ms//g' -i "$CSV_RESULTS"
 sed -e 's/ms//g' -i "$CSV_RESULTS"
 # echo "$(csvsort -c EPSILON,FROM,TO "$CSV_RESULTS")" > "$CSV_RESULTS"
-
 }
 
 compute "$TOY_TRIANGULATION_GRAPH" "$TOY_VISIBILITY_GRAPH" 6
+process_results "$TOY_TRIANGULATION_GRAPH"
 # compute "$AEGS_TRIANGULATION_GRAPH" "$AEGS_VISIBILITY_GRAPH" 20
+# process_results "$AEGS_TRIANGULATION_GRAPH"
 # compute "$PATA_TRIANGULATION_GRAPH" "$PATA_VISIBILITY_GRAPH" 20
+# process_results "$PATA_TRIANGULATION_GRAPH"
 # compute "$MEDI_TRIANGULATION_GRAPH" "$MEDI_VISIBILITY_GRAPH" 20
+# process_results "$MEDI_TRIANGULATION_GRAPH"
 
