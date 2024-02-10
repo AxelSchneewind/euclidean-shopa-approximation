@@ -369,9 +369,9 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbors(const base_edge_id_ty
 
     while (r - l >= 2) [[likely]] {
         // compute m-value,  can possibly be further improved
-        intra_edge_id_type step = std::floor(std::log(1 + std::exp(ln_base * (r - l)) / 2) * log_base_inv);
+        intra_edge_id_type step = std::floor(std::log((1 + std::exp(ln_base * (r - l))) / 2) * log_base_inv);
         assert(step >= 0);
-        m = right ? (r - step)
+        m = right_half ? (r - step)
                   : (l + step);
         m = std::clamp(m, l + 1, r - 1);
         assert (l >= r || (l <= m && m <= r));
