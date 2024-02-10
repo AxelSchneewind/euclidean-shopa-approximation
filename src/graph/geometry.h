@@ -35,6 +35,8 @@ inline double
 inner_angle(coordinate_t dir0, coordinate_t dir1);
 
 [[gnu::hot]]
+[[gnu::const]]
+[[gnu::always_inline]]
 inline double
 angle_cos(coordinate_t const& dir0, coordinate_t const& dir1);
 
@@ -49,6 +51,9 @@ line_distance(coordinate_t source, coordinate_t destination, coordinate_t point)
  * @param relative
  * @return
  */
+[[gnu::hot]]
+[[gnu::always_inline]]
+[[gnu::const]]
 inline coordinate_t
 interpolate_linear(coordinate_t source, coordinate_t destination, double relative);
 

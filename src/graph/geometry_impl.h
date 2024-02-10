@@ -69,8 +69,7 @@ inner_angle(coordinate_t dir0, coordinate_t dir1) {
 inline double
 angle_cos(coordinate_t const& dir0, coordinate_t const& dir1) {
     // use dot product
-    auto const AB = dir0 * dir1;
-    return AB / (dir0.length() * dir1.length());
+    return (dir0 * dir1) / (dir0.length() * dir1.length());
 }
 
 /**
@@ -115,7 +114,8 @@ line_distance(coordinate_t source, coordinate_t destination, coordinate_t point)
  * @return
  */
 inline coordinate_t
-interpolate_linear(coordinate_t source, coordinate_t destination, double relative) {
+interpolate_linear(coordinate_t source, coordinate_t destination, double const relative) {
+    // return { std::lerp(source.latitude, destination.latitude, relative), std::lerp(source.longitude, destination.longitude, relative) };
     destination -= source;
     destination *= relative;
     return source + destination;
