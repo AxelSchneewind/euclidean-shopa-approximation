@@ -134,14 +134,13 @@ dijkstra<G, Q, L, N, UseEdge>::step() {
 
     // remove current node
     _M_queue.pop();
-    _pull_count += 1;
+    _pull_count++;
 
     // label current node
     _M_labels.label(ncp.node(), ncp);
 
     // remove already settled nodes
     while (!_M_queue.empty() && _M_queue.top().distance() > _M_labels.at(_M_queue.top().node()).distance()) [[likely]] {
-        _pull_count += 1;
         _M_queue.pop();
     }
 }
