@@ -2,18 +2,30 @@
 
 #include "../graph/base_types.h"
 
-#include <cmath>
 #include <concepts>
 #include <cstddef>
-#include <math.h>
+
+#include <numbers>
+#include <cmath>
 #include <vector>
 
+template<typename Label, typename Graph>
+concept HasSuccessorHint = requires {
+    typename Graph::node_id_type;
+} && requires(Label &n) {
+    { n.successor_hint() } -> std::convertible_to<typename Graph::node_id_type &>;
+} && requires(Label const &n) {
+    { n.successor_hint() } -> std::convertible_to<typename Graph::node_id_type>;
+};
+
 template<typename NodeCostPair, typename Graph>
-concept HasFaceCrossingPredecessor = requires { typename Graph::node_id_type; }
-                                    && requires(
-        NodeCostPair &n) {{ n.face_crossing_predecessor() } -> std::convertible_to<typename Graph::node_id_type &>; }
-                                    && requires(
-        NodeCostPair const &n) {{ n.face_crossing_predecessor() } -> std::convertible_to<typename Graph::node_id_type>; };
+concept HasFaceCrossingPredecessor = requires {
+    typename Graph::node_id_type;
+} && requires( NodeCostPair &n) {
+    { n.face_crossing_predecessor() } -> std::convertible_to<typename Graph::node_id_type &>;
+} && requires( NodeCostPair const &n) {
+    { n.face_crossing_predecessor() } -> std::convertible_to<typename Graph::node_id_type>;
+};
 
 template<typename NodeCostPair, typename Graph>
 struct geometric_node_cost_pair : public NodeCostPair {
@@ -45,7 +57,7 @@ template<typename Graph, typename Labels>
 struct steiner_neighbors {
 private:
     Graph const &_graph;
-    Labels const &_labels;
+    Labels &_labels;
 
     double _spanner_angle;
     double _spanner_angle_cos;
@@ -81,6 +93,12 @@ private:
     [[gnu::hot]]
     [[gnu::always_inline]]
     void on_edge_neighbors(NodeCostPair const &node, std::vector<NodeCostPair> &out);
+
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    node_id_type
+    find_min_angle_neighbors_hinted(base_edge_id_type const &edge_id,
+                            coordinate_t const &direction, node_id_type const& hint, double& cos, double& cos2);
 
 
     [[gnu::hot]]
@@ -124,7 +142,7 @@ private:
     void from_steiner_node(NodeCostPair const &node, std::vector<NodeCostPair> &out);
 
 public:
-    steiner_neighbors(Graph const &graph, Labels const &labels)
+    steiner_neighbors(Graph const &graph, Labels &labels)
             : _graph(graph), _labels(labels),
               _spanner_angle{std::clamp(M_PI * graph.epsilon(), 0.0, M_PI)},
               _spanner_angle_cos{std::cos(_spanner_angle)},
@@ -132,7 +150,7 @@ public:
               _max_angle_cos{std::cos(_max_angle)} { }
 
     template<typename... Args>
-    steiner_neighbors(Graph const &graph, Labels const &labels, Args const &...) : steiner_neighbors(graph, labels) { }
+    steiner_neighbors(Graph const &graph, Labels &labels, Args const &...) : steiner_neighbors(graph, labels) { }
 
     steiner_neighbors(steiner_neighbors &&) noexcept = default;
 

@@ -83,11 +83,23 @@ public:
     // static_assert(std::ranges::forward_range<label_iterator_type>);
 
 private:
-    using node_id_type = G::node_id_type;
-    using distance_type = G::distance_type;
+    using node_id_type = typename G::node_id_type;
+    using edge_id_type = typename G::triangle_edge_id_type;
+    using intra_edge_id_type = typename G::triangle_edge_id_type;
+    using distance_type = typename G::distance_type;
 
-    // using labels_type = node_info_array<typename G::triangle_edge_id_type, typename G::intra_edge_id_type, label_type>;
-    using labels_type = compact_node_info_container<typename G::triangle_edge_id_type, typename G::intra_edge_id_type, char, label_type>;
+public:
+    struct edge_label_type {
+        node_id_type _hint;
+
+        node_id_type& successor_hint() { return _hint; }
+        node_id_type const& successor_hint() const { return _hint; }
+    };
+
+private:
+
+    // using labels_type = node_info_array<edge_id_type, intra_edge_id_type, label_type>;
+    using labels_type = compact_node_info_container<edge_id_type, intra_edge_id_type, edge_label_type, label_type>;
 
     G const &_graph;
 
@@ -97,6 +109,8 @@ private:
     labels_type _labels;
 
 public:
+
+
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::unique_ptr<std::vector<Label>>);
 
@@ -127,6 +141,9 @@ public:
     Label& at(node_id_type node);
     [[gnu::hot]]
     Label const& at(node_id_type node) const;
+
+    edge_label_type& at(edge_id_type edge);
+    edge_label_type const& at(edge_id_type edge) const;
 
     [[gnu::cold]]
     label_iterator_type all_visited() const;

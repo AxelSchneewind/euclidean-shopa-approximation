@@ -83,9 +83,16 @@ void compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, I
 }
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
-AggregateInfo
+AggregateInfo &
 compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::get_aggregate_info(
         AggregateId agg_id) {
+    assert(is_expanded(agg_id));
+    return aggregate_info_ptr[agg_id]->aggregate_info;
+}
+template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
+AggregateInfo const&
+compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::get_aggregate_info(
+        AggregateId agg_id) const {
     assert(is_expanded(agg_id));
     return aggregate_info_ptr[agg_id]->aggregate_info;
 }

@@ -292,9 +292,22 @@ steiner_neighbors<Graph, Labels>::add_min_angle_neighbor(const NodeCostPair&node
                                                          const double&max_angle_cos, const coordinate_t&direction,
                                                          std::vector<NodeCostPair>&out) {
     assert(direction.longitude != 0 || direction.latitude != 0);
-
+    node_id_type next;
     double cos1, cos2;
-    auto next = find_min_angle_neighbors(edge_id, direction, cos1, cos2);
+    if constexpr (HasSuccessorHint<typename Labels::edge_label_type, Graph>) {
+        auto& hint = _labels.at(node.node().edge).successor_hint();
+
+        if (hint.edge == edge_id) { // valid hint
+            // search for best neighbor here
+            next = find_min_angle_neighbors_hinted(edge_id, direction, hint, cos1, cos2);
+        } else {
+            next = find_min_angle_neighbors(edge_id, direction, cos1, cos2);
+        }
+
+        hint = next;
+    } else {
+        next = find_min_angle_neighbors(edge_id, direction, cos1, cos2);
+    }
 
     // add edge with minimal angle
     if (cos1 >= max_angle_cos) [[unlikely]] {
@@ -371,8 +384,7 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbors(const base_edge_id_ty
         // compute m-value,  can possibly be further improved
         intra_edge_id_type step = std::floor(std::log((1 + std::exp(ln_base * (r - l))) / 2) * log_base_inv);
         assert(step >= 0);
-        m = right_half ? (r - step)
-                  : (l + step);
+        m = right_half ? (r - step) : (l + step);
         m = std::clamp(m, l + 1, r - 1);
         assert (l >= r || (l <= m && m <= r));
 
@@ -441,6 +453,12 @@ void steiner_neighbors<Graph, Labels>::on_edge_neighbors(const NodeCostPair&node
             _destination_coordinates.emplace_back(destination_coordinate);
         }
     }
+}
+
+template<typename Graph, typename Labels>
+typename steiner_neighbors<Graph, Labels>::node_id_type steiner_neighbors<Graph, Labels>::
+find_min_angle_neighbors_hinted(base_edge_id_type const& edge_id, coordinate_t const& direction, node_id_type const& hint, double& cos, double& cos2) {
+    return find_min_angle_neighbors(edge_id, direction, cos, cos2);
 }
 
 template<typename Graph, typename Labels>

@@ -63,8 +63,6 @@ private:
     [[gnu::hot]]
     Info& get(AggregateId agg_id, IntraAggregateId intra_id);
 
-    AggregateInfo get_aggregate_info(AggregateId agg_id);
-
     void clear();
 
 public:
@@ -84,6 +82,9 @@ public:
     std::span<info_type> node_infos(edge_id_type edge_id);
 
     std::span<const info_type> node_infos(edge_id_type edge_id) const;
+
+    AggregateInfo const& get_aggregate_info(AggregateId agg_id) const;
+    AggregateInfo & get_aggregate_info(AggregateId agg_id);
 
     void reset(edge_id_type edge_id, intra_edge_id_type intra_edge_id);
 

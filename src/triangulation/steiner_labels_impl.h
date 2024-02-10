@@ -16,7 +16,7 @@ steiner_labels<G, N>::all_visited() const {
 template<RoutableGraph G, typename N>
 steiner_labels<G, N>::steiner_labels(G const&graph)
     : _graph(graph),
-      _labels(_graph.subdivision_info().offsets(), 0, none_value<N>),
+      _labels(_graph.subdivision_info().offsets(), {none_value<node_id_type>}, none_value<N>),
       //_labels(_graph.subdivision_info().offsets(), none_value<N>),
       _base_labels(_graph.base_graph().node_count(), none_value<N>),
       _edge_touched(_graph.base_graph().edge_count(), false) {
@@ -48,6 +48,16 @@ steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) const {
     }
 
     return _labels.node_info(node.edge, node.steiner_index - 1);
+}
+
+template<RoutableGraph G, typename Label>
+typename steiner_labels<G, Label>::edge_label_type const& steiner_labels<G, Label>::at(edge_id_type edge) const {
+    return _labels.get_aggregate_info(edge);
+}
+
+template<RoutableGraph G, typename Label>
+typename steiner_labels<G, Label>::edge_label_type& steiner_labels<G, Label>::at(edge_id_type edge) {
+    return _labels.get_aggregate_info(edge);
 }
 
 template<RoutableGraph G, typename N>
