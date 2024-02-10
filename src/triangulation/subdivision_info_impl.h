@@ -176,8 +176,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         entry.node_count = count;
         entry.r_first = r_first;
         entry.r_second = r_second;
-        entry.base_first = base_first;
-        entry.base_second = base_second;
+        entry.base_first = std::log(base_first);
+        entry.base_second = std::log(base_second);
     }
 
     return result;
@@ -205,20 +205,22 @@ subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, 
     //     return interpolate_linear(c2, c1, info.r_second);
 
     if (steiner_index < info.mid_index) [[likely]] {
-        auto index = steiner_index - 1;
+        auto const index = steiner_index - 1;
         assert(index >= 0);
 
-        auto &&relative = std::pow(info.base_first, index) * info.r_first;
+        // auto &&relative = std::pow(info.base_first, index) * info.r_first;
+        auto &&relative = std::exp(info.base_first * index) * info.r_first;
         assert(index != 0 || relative == info.r_first);
         assert(relative >= info.r_first - 0.002F);
         assert(relative <= info.mid_position + 0.002F);
         return interpolate_linear(c1, c2, relative);
     }
     // if (steiner_index > info.mid_index) [[likely]] {
-        auto index = info.node_count - steiner_index - 2;
+        auto const index = info.node_count - steiner_index - 2;
         assert(index >= 0);
 
-        auto &&relative = std::pow(info.base_second, index) * info.r_second;
+        // auto &&relative = std::pow(info.base_second, index) * info.r_second;
+        auto &&relative = std::exp(info.base_second * index) * info.r_second;
         assert(steiner_index != info.node_count - 2 || index == 0);
         assert(index != 0 || relative == info.r_second);
         assert(relative >= info.r_second - 0.002F);

@@ -313,18 +313,10 @@ steiner_neighbors<Graph, Labels>::add_min_angle_neighbor(const NodeCostPair&node
 }
 
 
-//an approximation for the  function b^e for b = (1+eps)
-template <typename B, typename E>
-[[gnu::always_inline]]
-[[gnu::hot]]
-B pow_approximation(B const& base, B const& ln_base, E const& exponent) {
-    return std::pow(base, exponent);
-}
-
 
 template<typename Graph, typename Labels>
 steiner_neighbors<Graph, Labels>::node_id_type
-steiner_neighbors<Graph, Labels>::find_min_angle_neighbors(const base_edge_id_type&edge_id, const coordinate_t&direction, double&cos, double& cos_next) {
+steiner_neighbors<Graph, Labels>::find_min_angle_neighbors(const base_edge_id_type&edge_id, const coordinate_t&direction, double&cos, double& cos_n) {
     assert(direction.longitude != 0 || direction.latitude != 0);
     auto&&destination_steiner_info = _graph.steiner_info(edge_id);
     _steiner_point_angle_test_count++;
@@ -333,13 +325,13 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbors(const base_edge_id_ty
     using intra_edge_id_type = typename node_id_type::intra_edge_id_type;
     intra_edge_id_type l = 1;
     intra_edge_id_type r = destination_steiner_info.node_count - 2;
-    intra_edge_id_type m = destination_steiner_info.mid_index;
-    double diff = 1.0;
-    double cos1 = 1.0;
-    double cos2 = 1.0;
+    intra_edge_id_type m = std::clamp(destination_steiner_info.mid_index, l + 1, r - 1);
+    double cos_next = 1.0;
+    double cos_current = 1.0;
 
     steiner_graph::node_id_type destination{edge_id, m};
     steiner_graph::node_id_type destination_next{edge_id, m + 1};
+    assert(m >= 0 && m <= r);
 
     if (l >= r) [[unlikely]]
         return destination;
@@ -359,31 +351,26 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbors(const base_edge_id_ty
         direction_current -= _source_coordinate;
 
         // compute cos values (can hopefully be vectorized)
-        cos1 = angle_cos(direction, direction_next);
-        cos2 = angle_cos(direction, direction_current);
-        assert(diff == 0 || std::isnormal(diff));
-        assert(cos2 == 0 || std::isnormal(cos2));
-
-        // keep difference of cosines
-        diff = cos1 - cos2;
+        cos_next = angle_cos(direction, direction_next);
+        cos_current = angle_cos(direction, direction_current);
+        assert(cos_current == 0 || std::isnormal(cos_current));
     }
 
     // check which half of the edge is used
-    bool  const right_half = (diff > 0.0);
+    bool  const right_half = (cos_next > cos_current);
     double const base = (right_half) ? destination_steiner_info.base_second : destination_steiner_info.base_first;
-    double const ln_base = std::log(base);
-    double const log_base_inv = 1 / std::log(base);
+    double const ln_base = base;
+    // double const ln_base = std::log(base);
+    double const log_base_inv = 1 / base;
 
-    while (r - l >= 2 && std::isnormal(diff)) [[likely]] {
-        // update range
-        bool right = (diff > 0.0);
-        bool left = !right;
-        l = right * m + left  * l;
-        r = left *  m + right * r;
+    bool right = right_half, left = !right_half;
+    l = right * m + left  * l;
+    r = left *  m + right * r;
 
+    while (r - l >= 2) [[likely]] {
         // compute m-value,  can possibly be further improved
-        intra_edge_id_type step = std::ceil(std::log((1 + pow_approximation(base, ln_base, r - l)) / 2) * log_base_inv);
-        assert(step >= 1);
+        intra_edge_id_type step = std::floor(std::log(1 + std::exp(ln_base * (r - l)) / 2) * log_base_inv);
+        assert(step >= 0);
         m = right ? (r - step)
                   : (l + step);
         m = std::clamp(m, l + 1, r - 1);
@@ -405,22 +392,24 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbors(const base_edge_id_ty
         assert(!direction.zero() && !direction_current.zero());
 
         // compute cos values (can hopefully be vectorized)
-        cos1 = angle_cos(direction, direction_next);
-        cos2 = angle_cos(direction, direction_current);
-        assert(diff == 0 || std::isnormal(diff));
-        assert(cos2 == 0 || std::isnormal(cos2));
+        cos_next = angle_cos(direction, direction_next);
+        cos_current = angle_cos(direction, direction_current);
+        assert(cos_next == 0 || std::isnormal(cos_next));
+        assert(cos_current == 0 || std::isnormal(cos_current));
 
-        // keep difference of cosines
-        diff = cos1 - cos2;
+        // update range
+        right = (cos_next > cos_current);
+        left = !right;
+        l = right * m + left  * l;
+        r = left *  m + right * r;
 
         _steiner_point_angle_test_count++;
     }
-    assert(diff == 0 || std::isnormal(diff));
-    assert(m >= 0 && m < destination_steiner_info.node_count);
+    assert(m > 0 && m < destination_steiner_info.node_count - 1);
 
     // store cos value
-    cos = cos1;
-    cos_next = cos2;
+    cos = cos_current;
+    cos_n = cos_next;
     return destination;
 }
 
