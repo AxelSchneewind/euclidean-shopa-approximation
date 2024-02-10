@@ -172,3 +172,6 @@ _deps
 # experiments
 experiments/**/results/
 scripts/**/results/
+
+src/cli/cmdline_*/
+
