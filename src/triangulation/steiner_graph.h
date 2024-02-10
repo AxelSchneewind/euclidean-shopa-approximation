@@ -125,20 +125,20 @@ public:
 
     struct node_id_iterator_type {
     private:
-        const steiner_graph *_M_graph_ptr;
-        node_id_type _M_current_node;
-        node_id_type _M_last_node;
+        const steiner_graph *_graph_ptr;
+        node_id_type _current_node;
+        node_id_type _last_node;
 
     public:
         node_id_iterator_type(const steiner_graph *graph, node_id_type current, node_id_type max)
-                : _M_graph_ptr(graph),
-                  _M_current_node(current),
-                  _M_last_node(max) {
+                : _graph_ptr(graph),
+                  _current_node(current),
+                  _last_node(max) {
 
-            while (_M_current_node.edge < _M_last_node.edge &&
-                   _M_graph_ptr->base_graph().source(_M_current_node.edge) >=
-                   _M_graph_ptr->base_graph().destination(_M_current_node.edge))
-                _M_current_node.edge++;
+            while (_current_node.edge < _last_node.edge &&
+                   _graph_ptr->base_graph().source(_current_node.edge) >=
+                   _graph_ptr->base_graph().destination(_current_node.edge))
+                _current_node.edge++;
         }
 
         node_id_iterator_type &begin() { return *this; };
@@ -149,17 +149,17 @@ public:
         end_type end() { return {}; };
 
         bool operator==(node_id_iterator_type other) const {
-            return _M_current_node.edge == other._M_current_node.edge &&
-                   _M_current_node.steiner_index == other._M_current_node.steiner_index;
+            return _current_node.edge == other._current_node.edge &&
+                   _current_node.steiner_index == other._current_node.steiner_index;
         }
 
         bool operator==(end_type other) const {
-            return _M_current_node.edge >= _M_last_node.edge;
+            return _current_node.edge >= _last_node.edge;
         }
 
         bool operator!=(node_id_iterator_type other) const {
-            return _M_current_node.edge != other._M_current_node.edge ||
-                   _M_current_node.steiner_index != other._M_current_node.steiner_index;
+            return _current_node.edge != other._current_node.edge ||
+                   _current_node.steiner_index != other._current_node.steiner_index;
         }
 
         bool operator!=(end_type other) const {
@@ -170,7 +170,7 @@ public:
 
         node_id_iterator_type operator++(int);
 
-        node_id_type &operator*() { return _M_current_node; }
+        node_id_type &operator*() { return _current_node; }
     };
 
     steiner_graph(steiner_graph &&other) noexcept;
@@ -189,54 +189,60 @@ public:
             base_topology_type::SIZE_PER_EDGE + polyhedron_type::SIZE_PER_EDGE + subdivision_info_type::SIZE_PER_EDGE;
 
 private:
-    size_t _M_node_count;
-    size_t _M_edge_count;
+    size_t _node_count;
+    size_t _edge_count;
 
     // the epsilon value used for discretization
-    double _M_epsilon;
+    double _epsilon;
 
     // store triangulation here
-    std::vector<node_info_type> _M_base_nodes;
+    std::vector<node_info_type> _base_nodes;
 
-    base_topology_type _M_base_topology;
+    base_topology_type _base_topology;
 
     // store subdivision table here
-    subdivision_info_type _M_table;
+    subdivision_info_type _table;
 
     // for each edge, store the id of the 2 nodes that make up the adjacent triangles
-    polyhedron_type _M_polyhedron;
+    polyhedron_type _polyhedron;
+
+public:
+    node_id_type from_base_node_id(base_topology_type::node_id_type node) const;
+
+    const subdivision_info_type &subdivision_info() const { return _table; }
+
+    const base_topology_type &base_graph() const { return _base_topology; }
+
+    const polyhedron_type &base_polyhedron() const { return _polyhedron; }
+
+    size_t node_count() const { return _node_count; }
+
+    size_t edge_count() const { return _edge_count; }
+
+    size_t face_count() const { return _polyhedron.face_count(); }
+
+    double epsilon() const { return _epsilon; }
+
+    node_id_iterator_type node_ids() const;
+
+    node_id_iterator_type node_ids(triangle_edge_id_type edge) const;
 
     // computes the coordinates of a node with given id
     [[gnu::pure]]
     [[gnu::hot]]
     [[gnu::always_inline]]
-    coordinate_t node_coordinates(node_id_type __id) const;
+    inline coordinate_t node_coordinates(node_id_type id) const;
+        // computes the coordinates of a node with given id
+    [[gnu::pure]]
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    inline coordinate_t const& node_coordinates(triangle_node_id_type id) const;
 
-public:
-    node_id_type from_base_node_id(base_topology_type::node_id_type __node) const;
-
-    const subdivision_info_type &subdivision_info() const { return _M_table; }
-
-    const base_topology_type &base_graph() const { return _M_base_topology; }
-
-    const polyhedron_type &base_polyhedron() const { return _M_polyhedron; }
-
-    size_t node_count() const { return _M_node_count; }
-
-    size_t edge_count() const { return _M_edge_count; }
-
-    size_t face_count() const { return _M_polyhedron.face_count(); }
-
-    double epsilon() const { return _M_epsilon; }
-
-    node_id_iterator_type node_ids() const;
-
-    node_id_iterator_type node_ids(triangle_edge_id_type __edge) const;
 
     node_info_type node(node_id_type id) const;
 
     node_info_type node(triangle_node_id_type id) const;
-    node_info_type& node(triangle_node_id_type id) { return _M_base_nodes[id]; };
+    node_info_type& node(triangle_node_id_type id) { return _base_nodes[id]; };
 
     bool is_base_node(node_id_type id) const;
     bool is_boundary_node(triangle_node_id_type id) const;
