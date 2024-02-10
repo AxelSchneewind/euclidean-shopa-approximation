@@ -1,9 +1,20 @@
-cmake_minimum_required(VERSION 3.26)
-project(src/routing)
+cmake_minimum_required(VERSION 3.22)
+project(routing)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_COMPILER g++)
 
 include_directories(include)
+
+
+# make file containing a version name
+add_custom_target(version
+        COMMAND echo -n "" > version.txt
+        COMMAND git rev-parse --short HEAD >> version.txt
+        # COMMAND date +%Y%m%d:%H%M >> version.txt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "make version name"
+        VERBATIM)
 
 # doxygen
 find_package(Doxygen)
@@ -14,34 +25,86 @@ if (DOXYGEN_FOUND)
 
     # request to configure the file
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-    message("Doxygen build started")
 
     # note the option ALL which allows to build the docs together with the application
-    add_custom_target( doc_doxygen ALL
-            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+    add_custom_target(doc_doxygen ALL
+            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT} -q
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "Generating API documentation with Doxygen"
-            VERBATIM )
+            VERBATIM)
 else (DOXYGEN_FOUND)
-    message("Doxygen need to be installed to generate the doxygen documentation")
+    message("Doxygen needs to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
 
+# gengetopt
+find_program(GENGETOPT gengetopt)
+if (GENGETOPT)
+    add_custom_target(cmdline_route ALL
+            COMMAND cp src/cli/route.ggo ${CMAKE_BINARY_DIR}/route.ggo
+            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/route.ggo
+            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/route.ggo -F cmdline_route --output-dir=src/cli  #--set-version=${VERSION}
+            SOURCES src/cli/route.ggo
+            DEPENDS version
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            VERBATIM)
+
+    add_custom_target(cmdline_find_nodes ALL
+            COMMAND cp src/cli/find_nodes.ggo ${CMAKE_BINARY_DIR}/find_nodes.ggo
+            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/find_nodes.ggo
+            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/find_nodes.ggo -F cmdline_find_nodes --output-dir=src/cli  #--set-version=${VERSION}
+            SOURCES src/cli/find_nodes.ggo
+            DEPENDS version
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            VERBATIM)
+
+    add_custom_target(cmdline_prune_graph ALL
+            COMMAND cp src/cli/prune_graph.ggo ${CMAKE_BINARY_DIR}/prune_graph.ggo
+            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/prune_graph.ggo
+            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/prune_graph.ggo -F cmdline_prune_graph --output-dir=src/cli --set-version=${VERSION}
+            SOURCES src/cli/prune_graph.ggo
+            DEPENDS version
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            VERBATIM)
+
+else (GENGETOPT)
+    message("gengetopt needs to be installed to modify and generate the command line argument parser, falling back to precompiled (possibly out of date) command line parsing")
+endif (GENGETOPT)
+
+
+set(CMAKE_CXX_FLAGS "--std=c++20") # -Wall -Wextra
+set(CMAKE_CXX_FLAGS_DEBUG "-g") #-D_GLIBCXX_DEBUG
 
 # performance options
-set(CMAKE_CXX_FLAGS "-Wall") # -Wextra
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3") #
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native -ffast-math") # -ffast-math
 
-# compile everything into one library file
-#add_library(routing src/routing.h)
-#link_libraries(routing)
+# 
+add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
+add_executable(find_nodes src/find_nodes.cpp src/cli/cmdline_find_nodes.c)
 
-add_executable(test_route_toy src/test/test_route_toy.cpp)
-add_executable(test_route_stgtregbz src/test/test_route_stgtregbz.cpp)
-add_executable(test_read src/test/test_read.cpp)
-add_executable(test_read_triangulation src/test/test_read_aegaeis.cpp)
-add_executable(test_route_triangulation src/test/test_route_aegaeis.cpp)
-add_executable(make_gl src/make_gl.cpp
-        src/util/remove_duplicates.h)
-add_executable(route_interactive_triangulation src/main.cpp)
-add_executable(route_interactive_ch src/route_interactive_ch.cpp)
+# compile implementation into one library file
+add_library(routing src/interface/Client.cpp)
+link_libraries(routing)
+
+# executables that will be linked against routing library
+add_executable(project_graph src/project.cpp)
+
+add_executable(make_gl src/make_gl.cpp)
+add_executable(make_pruned_gl src/make_pruned_gl.cpp)
+add_executable(make_bin src/make_bin.cpp)
+
+add_executable(route src/route.cpp src/cli/cmdline_route.c)
+
+add_executable(distance_one_to_all src/distance_one_to_all.cpp)
+add_executable(subdivision_stats src/subdivision_stats.cpp)
+
+if (GENGETOPT)
+    add_dependencies(route cmdline_route)
+    add_dependencies(prune_graph cmdline_prune_graph)
+    add_dependencies(find_nodes cmdline_find_nodes)
+endif(GENGETOPT)
+
+# installation
+set(CMAKE_INSTALL_PREFIX /opt/routing)
+install(TARGETS route subdivision_stats make_gl prune_graph project_graph find_nodes RUNTIME DESTINATION bin)
+
+include(CPack)

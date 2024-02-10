@@ -1,131 +1,154 @@
 #pragma once
 
-#include "dijkstra_impl.h"
+#include "dijkstra_concepts.h"
+
+#include "../graph/unidirectional_adjacency_list.h"
+
+#include "../triangulation/compact_node_info_container.h"
+
 #include <concepts>
 #include <tuple>
+#include <queue>
+#include <map>
 
+template<RoutableGraph Graph>
+struct use_all_edges {
+public:
+    use_all_edges(Graph const &g) {}
 
-template <typename Info = std::nullptr_t> struct node_cost_pair
-{
-  node_id_t node;
-  node_id_t predecessor;
-  distance_t distance;
-  Info info;
+    use_all_edges() = default;
+
+    use_all_edges(use_all_edges &&) = default;
+
+    constexpr bool operator()(Graph::node_id_type /*node*/,
+                              internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> /*via*/) {
+        return true;
+    };
 };
 
-template <> struct node_cost_pair<std::nullptr_t>
-{
-  node_id_t node;
-  node_id_t predecessor;
-  distance_t distance;
-};
-
-
-template <RoutableGraph Graph> struct use_all_edges
-{
+template<RoutableGraph Graph>
+struct use_upward_edges {
 protected:
-  const Graph *g;
+    Graph const &g;
 
 public:
-  use_all_edges (const Graph *g) : g (g) {}
+    use_upward_edges(Graph const &g) : g(g) {}
 
-  bool operator() (const node_id_t &node, const adjacency_list_edge<typename Graph::edge_info_type> &via)
-  {
-    return true;
-  };
+    use_upward_edges(use_upward_edges &&) = default;
+
+    constexpr bool operator()(Graph::node_id_type node,
+                              internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> via) {
+        return g.node(node).level <= g.node(via.destination).level;
+    };
 };
 
-template <RoutableGraph Graph> struct use_upward_edges
-{
-protected:
-  const Graph *g;
-
+struct Default {
 public:
-  use_upward_edges (const Graph *g) : g (g) {}
+    Default() = default;
 
-  bool operator() (const node_id_t &node, const adjacency_list_edge<typename Graph::edge_info_type> &via)
-  {
-    return g->node(node).level <= g->node(via.destination).level;
-  };
+    template<typename NodeCostPair>
+    constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
+        return n1.distance() > n2.distance();
+    };
 };
 
-template <typename NodeCostPair> struct Default
-{
-public:
-  Default (){};
-
-  bool operator() (const NodeCostPair &n1, const NodeCostPair &n2) { return n1.distance > n2.distance; };
-};
-
-template <typename NodeCostPair> struct A_Star
-{
-public:
-  A_Star () {};
-
-  bool operator() (const NodeCostPair &__n1, const NodeCostPair &__n2)
-  {
-    return __n1.info.value > __n2.info.value;
-  };
-};
-
-template <RoutableGraph Graph, typename NodeCostPair, typename Comp>
-class dijkstra_queue : protected std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>
-{
-protected:
-public:
-  using value_type = NodeCostPair;
-
-  dijkstra_queue (std::shared_ptr<const Graph> __graph, Comp __comp = Comp{}) {}
-
-  virtual void init (node_id_t __start_node, node_id_t __target_node){
-    while (!empty())
-      pop();
-  };
-
-  virtual void push (node_id_t __node, node_id_t __predecessor, distance_t __dist)
-  {
-    NodeCostPair ncp (__node, __predecessor, __dist);
-    std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>::push (ncp);
-  }
-
-  Comp &get_comp () { return this->std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>::comp; }
-
-  bool empty () const { return this->std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>::empty (); }
-
-  void pop () { return this->std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>::pop (); }
-
-  const NodeCostPair &top () const
-  {
-    return this->std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>::top ();
-  }
-};
-
-template <typename Graph, typename NodeCostPair, typename Comp = A_Star<NodeCostPair>>
-class a_star_queue : public dijkstra_queue<Graph, NodeCostPair, Comp>
-{
+template<RoutableGraph Graph, typename NodeCostPair, typename Comp = Default>
+class dijkstra_queue : protected std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp> {
 private:
-  std::shared_ptr<const Graph> _M_graph;
-  coordinate_t _M_target_coordinates;
+    std::size_t _max_size{0};
+
+    // count the number of push operations since last cleanup (bounds the number of duplicates currently present)
+    std::size_t counter;
+
+    // when to perform cleanup (0 means no cleanup)
+    static constexpr std::size_t max_queue_size = 0;
+    static constexpr std::size_t max_allowed_duplicates = max_queue_size;
+
+protected:
+    using base_queue_type = std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>;
 
 public:
-  using value_type = NodeCostPair;
+    using value_type = NodeCostPair;
 
-  a_star_queue (std::shared_ptr<const Graph> __graph, Comp __comp = Comp{})
-    : dijkstra_queue<Graph, NodeCostPair, Comp> (__graph, __comp), _M_graph (__graph)
-  {}
+    dijkstra_queue(Graph const &__graph, Comp __comp = Comp{})
+            : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(__comp), counter(0) {}
 
-  void push (node_id_t __node, node_id_t __predecessor, distance_t __dist) override
-  {
-    NodeCostPair ncp (__node, __predecessor, __dist);
-    ncp.info.value = __dist + distance (_M_target_coordinates, _M_graph->node (__node).coordinates);
-    std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>::push (ncp);
-  }
+    void init(Graph::node_id_type __start_node, Graph::node_id_type __target_node) {
+        while (!empty())
+            pop();
 
-  void init (node_id_t /*__start_node*/, node_id_t __target_node) override
-  {
-    while (!dijkstra_queue<Graph, NodeCostPair, Comp>::empty())
-      dijkstra_queue<Graph, NodeCostPair, Comp>::pop();
+        counter = 0;
+        _max_size = 0;
+    };
 
-    _M_target_coordinates = _M_graph->node (__target_node).coordinates;
-  }
+    void push(base_queue_type::value_type const& ncp) {
+        assert(ncp.distance() != infinity<decltype(ncp.distance())>);
+        base_queue_type::emplace(ncp);
+
+        if constexpr (max_allowed_duplicates > 0) {
+            // assumes that counter is the number of duplicates currently inserted
+            counter++;
+            if (counter >= max_allowed_duplicates) {
+                cleanup();
+                counter = 0;
+            }
+        }
+    }
+
+    void push(Graph::node_id_type __node, Graph::node_id_type __predecessor, distance_t __dist) {
+        NodeCostPair ncp(__node, __predecessor, __dist);
+        push(ncp);
+    }
+
+    void push_range(std::span<NodeCostPair, std::dynamic_extent> __nodes) {
+        for (auto&& ncp: __nodes)
+            push(ncp);
+    }
+
+    bool empty() const { return base_queue_type::empty(); }
+
+    void pop() {
+        _max_size = std::max(_max_size, base_queue_type::size());
+        return base_queue_type::pop();
+    }
+
+    NodeCostPair top() const {
+        return base_queue_type::top();
+    }
+
+    /**
+     * perform sweep along container and remove duplicates (i.e. for node cost pairs with identical node, the one with minimal distance is kept)
+     */
+    void cleanup() {
+        auto &container = base_queue_type::c;
+        static std::unordered_map<typename Graph::node_id_type, unsigned int> first_index;
+
+        size_t from_index = 0;
+        size_t to_index = container.size();
+        for (; from_index < to_index; from_index++) {
+            auto ncp = container[from_index];
+            auto node = container[from_index].node;
+
+            // swap other node_cost_pair to current position if distance is larger than at the first occurrence
+            while (from_index < to_index && first_index.contains(node)) [[likely]] {
+                // if current instance has higher distance, move last element of vector here
+                if (ncp.distance >= container[first_index[node]].distance)
+                    [[likely]]
+                            container[from_index] = container[--to_index];
+                else // if current instance has lower distance, swap with first occurrence, next iteration will get last element
+                    container[first_index[node]] = container[from_index];
+
+                ncp = container[from_index];
+                node = container[from_index].node;
+            }
+
+            first_index[node] = from_index;
+        }
+        container.resize(to_index);
+        first_index.clear();
+
+        std::make_heap(container.begin(), container.end(), base_queue_type::comp);
+    }
+
+    size_t max_size() const { return _max_size; }
 };

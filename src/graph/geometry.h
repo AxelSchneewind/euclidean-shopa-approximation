@@ -4,41 +4,65 @@
 
 #include "cmath"
 
-// euclidian distance
-[[deprecated]] distance_t
-distance_euclidian (const coordinate_t &c1, const coordinate_t &c2)
-{
-  coordinate_t delta{ c2.latitude - c1.latitude, c2.longitude - c1.longitude };
-  return std::sqrt (delta.latitude * delta.latitude + delta.longitude * delta.longitude);
-}
+// Euclidean distance
+double
+distance_euclidean(coordinate_t c1, coordinate_t c2);
 
-inline distance_t
-to_radians (const double &__degree)
-{
-  const distance_t one_deg = (M_PI) / 180;
-  return one_deg * __degree;
-}
+inline double
+to_radians(double degrees);
 
 // exact distance on earths surface
-// TODO fix distances at longitude 180
-inline distance_t
-distance (const coordinate_t &__c1, const coordinate_t &__c2)
-{
-  auto lat1 = to_radians (__c1.latitude);
-  auto long1 = to_radians (__c1.longitude);
-  auto lat2 = to_radians (__c2.latitude);
-  auto long2 = to_radians (__c2.longitude);
+distance_t
+distance(coordinate_t c1, coordinate_t c2);
 
-  auto dlong = long2 - long1;
-  auto dlat = lat2 - lat1;
+/**
+ * angle in radians
+ * @param source0
+ * @param dest0
+ * @param source1
+ * @param dest1
+ * @return
+ */
+inline double
+angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1);
 
-  // haversine formula
-  auto ans = std::pow (std::sin (dlat / 2), 2) + std::cos (lat1) * std::cos (lat2) * std::pow (std::sin (dlong / 2), 2);
-  ans = 2 * std::asin (std::sqrt (ans));
+inline double
+inner_angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1);
 
-  // multiply with earths radius
-  const int R = 6371;
-  ans = ans * R;
+inline double
+angle(coordinate_t dir0, coordinate_t dir1);
+inline double
+inner_angle(coordinate_t dir0, coordinate_t dir1);
 
-  return ans;
+[[gnu::hot]]
+inline double
+angle_cos(coordinate_t const& dir0, coordinate_t const& dir1);
+
+inline double
+line_distance(coordinate_t source, coordinate_t destination, coordinate_t point);
+
+
+/**
+ * generates the point s + (d - s) * x
+ * @param source
+ * @param destination
+ * @param relative
+ * @return
+ */
+inline coordinate_t
+interpolate_linear(coordinate_t source, coordinate_t destination, double relative);
+
+
+void WGS84toGoogleBing(double lat, double lon, double &x, double &y);
+
+void GoogleBingtoWGS84Mercator (double x, double y, double &lat, double &lon);
+
+enum class Projection {
+    NONE,
+    WGS84_TO_GB,
+    GB_TO_WGS84
 };
+
+void project_coordinate(coordinate_t& src, Projection projection);
+
+inline bool is_in_rectangle(coordinate_t point, coordinate_t bottom_left, coordinate_t top_right);

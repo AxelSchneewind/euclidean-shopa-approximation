@@ -1,0 +1,42 @@
+package "Routing"
+purpose ""
+usage "route --graph-file /path/to/graph-file --output-directory /path/to/results-directory --epsilon 0.5 -q src0,dest0,..."
+description "computes the shortest path for each given pair of source and destination node."
+
+args ""
+
+
+section "input/output files"
+option "graph-file" g "path to graph file (of type .fmi or .graph)" string typestr="FILE" required
+option "output-directory" o "path to output directory (where the subdirectory with the output files should be created)" string typestr="FILE" default="."
+
+section "triangulation"
+option "epsilon" e "ε value to use for discretizing the triangulation (if a .graph file is given)" double default="0.0" optional
+
+section "query"
+option "query" q "pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed)" string multiple
+option "coordinates" - "interpret the pair(s) of source and destination nodes as their coordinates" flag off
+option "stdin" i "indicates that queries should be read from stdin" flag off
+
+section "output" sectiondesc="options for the command line output"
+option "csv-format" c "indicates that routing information should be printed in the csv format" flag off
+option "projection" p "which projection to apply to coordinates when writing to files" values="none","google_bing","wgs84" enum default="none" optional
+option "tree" t "generate graph file for search tree" int default="06062001" argoptional
+
+section "routing algorithms"
+option "astar" a "use A* heuristic to speed up routing" flag off
+
+# option <long> <short> "<desc>"
+# 	{details="<detailed description>"}
+# 	{argtype} {typestr="<type descr>"}
+# 	{values="<value1>","<value2>",...}
+# 	{default="<default value>"}
+# 	{dependon="<other option>"}
+# 	{required} {argoptional} {multiple}
+# 	{hidden}
+
+# option <long> <short> "<desc>" flag <on/off>
+
+# section "section" {sectiondesc="optional section description"}
+
+# text "a textual sentence"
