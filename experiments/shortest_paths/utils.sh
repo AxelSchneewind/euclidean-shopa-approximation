@@ -48,16 +48,16 @@ echo " ################# computing approximate values without subdividing triang
 echo "$ROUTER --graph-file $GRAPH_FILE --output-directory $OUTPUT_DIR_RAW --epsilon inf --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
 $ROUTER --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR_RAW" --epsilon inf --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
 
-echo " ##################################### computing exact values:  ##################################### "
-echo "$ROUTER --graph-file $GRAPH_FILE_VISIBILITY --output-directory $OUTPUT_DIR_VIS -e 0.0 --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
-$ROUTER --graph-file "$GRAPH_FILE_VISIBILITY" --output-directory "$OUTPUT_DIR_VIS" -e 0.0 --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
-
 EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02" "0.01")
 for eps in "${EPSILONS[@]}"; do
 echo " ########################## computing approximate values for epsilon=$eps: ########################## "
 echo "$ROUTER --graph-file $GRAPH_FILE --output-directory $OUTPUT_DIR --epsilon $eps --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
 $ROUTER --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR" --epsilon "$eps" --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
 done
+
+echo " ##################################### computing exact values:  ##################################### "
+echo "$ROUTER --graph-file $GRAPH_FILE_VISIBILITY --output-directory $OUTPUT_DIR_VIS -e 0.0 --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
+$ROUTER --graph-file "$GRAPH_FILE_VISIBILITY" --output-directory "$OUTPUT_DIR_VIS" -e 0.0 --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
 
 }
 
