@@ -10,10 +10,11 @@ performance-*,
 readability-*
 -*-reserved-identifier,
 -*-easily-swappable-parameters,
--*-use-trailing-return-type
--*-const-correctness
--*-nodiscard
--misc-non-private-member-variables-in-classes'
+-*-use-trailing-return-type,
+-*-const-correctness,
+-*-nodiscard,
+-misc-non-private-member-variables-in-classes,
+-*-use-trailing-return-type'
 
 # CheckOptions:
 #   - { key: readability-identifier-naming.NamespaceCase,       value: lower_case }
