@@ -93,9 +93,7 @@ private:
     std::size_t _boundary_node_count;
     std::size_t _boundary_edge_count;
 
-    [[gnu::hot]]
     std::vector<bool> _is_boundary_edge;
-    [[gnu::hot]]
     std::vector<bool> _is_boundary_node;
 
     // for each triangle
@@ -103,13 +101,10 @@ private:
 
     // for each edge
     std::vector<edge_info_type> _edge_info;
-    [[gnu::hot]]
     std::vector<edge_link_type> _edge_links;
 
     // for each node, store edges that are reachable by crossing a face
-    [[gnu::hot]]
     std::vector<edge_id_type> _node_edges;
-    [[gnu::hot]]
     std::vector<int> _node_edges_offsets;
 
 
