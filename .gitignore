@@ -173,5 +173,5 @@ _deps
 experiments/**/results/
 scripts/**/results/
 
-src/cli/cmdline_*/
-
+cli/*.c
+cli/*.h
