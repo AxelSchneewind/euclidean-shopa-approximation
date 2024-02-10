@@ -75,7 +75,7 @@ private:
 
     [[gnu::hot]]
     [[gnu::always_inline]]
-    bool ignore_edge(base_edge_id_type const& edge_id, coordinate_t const& direction);
+    bool ignore_edge(base_edge_id_type const& edge_id, coordinate_t const& direction) const;
 
     template<typename NodeCostPair>
     [[gnu::hot]]
@@ -86,8 +86,8 @@ private:
     [[gnu::hot]]
     [[gnu::always_inline]]
     node_id_type
-    find_min_angle_neighbor(base_edge_id_type const &edge_id,
-                            coordinate_t const &direction, double& cos);
+    find_min_angle_neighbors(base_edge_id_type const &edge_id,
+                            coordinate_t const &direction, double& cos, double& cos2);
 
     template<typename NodeCostPair>
     [[gnu::hot]]
@@ -116,7 +116,7 @@ private:
     static node_id_type const& find_face_crossing_predecessor(NodeCostPair const &node);
 
     template<typename NodeCostPair> requires (!HasFaceCrossingPredecessor<NodeCostPair, Graph>)
-    node_id_type find_face_crossing_predecessor(NodeCostPair const &node);
+    node_id_type find_face_crossing_predecessor(NodeCostPair const &node) const;
 
 
     template<typename NodeCostPair>
