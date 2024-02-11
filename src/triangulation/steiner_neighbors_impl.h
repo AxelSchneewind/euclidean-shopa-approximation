@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <vector>
+#include <algorithm>
 
 template<typename Graph, typename Labels>
 template<typename NodeCostPair> requires HasFaceCrossingPredecessor<NodeCostPair, Graph>
@@ -338,7 +339,7 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbors(const base_edge_id_ty
     using intra_edge_id_type = typename node_id_type::intra_edge_id_type;
     intra_edge_id_type l = 1;
     intra_edge_id_type r = destination_steiner_info.node_count - 2;
-    intra_edge_id_type m = std::clamp(destination_steiner_info.mid_index, l + 1, r - 1);
+    intra_edge_id_type m = std::clamp(destination_steiner_info.mid_index, (intra_edge_id_type)(l + 1), (intra_edge_id_type)(r - 1));
     double cos_next = 1.0;
     double cos_current = 1.0;
 
@@ -385,7 +386,7 @@ steiner_neighbors<Graph, Labels>::find_min_angle_neighbors(const base_edge_id_ty
         intra_edge_id_type step = std::floor(std::log((1 + std::exp(ln_base * (r - l))) / 2) * log_base_inv);
         assert(step >= 0);
         m = right_half ? (r - step) : (l + step);
-        m = std::clamp(m, l + 1, r - 1);
+        m = std::clamp(m, (intra_edge_id_type)(l + 1), (intra_edge_id_type)(r - 1));
         assert (l >= r || (l <= m && m <= r));
 
         // update node ids
