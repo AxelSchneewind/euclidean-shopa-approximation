@@ -81,7 +81,7 @@ main(int argc, char *argv[]) {
         target_dir_builder <<  output_directory.string() << "/" << src_node << "_" << dest_node << "_";
         if (epsilon == 0.0)
             target_dir_builder << "exact";
-	else if (std::isinf(epsilon))
+        else if (std::isinf(epsilon))
             target_dir_builder << "raw";
         else target_dir_builder << ((int) (epsilon * 10000));
         std::string target_directory = target_dir_builder.str();
@@ -96,7 +96,9 @@ main(int argc, char *argv[]) {
         std::ofstream output_info(info_file);
         output_info << std::flush;
 
-        std::cout << "computing route...\n";
+        if (arguments.query_given >= 2)
+            std::cout << "computing route " << (query_index / 2) << ": " << src_node << ',' << dest_node << "\n";
+
         if (dest_node >= 0)
             client.compute_route(src_node, dest_node);
         else
