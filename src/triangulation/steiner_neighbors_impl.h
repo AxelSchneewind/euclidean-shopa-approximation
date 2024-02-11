@@ -97,24 +97,20 @@ double steiner_neighbors<Graph, Labels>::min_angle_relative_value(base_edge_id_t
     coordinate_t const src_left  = left - _source_coordinate;
     coordinate_t const right_left = left - _graph.node_coordinates(_graph.base_graph().destination(edge_id));
 
-    double const dist_left = src_left.length();
-    double const length = right_left.length();
-
-    // TODO implement it this way to reduce atan calls
-    // auto angle0 = std::atan2(src_left.longitude, src_left.latitude);
-    // auto angle1 = std::atan2(right_left.longitude, right_left.latitude);
-    // auto angle2 = std::atan2(direction.longitude, direction.latitude);
-
-    // double angle_source = std::fabs(angle0 - angle2);
-    // angle_source += (angle_source < 0) ? (2 * std::numbers::pi) : 0;
-    // double angle_left = std::fabs(angle0 - angle1);
-    // angle_left += (angle_left < 0) ? (2 * std::numbers::pi) : 0;
+    // TODO check if law of sines applied to the other edge is easier to compute
+    double const angle0 = std::atan2(src_left.longitude, src_left.latitude);
+    double const angle1 = std::atan2(right_left.longitude, right_left.latitude);
+    double const angle2 = std::atan2(direction.longitude, direction.latitude);
 
     // angle between src->left and src->intersection
-    double const angle_source = inner_angle(src_left, direction);
+    double angle_source = std::fabs(angle0 - angle2); // inner_angle(src_left, direction);
 
     // angle between src->left and right->left
-    double const angle_left = inner_angle(src_left, right_left);
+    double angle_left = std::fabs(angle0 - angle1); // inner_angle(src_left, right_left);
+
+    //
+    angle_source = (angle_source > std::numbers::pi) ? (2 * std::numbers::pi) - angle_source : angle_source;
+    angle_left = (angle_left > std::numbers::pi) ? (2 * std::numbers::pi) - angle_left : angle_left;
 
     // angle between intersection->left and intersection->src
     double const angle_intersection = std::numbers::pi - angle_source - angle_left;
@@ -122,6 +118,10 @@ double steiner_neighbors<Graph, Labels>::min_angle_relative_value(base_edge_id_t
     // compute sin values
     double const sin_source = std::sin(angle_source);
     double const sin_intersection = std::sin(angle_intersection);
+
+    // side lengths
+    double const dist_left = src_left.length();
+    double const length = right_left.length();
 
     //
     auto const result =  (dist_left / length) * (sin_source / sin_intersection);
