@@ -12,7 +12,7 @@ distance_euclidean(coordinate_t c1, coordinate_t c2) {
 
 inline double
 to_radians(double degree) {
-    constexpr double one_deg = (M_PI) / 180;
+    constexpr double one_deg = (std::numbers::pi) / 180;
     return one_deg * degree;
 }
 
@@ -53,15 +53,14 @@ inner_angle(coordinate_t dir0, coordinate_t dir1) {
     // return std::acos(AB / (dir0.length() * dir1.length()));
 
     // using atan on both vectors
-    auto angle0 = std::atan2(dir0.longitude, dir0.latitude);
-    auto angle1 = std::atan2(dir1.longitude, dir1.latitude);
+    const auto angle0 = std::atan2(dir0.longitude, dir0.latitude);
+    const auto angle1 = std::atan2(dir1.longitude, dir1.latitude);
     auto diff = std::fabs(angle1 - angle0);
 
-    if (diff > M_PI)
-        diff = 2 * M_PI - diff;
+    diff = (diff > std::numbers::pi) ? (2 * std::numbers::pi) - diff : diff;
 
     assert(diff >= 0);
-    assert(diff <= M_PI);
+    assert(diff <= std::numbers::pi);
     return diff;
 }
 
@@ -81,7 +80,7 @@ angle_cos(coordinate_t const& dir0, coordinate_t const& dir1) {
  * @return
  */
 inline double
-angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1) {
+angle(const coordinate_t source0, const coordinate_t dest0, const coordinate_t source1, const coordinate_t dest1) {
     // use dot product
     auto const A = dest0 - source0;
     auto const B = dest1 - source1;
@@ -89,7 +88,7 @@ angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate
 }
 
 inline double
-inner_angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1) {
+inner_angle(const coordinate_t source0, coordinate_t dest0, const coordinate_t source1, coordinate_t dest1) {
     // use dot product
     dest0 -= source0;
     dest1 -= source1;
@@ -124,7 +123,7 @@ interpolate_linear(coordinate_t source, coordinate_t destination, double const r
 
 void WGS84toGoogleBing(double lat, double lon, double &x, double &y) {
     x = lon * 20037508.34 / 180;
-    y = std::log(std::tan((90 + lat) * M_PI / 360)) / (M_PI / 180);
+    y = std::log(std::tan((90 + lat) * std::numbers::pi / 360)) / (std::numbers::pi / 180);
     y = y * 20037508.34 / 180;
 
 }
@@ -134,7 +133,7 @@ void GoogleBingtoWGS84Mercator(double x, double y, double &lat, double &lon) {
     lon = (x / 20037508.34) * 180;
     lat = (y / 20037508.34) * 180;
 
-    lat = 180 / M_PI * (2 * std::atan(std::exp(lat * M_PI / 180)) - M_PI / 2);
+    lat = 180 / std::numbers::pi * (2 * std::atan(std::exp(lat * std::numbers::pi / 180)) - std::numbers::pi / 2);
 }
 
 void project_coordinate(coordinate_t &src, Projection projection) {
