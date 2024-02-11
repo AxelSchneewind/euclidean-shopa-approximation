@@ -12,7 +12,7 @@
 
 class subdivision {
 public:
-    using steiner_index_type = int;
+    using steiner_index_type = short;
 
 private:
     static constexpr steiner_index_type max_steiner_count_per_edge = std::numeric_limits<steiner_index_type>::max();
