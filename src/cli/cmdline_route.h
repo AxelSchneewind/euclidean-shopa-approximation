@@ -67,6 +67,8 @@ struct gengetopt_args_info
   int tree_arg;	/**< @brief generate graph file for search tree (default='06062001').  */
   char * tree_orig;	/**< @brief generate graph file for search tree original value given at command line.  */
   const char *tree_help; /**< @brief generate graph file for search tree help description.  */
+  int live_status_flag;	/**< @brief show live status on route computation (default=off).  */
+  const char *live_status_help; /**< @brief show live status on route computation help description.  */
   int astar_flag;	/**< @brief use A* heuristic to speed up routing (default=off).  */
   const char *astar_help; /**< @brief use A* heuristic to speed up routing help description.  */
   
@@ -81,6 +83,7 @@ struct gengetopt_args_info
   unsigned int csv_format_given ;	/**< @brief Whether csv-format was given.  */
   unsigned int projection_given ;	/**< @brief Whether projection was given.  */
   unsigned int tree_given ;	/**< @brief Whether tree was given.  */
+  unsigned int live_status_given ;	/**< @brief Whether live-status was given.  */
   unsigned int astar_given ;	/**< @brief Whether astar was given.  */
 
 } ;

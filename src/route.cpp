@@ -31,7 +31,7 @@ main(int argc, char *argv[]) {
     RoutingConfiguration config;
     config.bidirectional = false;
     config.use_a_star = arguments.astar_flag;
-    config.live_status = true;
+    config.live_status = arguments.live_status_flag;
     config.tree_size = (arguments.tree_given) * arguments.tree_arg;
 
     // read graph
@@ -83,7 +83,7 @@ main(int argc, char *argv[]) {
             target_dir_builder << "exact";
 	else if (std::isinf(epsilon))
             target_dir_builder << "raw";
-        else target_dir_builder<< ((int) (epsilon * 10000));
+        else target_dir_builder << ((int) (epsilon * 10000));
         std::string target_directory = target_dir_builder.str();
         std::string beeline_file = target_directory + "/beeline.gl";
         std::string route_file = target_directory + "/path.gl";
