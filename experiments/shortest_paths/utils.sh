@@ -46,18 +46,19 @@ QUERY=${QUERY::-1}
 # run shortest path computations
 echo " ################# computing approximate values without subdividing triangulation:  ################# "
 echo "$ROUTER --graph-file $GRAPH_FILE --output-directory $OUTPUT_DIR_RAW --epsilon inf --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
-$ROUTER --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR_RAW" --epsilon inf --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
+$ROUTER --epsilon inf -p wgs84 -a "$ASTAR" -t$TREE_SIZE --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR_RAW" --query "$QUERY"
 
-EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02" "0.01")
+EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05")
+# "0.02" "0.01")
 for eps in "${EPSILONS[@]}"; do
 echo " ########################## computing approximate values for epsilon=$eps: ########################## "
 echo "$ROUTER --graph-file $GRAPH_FILE --output-directory $OUTPUT_DIR --epsilon $eps --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
-$ROUTER --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR" --epsilon "$eps" --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
+$ROUTER --epsilon "$eps"  -p wgs84 -a "$ASTAR" -t$TREE_SIZE --graph-file "$GRAPH_FILE" --output-directory "$OUTPUT_DIR" --query "$QUERY"
 done
 
 echo " ##################################### computing exact values:  ##################################### "
 echo "$ROUTER --graph-file $GRAPH_FILE_VISIBILITY --output-directory $OUTPUT_DIR_VIS -e 0.0 --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
-$ROUTER --graph-file "$GRAPH_FILE_VISIBILITY" --output-directory "$OUTPUT_DIR_VIS" -e 0.0 --query "$QUERY" -p wgs84 -a "$ASTAR" -t$TREE_SIZE
+$ROUTER -e 0.0 -p wgs84 -a "$ASTAR" -t$TREE_SIZE --graph-file "$GRAPH_FILE_VISIBILITY" --output-directory "$OUTPUT_DIR_VIS" --query "$QUERY"
 
 }
 
@@ -73,4 +74,11 @@ sed -e '1p;/,NODE.*/d' -i "$CSV_RESULTS"
 sed -e 's/ms//g' -i "$CSV_RESULTS"
 sed -e 's/ms//g' -i "$CSV_RESULTS"
 # echo "$(csvsort -c EPSILON,FROM,TO "$CSV_RESULTS")" > "$CSV_RESULTS"
+}
+
+
+process_all_results() {
+CSV_RESULTS="results.csv"
+cat "results/*/*/*/info.csv" > "$CSV_RESULTS"
+sed -e '1p;/,NODE.*/d' -i "$CSV_RESULTS"
 }
