@@ -295,33 +295,35 @@ steiner_neighbors<Graph, Labels>::add_min_angle_neighbor(const NodeCostPair&node
     assert(direction.longitude != 0 || direction.latitude != 0);
     node_id_type next;
     double cos1, cos2;
-    if constexpr (HasSuccessorHint<typename Labels::edge_label_type, Graph>) {
-        auto& hint = _labels.at(node.node().edge).successor_hint();
+    // if constexpr (HasSuccessorHint<typename Labels::edge_label_type, Graph>) {
+    //     auto& hint = _labels.at(node.node().edge).successor_hint();
 
-        if (hint.edge == edge_id) { // valid hint
-            // search for best neighbor here
-            next = find_min_angle_neighbors_hinted(edge_id, direction, hint, cos1, cos2);
-        } else {
-            next = find_min_angle_neighbors(edge_id, direction, cos1, cos2);
-        }
+    //     if (hint.edge == edge_id) { // valid hint
+    //         // search for best neighbor here
+    //         next = find_min_angle_neighbors_hinted(edge_id, direction, hint, cos1, cos2);
+    //     } else {
+    //         next = find_min_angle_neighbors(edge_id, direction, cos1, cos2);
+    //     }
 
-        hint = next;
-    } else {
-        next = find_min_angle_neighbors(edge_id, direction, cos1, cos2);
-    }
+    //     hint = next;
+    // } else {
+    //     next = find_min_angle_neighbors(edge_id, direction, cos1, cos2);
+    // }
 
-    // add edge with minimal angle
-    if (cos1 >= max_angle_cos) [[unlikely]] {
-        coordinate_t destination_coordinate{_graph.node_coordinates(next)};
-        out.emplace_back(next, node.node(), node.distance());
+    double rel   = min_angle_relative_value(edge_id, direction);
+    node_id_type other{ edge_id, _graph.subdivision_info().index(edge_id, rel) };
+
+    {
+        coordinate_t destination_coordinate{_graph.node_coordinates(other)};
+        out.emplace_back(other, node.node(), node.distance());
         _destination_coordinates.emplace_back(destination_coordinate);
     }
 
-    // add edge with minimal angle
-    if (cos2 >= max_angle_cos) [[unlikely]] {
-        ++next.steiner_index;
-        coordinate_t destination_coordinate = _graph.node_coordinates(next);
-        out.emplace_back(next, node.node(), node.distance());
+    ++other.steiner_index;
+
+    {
+        coordinate_t destination_coordinate{_graph.node_coordinates(other)};
+        out.emplace_back(other, node.node(), node.distance());
         _destination_coordinates.emplace_back(destination_coordinate);
     }
 }

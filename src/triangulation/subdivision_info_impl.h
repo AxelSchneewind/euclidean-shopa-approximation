@@ -183,7 +183,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
     return result;
 }
 
-coordinate_t
+inline coordinate_t
 subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_t const &c1,
                                     coordinate_t const &c2) const {
     auto &&info = edges[edge];
@@ -191,12 +191,12 @@ subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, 
     assert(steiner_index >= 0);
     assert(steiner_index < info.node_count);
 
-    if (steiner_index == 0) [[unlikely]]
+    if (steiner_index == 0)
         return c1;
-    else if (steiner_index == info.node_count - 1) [[unlikely]]
+    if (steiner_index == info.node_count - 1)
         return c2;
 
-    if (steiner_index == info.mid_index) [[unlikely]]
+    if (steiner_index == info.mid_index)
         return interpolate_linear(c1, c2, info.mid_position);
 
     // if (steiner_index == 1) [[unlikely]]
@@ -229,10 +229,78 @@ subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, 
     // }
 }
 
-subdivision::subdivision_edge_info &subdivision::edge(edge_id_t edge) {
+inline double subdivision::relative_position(edge_id_t const edge, steiner_index_type const steiner_index) const {
+    auto &&info = edges[edge];
+
+    if (steiner_index == 0)
+        return 0;
+    if (steiner_index == info.node_count - 1)
+        return 1;
+
+    if (steiner_index == info.mid_index)
+        return info.mid_position;
+
+    if (steiner_index < info.mid_index) [[likely]] {
+        auto const index = steiner_index - 1;
+        assert(index >= 0);
+
+        // auto &&relative = std::pow(info.base_first, index) * info.r_first;
+        auto &&relative = std::exp(info.base_first * index) * info.r_first;
+        assert(index != 0 || relative == info.r_first);
+        assert(relative >= info.r_first - 0.002F);
+        assert(relative <= info.mid_position + 0.002F);
+        return relative;
+    }
+    // if (steiner_index > info.mid_index) [[likely]] {
+        auto const index = info.node_count - steiner_index - 2;
+        assert(index >= 0);
+
+        // auto &&relative = std::pow(info.base_second, index) * info.r_second;
+        auto &&relative = std::exp(info.base_second * index) * info.r_second;
+        assert(steiner_index != info.node_count - 2 || index == 0);
+        assert(index != 0 || relative == info.r_second);
+        assert(relative >= info.r_second - 0.002F);
+        assert(relative <= 1.0F - info.mid_position + 0.002F);
+        return 1 - relative;
+    // }
+}
+
+inline subdivision::steiner_index_type subdivision::index(const edge_id_t edge, double relative) const {
+    auto &&info = edges[edge];
+
+    assert(relative >= 0 && relative <= 1);
+
+    if (relative < info.mid_position) {
+        int const exponent = std::clamp((int)std::floor(std::log(relative / info.r_first) / info.base_first), 0, info.mid_index - 2);
+        double rel  = std::exp(info.base_first * exponent) * info.r_first;
+        double reln = std::exp(info.base_first * (exponent + 1)) * info.r_first;
+        rel -= relative;
+        reln -= relative;
+        rel = std::abs(rel);
+        reln = std::abs(reln);
+        steiner_index_type index =  (exponent + (reln < rel) + 1);
+        assert(index > 0 && index <= info.mid_index);
+        return index;
+    } else {
+        relative = 1 - relative;
+        steiner_index_type const exponent = std::clamp((int)std::floor(std::log(relative / info.r_second) / info.base_second), 0, info.node_count - info.mid_index - 3);
+        double rel  = std::exp(info.base_second * exponent) * info.r_second;
+        double reln = std::exp(info.base_second * (exponent + 1)) * info.r_second;
+        rel -= relative;
+        reln -= relative;
+        rel = std::abs(rel);
+        reln = std::abs(reln);
+        steiner_index_type index = (info.node_count - 2) - (exponent + (reln < rel));
+        assert(index >= info.mid_index - 1 && index <= info.node_count);
+        return index;
+    }
+
+}
+
+inline subdivision::subdivision_edge_info &subdivision::edge(edge_id_t const edge) {
     return edges[edge];
 }
 
-const subdivision::subdivision_edge_info &subdivision::edge(edge_id_t edge) const {
+inline const subdivision::subdivision_edge_info &subdivision::edge(edge_id_t const edge) const {
     return edges[edge];
 }

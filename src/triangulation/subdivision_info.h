@@ -62,6 +62,9 @@ public:
     [[gnu::always_inline]]
     coordinate_t node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_t const& c1, coordinate_t const& c2) const;
 
+    double relative_position(edge_id_t edge, steiner_index_type steiner_index) const;
+    steiner_index_type index(edge_id_t edge, double relative) const;
+
     subdivision_edge_info& edge(edge_id_t edge);
     subdivision_edge_info const& edge(edge_id_t edge) const;
 
