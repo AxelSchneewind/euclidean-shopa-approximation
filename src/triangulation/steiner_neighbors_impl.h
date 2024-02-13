@@ -2,6 +2,7 @@
 #include "../graph/base_types.h"
 
 #include <cmath>
+#include <numbers>
 #include <vector>
 #include <algorithm>
 
@@ -94,38 +95,45 @@ void steiner_neighbors<Graph, Labels>::operator()(const NodeCostPair&node, std::
 template<typename Graph, typename Labels>
 double steiner_neighbors<Graph, Labels>::min_angle_relative_value(base_edge_id_type edge_id, coordinate_t const& direction) const {
     coordinate_t const left = _graph.node_coordinates(_graph.base_graph().source(edge_id));
-    coordinate_t const src_left  = left - _source_coordinate;
     coordinate_t const right_left = left - _graph.node_coordinates(_graph.base_graph().destination(edge_id));
+    coordinate_t const src_left  = left - _source_coordinate;
+
+    double angle_source, angle_left;
 
     // TODO check if law of sines applied to the other edge is easier to compute
-    double const angle0 = std::atan2(src_left.longitude, src_left.latitude);
-    double const angle1 = std::atan2(right_left.longitude, right_left.latitude);
-    double const angle2 = std::atan2(direction.longitude, direction.latitude);
+    {
+        double const angle0 = std::atan2(src_left.longitude, src_left.latitude);
+        double const angle1 = std::atan2(right_left.longitude, right_left.latitude);
+        double const angle2 = std::atan2(direction.longitude, direction.latitude);
 
-    // angle between src->left and src->intersection
-    double angle_source = std::fabs(angle0 - angle2); // inner_angle(src_left, direction);
+        // angle between src->left and src->intersection
+        angle_source = std::fabs(angle0 - angle2); // inner_angle(src_left, direction);
 
-    // angle between src->left and right->left
-    double angle_left = std::fabs(angle0 - angle1); // inner_angle(src_left, right_left);
+        // angle between src->left and right->left
+        angle_left = std::fabs(angle0 - angle1); // inner_angle(src_left, right_left);
+    }
 
     //
     angle_source = (angle_source > std::numbers::pi) ? (2 * std::numbers::pi) - angle_source : angle_source;
     angle_left = (angle_left > std::numbers::pi) ? (2 * std::numbers::pi) - angle_left : angle_left;
 
-    // angle between intersection->left and intersection->src
-    double const angle_intersection = std::numbers::pi - angle_source - angle_left;
+    double result;
+    {
+        // side lengths
+        double const dist_left = src_left.sqr_length();
+        double const length = right_left.sqr_length();
 
-    // compute sin values
-    double const sin_source = std::sin(angle_source);
-    double const sin_intersection = std::sin(angle_intersection);
+        // compute sin values
+        double const sin_source = std::sin(angle_source);
 
-    // side lengths
-    double const dist_left = src_left.length();
-    double const length = right_left.length();
+        // angle between intersection->left and intersection->src
+        // std::sin(std::numbers::pi - angle_source - angle_left) is equal to:
+        double const sin_intersection = std::sin(angle_source + angle_left);
 
-    //
-    auto const result =  (dist_left / length) * (sin_source / sin_intersection);
-    assert(result >= 0.0 && result <= 1.0 + std::numeric_limits<double>::epsilon());
+        // found using law of sines
+        result = std::sqrt(dist_left / length) * (sin_source / sin_intersection);
+        assert(result >= 0.0 && result <= 1.0 + std::numeric_limits<double>::epsilon());
+    }
     return result;
 }
 
