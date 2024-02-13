@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <limits>
 #include <vector>
 #include <complex>
@@ -19,42 +20,49 @@ struct coordinate_t {
     double latitude;
     double longitude;
 
-    double length() const { return std::sqrt(latitude * latitude + longitude * longitude); }
+    [[gnu::always_inline]]
+    inline component_type length() const { return std::sqrt((latitude * latitude) + (longitude * longitude)); }
+    [[gnu::always_inline]]
+    inline component_type sqr_length() const { return (latitude * latitude) + (longitude * longitude); }
 
-    double zero() const { return latitude == 0 && longitude == 0; }
+    [[gnu::always_inline]]
+    inline bool zero() const { return latitude == 0 && longitude == 0; }
 
-    coordinate_t operator+(const coordinate_t &second) const {
+    inline coordinate_t operator+(const coordinate_t &second) const {
         return {latitude + second.latitude, longitude + second.longitude};
     }
-    coordinate_t& operator+=(const coordinate_t &second) {
+    inline coordinate_t& operator+=(const coordinate_t &second) {
         latitude += second.latitude;
         longitude += second.longitude;
         return *this;
     }
 
-    coordinate_t operator-(const coordinate_t &second) const {
+    [[gnu::always_inline]]
+    inline coordinate_t operator-(const coordinate_t &second) const {
         return {latitude - second.latitude, longitude - second.longitude};
     }
-    coordinate_t& operator-=(const coordinate_t &second) {
+
+    [[gnu::always_inline]]
+    inline coordinate_t& operator-=(const coordinate_t &second) {
         latitude -= second.latitude;
         longitude -= second.longitude;
         return *this;
     }
 
-    double operator*(const coordinate_t &second) const {
+    inline double operator*(const coordinate_t &second) const {
         return latitude * second.latitude + longitude * second.longitude;
     }
 
-    coordinate_t operator*(const float &second) const {
+    inline coordinate_t operator*(const component_type &second) const {
         return {latitude * second, longitude * second};
     }
-    coordinate_t& operator*=(const float &second) {
+    inline coordinate_t& operator*=(const component_type &second) {
         latitude *= second;
         longitude *= second;
         return *this;
     }
 
-    bool operator==(const coordinate_t &second) const {
+    inline bool operator==(const coordinate_t &second) const {
         return latitude == second.latitude && longitude == second.longitude;
     }
 };

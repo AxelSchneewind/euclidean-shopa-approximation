@@ -40,6 +40,12 @@ inner_angle(coordinate_t dir0, coordinate_t dir1);
 inline double
 angle_cos(coordinate_t const& dir0, coordinate_t const& dir1);
 
+[[gnu::hot]]
+[[gnu::const]]
+[[gnu::always_inline]]
+inline double
+angle_cos_sqr(coordinate_t const& dir0, coordinate_t const& dir1);
+
 inline double
 line_distance(coordinate_t source, coordinate_t destination, coordinate_t point);
 

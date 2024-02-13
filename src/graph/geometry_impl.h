@@ -68,7 +68,16 @@ inner_angle(coordinate_t dir0, coordinate_t dir1) {
 inline double
 angle_cos(coordinate_t const& dir0, coordinate_t const& dir1) {
     // use dot product
-    return (dir0 * dir1) / (dir0.length() * dir1.length());
+    auto dot_product = (dir0 * dir1);
+    return std::sqrt((dot_product * dot_product) / (dir0.sqr_length() * dir1.sqr_length()));
+    // return dot_product / (dir0.length() * dir1.length());
+}
+
+inline double
+angle_cos_sqr(coordinate_t const& dir0, coordinate_t const& dir1) {
+    // use dot product
+    auto dot_product = (dir0 * dir1);
+    return (dot_product * dot_product) / (dir0.sqr_length() * dir1.sqr_length());
 }
 
 /**
