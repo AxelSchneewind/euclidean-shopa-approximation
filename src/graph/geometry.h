@@ -5,14 +5,14 @@
 #include "cmath"
 
 // Euclidean distance
-double
+inline distance_t
 distance_euclidean(coordinate_t c1, coordinate_t c2);
 
 inline double
 to_radians(double degrees);
 
 // exact distance on earths surface
-distance_t
+inline distance_t
 distance(coordinate_t c1, coordinate_t c2);
 
 /**
