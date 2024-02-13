@@ -230,7 +230,6 @@ public:
     // computes the coordinates of a node with given id
     [[gnu::pure]]
     [[gnu::hot]]
-    [[gnu::always_inline]]
     inline coordinate_t node_coordinates(node_id_type id) const;
         // computes the coordinates of a node with given id
     [[gnu::pure]]
