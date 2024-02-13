@@ -99,8 +99,6 @@ double steiner_neighbors<Graph, Labels>::min_angle_relative_value(base_edge_id_t
     coordinate_t const src_left  = left - _source_coordinate;
 
     double angle_source, angle_left;
-
-    // TODO check if law of sines applied to the other edge is easier to compute
     {
         double const angle0 = std::atan2(src_left.longitude, src_left.latitude);
         double const angle1 = std::atan2(right_left.longitude, right_left.latitude);
