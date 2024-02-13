@@ -71,7 +71,7 @@ else (GENGETOPT)
 endif (GENGETOPT)
 
 
-set(CMAKE_CXX_FLAGS "--std=c++20") # -Wall -Wextra
+set(CMAKE_CXX_FLAGS "") # -Wall -Wextra
 set(CMAKE_CXX_FLAGS_DEBUG "-g") #-D_GLIBCXX_DEBUG
 
 # performance options
