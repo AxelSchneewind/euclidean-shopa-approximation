@@ -114,8 +114,8 @@ distance_t distance(coordinate_t c1, coordinate_t c2);
 struct node_t {
     coordinate_t coordinates;
 
-    node_t(coordinate_t const& c) : coordinates{c} {}
-    node_t(coordinate_t && c) : coordinates{std::move(c)} {}
+    explicit node_t(coordinate_t const& c) : coordinates{c} {}
+    explicit node_t(coordinate_t && c) : coordinates{std::move(c)} {}
 
     node_t() = default;
     node_t(node_t&&) = default;
@@ -129,7 +129,7 @@ struct node_t {
 struct edge_t {
     cost_t cost;
 
-    edge_t(cost_t const& c) : cost{c} {}
+    explicit edge_t(cost_t const& c) : cost{c} {}
 
     edge_t() = default;
     edge_t(edge_t&&) = default;

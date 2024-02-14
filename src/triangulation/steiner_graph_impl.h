@@ -423,7 +423,7 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
 }
 
 steiner_graph::node_info_type steiner_graph::node(steiner_graph::node_id_type id) const {
-    return node_coordinates(id);
+    return node_info_type{node_coordinates(id)};
 }
 
 steiner_graph::node_id_type steiner_graph::source(steiner_graph::edge_id_type id) {
@@ -436,8 +436,8 @@ steiner_graph::node_id_type steiner_graph::destination(steiner_graph::edge_id_ty
 
 steiner_graph::edge_info_type steiner_graph::edge(steiner_graph::edge_id_type id) const {
     edge_info_type result;
-    auto src = node(source(id));
-    auto dest = node(destination(id));
+    auto const src = node(source(id));
+    auto const dest = node(destination(id));
     result.cost = distance(src.coordinates, dest.coordinates);
     return result;
 }

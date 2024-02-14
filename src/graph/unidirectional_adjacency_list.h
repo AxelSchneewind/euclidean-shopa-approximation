@@ -17,6 +17,13 @@ struct adjacency_list_edge {
     NodeId destination;
     E info;
 
+    template <typename... Args>
+    adjacency_list_edge(NodeId source, NodeId dest, Args&&... args) : source{source}, destination{dest}, info(std::forward<Args...>(args...)){}
+
+    adjacency_list_edge(NodeId source, NodeId dest) : source{source}, destination{dest} {}
+
+    adjacency_list_edge() = default;
+
     bool operator==(const adjacency_list_edge &) const = default;
 
     bool operator!=(const adjacency_list_edge &) const = default;
@@ -43,7 +50,7 @@ struct internal_adjacency_list_edge<NodeId, void> {
     internal_adjacency_list_edge() = default;
 
     template<typename... Args>
-    internal_adjacency_list_edge(NodeId destination, Args...  /*ignore*/) : destination(destination) {}
+    internal_adjacency_list_edge(NodeId destination, Args&&...  /*ignore*/) : destination(destination) {}
 
     template <typename OtherN, typename OtherE>
     internal_adjacency_list_edge(adjacency_list_edge<OtherN, OtherE> const& other) : destination{other.destination} {}
@@ -60,8 +67,11 @@ struct adjacency_list_edge<NodeId, void> {
     adjacency_list_edge() = default;
 
     template<typename... Args>
-    adjacency_list_edge(NodeId source, NodeId destination, Args...  /*ignore*/) : source(source),
+    adjacency_list_edge(NodeId source, NodeId destination, Args&&...  /*ignore*/) : source(source),
                                                                              destination(destination) {}
+
+    adjacency_list_edge(NodeId source, NodeId destination) : source(source), destination(destination) {}
+
 
     bool operator==(const adjacency_list_edge &) const = default;
 
