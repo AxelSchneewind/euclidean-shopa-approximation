@@ -10,8 +10,7 @@
 template<typename Graph, typename Labels>
 template<typename NodeCostPair>
 requires HasFaceCrossingPredecessor<NodeCostPair, Graph>
-typename Graph::node_id_type const &steiner_neighbors<Graph, Labels>::find_face_crossing_predecessor(
-        const NodeCostPair &node) {
+typename Graph::node_id_type const &steiner_neighbors<Graph, Labels>::find_face_crossing_predecessor( const NodeCostPair &node) {
     assert(!is_none(node.face_crossing_predecessor()));
     return node.face_crossing_predecessor();
 }
@@ -78,14 +77,6 @@ void steiner_neighbors<Graph, Labels>::operator()(const NodeCostPair &node, std:
         assert(!is_none(fcp));
         for (int e = 0; e < out.size(); ++e) [[likely]] {
             out[e].face_crossing_predecessor() = fcp;
-        }
-
-        for (int e = 0; e < out.size(); ++e) [[likely]] {
-            out[e].face_crossing_predecessor() = (out[e].face_crossing_predecessor() == out[e].node()) ? node.node()
-                                                                                                       : out[e].face_crossing_predecessor();
-            assert(out[e].face_crossing_predecessor() != out[e].node());
-            assert(out[e].predecessor() != out[e].node());
-            assert(!is_none(out[e].face_crossing_predecessor()));
         }
     }
 
