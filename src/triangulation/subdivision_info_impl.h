@@ -32,8 +32,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
 
         // get minimal angle for node1 and node2
         // treat angles > 90 degrees like 90 degrees
-        long double angle1 = M_PI_2l; // between node1->node2 and node1->node3
-        long double angle2 = M_PI_2l; // between node2->node1 and node2->node3
+        long double angle1 = std::numbers::pi_v<long double> / 2; // between node1->node2 and node1->node3
+        long double angle2 = std::numbers::pi_v<long double> / 2; // between node2->node1 and node2->node3
         long double angle3 = 0; // between node2->node1 and node2->node3
 
         for (auto&& edge: polyhedron.edges(i)) {
@@ -51,17 +51,16 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
             auto a1 = inner_angle(c1, c2, c1, c3);
             auto a2 = inner_angle(c2, c1, c2, c3);
             auto a3 = inner_angle(c3, c1, c3, c2);
-            assert(std::fabs((a1 + a2 + a3) - M_PI) <
-                   M_PI / 180); // check that sum of inner angles is 180º (+- 1º for rounding)
+            assert(std::fabs((a1 + a2 + a3) - std::numbers::pi) < std::numbers::pi / 180); // check that sum of inner angles is 180º (+- 1º for rounding)
 
             if (a1 < angle1)
                 angle1 = a1;
             if (a2 < angle2)
                 angle2 = a2;
         }
-        angle1 = std::clamp(angle1, min_angle, M_PI_2l);
-        angle2 = std::clamp(angle2, min_angle, M_PI_2l);
-        angle3 = M_PI - angle2 - angle1;
+        angle1 = std::clamp(angle1, min_angle, std::numbers::pi_v<long double> / 2);
+        angle2 = std::clamp(angle2, min_angle, std::numbers::pi_v<long double> / 2);
+        angle3 = std::numbers::pi - angle2 - angle1;
 
         // length |e| of the edge
         double const length = distance(c2, c1);
