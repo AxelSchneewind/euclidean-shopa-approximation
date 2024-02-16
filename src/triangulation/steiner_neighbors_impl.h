@@ -54,18 +54,18 @@ void steiner_neighbors<Graph, Labels>::operator()(const NodeCostPair &node, std:
                (!is_none(node.face_crossing_predecessor()) && node.face_crossing_predecessor() != node.node()));
     }
 
-    if (is_start_node) [[unlikely]] {
+    if (!is_base_node && !is_start_node) [[likely]] {
+        from_steiner_node(node, out);
+    } else if (!is_base_node) {
         from_start_node(node, out);
-    } else if (is_base_node) [[unlikely]] {
+    } else {
         auto base_node_id = _graph.base_node_id(node_id);
         is_boundary_node = _graph.is_boundary_node(base_node_id);
-        if (is_boundary_node) {
-            [[unlikely]]
-                    from_boundary_node(node, out);
-        } else
+        if (is_boundary_node) { [[unlikely]]
+            from_boundary_node(node, out);
+        } else {
             from_base_node(node, out);
-    } else {
-        from_steiner_node(node, out);
+        }
     }
 
     // set face crossing predecessor of neighbors
