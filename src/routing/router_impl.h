@@ -31,15 +31,14 @@ router<Graph, Dijkstra>::router(router&&routing) noexcept
 template<typename Graph, typename Dijkstra>
 void
 router<Graph, Dijkstra>::step_forward() {
-    assert(!is_none(_forward_current.node()));
-    // TODO check why this is never true
-    if (_forward_current.node() == _target_node)
-        _mid_node = _target_node;
-
     assert(!_forward_search.queue_empty());
 
     _forward_search.step();
     _forward_current = _forward_search.current();
+
+    assert(!is_none(_forward_current.node()));
+    if (_forward_current.node() == _target_node)
+        _mid_node = _target_node;
 }
 
 template<typename Graph, typename Dijkstra>
