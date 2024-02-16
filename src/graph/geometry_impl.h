@@ -97,18 +97,21 @@ angle(coordinate_t dir0, coordinate_t dir1) {
 
 inline double
 inner_angle(coordinate_t dir0, coordinate_t dir1) {
-    // using dot product
-    // auto const AB = dir0 * dir1;
-    // return std::acos(AB / (dir0.length() * dir1.length()));
+    // using dot product (not working at the moment)
+    // auto const dot_product = dir0 * dir1;
+    // auto const lengths = std::sqrt(dir0.sqr_length() * dir1.sqr_length());
+    // auto const frac = std::clamp(dot_product / lengths, 0.0, 1.0);
+    // auto diff = std::acos(frac);
 
     // using atan on both vectors
-    const auto angle0 = std::atan2(dir0.longitude, dir0.latitude);
-    const auto angle1 = std::atan2(dir1.longitude, dir1.latitude);
+    const auto angle0 = std::atan2(dir0);
+    const auto angle1 = std::atan2(dir1);
     auto diff = std::fabs(angle1 - angle0);
 
     diff = (diff > std::numbers::pi) ? (2 * std::numbers::pi) - diff : diff;
 
-    assert(diff >= 0);
+    assert(diff == 0 || std::isnormal(diff));
+    assert(!std::signbit(diff));
     assert(diff <= std::numbers::pi);
     return diff;
 }
