@@ -14,11 +14,17 @@ using node_level_t = int;
 /*
  * a pair of coordinates, consisting of latitude, longitude
  */
-struct coordinate_t {
-    using component_type = double;
+// TODO use Dim parameter
+template <typename C, std::size_t Dim>
+struct coordinate {
+    using component_type = C;
+    static constexpr std::size_t size  = Dim;
 
-    double latitude;
-    double longitude;
+    //
+    // std::array<component_type, Dim> components;
+
+    component_type latitude;
+    component_type longitude;
 
     [[gnu::always_inline]]
     inline component_type length() const { return std::sqrt((latitude * latitude) + (longitude * longitude)); }
@@ -28,41 +34,41 @@ struct coordinate_t {
     [[gnu::always_inline]]
     inline bool zero() const { return latitude == 0 && longitude == 0; }
 
-    inline coordinate_t operator+(const coordinate_t &second) const {
-        return {latitude + second.latitude, longitude + second.longitude};
+    inline coordinate operator+(const coordinate &second) const {
+        return { latitude + second.latitude, longitude + second.longitude};
     }
-    inline coordinate_t& operator+=(const coordinate_t &second) {
+    inline coordinate& operator+=(const coordinate &second) {
         latitude += second.latitude;
         longitude += second.longitude;
         return *this;
     }
 
     [[gnu::always_inline]]
-    inline coordinate_t operator-(const coordinate_t &second) const {
-        return {latitude - second.latitude, longitude - second.longitude};
+    inline coordinate operator-(const coordinate &second) const {
+        return { latitude - second.latitude, longitude - second.longitude };
     }
 
     [[gnu::always_inline]]
-    inline coordinate_t& operator-=(const coordinate_t &second) {
+    inline coordinate& operator-=(const coordinate &second) {
         latitude -= second.latitude;
         longitude -= second.longitude;
         return *this;
     }
 
-    inline double operator*(const coordinate_t &second) const {
+    inline double operator*(const coordinate &second) const {
         return latitude * second.latitude + longitude * second.longitude;
     }
 
-    inline coordinate_t operator*(const component_type &second) const {
-        return {latitude * second, longitude * second};
+    inline coordinate operator*(const component_type &second) const {
+        return {latitude * second, longitude * second  };
     }
-    inline coordinate_t& operator*=(const component_type &second) {
+    inline coordinate& operator*=(const component_type &second) {
         latitude *= second;
         longitude *= second;
         return *this;
     }
 
-    inline bool operator==(const coordinate_t &second) const {
+    inline bool operator==(const coordinate &second) const {
         return latitude == second.latitude && longitude == second.longitude;
     }
 };
@@ -107,9 +113,7 @@ constexpr double none_value<double> = infinity<double>;
 
 using triangle = std::array<node_id_t, 3>;
 
-
-// euclidean distance
-distance_t distance(coordinate_t c1, coordinate_t c2);
+using coordinate_t = coordinate<double, 2>;
 
 struct node_t {
     coordinate_t coordinates;

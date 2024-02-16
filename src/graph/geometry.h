@@ -4,15 +4,32 @@
 
 #include "cmath"
 
+
+[[gnu::hot]]
+void atan2_approximation(size_t num_points, const coordinate_t* coordinates, coordinate_t::component_type out);
+
+
+namespace std {
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    [[gnu::const]]
+    coordinate_t::component_type atan2(coordinate_t const direction);
+}
+
+
 // Euclidean distance
-inline distance_t
+[[gnu::hot]]
+[[gnu::const]]
+[[gnu::always_inline]]
+inline coordinate_t::component_type
 distance_euclidean(coordinate_t c1, coordinate_t c2);
 
-inline double
-to_radians(double degrees);
+template <typename T>
+inline T
+to_radians(T degrees);
 
 // exact distance on earths surface
-inline distance_t
+inline coordinate_t::component_type
 distance(coordinate_t c1, coordinate_t c2);
 
 /**
@@ -23,30 +40,30 @@ distance(coordinate_t c1, coordinate_t c2);
  * @param dest1
  * @return
  */
-inline double
+inline coordinate_t::component_type
 angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1);
 
-inline double
+inline coordinate_t::component_type
 inner_angle(coordinate_t source0, coordinate_t dest0, coordinate_t source1, coordinate_t dest1);
 
-inline double
+inline coordinate_t::component_type
 angle(coordinate_t dir0, coordinate_t dir1);
-inline double
+inline coordinate_t::component_type
 inner_angle(coordinate_t dir0, coordinate_t dir1);
 
 [[gnu::hot]]
 [[gnu::const]]
 [[gnu::always_inline]]
-inline double
+inline coordinate_t::component_type
 angle_cos(coordinate_t const& dir0, coordinate_t const& dir1);
 
 [[gnu::hot]]
 [[gnu::const]]
 [[gnu::always_inline]]
-inline double
+inline coordinate_t::component_type
 angle_cos_sqr(coordinate_t const& dir0, coordinate_t const& dir1);
 
-inline double
+inline coordinate_t::component_type
 line_distance(coordinate_t source, coordinate_t destination, coordinate_t point);
 
 
@@ -61,7 +78,7 @@ line_distance(coordinate_t source, coordinate_t destination, coordinate_t point)
 [[gnu::always_inline]]
 [[gnu::const]]
 inline coordinate_t
-interpolate_linear(coordinate_t source, coordinate_t destination, double relative);
+interpolate_linear(coordinate_t source, coordinate_t destination, coordinate_t::component_type  relative);
 
 
 void WGS84toGoogleBing(double lat, double lon, double &x, double &y);

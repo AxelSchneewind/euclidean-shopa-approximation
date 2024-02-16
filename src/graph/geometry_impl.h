@@ -3,9 +3,58 @@
 #include "geometry.h"
 #include "base_types.h"
 
+#include <cmath>
+
+
+template <typename N>
+[[gnu::always_inline]]
+inline constexpr N atan_scalar_approximation(N x) {
+    constexpr N a1  =  0.99997726;
+    constexpr N a3  = -0.33262347;
+    constexpr N a5  =  0.19354346;
+    constexpr N a7  = -0.11643287;
+    constexpr N a9  =  0.05265332;
+    constexpr N a11 = -0.01172120;
+
+    N x_sq = x*x;
+    return x * (a1 + x_sq * (a3 + x_sq * (a5 + x_sq * (a7 + x_sq * (a9 + x_sq * a11)))));
+}
+
+void atan2_approximation(size_t num_points, const coordinate_t* coordinates, coordinate_t::component_type* out) {
+    for (int i = 0; i < num_points; ++i) {
+        // Ensure input is in [-1, +1]
+        auto y = coordinates[i].latitude;
+        auto x = coordinates[i].longitude;
+        bool swap = std::fabs(x) < std::fabs(y);
+        double atan_input = (swap ? x : y) / (swap ? y : x);
+
+        // Approximate atan
+        double res = atan_scalar_approximation(atan_input);
+
+        // If swapped, adjust atan output
+        res = swap ? (!std::signbit(atan_input) ? (std::numbers::pi / 2) : -(std::numbers::pi / 2)) - res : res;
+        // Adjust quadrants
+        //if (x >= 0.0 && y >= 0.0) {}                     // 1st quadrant
+        //else if (x < 0.0 && y >= 0.0) { res = M_PI + res; } // 2nd quadrant
+        //else if (x < 0.0 && y < 0.0) { res = -M_PI + res; } // 3rd quadrant
+        //else if (x >= 0.0 && y < 0.0) {}                     // 4th quadrant
+        // simplified
+        if (std::signbit(x)) {
+            res += (!std::signbit(y) ? (std::numbers::pi) : (-std::numbers::pi));
+        }
+
+        // Store result
+        out[i] = res;
+    }
+}
+
+coordinate_t::component_type std::atan2(coordinate_t const direction) {
+    return std::atan2(direction.latitude, direction.longitude);
+}
+
 // Euclidean distance
-double
-distance_euclidean(coordinate_t c1, coordinate_t c2) {
+coordinate_t::component_type
+distance_euclidean(coordinate_t const c1, coordinate_t c2) {
     c2 -= c1;
     return std::sqrt(std::pow(c2.latitude, 2) + std::pow(c2.longitude, 2));
 }

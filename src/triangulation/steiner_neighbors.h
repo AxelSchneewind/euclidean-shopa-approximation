@@ -59,11 +59,11 @@ private:
     Graph const &_graph;
     Labels &_labels;
 
-    double _spanner_angle;
-    double _spanner_angle_cos;
+    coordinate_t::component_type _spanner_angle;
+    coordinate_t::component_type _spanner_angle_cos;
 
-    double _max_angle;
-    double _max_angle_cos;
+    coordinate_t::component_type _max_angle;
+    coordinate_t::component_type _max_angle_cos;
 
     coordinate_t _source_coordinate;
 
@@ -97,30 +97,30 @@ private:
 
     [[gnu::hot]]
     [[gnu::always_inline]]
-    double min_angle_relative_value(base_edge_id_type edge_id, coordinate_t const& direction) const;;
+    coordinate_t::component_type min_angle_relative_value(base_edge_id_type edge_id, coordinate_t const& direction) const;;
 
     [[gnu::cold]]
     node_id_type
     find_min_angle_neighbors_hinted(base_edge_id_type const &edge_id,
-                            coordinate_t const &direction, node_id_type const& hint, double& cos, double& cos2);
+                            coordinate_t const &direction, node_id_type const& hint, coordinate_t::component_type & cos, coordinate_t::component_type& cos2);
 
 
     [[gnu::cold]]
     node_id_type
     find_min_angle_neighbors(base_edge_id_type const &edge_id,
-                            coordinate_t const &direction, double& cos, double& cos2);
+                            coordinate_t const &direction, coordinate_t::component_type & cos, coordinate_t::component_type & cos2);
 
     template<typename NodeCostPair>
     [[gnu::hot]]
     [[gnu::always_inline]]
     void
     add_min_angle_neighbor(NodeCostPair const &node, base_edge_id_type const &edge_id,
-                           double const &max_angle_cos, coordinate_t const &direction, std::vector<NodeCostPair> &out);
+                           coordinate_t::component_type const&max_angle_cos, coordinate_t const &direction, std::vector<NodeCostPair> &out);
 
 
     template<typename NodeCostPair>
     void epsilon_spanner(NodeCostPair const &node,
-                         base_edge_id_type const &edge_id, double const &max_angle_cos,
+                         base_edge_id_type const &edge_id, coordinate_t::component_type const &max_angle_cos,
                          coordinate_t const &direction,
                          std::vector<NodeCostPair> &out);
 
@@ -147,9 +147,9 @@ private:
 public:
     steiner_neighbors(Graph const &graph, Labels &labels)
             : _graph(graph), _labels(labels),
-              _spanner_angle{std::clamp(std::numbers::pi * graph.epsilon(), 0.0, std::numbers::pi_v<double>)},
+              _spanner_angle{std::clamp(std::numbers::pi * graph.epsilon(), 0.0, std::numbers::pi_v<coordinate_t::component_type>)},
               _spanner_angle_cos{std::cos(_spanner_angle)},
-              _max_angle{std::clamp(std::numbers::pi / 2 * graph.epsilon(), std::numeric_limits<double>::min(), std::numbers::pi)},
+              _max_angle{std::clamp(std::numbers::pi / 2 * graph.epsilon(), std::numeric_limits<coordinate_t::component_type>::min(), std::numbers::pi)},
               _max_angle_cos{std::cos(_max_angle)} { }
 
     template<typename... Args>
