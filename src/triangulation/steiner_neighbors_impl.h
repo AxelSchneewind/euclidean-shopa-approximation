@@ -149,7 +149,7 @@ coordinate_t::component_type steiner_neighbors<Graph, Labels>::min_angle_relativ
                                                                                         coordinate_t::component_type angle_l,
                                                                                         coordinate_t::component_type angle_dir) const {
     left -= _source_coordinate;
-    right -= right;
+    right -= left;
 
     coordinate_t::component_type angle_source;
     coordinate_t::component_type angle_left;
