@@ -9,15 +9,6 @@
 #include <cmath>
 #include <vector>
 
-template<typename Label, typename Graph>
-concept HasSuccessorHint = requires {
-    typename Graph::node_id_type;
-} && requires(Label &n) {
-    { n.successor_hint() } -> std::convertible_to<typename Graph::node_id_type &>;
-} && requires(Label const &n) {
-    { n.successor_hint() } -> std::convertible_to<typename Graph::node_id_type>;
-};
-
 template<typename NodeCostPair, typename Graph>
 concept HasFaceCrossingPredecessor = requires {
     typename Graph::node_id_type;
@@ -85,10 +76,6 @@ private:
     using base_node_id_type = typename Graph::base_topology_type::node_id_type;
     using base_edge_id_type = typename Graph::base_topology_type::edge_id_type;
 
-    [[gnu::hot]]
-    [[gnu::always_inline]]
-    bool ignore_edge(base_edge_id_type const& edge_id, coordinate_t const& direction) const;
-
     template<typename NodeCostPair>
     [[gnu::hot]]
     [[gnu::always_inline]]
@@ -97,7 +84,15 @@ private:
 
     [[gnu::hot]]
     [[gnu::always_inline]]
-    coordinate_t::component_type min_angle_relative_value(base_edge_id_type edge_id, coordinate_t const& direction) const;;
+    coordinate_t::component_type min_angle_relative_value(base_edge_id_type edge_id, coordinate_t const& direction) const;
+
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    coordinate_t::component_type min_angle_relative_value(base_edge_id_type edge_id,
+                                                          coordinate_t left,
+                                                          coordinate_t right,
+                                                          coordinate_t::component_type angle_l,
+                                                          coordinate_t::component_type angle_dir) const;
 
     [[gnu::cold]]
     node_id_type
@@ -115,7 +110,24 @@ private:
     [[gnu::always_inline]]
     void
     add_min_angle_neighbor(NodeCostPair const &node, base_edge_id_type const &edge_id,
-                           coordinate_t::component_type const&max_angle_cos, coordinate_t const &direction, std::vector<NodeCostPair> &out);
+                           coordinate_t::component_type angle_left, coordinate_t::component_type angle_right, coordinate_t::component_type angle_dir,
+                           std::vector<NodeCostPair> &out);
+
+    template<typename NodeCostPair>
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    void
+    add_min_angle_neighbor( NodeCostPair const &node, base_edge_id_type const &edge_id,
+            coordinate_t const& left, coordinate_t const& right, coordinate_t::component_type angle_left_dir, coordinate_t::component_type angle_dir,
+            std::vector<NodeCostPair> &out);
+
+
+    template<typename NodeCostPair>
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    void
+    add_min_angle_neighbor(NodeCostPair const &node, base_edge_id_type const &edge_id,
+                           coordinate_t const&direction, std::vector<NodeCostPair> &out);
 
 
     template<typename NodeCostPair>
