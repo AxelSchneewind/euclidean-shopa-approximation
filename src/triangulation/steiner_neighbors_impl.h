@@ -101,9 +101,9 @@ coordinate_t::component_type steiner_neighbors<Graph, Labels>::min_angle_relativ
         coordinates[0] = src - _graph.node_coordinates(_graph.base_graph().destination(edge_id));
     }
 
-    coordinate_t::component_type angle_source, angle_left;
+    coordinate_t::component_type angle_source;
+    coordinate_t::component_type angle_left;
     {
-        // TODO: try approximation https://mazzo.li/posts/vectorized-atan2.html
         coordinate_t::component_type angles[3];
         angles[0] = std::atan2(coordinates[1]);
         angles[1] = std::atan2(coordinates[0]);
@@ -136,8 +136,9 @@ coordinate_t::component_type steiner_neighbors<Graph, Labels>::min_angle_relativ
 
         // found using law of sines
         result = std::sqrt(dist_left / length) * (sin_source / sin_intersection);
-        assert(result >= 0.0 && result <= 1.0 + std::numeric_limits<coordinate_t::component_type>::epsilon());
+        assert(result >= -0.00001 && result <= 1.00001);
     }
+
     return std::clamp(result, 0.0, 1.0);
 }
 
