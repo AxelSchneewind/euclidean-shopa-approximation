@@ -36,7 +36,6 @@ router<Graph, Dijkstra>::step_forward() {
     _forward_search.step();
     _forward_current = _forward_search.current();
 
-    assert(!is_none(_forward_current.node()));
     if (_forward_current.node() == _target_node)
         _mid_node = _target_node;
 }
