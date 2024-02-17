@@ -352,7 +352,6 @@ void steiner_neighbors<Graph, Labels>::from_steiner_node(const NodeCostPair &nod
         }
 
         add_min_angle_neighbor(node, base_edge_id, left, right, angle_left, angle_dir, out);
-        add_min_angle_neighbor(node, base_edge_id, direction, out);
 
         // required in paper, but probably not on unweighted triangulations
         // if (face_crossing_predecessor != reached_from && _source_coordinate != _graph.node_coordinates(reached_from)) [[unlikely]] {
