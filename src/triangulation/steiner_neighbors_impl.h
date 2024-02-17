@@ -146,30 +146,32 @@ template<typename Graph, typename Labels>
 coordinate_t::component_type steiner_neighbors<Graph, Labels>::min_angle_relative_value(base_edge_id_type edge_id,
                                                                                         coordinate_t left,
                                                                                         coordinate_t right,
-                                                                                        coordinate_t::component_type angle_l,
-                                                                                        coordinate_t::component_type angle_dir) const {
-    left -= _source_coordinate;
-    right -= left;
+                                                                                        coordinate_t::component_type const direction_left,
+                                                                                        coordinate_t::component_type const direction_dir) const {
+    // left->right
+    right = left - right;
+    // source->left
+    left  -= _source_coordinate;
 
     coordinate_t::component_type angle_source;
     coordinate_t::component_type angle_left;
     {
         // angle between src->left and src->intersection
-        angle_source = std::fabs(angle_l - angle_dir);
+        angle_source = std::fabs(direction_left - direction_dir);
 
         // angle between src->left and right->left
-        angle_left = std::fabs(angle_l - std::atan2(right));
-    }
+        angle_left   = std::fabs(direction_left - std::atan2(right));
 
-    //
-    angle_source = (angle_source > std::numbers::pi) ? (2 * std::numbers::pi) - angle_source : angle_source;
-    angle_left = (angle_left > std::numbers::pi) ? (2 * std::numbers::pi) - angle_left : angle_left;
+        //
+        angle_source = (angle_source > std::numbers::pi) ? (2 * std::numbers::pi) - angle_source : angle_source;
+        angle_left   = (angle_left   > std::numbers::pi) ? (2 * std::numbers::pi) - angle_left   : angle_left;
+    }
 
     coordinate_t::component_type result;
     {
         // side lengths
         coordinate_t::component_type const dist_left = left.sqr_length();
-        coordinate_t::component_type const length = right.sqr_length();
+        coordinate_t::component_type const length    = right.sqr_length();
 
         // compute sin values
         coordinate_t::component_type const sin_source = std::sin(angle_source);
@@ -180,7 +182,7 @@ coordinate_t::component_type steiner_neighbors<Graph, Labels>::min_angle_relativ
 
         // found using law of sines
         result = std::sqrt(dist_left / length) * (sin_source / sin_intersection);
-        assert(result >= -0.00001 && result <= 1.00001);
+        assert(result >= -0.01 && result <= 1.01);
     }
 
     return std::clamp(result, 0.0, 1.0);
@@ -297,24 +299,28 @@ void steiner_neighbors<Graph, Labels>::from_boundary_node(const NodeCostPair &no
     _boundary_node_neighbor_count += out.size();
 }
 
+inline bool is_in_cone(const coordinate_t::component_type direction_left, const coordinate_t::component_type direction_right, const coordinate_t::component_type direction_dir) {
+    assert((direction_dir == 0.0 || std::isnormal(direction_dir)) && direction_dir >= -std::numbers::pi && direction_dir <= std::numbers::pi);
+    assert((direction_left  == 0.0 || std::isnormal(direction_left )) && direction_left  >= -std::numbers::pi && direction_left  <= 2 * std::numbers::pi);
+    assert((direction_right == 0.0 || std::isnormal(direction_right)) && direction_right >= - std::numbers::pi && direction_right <= 2 * std::numbers::pi);
 
-bool ignore(coordinate_t::component_type angle_left, coordinate_t::component_type angle_right,coordinate_t::component_type angle_dir) {
-    coordinate_t::component_type angle_both { std::fabs(angle_right - angle_left)  };
-    coordinate_t::component_type angle_l    { std::fabs(angle_dir   - angle_left)  };
-    coordinate_t::component_type angle_r    { std::fabs(angle_dir   - angle_right) };
+    coordinate_t::component_type angle_both { std::fabs(direction_right - direction_left) };
+    coordinate_t::component_type angle_l    { std::fabs(direction_left  - direction_dir ) };
+    coordinate_t::component_type angle_r    { std::fabs(direction_right - direction_dir ) };
 
-    angle_both = (angle_both >= std::numbers::pi) ? 2 * std::numbers::pi - angle_both : angle_both;
-    angle_l    = (angle_l    >= std::numbers::pi) ? 2 * std::numbers::pi - angle_l  : angle_l;
-    angle_r    = (angle_r    >= std::numbers::pi) ? 2 * std::numbers::pi - angle_r : angle_r;
+    angle_both = (angle_both > std::numbers::pi) ? 2 * std::numbers::pi - angle_both : angle_both;
+    angle_l    = (angle_l    > std::numbers::pi) ? 2 * std::numbers::pi - angle_l    : angle_l;
+    angle_r    = (angle_r    > std::numbers::pi) ? 2 * std::numbers::pi - angle_r    : angle_r;
 
     assert((angle_both == 0.0 || std::isnormal(angle_both)) && angle_both >= 0.0 && angle_both <= std::numbers::pi);
     assert((angle_l  == 0.0 || std::isnormal(angle_l )) && angle_l  >= 0.0 && angle_l  <= std::numbers::pi);
     assert((angle_r == 0.0 || std::isnormal(angle_r)) && angle_r >= 0.0 && angle_r <= std::numbers::pi);
 
-    return (angle_both < angle_l || angle_both < angle_r);
+    return (angle_l < angle_both && angle_r < angle_both);
 }
-
-
+inline bool ignore(const coordinate_t::component_type direction_left, const coordinate_t::component_type direction_right, const coordinate_t::component_type direction_dir) {
+    return !is_in_cone(direction_left, direction_right, direction_dir);
+}
 
 template<typename Graph, typename Labels>
 template<typename NodeCostPair>
@@ -322,16 +328,9 @@ void steiner_neighbors<Graph, Labels>::from_steiner_node(const NodeCostPair &nod
     _steiner_point_count++;
     auto const &node_id = node.node();
 
-    // always add the two neighbors on this edge
-    on_edge_neighbors(node, out);
-
     auto &&face_crossing_predecessor = find_face_crossing_predecessor(node);
     coordinate_t direction = _source_coordinate - _graph.node_coordinates(face_crossing_predecessor);
     coordinate_t::component_type angle_dir = std::atan2(direction);
-
-    // normalize direction length so that it has the same length as the current edge (to prevent numerical issues)
-    direction *= distance(_graph.node_coordinates(_graph.base_graph().source(node.node().edge)),
-                          _graph.node_coordinates(_graph.base_graph().destination(node.node().edge))) / direction.length();
 
     assert(face_crossing_predecessor != node_id);
     assert(_graph.node_coordinates(node_id) != _graph.node_coordinates(face_crossing_predecessor));
@@ -341,15 +340,19 @@ void steiner_neighbors<Graph, Labels>::from_steiner_node(const NodeCostPair &nod
 
     // face-crossing edges
     for (auto &&base_edge_id: _graph.base_polyhedron().edges(node.node().edge)) [[likely]] {
-        auto left  {_graph.node_coordinates(_graph.base_graph().source(base_edge_id))};
-        auto right {_graph.node_coordinates(_graph.base_graph().destination(base_edge_id))};
+        auto left  { _graph.node_coordinates(_graph.base_graph().source(base_edge_id)) };
+        auto right { _graph.node_coordinates(_graph.base_graph().destination(base_edge_id)) };
 
-        auto angle_left  = std::atan2(left - _source_coordinate);
+        auto angle_left  = std::atan2(left  - _source_coordinate);
         auto angle_right = std::atan2(right - _source_coordinate);
-        if (ignore(angle_left, angle_right, angle_dir)) [[unlikely]]
+        assert(ignore(angle_left, angle_right, angle_dir) == ignore(angle_right, angle_left, angle_dir));
+        assert(ignore(angle_left, angle_dir, angle_right) || ignore(angle_left, angle_right, angle_dir));
+        if (ignore(angle_left, angle_right, angle_dir)) [[likely]] {
             continue;
+        }
 
         add_min_angle_neighbor(node, base_edge_id, left, right, angle_left, angle_dir, out);
+        add_min_angle_neighbor(node, base_edge_id, direction, out);
 
         // required in paper, but probably not on unweighted triangulations
         // if (face_crossing_predecessor != reached_from && _source_coordinate != _graph.node_coordinates(reached_from)) [[unlikely]] {
@@ -357,6 +360,9 @@ void steiner_neighbors<Graph, Labels>::from_steiner_node(const NodeCostPair &nod
         //     add_min_angle_neighbor(node, base_edge_id, _max_angle_cos, _source_coordinate - _graph.node_coordinates(reached_from), out);
         // }
     }
+
+    // always add the two neighbors on this edge
+    on_edge_neighbors(node, out);
 
     _steiner_point_neighbor_count += out.size();
 }
@@ -413,9 +419,12 @@ template<typename NodeCostPair>
 void
 steiner_neighbors<Graph, Labels>::add_min_angle_neighbor(const NodeCostPair &node,
                                                          const base_edge_id_type &edge_id,
-                                                         coordinate_t const& left, coordinate_t const& right, coordinate_t::component_type angle_left_dir, coordinate_t::component_type angle_dir,
+                                                         coordinate_t const& left,
+                                                         coordinate_t const& right,
+                                                         coordinate_t::component_type const angle_left,
+                                                         coordinate_t::component_type const angle_dir,
                                                          std::vector<NodeCostPair> &out) {
-    coordinate_t::component_type rel = min_angle_relative_value(edge_id, left, right, angle_left_dir, angle_dir);
+    coordinate_t::component_type rel = min_angle_relative_value(edge_id, left, right, angle_left, angle_dir);
     node_id_type other{edge_id, _graph.subdivision_info().index(edge_id, rel)};
 
     {

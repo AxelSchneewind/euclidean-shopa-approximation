@@ -91,8 +91,8 @@ private:
     coordinate_t::component_type min_angle_relative_value(base_edge_id_type edge_id,
                                                           coordinate_t left,
                                                           coordinate_t right,
-                                                          coordinate_t::component_type angle_l,
-                                                          coordinate_t::component_type angle_dir) const;
+                                                          coordinate_t::component_type direction_left,
+                                                          coordinate_t::component_type direction_dir) const;
 
     [[gnu::cold]]
     node_id_type
@@ -104,14 +104,6 @@ private:
     node_id_type
     find_min_angle_neighbors(base_edge_id_type const &edge_id,
                             coordinate_t const &direction, coordinate_t::component_type & cos, coordinate_t::component_type & cos2);
-
-    template<typename NodeCostPair>
-    [[gnu::hot]]
-    [[gnu::always_inline]]
-    void
-    add_min_angle_neighbor(NodeCostPair const &node, base_edge_id_type const &edge_id,
-                           coordinate_t::component_type angle_left, coordinate_t::component_type angle_right, coordinate_t::component_type angle_dir,
-                           std::vector<NodeCostPair> &out);
 
     template<typename NodeCostPair>
     [[gnu::hot]]
