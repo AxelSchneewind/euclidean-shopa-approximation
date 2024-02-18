@@ -4,6 +4,7 @@
 #include "graph_properties.h"
 
 #include <memory>
+#include <cassert>
 
 
 template<typename NodeId, typename E>

@@ -1,11 +1,13 @@
 #pragma once
 
+#include "../routing/dijkstra_concepts.h"
 #include "polyhedron.h"
 
-#include "../util/keep_duplicates.h"
 #include "../util/list_intersection.h"
 #include "../util/list_invert.h"
-#include "../util/remove_duplicates.h"
+
+#include <array>
+#include <vector>
 
 namespace {
     template<Topology BaseGraph, std::size_t MaxNodesPerFace>

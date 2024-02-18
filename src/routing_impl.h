@@ -16,13 +16,13 @@
 #include "routing/router_impl.h"
 #include "routing/router_bidirectional_impl.h"
 #include "triangulation/steiner_neighbors_impl.h"
-#include "triangulation/pruned_steiner_neighbors_impl.h"
 #include "triangulation/node_info_container_impl.h"
 #include "triangulation/node_info_array_impl.h"
 #include "triangulation/compact_node_info_container_impl.h"
 #include "triangulation/steiner_graph_impl.h"
 #include "triangulation/frontier_labels.h"
 #include "triangulation/steiner_labels_impl.h"
+#include "triangulation/polyhedron_impl.h"
 #include "routing/node_labels_impl.h"
 
 #include "graph/geometry_impl.h"
@@ -83,25 +83,22 @@ using default_node_cost_pair = node_cost_pair<std_graph_t::node_id_type, std_gra
 using a_star_node_cost_pair = node_cost_pair<std_graph_t::node_id_type, std_graph_t::distance_type, a_star_info>;
 
 
-using default_queue_t = dijkstra_queue<std_graph_t, default_node_cost_pair, Default>;
+using default_queue_t = dijkstra_queue<std_graph_t, default_node_cost_pair, compare_distance>;
 
 
 using default_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
 using a_star_queue_t = a_star_queue<std_graph_t, a_star_node_cost_pair>;
 using a_star_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
 
-using std_dijkstra = dijkstra<std_graph_t, default_queue_t, default_labels_t, default_neighbors<std_graph_t>,
-        use_all_edges<std_graph_t>>;
-using a_star_dijkstra = dijkstra<std_graph_t, a_star_queue_t, a_star_labels_t, default_neighbors<std_graph_t>,
-        use_all_edges<std_graph_t>>;
+using std_dijkstra = dijkstra<std_graph_t, default_queue_t, default_labels_t, default_neighbors<std_graph_t>>;
+using a_star_dijkstra = dijkstra<std_graph_t, a_star_queue_t, a_star_labels_t, default_neighbors<std_graph_t>>;
 
 using std_routing_t = bidirectional_router<std_graph_t, std_dijkstra>;
 using a_star_routing_t = bidirectional_router<std_graph_t, a_star_dijkstra>;
 
 using default_ch_labels_t = node_labels<ch_graph_t, label_type<ch_graph_t>>;
-using default_ch_queue_t = dijkstra_queue<ch_graph_t, default_node_cost_pair, Default>;
-using ch_dijkstra = dijkstra<ch_graph_t, default_ch_queue_t, default_ch_labels_t, default_neighbors<ch_graph_t>,
-        use_upward_edges<ch_graph_t>>;
+using default_ch_queue_t = dijkstra_queue<ch_graph_t, default_node_cost_pair, compare_distance>;
+using ch_dijkstra = dijkstra<ch_graph_t, default_ch_queue_t, default_ch_labels_t, default_neighbors<ch_graph_t>>;
 using ch_routing_t = router<ch_graph_t, ch_dijkstra>;
 
 
@@ -111,6 +108,5 @@ using steiner_node_cost_pair = node_cost_pair<steiner_graph::node_id_type, stein
 
 using steiner_queue_t = dijkstra_queue<steiner_graph, steiner_node_cost_pair>;
 using steiner_labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
-using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, steiner_labels_t, steiner_neighbors<steiner_graph,
-        steiner_labels_t>, use_all_edges<steiner_graph>>;
+using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, steiner_labels_t, steiner_neighbors<steiner_graph, steiner_labels_t>>;
 using steiner_routing_t = router<steiner_graph, steiner_dijkstra>;

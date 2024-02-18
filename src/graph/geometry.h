@@ -2,11 +2,11 @@
 
 #include "base_types.h"
 
-#include "cmath"
+#include <cstddef>
 
 
 [[gnu::hot]]
-void atan2_approximation(size_t num_points, const coordinate_t* coordinates, coordinate_t::component_type out);
+void atan2_approximation(std::size_t num_points, const coordinate_t* coordinates, coordinate_t::component_type out);
 
 
 namespace std {

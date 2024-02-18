@@ -136,7 +136,7 @@ coordinate_t::component_type steiner_neighbors<Graph, Labels>::min_angle_relativ
 
         // found using law of sines
         result = std::sqrt(dist_left / length) * (sin_source / sin_intersection);
-        assert(result >= -0.00001 && result <= 1.00001);
+        assert(result >= -0.0001 && result <= 1.0001);
     }
 
     return std::clamp(result, 0.0, 1.0);

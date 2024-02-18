@@ -27,9 +27,9 @@ public:
 template<>
 constexpr a_star_info none_value<a_star_info> = {infinity<distance_t>};
 
-struct A_Star {
+struct compare_heuristic {
 public:
-    A_Star() {};
+    compare_heuristic() = default;
 
     template<typename NodeCostPair>
     constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
@@ -38,7 +38,7 @@ public:
 };
 
 
-template<typename Graph, typename NodeCostPair, typename Comp = A_Star> requires requires(
+template<typename Graph, typename NodeCostPair, typename Comp = compare_heuristic> requires requires(
         NodeCostPair n) { n.value(); }
 class a_star_queue : public dijkstra_queue<Graph, NodeCostPair, Comp> {
 private:

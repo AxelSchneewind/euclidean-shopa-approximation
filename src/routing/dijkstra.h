@@ -2,25 +2,17 @@
 
 #include "dijkstra_concepts.h"
 
-template<typename T, typename G>
-concept EdgePredicate = std::predicate<T, typename G::node_id_type, internal_adjacency_list_edge<typename G::node_id_type, typename G::edge_info_type>>;
-
-template<typename T, typename NodeCostPair>
-concept NeighborsGetter = requires(T t, NodeCostPair n, std::vector<NodeCostPair> &r) { t(n, r); };
-
 template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
-        NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
+        NeighborsGetter<typename Q::value_type> N>
 class dijkstra {
-    static_assert(Routable<typename G::topology_type>);
 public:
-    using type = dijkstra<G, Q, L, N, UseEdge>;
+    using type = dijkstra<G, Q, L, N>;
     using node_cost_pair_type = typename Q::value_type;
     using node_id_type = typename G::node_id_type;
     using distance_type = typename G::distance_type;
 
     using graph_type = G;
-    using use_edge_type = UseEdge;
     using queue_type = Q;
     using labels_type = L;
     using neighbor_getter_type = N;
@@ -29,18 +21,17 @@ public:
     static constexpr size_t SIZE_PER_EDGE = L::SIZE_PER_EDGE;
 
 private:
-    G const &_M_graph;
+    G const &_graph;
 
-    node_id_type _M_start_node;
-    node_id_type _M_target_node;
+    node_id_type _start_node;
+    node_id_type _target_node;
 
-    distance_type _M_min_distance;
+    distance_type _min_distance;
 
-    Q _M_queue;
-    L _M_labels;
+    Q _queue;
+    L _labels;
 
-    N _M_neighbors;
-    UseEdge _M_use_edge;
+    N _neighbors;
 
     std::size_t _push_count{0};
     std::size_t _pull_count{0};
@@ -58,18 +49,17 @@ public:
 
     // constructs a dijkstra object for the given graph
     explicit dijkstra(G const &graph)
-            : _M_graph(graph), _M_queue{_M_graph},
-              _M_labels(_M_graph), _M_neighbors{_M_graph, _M_labels}, _M_use_edge{_M_graph} {};
+            : _graph(graph), _queue{_graph},
+              _labels(_graph), _neighbors{_graph, _labels} {};
 
    //  TODO
     explicit dijkstra(G const &graph, dijkstra&& other)
-            : _M_graph(graph), _M_queue{std::move(other._M_queue)},
-              _M_labels(_M_graph, std::move(other._M_labels)), _M_neighbors(_M_graph, _M_labels), _M_use_edge{_M_graph} {};
+            : _graph(graph), _queue{std::move(other._queue)},
+              _labels(_graph, std::move(other._labels)), _neighbors(_graph, _labels) {};
 
-    explicit dijkstra(G const &graph, Q &&queue, L &&labels, N &&__neighbors, UseEdge &&__use_edge)
-            : _M_graph(graph), _M_queue(std::move(queue)),
-              _M_labels(std::move(labels)), _M_neighbors(std::move(__neighbors)),
-              _M_use_edge(std::move(__use_edge)) {};
+    explicit dijkstra(G const &graph, Q &&queue, L &&labels, N &&neighbors)
+            : _graph(graph), _queue(std::move(queue)),
+              _labels(std::move(labels)), _neighbors(std::move(neighbors)) {};
 
     ~dijkstra() = default;
 
@@ -79,20 +69,20 @@ public:
 
     distance_type min_path_length() const;
 
-    node_id_type source() const { return _M_start_node; }
+    node_id_type source() const { return _start_node; }
 
-    node_id_type target() const { return _M_target_node; }
+    node_id_type target() const { return _target_node; }
 
-    const Q &queue() const { return _M_queue; }
+    const Q &queue() const { return _queue; }
 
-    Q &queue() { return _M_queue; }
+    Q &queue() { return _queue; }
 
-    const L &labels() const { return _M_labels; }
-    const N &neighbors() const { return _M_neighbors; }
+    const L &labels() const { return _labels; }
+    const N &neighbors() const { return _neighbors; }
 
-    L &labels() { return _M_labels; }
+    L &labels() { return _labels; }
 
-    typename L::label_type const& get_label(node_id_type node) const { return _M_labels.at(node); }
+    typename L::label_type const& get_label(node_id_type node) const { return _labels.at(node); }
 
     /**
      * init one to one

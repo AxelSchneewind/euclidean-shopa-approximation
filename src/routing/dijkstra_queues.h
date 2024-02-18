@@ -2,58 +2,21 @@
 
 #include "dijkstra_concepts.h"
 
-#include "../graph/unidirectional_adjacency_list.h"
-
-#include "../triangulation/compact_node_info_container.h"
-
-#include <concepts>
-#include <tuple>
+#include <cstddef>
 #include <queue>
-#include <map>
+#include <vector>
 
-// TODO remove
-template<RoutableGraph Graph>
-struct use_all_edges {
+struct compare_distance {
 public:
-    use_all_edges(Graph const &g) {}
+    compare_distance() = default;
 
-    use_all_edges() = default;
-
-    use_all_edges(use_all_edges &&) = default;
-
-    constexpr bool operator()(Graph::node_id_type /*node*/,
-                              internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> /*via*/) {
-        return true;
-    };
-};
-
-template<RoutableGraph Graph>
-struct use_upward_edges {
-protected:
-    Graph const &g;
-
-public:
-    use_upward_edges(Graph const &g) : g(g) {}
-
-    use_upward_edges(use_upward_edges &&) = default;
-
-    constexpr bool operator()(Graph::node_id_type node,
-                              internal_adjacency_list_edge<typename Graph::node_id_type, typename Graph::edge_info_type> via) {
-        return g.node(node).level <= g.node(via.destination).level;
-    };
-};
-
-struct Default {
-public:
-    Default() = default;
-
-    template<typename NodeCostPair>
+    template<HasDistance NodeCostPair>
     constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
         return n1.distance() > n2.distance();
     };
 };
 
-template<RoutableGraph Graph, typename NodeCostPair, typename Comp = Default>
+template<RoutableGraph Graph, HasDistance NodeCostPair, typename Comp = compare_distance>
 class dijkstra_queue : protected std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp> {
 private:
     std::size_t _max_size{0};

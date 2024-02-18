@@ -9,7 +9,7 @@
 std::vector<float>
 subdivision_table::min_r_per_triangle_class(const std::vector<node_t> &nodes, const std::vector<float> &r_values,
                                             const std::vector<triangle> &faces) {
-    std::vector<float> min_r(M_PI / step_size, infinity<float>);
+    std::vector<float> min_r(std::numbers::pi / step_size, infinity<float>);
 
     for (auto &&face: faces) {
         for (int node_index = 0; node_index < 3; ++node_index) {
@@ -72,8 +72,8 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
 
         // get minimal angle for node1 and node2
         // treat angles > 90 degrees like 90 degrees
-        double angle1 = M_PI_2; // between node1->node2 and node1->node3
-        double angle2 = M_PI_2; // between node2->node1 and node2->node3
+        double angle1 = std::numbers::pi / 2; // between node1->node2 and node1->node3
+        double angle2 = std::numbers::pi / 2; // between node2->node1 and node2->node3
         double angle3 = 0; // between node2->node1 and node2->node3
 
         for (auto &&edge: polyhedron.edges(i)) {
@@ -91,8 +91,8 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
             auto a1 = inner_angle(c1, c2, c1, c3);
             auto a2 = inner_angle(c2, c1, c2, c3);
             auto a3 = inner_angle(c3, c1, c3, c2);
-            assert(std::fabs((a1 + a2 + a3) - M_PI) <
-                   M_PI / 180); // check that sum of inner angles is 180º (+- 1º for rounding)
+            assert(std::fabs((a1 + a2 + a3) - std::numbers::pi) <
+                   std::numbers::pi / 180); // check that sum of inner angles is 180º (+- 1º for rounding)
 
             if (a1 < angle1)
                 angle1 = a1;
@@ -103,7 +103,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
         angle2 = std::max(angle2, min_angle);
         angle1 = std::min(angle1, max_angle);
         angle2 = std::min(angle2, max_angle);
-        angle3 = M_PI - angle2 - angle1;
+        angle3 = std::numbers::pi - angle2 - angle1;
 
         // length |e| of the edge
         double length = distance(c2, c1);
@@ -220,7 +220,7 @@ double subdivision_table::class_angle(int index) {
 
 int subdivision_table::class_index(double radians) {
     assert(radians >= 0);
-    radians = std::min(radians, M_PI_2);
+    radians = std::min(radians, std::numbers::pi / 2);
     int result = std::floor((radians - min_angle) / step_size);
     return std::min(std::max(result, 0), step_count - 1);
 }

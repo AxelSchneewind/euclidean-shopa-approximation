@@ -2,11 +2,12 @@
 
 #include "unidirectional_adjacency_list.h"
 
-#include "../util/list_intersection.h"
 #include "../util/remove_duplicates.h"
 
 #include <algorithm>
 #include <cassert>
+#include <concepts>
+#include <cstddef>
 #include <span>
 #include <vector>
 
@@ -468,7 +469,7 @@ unidirectional_adjacency_list<NodeId, E>
 unidirectional_adjacency_list<NodeId, E>::inverse() const {
     adjacency_list_builder builder(node_count());
 
-    for (std::size_t edge_index = 0; edge_index < edge_count(); ++edge_index) {
+    for (std::size_t edge_index = 0; edge_index < edge_count(); edge_index++) {
         if constexpr (std::is_same_v<E, void>) {
             builder.add_edge(destination(edge_index), source(edge_index));
         } else {

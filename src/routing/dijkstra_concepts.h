@@ -1,8 +1,5 @@
 #pragma once
 
-#include <ranges>
-#include <memory>
-
 
 template<typename T>
 concept HasDistance = requires(T t) {
@@ -92,3 +89,7 @@ concept DijkstraLabels = requires(L l, NodeId node, NodeCostPair ncp, Label labe
     l.at(node);
     l.label(node, label);
 };
+
+
+template<typename T, typename NodeCostPair>
+concept NeighborsGetter = requires(T t, NodeCostPair n, std::vector<NodeCostPair> &r) { t(n, r); };

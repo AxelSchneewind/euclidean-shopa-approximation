@@ -1,14 +1,13 @@
 #pragma once
 
 #include "base_types.h"
+#include "../util/counting_iterator.h"
 
-#include <algorithm>
+#include <array>
 #include <cassert>
 #include <span>
 #include <vector>
 
-#include "../routing/dijkstra_concepts.h"
-#include "../util/counting_iterator.h"
 
 
 template<typename NodeId, typename E = void>
@@ -94,8 +93,8 @@ public:
 
     class adjacency_list_builder {
     private:
-        size_t _node_count;
-        size_t _edge_count;
+        std::size_t _node_count;
+        std::size_t _edge_count;
 
         std::vector<adjacency_list_edge<NodeId, E>> _edges;
         std::vector<edge_index_type> _offsets;
@@ -109,13 +108,13 @@ public:
     public:
         using edge_type = adjacency_list_edge<NodeId, E>;
 
-        adjacency_list_builder() : _node_count(0), _edge_count(0) {};
+        adjacency_list_builder() : _node_count(0), _edge_count(0), _edges_sorted(true), _offsets_valid(true) {};
 
         adjacency_list_builder(adjacency_list_builder &&other) = default;
 
         adjacency_list_builder(const adjacency_list_builder &other) = default;
 
-        adjacency_list_builder(size_t node_count) : _node_count(node_count), _edge_count(0), _offsets_valid(false),
+        adjacency_list_builder(std::size_t node_count) : _node_count(node_count), _edge_count(0), _offsets_valid(false),
                                                     _edges_sorted(false) { _edges.reserve(_node_count); };
 
         ~adjacency_list_builder() = default;
@@ -169,12 +168,12 @@ public:
         unidirectional_adjacency_list<NodeId, E> get();
     };
 
-    static constexpr size_t SIZE_PER_NODE = sizeof(edge_index_type);
-    static constexpr size_t SIZE_PER_EDGE = sizeof(NodeId) + sizeof(internal_adjacency_list_edge<NodeId, E>);
+    static constexpr std::size_t SIZE_PER_NODE = sizeof(edge_index_type);
+    static constexpr std::size_t SIZE_PER_EDGE = sizeof(NodeId) + sizeof(internal_adjacency_list_edge<NodeId, E>);
 
 private:
-    size_t _M_node_count;
-    size_t _M_edge_count;
+    std::size_t _M_node_count;
+    std::size_t _M_edge_count;
 
     // per node
     std::vector<edge_index_type> _M_offsets;
@@ -191,7 +190,7 @@ private:
 public:
     ~unidirectional_adjacency_list();
 
-    unidirectional_adjacency_list(size_t node_count,
+    unidirectional_adjacency_list(std::size_t node_count,
                                   std::vector<adjacency_list_edge<NodeId, E> > &&edges);
 
     unidirectional_adjacency_list(std::vector<edge_id_t> &&offsets,
@@ -220,13 +219,13 @@ public:
      * get the number of nodes of this adjacency list
      * @return
      */
-    inline size_t node_count() const;
+    inline std::size_t node_count() const;
 
     /**
      * get the number of edges stored in this adjacency list
      * @return
      */
-    inline size_t edge_count() const;
+    inline std::size_t edge_count() const;
 
     /**
      * enumerates all edge ids

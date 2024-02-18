@@ -11,11 +11,10 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
             if (_config.use_a_star) {
                 using node_cost_pair = geometric_node_cost_pair<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type,
                     a_star_info>, steiner_graph>;
-                //using node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, a_star_info>;
                 using queue_t = a_star_queue<steiner_graph, node_cost_pair>;
                 if (_config.compact_labels) {   // map based labels
                     using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>; // TODO
-                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
+                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>>;
                     if (!_config.bidirectional) { // unidirectional routing
                         using steiner_routing_t = router<steiner_graph, dijkstra>;
                         impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>( graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
@@ -25,18 +24,17 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
                     }
                 } else { // array-based labels
                     using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>; // TODO
-                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
+                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>>;
                     using steiner_routing_t = router<steiner_graph, dijkstra>;
                     impl = std::make_shared<RouterImplementation<steiner_graph, steiner_routing_t>>(
                         graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
                 }
             } else {
                 using node_cost_pair = geometric_node_cost_pair<node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>, steiner_graph>;
-                // using node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>;
                 using queue_t = dijkstra_queue<steiner_graph, node_cost_pair>;
                 if (_config.compact_labels) {   // map based labels
                     using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>; // TODO
-                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
+                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>>;
                     if (!_config.bidirectional) { // unidirectional routing
                         using steiner_routing_t = router<steiner_graph, dijkstra>;
                         impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>( graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
@@ -46,7 +44,7 @@ Router::Router(const Graph&graph, RoutingConfiguration const&config)
                     }
                 } else { // array-based labels
                     using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>; // TODO
-                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>, use_all_edges<steiner_graph>>;
+                    using dijkstra = dijkstra<steiner_graph, queue_t, labels_t, steiner_neighbors<steiner_graph, labels_t>>;
                     using steiner_routing_t = router<steiner_graph, dijkstra>;
                     impl = std::make_shared<RouterImplementation<steiner_graph, steiner_routing_t>>(
                         graph.get_implementation<steiner_graph>(), steiner_routing_t(graph.get_implementation<steiner_graph>()), _config);
@@ -84,7 +82,7 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
     std::thread status;
     bool volatile done = false;
     if (_config.live_status) {
-        status = std::thread([&]() -> void {
+        status = std::thread([&] () -> void {
             while (!done) {
                 double vm, res;
                 process_mem_usage(vm, res);
@@ -109,15 +107,15 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
     }
 
 
-    auto before = std::chrono::high_resolution_clock::now();
+    auto const before = std::chrono::high_resolution_clock::now();
 
     _router.compute_route();
 
-    auto after = std::chrono::high_resolution_clock::now();
+    auto const after = std::chrono::high_resolution_clock::now();
     done = true;
     if (_config.live_status)
         status.join();
 
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
+    auto const duration = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
     _result_ptr = std::make_shared<ResultImplementation<GraphT>>(_graph, *_query_ptr, _router, duration);
 }

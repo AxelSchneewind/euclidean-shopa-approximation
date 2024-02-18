@@ -29,7 +29,7 @@ compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>:
 }
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
-size_t compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::aggregate_count() const {
+std::size_t compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::aggregate_count() const {
     return edge_count;
 }
 

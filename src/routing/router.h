@@ -2,13 +2,6 @@
 
 #include <cassert>
 
-#include "../graph/graph.h"
-#include "dijkstra.h"
-#include "dijkstra_queues.h"
-
-#include <deque>
-#include <map>
-#include <ostream>
 
 template<typename Graph, typename Dijkstra>
 class router {

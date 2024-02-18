@@ -13,7 +13,7 @@ public:
 
 
 private:
-    using index_type = size_t;
+    using index_type = std::size_t;
 
     std::vector<Info> node_info_list;
     std::vector<index_type> offsets;

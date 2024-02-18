@@ -1,17 +1,8 @@
 #pragma once
 
 #include <cassert>
-#include <exception>
 
 #include "router_bidirectional.h"
-
-#include "../graph/graph_impl.h"
-#include "dijkstra_impl.h"
-#include <deque>
-#include <map>
-#include <ostream>
-
-#include "dijkstra_queues.h"
 
 
 template<typename Graph, typename Dijkstra>

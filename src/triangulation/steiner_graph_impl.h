@@ -1,13 +1,18 @@
 #pragma once
 
+#include "/home/axel/Dokumente/Studium/Semester_7/routing/src/graph/adjacency_list.h"
+#include "/home/axel/Dokumente/Studium/Semester_7/routing/src/graph/subgraph.h"
+#include "polyhedron.h"
 #include "steiner_graph.h"
 
 #include "subdivision_table_impl.h"
 #include "subdivision_info_impl.h"
-#include "polyhedron_impl.h"
 
 
 #include "../util/set_minus.h"
+#include <span>
+#include <unordered_map>
+#include <cmath>
 
 
 template<typename E, typename I>
@@ -296,8 +301,8 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
 
 
 coordinate_t steiner_graph::node_coordinates(steiner_graph::node_id_type id) const {
-    const coordinate_t &c1 = _base_nodes[_base_topology.source(id.edge)].coordinates;
     const coordinate_t &c2 = _base_nodes[_base_topology.destination(id.edge)].coordinates;
+    const coordinate_t &c1 = _base_nodes[_base_topology.source(id.edge)].coordinates;
 
     return _table.node_coordinates(id.edge, id.steiner_index, c1, c2);
 }
@@ -392,7 +397,7 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
     }
 
     // face-crossing edges
-    for (unsigned char triangle_index = 0; triangle_index < 2; triangle_index++) [[unlikely]] {
+    for (int triangle_index = 0; triangle_index < 2; triangle_index++) [[unlikely]] {
         if (is_none(triangles[triangle_index])) continue;
 
         auto&& triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
@@ -403,7 +408,7 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
 
             auto &&destination_steiner_info = steiner_info(base_edge_id);
 
-            for (int i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+            for (steiner_graph::node_id_type::intra_edge_id_type i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
                 steiner_graph::node_id_type destination = {base_edge_id, i};
                 coordinate_t destination_coordinate = node(destination).coordinates;
                 assert(has_edge(destination, node_id));
