@@ -20,12 +20,12 @@
 template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
         NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
-dijkstra<G, Q, L, N, UseEdge>::dijkstra(dijkstra<G, Q, L, N, UseEdge> &&__other) noexcept
-        : _M_labels(std::move(__other._M_labels)),
-          _M_graph(std::move(__other._M_graph)),
-          _M_queue(std::move(__other._M_queue)),
-          _M_neighbors(std::move(__other._M_neighbors)),
-          _M_use_edge(std::move(__other._M_use_edge)) {
+dijkstra<G, Q, L, N, UseEdge>::dijkstra(dijkstra<G, Q, L, N, UseEdge> &&other) noexcept
+        : _M_labels(std::move(other._M_labels)),
+          _M_graph(std::move(other._M_graph)),
+          _M_queue(std::move(other._M_queue)),
+          _M_neighbors(std::move(other._M_neighbors)),
+          _M_use_edge(std::move(other._M_use_edge)) {
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
@@ -41,8 +41,8 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
         NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
 bool
-dijkstra<G, Q, L, N, UseEdge>::reached(G::node_id_type __node) const {
-    return !is_none(_M_labels.at(__node).predecessor());
+dijkstra<G, Q, L, N, UseEdge>::reached(G::node_id_type node) const {
+    return !is_none(_M_labels.at(node).predecessor());
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
@@ -57,16 +57,16 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
         NeighborsGetter<typename Q::value_type> N, EdgePredicate<G> UseEdge>
 void
-dijkstra<G, Q, L, N, UseEdge>::init(node_id_type __start_node, node_id_type __target_node) {
-    _M_target_node = __target_node;
-    _M_start_node = __start_node;
+dijkstra<G, Q, L, N, UseEdge>::init(node_id_type start_node, node_id_type target_node) {
+    _M_target_node = target_node;
+    _M_start_node = start_node;
 
-    _M_queue.init(__start_node, __target_node);
-    _M_labels.init(__start_node, __target_node);
+    _M_queue.init(start_node, target_node);
+    _M_labels.init(start_node, target_node);
 
     // add start node to queue
-    if (!is_none(__start_node)) {
-        _M_queue.push(__start_node, __start_node, 0);
+    if (!is_none(start_node)) {
+        _M_queue.push(start_node, start_node, 0);
     }
 
     _pull_count = 0;
