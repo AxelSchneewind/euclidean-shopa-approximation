@@ -49,7 +49,7 @@ void atan2_approximation(size_t num_points, const coordinate_t* coordinates, coo
 }
 
 coordinate_t::component_type std::atan2(coordinate_t const direction) {
-    return std::atan2(direction.latitude, direction.longitude);
+    return std::atan2(direction.longitude, direction.latitude);
 }
 
 // Euclidean distance
