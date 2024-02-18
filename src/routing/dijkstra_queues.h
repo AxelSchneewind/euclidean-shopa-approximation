@@ -11,6 +11,7 @@
 #include <queue>
 #include <map>
 
+// TODO remove
 template<RoutableGraph Graph>
 struct use_all_edges {
 public:
@@ -57,51 +58,34 @@ class dijkstra_queue : protected std::priority_queue<NodeCostPair, std::vector<N
 private:
     std::size_t _max_size{0};
 
-    // count the number of push operations since last cleanup (bounds the number of duplicates currently present)
-    std::size_t counter;
-
-    // when to perform cleanup (0 means no cleanup)
-    static constexpr std::size_t max_queue_size = 0;
-    static constexpr std::size_t max_allowed_duplicates = max_queue_size;
-
 protected:
     using base_queue_type = std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>;
 
 public:
     using value_type = NodeCostPair;
 
-    dijkstra_queue(Graph const &__graph, Comp __comp = Comp{})
-            : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(__comp), counter(0) {}
+    dijkstra_queue(Graph const &graph, Comp comp = Comp{})
+            : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(comp) {}
 
-    void init(Graph::node_id_type __start_node, Graph::node_id_type __target_node) {
+    void init(Graph::node_id_type start_node, Graph::node_id_type target_node) {
         while (!empty())
             pop();
 
-        counter = 0;
         _max_size = 0;
     };
 
     void push(base_queue_type::value_type const& ncp) {
         assert(ncp.distance() != infinity<decltype(ncp.distance())>);
         base_queue_type::emplace(ncp);
-
-        if constexpr (max_allowed_duplicates > 0) {
-            // assumes that counter is the number of duplicates currently inserted
-            counter++;
-            if (counter >= max_allowed_duplicates) {
-                cleanup();
-                counter = 0;
-            }
-        }
     }
 
-    void push(Graph::node_id_type __node, Graph::node_id_type __predecessor, distance_t __dist) {
-        NodeCostPair ncp(__node, __predecessor, __dist);
+    void push(Graph::node_id_type node, Graph::node_id_type predecessor, distance_t dist) {
+        NodeCostPair ncp(node, predecessor, dist);
         push(ncp);
     }
 
-    void push_range(std::span<NodeCostPair, std::dynamic_extent> __nodes) {
-        for (auto&& ncp: __nodes)
+    void push_range(std::span<NodeCostPair, std::dynamic_extent> nodes) {
+        for (auto&& ncp: nodes)
             push(ncp);
     }
 
@@ -114,40 +98,6 @@ public:
 
     NodeCostPair top() const {
         return base_queue_type::top();
-    }
-
-    /**
-     * perform sweep along container and remove duplicates (i.e. for node cost pairs with identical node, the one with minimal distance is kept)
-     */
-    void cleanup() {
-        auto &container = base_queue_type::c;
-        static std::unordered_map<typename Graph::node_id_type, unsigned int> first_index;
-
-        size_t from_index = 0;
-        size_t to_index = container.size();
-        for (; from_index < to_index; from_index++) {
-            auto ncp = container[from_index];
-            auto node = container[from_index].node;
-
-            // swap other node_cost_pair to current position if distance is larger than at the first occurrence
-            while (from_index < to_index && first_index.contains(node)) [[likely]] {
-                // if current instance has higher distance, move last element of vector here
-                if (ncp.distance >= container[first_index[node]].distance)
-                    [[likely]]
-                            container[from_index] = container[--to_index];
-                else // if current instance has lower distance, swap with first occurrence, next iteration will get last element
-                    container[first_index[node]] = container[from_index];
-
-                ncp = container[from_index];
-                node = container[from_index].node;
-            }
-
-            first_index[node] = from_index;
-        }
-        container.resize(to_index);
-        first_index.clear();
-
-        std::make_heap(container.begin(), container.end(), base_queue_type::comp);
     }
 
     size_t max_size() const { return _max_size; }
