@@ -444,22 +444,6 @@ steiner_neighbors<Graph, Labels>::add_min_angle_neighbor(const NodeCostPair &nod
                                                          const coordinate_t &direction,
                                                          std::vector<NodeCostPair> &out) {
     assert(direction.longitude != 0 || direction.latitude != 0);
-    //node_id_type next;
-    //coordinate_t::component_type cos1, cos2;
-    // if constexpr (HasSuccessorHint<typename Labels::edge_label_type, Graph>) {
-    //     auto& hint = _labels.at(node.node().edge).successor_hint();
-
-    //     if (hint.edge == edge_id) { // valid hint
-    //         // search for best neighbor here
-    //         next = find_min_angle_neighbors_hinted(edge_id, direction, hint, cos1, cos2);
-    //     } else {
-    //         next = find_min_angle_neighbors(edge_id, direction, cos1, cos2);
-    //     }
-
-    //     hint = next;
-    // } else {
-    //     next = find_min_angle_neighbors(edge_id, direction, cos1, cos2);
-    // }
 
     coordinate_t::component_type rel = min_angle_relative_value(edge_id, direction);
     node_id_type other{edge_id, _graph.subdivision_info().index(edge_id, rel)};
