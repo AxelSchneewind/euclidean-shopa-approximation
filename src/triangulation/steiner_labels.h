@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../routing/dijkstra_concepts.h"
-#include "node_info_array.h"
 #include "compact_node_info_container.h"
+#include "fast_map.h"
 
 #include <functional>
 
@@ -73,14 +73,12 @@ public:
 };
 
 
-// TODO add template parameter for switching between array- and map-based data structure
 template<RoutableGraph G, typename Label>
 class steiner_labels {
 public:
     using label_type = Label;
 
     using label_iterator_type = nested_iterator<typename std::vector<bool>::const_iterator, steiner_graph::node_id_iterator_type>;
-    // static_assert(std::ranges::forward_range<label_iterator_type>);
 
 private:
     using node_id_type = typename G::node_id_type;
@@ -89,17 +87,10 @@ private:
     using distance_type = typename G::distance_type;
 
 public:
-    struct edge_label_type {
-        node_id_type _hint;
-
-        node_id_type& successor_hint() { return _hint; }
-        node_id_type const& successor_hint() const { return _hint; }
-    };
+    struct edge_label_type { };
 
 private:
-
-    // using labels_type = node_info_array<edge_id_type, intra_edge_id_type, label_type>;
-    using labels_type = compact_node_info_container<edge_id_type, intra_edge_id_type, edge_label_type, label_type>;
+    using labels_type = fast_map<edge_id_type, intra_edge_id_type, label_type>;
 
     G const &_graph;
 
@@ -109,8 +100,6 @@ private:
     labels_type _labels;
 
 public:
-
-
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::unique_ptr<std::vector<Label>>);
 
@@ -118,17 +107,9 @@ public:
 
     ~steiner_labels() = default;
 
-    steiner_labels(steiner_labels &&other) noexcept
-        : _graph(other._graph)
-        , _edge_touched(std::move(other._edge_touched))
-        , _base_labels(std::move(other._base_labels))
-        , _labels(std::move(other._labels)) {};
+    steiner_labels(steiner_labels &&other) noexcept;;
 
-    steiner_labels(G const& graph, steiner_labels &&other) noexcept
-        : _graph(graph)
-        , _edge_touched(std::move(other._edge_touched))
-        , _base_labels(std::move(other._base_labels))
-        , _labels(std::move(other._labels)) {};
+    steiner_labels(G const& graph, steiner_labels &&other) noexcept;;
 
 
     steiner_labels &operator=(steiner_labels &&) noexcept = default;
@@ -140,7 +121,7 @@ public:
     [[gnu::hot]]
     Label& at(node_id_type node);
     [[gnu::hot]]
-    Label const& at(node_id_type node) const;
+    Label at(node_id_type node) const;
 
     edge_label_type& at(edge_id_type edge);
     edge_label_type const& at(edge_id_type edge) const;
@@ -151,3 +132,17 @@ public:
     [[gnu::hot]]
     void label(node_id_type const& node, Label const& label);
 };
+
+template<RoutableGraph G, typename Label>
+steiner_labels<G, Label>::steiner_labels(steiner_labels &&other) noexcept
+        : _graph(other._graph)
+        , _edge_touched(std::move(other._edge_touched))
+        , _base_labels(std::move(other._base_labels))
+        , _labels(std::move(other._labels)) {}
+
+template<RoutableGraph G, typename Label>
+steiner_labels<G, Label>::steiner_labels(const G &graph, steiner_labels &&other) noexcept
+        : _graph(graph)
+        , _edge_touched(std::move(other._edge_touched))
+        , _base_labels(std::move(other._base_labels))
+        , _labels(std::move(other._labels)) {}

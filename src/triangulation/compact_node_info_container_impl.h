@@ -4,7 +4,6 @@
 
 #include <vector>
 #include <map>
-#include "node_info_container.h"
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
 Info const&
@@ -29,7 +28,7 @@ compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>:
 }
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
-std::size_t compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::aggregate_count() const {
+size_t compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>::aggregate_count() const {
     return edge_count;
 }
 

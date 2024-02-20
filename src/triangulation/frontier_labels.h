@@ -1,62 +1,21 @@
 #pragma once
 
 #include "steiner_graph.h"
-#include "../graph/graph.h"
 
 #include "../routing/dijkstra_concepts.h"
-#include "node_info_array.h"
 
 #include <queue>
+#include <vector>
 
 
 template<typename T>
 concept DistanceNodeCostPair = HasDistance<T> && HasNode<T>;
 
-
-// TODO move somewhere else
-struct distance_label {
-public:
-    using distance_type = steiner_graph::distance_type;
-private:
-    distance_type _distance;
-public:
-
-    static constexpr steiner_graph::node_id_type predecessor = none_value<steiner_graph::node_id_type>;
-
-    constexpr distance_label() : _distance(infinity<distance_type>) {}
-
-    constexpr distance_label(distance_type dist) : _distance(dist) {}
-
-    template<typename NCP>
-    requires HasDistance<NCP>
-    constexpr distance_label(NCP ncp) : _distance(ncp.distance()) {}
-
-    constexpr distance_label(distance_type distance, steiner_graph::node_id_type) : _distance(distance) {}
-
-    template<typename NCP>
-    requires HasDistance<NCP>
-    operator NCP() {
-        return {
-                none_value<steiner_graph::node_id_type>,
-                none_value<steiner_graph::node_id_type>,
-                _distance,
-        };
-    }
-
-    distance_type& distance() { return _distance; }
-    distance_type const& distance() const { return _distance; }
-};
-
-template<>
-constexpr distance_label none_value<distance_label> = {infinity<steiner_graph::distance_type>,
-                                                       none_value<steiner_graph::node_id_type>};
-
-
 /**
  * only stores labels for relevant nodes in a graph with steiner points
  * @tparam NodeCostPair
  */
-template<DistanceNodeCostPair NodeCostPair, HasDistance Label = distance_label>
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 class frontier_labels {
 public:
     using node_id_type = steiner_graph::node_id_type;
@@ -85,33 +44,30 @@ private:
     };
 
 
-    steiner_graph const &_M_graph;
+    steiner_graph const &_graph;
 
     // nodes with lower value (minimal path length) will not be labelled again, assuming nodes are labelled with ascending value()
-    distance_type min_value;
+    distance_type _min_value;
     // nodes with higher distance are preliminarily labelled
-    distance_type max_distance;
+    distance_type _max_distance;
 
     // nodes with value < min_value - frontier_width can be discarded, this value has to be lower than the maximum edge length
-    distance_type frontier_width;
+    distance_type _frontier_width;
 
-    // std::unordered_map<base_node_id_type, std::shared_ptr<aggregate_info>> _M_expanded_node_aggregates;
-    compact_node_info_container<base_edge_id_type, short unsigned int, nullptr_t, label_type> _M_expanded_node_aggregates;
+    // std::unordered_map<base_node_id_type, std::shared_ptr<aggregate_info>> _expanded_node_aggregates;
+    compact_node_info_container<base_edge_id_type, short unsigned int, nullptr_t, label_type> _expanded_node_aggregates;
 
-    label_type default_value;
+    label_type _default_value;
 
-    std::priority_queue<aggregate_throwaway_info, std::vector<aggregate_throwaway_info>, compare_aggregate_throwaway> _M_active_aggregates;
+    std::priority_queue<aggregate_throwaway_info, std::vector<aggregate_throwaway_info>, compare_aggregate_throwaway> _active_aggregates;
 
 public:
 
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<aggregate_info>);
 
-    frontier_labels(steiner_graph const &__graph, distance_type frontier_width = 0.2,
-                    label_type default_value = none_value<label_type>)
-            : _M_graph(__graph),
-              _M_expanded_node_aggregates{__graph.subdivision_info().offsets(), nullptr, default_value}, min_value{0.0},
-              max_distance{0.0}, default_value(default_value), frontier_width(frontier_width) {};
+    frontier_labels(steiner_graph const &graph, distance_type frontier_width = 0.2,
+                    label_type default_value = none_value<label_type>);
 
     frontier_labels(frontier_labels &&) noexcept = default;
 
@@ -119,58 +75,97 @@ public:
 
     ~frontier_labels() = default;
 
-    size_t aggregate_count() const {
-        return _M_expanded_node_aggregates.edge_count();
-    }
+    size_t aggregate_count() const;
 
     // init for given query
-    void init(node_id_type __start_node, node_id_type __target_node) {
-        _M_expanded_node_aggregates.reset();
+    void init(node_id_type start_node, node_id_type target_node);;
 
-        while (!_M_active_aggregates.empty())
-            _M_active_aggregates.pop();
-    };
+    bool reached(node_id_type node) const;
 
-    bool reached(node_id_type __node) const {
-        return _M_expanded_node_aggregates.node_count(__node.edge) > 0 &&
-               !is_infinity(_M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index).distance());
-    }
+    label_type get(node_id_type node) const;
 
-    label_type get(node_id_type __node) const {
-        return get_preliminary(__node);
-    }
-
-    label_type get_preliminary(node_id_type __node) const {
-        return _M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index);
-    }
+    label_type get_preliminary(node_id_type node) const;
 
     /**
      * informs the data structure that node information with distance less than the given one can be discarded
      * @param new_distance
      */
-    void set_frontier_distance(distance_type new_distance) {
-        min_value = std::max(min_value, new_distance);
+    void set_frontier_distance(distance_type new_distance);
 
-        while (!_M_active_aggregates.empty() && _M_active_aggregates.top().throwaway_distance < min_value) {
-            _M_expanded_node_aggregates.erase(_M_active_aggregates.top().edge);
-            _M_active_aggregates.pop();
-        }
-    }
+    void set_frontier_width(distance_type new_width);
 
-    void set_frontier_width(distance_type new_width) {
-        frontier_width = new_width;
-    }
+    void label_preliminary(steiner_graph::node_id_type node, node_cost_pair_type node_cost_pair);
 
-    void label_preliminary(steiner_graph::node_id_type __node, node_cost_pair_type __node_cost_pair) {
-        if (_M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index).distance >
-            __node_cost_pair.distance)
-            _M_expanded_node_aggregates.node_info(__node.edge, __node.steiner_index) = __node_cost_pair;
-    }
-
-    void label(steiner_graph::node_id_type __node, node_cost_pair_type __node_cost_pair) {
-        label_preliminary(__node, __node_cost_pair);
-        max_distance = std::max(max_distance, __node_cost_pair.distance);
-        set_frontier_distance(__node_cost_pair.value() - frontier_width);
-    };
+    void label(steiner_graph::node_id_type node, node_cost_pair_type node_cost_pair);;
 };
 
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+void frontier_labels<NodeCostPair, Label>::label(steiner_graph::node_id_type node, node_cost_pair_type node_cost_pair) {
+    label_preliminary(node, node_cost_pair);
+    _max_distance = std::max(_max_distance, node_cost_pair.distance);
+    set_frontier_distance(node_cost_pair.value() - _frontier_width);
+}
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+void frontier_labels<NodeCostPair, Label>::label_preliminary(steiner_graph::node_id_type node,
+                                                             node_cost_pair_type node_cost_pair) {
+    if (_expanded_node_aggregates.node_info(node.edge, node.steiner_index).distance >
+        node_cost_pair.distance)
+        _expanded_node_aggregates.node_info(node.edge, node.steiner_index) = node_cost_pair;
+}
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+void frontier_labels<NodeCostPair, Label>::set_frontier_width(frontier_labels::distance_type new_width) {
+    _frontier_width = new_width;
+}
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+void frontier_labels<NodeCostPair, Label>::set_frontier_distance(frontier_labels::distance_type new_distance) {
+    _min_value = std::max(_min_value, new_distance);
+
+    while (!_active_aggregates.empty() && _active_aggregates.top().throwaway_distance < _min_value) {
+        _expanded_node_aggregates.erase(_active_aggregates.top().edge);
+        _active_aggregates.pop();
+    }
+}
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+Label frontier_labels<NodeCostPair, Label>::get_preliminary(frontier_labels::node_id_type node) const {
+    return _expanded_node_aggregates.node_info(node.edge, node.steiner_index);
+}
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+Label frontier_labels<NodeCostPair, Label>::get(frontier_labels::node_id_type node) const {
+    return get_preliminary(node);
+}
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+bool frontier_labels<NodeCostPair, Label>::reached(frontier_labels::node_id_type node) const {
+    return _expanded_node_aggregates.node_count(node.edge) > 0 &&
+           !is_infinity(_expanded_node_aggregates.node_info(node.edge, node.steiner_index).distance());
+}
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+void frontier_labels<NodeCostPair, Label>::init(frontier_labels::node_id_type start_node,
+                                                frontier_labels::node_id_type target_node) {
+    _expanded_node_aggregates.reset();
+
+    while (!_active_aggregates.empty())
+        _active_aggregates.pop();
+}
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+size_t frontier_labels<NodeCostPair, Label>::aggregate_count() const {
+    return _expanded_node_aggregates.edge_count();
+}
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+frontier_labels<NodeCostPair, Label>::frontier_labels(const steiner_graph &graph,
+                                                      frontier_labels::distance_type frontier_width,
+                                                      label_type default_value)
+        : _graph(graph),
+          _expanded_node_aggregates{graph.subdivision_info().offsets(), nullptr, default_value},
+          _min_value{0.0},
+          _max_distance{0.0},
+          _default_value(default_value),
+          _frontier_width(frontier_width) {}

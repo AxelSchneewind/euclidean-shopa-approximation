@@ -1,13 +1,10 @@
 #pragma once
 
-#include "node_info_container.h"
-
 #include <vector>
 #include <map>
 
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
-class compact_node_info_container
-        : public node_info_container<AggregateId, IntraAggregateId, Info, compact_node_info_container<AggregateId, IntraAggregateId, AggregateInfo, Info>>{
+class compact_node_info_container {
 public:
     using edge_id_type = AggregateId;
     using intra_edge_id_type = IntraAggregateId;

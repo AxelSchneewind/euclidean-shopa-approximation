@@ -16,8 +16,6 @@
 #include "routing/router_impl.h"
 #include "routing/router_bidirectional_impl.h"
 #include "triangulation/steiner_neighbors_impl.h"
-#include "triangulation/node_info_container_impl.h"
-#include "triangulation/node_info_array_impl.h"
 #include "triangulation/compact_node_info_container_impl.h"
 #include "triangulation/steiner_graph_impl.h"
 #include "triangulation/frontier_labels.h"
@@ -68,10 +66,38 @@ public:
     typename G::node_id_type const& predecessor() const { return _predecessor; };
 };
 
-template<RoutableGraph Graph>
-constexpr label_type<Graph>
-//none_value<label_type<Graph>> = {infinity<typename Graph::distance_type>, none_value<typename Graph::node_id_type>};
-none_value<label_type<Graph>> = {};
+struct distance_label {
+public:
+    using distance_type = steiner_graph::distance_type;
+private:
+    distance_type _distance;
+public:
+
+    static constexpr steiner_graph::node_id_type predecessor = none_value<steiner_graph::node_id_type>;
+
+    constexpr distance_label() : _distance(infinity<distance_type>) {}
+
+    constexpr distance_label(distance_type dist) : _distance(dist) {}
+
+    template<typename NCP>
+    requires HasDistance<NCP>
+    constexpr distance_label(NCP ncp) : _distance(ncp.distance()) {}
+
+    constexpr distance_label(distance_type distance, steiner_graph::node_id_type) : _distance(distance) {}
+
+    template<typename NCP>
+    requires HasDistance<NCP>
+    operator NCP() {
+        return {
+                none_value<steiner_graph::node_id_type>,
+                none_value<steiner_graph::node_id_type>,
+                _distance,
+        };
+    }
+
+    distance_type& distance() { return _distance; }
+    distance_type const& distance() const { return _distance; }
+};
 
 
 using std_graph_t = graph<node_t, edge_t, node_id_t, edge_id_t>;
