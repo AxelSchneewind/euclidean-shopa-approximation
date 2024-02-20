@@ -5,6 +5,7 @@
 #include "fast_map.h"
 
 #include <functional>
+#include <vector>
 
 template<typename Outer, typename Inner>
 class nested_iterator {
@@ -86,9 +87,6 @@ private:
     using intra_edge_id_type = typename G::triangle_edge_id_type;
     using distance_type = typename G::distance_type;
 
-public:
-    struct edge_label_type { };
-
 private:
     using labels_type = fast_map<edge_id_type, intra_edge_id_type, label_type>;
 
@@ -123,26 +121,9 @@ public:
     [[gnu::hot]]
     Label at(node_id_type node) const;
 
-    edge_label_type& at(edge_id_type edge);
-    edge_label_type const& at(edge_id_type edge) const;
-
     [[gnu::cold]]
     label_iterator_type all_visited() const;
 
     [[gnu::hot]]
     void label(node_id_type const& node, Label const& label);
 };
-
-template<RoutableGraph G, typename Label>
-steiner_labels<G, Label>::steiner_labels(steiner_labels &&other) noexcept
-        : _graph(other._graph)
-        , _edge_touched(std::move(other._edge_touched))
-        , _base_labels(std::move(other._base_labels))
-        , _labels(std::move(other._labels)) {}
-
-template<RoutableGraph G, typename Label>
-steiner_labels<G, Label>::steiner_labels(const G &graph, steiner_labels &&other) noexcept
-        : _graph(graph)
-        , _edge_touched(std::move(other._edge_touched))
-        , _base_labels(std::move(other._base_labels))
-        , _labels(std::move(other._labels)) {}
