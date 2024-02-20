@@ -66,6 +66,17 @@ public:
         _target_coordinate = _graph.node(target_node).coordinates;
     }
 
+    void push_range(std::span<NodeCostPair, std::dynamic_extent> nodes, std::span<coordinate_t> coordinates) {
+        // can be vectorized
+        for (int i = 0; i < nodes.size(); ++i) {
+            nodes[i].info().value() = nodes[i].distance() + factor * distance(_target_coordinate, coordinates[i]);
+        }
+
+        for (auto&& ncp: nodes)
+            base_queue_type::emplace(ncp);
+    }
+
+    [[deprecated("it is recommended to pass a span of the node coordinates as well")]]
     void push_range(std::span<NodeCostPair, std::dynamic_extent> nodes) {
         static std::vector<coordinate_t> coordinates;
 
@@ -75,13 +86,7 @@ public:
             coordinates[i] = _graph.node(nodes[i].node()).coordinates;
         }
 
-        // can be vectorized
-        for (int i = 0; i < nodes.size(); ++i) {
-            nodes[i].info().value() = nodes[i].distance() + factor * distance(_target_coordinate, coordinates[i]);
-        }
-
-        for (auto&& ncp: nodes)
-            base_queue_type::emplace(ncp);
+        push_range(nodes, std::span{coordinates.begin(), coordinates.end()});
     }
 
     void set_target(coordinate_t coordinates) {
