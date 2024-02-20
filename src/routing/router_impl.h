@@ -37,6 +37,7 @@ router<Graph, Dijkstra>::step_forward() {
 
     // update mid node if target found
     if (_forward_current.node() == _target_node)
+        // TODO why is this not always executed
         _mid_node = _target_node;
 
     // update current node
@@ -47,19 +48,25 @@ template<typename Graph, typename Dijkstra>
 void
 router<Graph, Dijkstra>::compute_route() {
     assert(!is_none(_start_node));
+    assert(is_none(_target_node) || !_forward_search.reached(_target_node));
 
     bool done = _forward_search.queue_empty();
     std::size_t step_count = 0;
     while (!done) {
+        step_forward();
+
         done = _forward_search.queue_empty();
         done |= !is_none(_target_node) && _forward_search.reached(_target_node);
         done |= !is_none(_mid_node);
 
-        step_forward();
-
-        done |= is_none(_forward_current);
         step_count++;
     }
+
+    // TODO remove
+    _mid_node = _target_node;
+
+    assert(is_none(_mid_node) || _mid_node == _target_node);
+    assert(is_none(_target_node) || is_infinity(_forward_search.get_label(_target_node).distance()) || (!is_none(_mid_node) && _forward_search.reached(_target_node)));
 }
 
 template<typename Graph, typename Dijkstra>
