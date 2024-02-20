@@ -26,8 +26,6 @@ private:
     node_id_type _start_node;
     node_id_type _target_node;
 
-    distance_type _min_distance;
-
     Q _queue;
     L _labels;
 
@@ -41,25 +39,16 @@ private:
     void expand(node_cost_pair_type node);
 
 public:
-
     dijkstra(dijkstra &&other) noexcept;
 
     dijkstra(const dijkstra &other) = delete;
 
-
     // constructs a dijkstra object for the given graph
-    explicit dijkstra(G const &graph)
-            : _graph(graph), _queue{_graph},
-              _labels(_graph), _neighbors{_graph, _labels} {};
+    explicit dijkstra(G const &graph);
 
-   //  TODO
-    explicit dijkstra(G const &graph, dijkstra&& other)
-            : _graph(graph), _queue{std::move(other._queue)},
-              _labels(_graph, std::move(other._labels)), _neighbors(_graph, _labels) {};
+    explicit dijkstra(G const &graph, dijkstra&& other);
 
-    explicit dijkstra(G const &graph, Q &&queue, L &&labels, N &&neighbors)
-            : _graph(graph), _queue(std::move(queue)),
-              _labels(std::move(labels)), _neighbors(std::move(neighbors)) {};
+    explicit dijkstra(G const &graph, Q &&queue, L &&labels, N &&neighbors);
 
     ~dijkstra() = default;
 
@@ -67,22 +56,19 @@ public:
 
     dijkstra &operator=(dijkstra const &other) = delete;
 
-    distance_type min_path_length() const;
+    node_id_type source() const;
 
-    node_id_type source() const { return _start_node; }
+    node_id_type target() const;
 
-    node_id_type target() const { return _target_node; }
+    const Q &queue() const;
+    Q &queue();
 
-    const Q &queue() const { return _queue; }
+    const L &labels() const;
+    L &labels();
 
-    Q &queue() { return _queue; }
+    const N &neighbors() const;
 
-    const L &labels() const { return _labels; }
-    const N &neighbors() const { return _neighbors; }
-
-    L &labels() { return _labels; }
-
-    typename L::label_type const& get_label(node_id_type node) const { return _labels.at(node); }
+    typename L::label_type get_label(node_id_type node) const;
 
     /**
      * init one to one
@@ -132,7 +118,7 @@ public:
      */
     G::path_type path(node_id_type target) const;
 
-    std::size_t push_count() const {return _push_count;};
-    std::size_t pull_count() const {return _pull_count;};
-    std::size_t edges_checked() const {return _edges_checked;};
+    std::size_t push_count() const;
+    std::size_t pull_count() const;
+    std::size_t edges_checked() const;
 };

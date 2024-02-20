@@ -3,13 +3,50 @@
 #include "dijkstra.h"
 
 #include "../graph/base_types.h"
-#include "dijkstra_concepts.h"
 
 #include <cassert>
-#include <vector>
-
+#include <cstddef>
 #include <cmath>
 
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+typename L::label_type dijkstra<G, Q, L, N>::get_label(node_id_type node) const { return _labels.at(node); }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+L &dijkstra<G, Q, L, N>::labels() { return _labels; }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+const N &dijkstra<G, Q, L, N>::neighbors() const { return _neighbors; }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+const L &dijkstra<G, Q, L, N>::labels() const { return _labels; }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+Q &dijkstra<G, Q, L, N>::queue() { return _queue; }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+const Q &dijkstra<G, Q, L, N>::queue() const { return _queue; }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+dijkstra<G, Q, L, N>::node_id_type dijkstra<G, Q, L, N>::target() const { return _target_node; }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+dijkstra<G, Q, L, N>::node_id_type dijkstra<G, Q, L, N>::source() const { return _start_node; }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+dijkstra<G, Q, L, N>::dijkstra(const G &graph, Q &&queue, L &&labels, N &&neighbors)
+        : _graph(graph), _queue(std::move(queue)),
+          _labels(std::move(labels)), _neighbors(std::move(neighbors)) {}
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+dijkstra<G, Q, L, N>::dijkstra(const G &graph, dijkstra &&other)
+        : _graph(graph), _queue{std::move(other._queue)},
+          _labels(_graph, std::move(other._labels)), _neighbors(_graph, _labels) {}
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+dijkstra<G, Q, L, N>::dijkstra(const G &graph)
+        : _graph(graph), _queue{_graph}, _labels(_graph), _neighbors{_graph, _labels},
+          _start_node{none_value<node_id_type>}, _target_node{none_value<node_id_type>} {}
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
@@ -26,6 +63,7 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         NeighborsGetter<typename Q::value_type> N>
 dijkstra<G, Q, L, N>::node_cost_pair_type
 dijkstra<G, Q, L, N>::current() const {
+    assert(!_queue.empty());
     return _queue.empty() ? none_value<dijkstra<G, Q, L, N>::node_cost_pair_type> : _queue.top();
 }
 
@@ -82,8 +120,8 @@ dijkstra<G, Q, L, N>::expand(node_cost_pair_type node) {
 
     int to_index = 0;
     for (int i = 0; i < node_cost_pairs.size(); i++) {
-        auto const& successor = node_cost_pairs[i];
-        node_id_type const& successor_node = successor.node();
+        auto const &successor = node_cost_pairs[i];
+        node_id_type const &successor_node = successor.node();
 
         assert(!is_none(successor_node));
         assert(successor.predecessor() == node.node());
@@ -91,7 +129,7 @@ dijkstra<G, Q, L, N>::expand(node_cost_pair_type node) {
         assert (successor_node == _start_node || _graph.has_edge(successor.predecessor(), successor_node));
 
         const distance_t successor_cost = _labels.at(successor_node).distance(); // use shortest distance
-        const distance_t& new_cost = successor.distance();
+        const distance_t &new_cost = successor.distance();
 
         assert(new_cost >= node.distance());
         if (new_cost < successor_cost) [[likely]] {
@@ -130,22 +168,15 @@ dijkstra<G, Q, L, N>::step() {
     _pull_count++;
 
     // label current node
+    assert(is_none(_labels.at(ncp.node()).predecessor()));
+    assert(!reached(ncp.node()));
     _labels.label(ncp.node(), ncp);
 
-    // remove already settled nodes
-    while (!_queue.empty() && _queue.top().distance() > _labels.at(_queue.top().node()).distance()) [[likely]] {
+    // remove already labelled nodes
+    while (!_queue.empty() && !is_none(_labels.at(_queue.top().node()).predecessor())) [[likely]] {
         _queue.pop();
     }
 }
-
-
-template<RoutableGraph G, DijkstraQueue<G> Q,
-        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
-        NeighborsGetter<typename Q::value_type> N>
-typename G::distance_type dijkstra<G, Q, L, N>::min_path_length() const {
-    return current().min_distance();
-}
-
 
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
@@ -186,7 +217,7 @@ G::subgraph_type dijkstra<G, Q, L, N>::shortest_path_tree(int max_node_count) co
 
     // add nodes and edges that have been visited
     auto &&visited = labels().all_visited();
-    for (auto const& node_id: visited) {
+    for (auto const &node_id: visited) {
         if (nodes.size() >= max_node_count || edges.size() >= max_node_count)
             break;
 
@@ -206,8 +237,17 @@ G::subgraph_type dijkstra<G, Q, L, N>::shortest_path_tree(int max_node_count) co
     remove_duplicates(nodes);
     remove_duplicates(edges);
 
-    typename G::subgraph_type subgraph {std::move(nodes), std::move(edges)};
-    filter_nodes(subgraph, [&](auto const& node) -> bool { return get_label(node).distance() < current().value(); });
+    typename G::subgraph_type subgraph{std::move(nodes), std::move(edges)};
+    filter_nodes(subgraph, [&](auto const &node) -> bool { return get_label(node).distance() < current().value(); });
 
     return subgraph;
 }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+std::size_t dijkstra<G, Q, L, N>::edges_checked() const { return _edges_checked; }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+std::size_t dijkstra<G, Q, L, N>::pull_count() const { return _pull_count; }
+
+template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
+std::size_t dijkstra<G, Q, L, N>::push_count() const { return _push_count; }
