@@ -111,11 +111,21 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
 void
 dijkstra<G, Q, L, N>::expand(node_cost_pair_type node) {
     static std::vector<node_cost_pair_type> node_cost_pairs;
+    static std::vector<coordinate_t > coordinates;
     node_cost_pairs.clear();
+    coordinates.clear();
 
     assert(!is_none(node.node()));
     assert(node.node() == _start_node || node.node() != node.predecessor());
-    _neighbors(node, node_cost_pairs);
+
+    static constexpr bool geometric_queue     = requires(Q q, std::span<node_cost_pair_type> out, std::span<coordinate_t> coords_out) { q.push_range(out, coords_out);};
+    static constexpr bool geometric_neighbors = requires(N n, std::vector<node_cost_pair_type> out, std::vector<coordinate_t> coords_out) { n(out, coords_out);};
+    if constexpr (geometric_queue && geometric_neighbors) {
+        _neighbors(node, node_cost_pairs, coordinates);
+    } else {
+        _neighbors(node, node_cost_pairs);
+    }
+
     _edges_checked += node_cost_pairs.size();
 
     int to_index = 0;
@@ -136,11 +146,13 @@ dijkstra<G, Q, L, N>::expand(node_cost_pair_type node) {
             assert(successor_node != node.predecessor());
 
             // (re-)insert node into the queue with updated priority
+            if constexpr (geometric_neighbors && geometric_queue) {
+                coordinates[to_index] = coordinates[i];
+            }
             node_cost_pairs[to_index++] = successor;
 
             // label current node with preliminary value
             assert (_graph.has_edge(successor.predecessor(), successor_node));
-
             _labels.label(successor_node, successor);
             _labels.at(successor_node).predecessor() = none_value<typename G::node_id_type>;
         }
@@ -148,8 +160,23 @@ dijkstra<G, Q, L, N>::expand(node_cost_pair_type node) {
 
     // push all
     node_cost_pairs.resize(to_index);
+    if constexpr (!geometric_neighbors && geometric_queue) {
+        coordinates.resize(to_index);
+
+        // get coordinates
+        for (int i = 0; i < node_cost_pairs.size(); ++i) {
+            coordinates[i] = _graph.node(node_cost_pairs[i].node()).coordinates;
+        }
+    }
+
+    if constexpr (geometric_queue) {
+        _queue.push_range(std::span{node_cost_pairs.begin(), node_cost_pairs.end()},
+                          std::span{coordinates.begin(), coordinates.end()});
+    } else {
+        _queue.push_range(std::span{node_cost_pairs.begin(), node_cost_pairs.end()});
+    }
+
     _push_count += to_index;
-    _queue.push_range({node_cost_pairs.begin(), node_cost_pairs.end()});
 }
 
 
