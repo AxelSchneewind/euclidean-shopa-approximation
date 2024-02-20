@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <limits>
+#include <utility>
 #include <vector>
 #include <cstdint>
 #include <cmath>
@@ -12,7 +13,7 @@
 
 class subdivision {
 public:
-    using steiner_index_type = short;
+    using steiner_index_type = int;
 
 private:
     static constexpr steiner_index_type max_steiner_count_per_edge = std::numeric_limits<steiner_index_type>::max();
@@ -48,8 +49,8 @@ public:
 
     std::vector<subdivision_edge_info> edges;
 
-    static constexpr size_t SIZE_PER_NODE = 0;
-    static constexpr size_t SIZE_PER_EDGE = sizeof(subdivision_edge_info);
+    static constexpr std::size_t SIZE_PER_NODE = 0;
+    static constexpr std::size_t SIZE_PER_EDGE = sizeof(subdivision_edge_info);
 
     ~subdivision() = default;
 
@@ -69,20 +70,7 @@ public:
     subdivision_edge_info const& edge(edge_id_t edge) const;
 
     // TODO move somewhere else
-    std::vector<size_t> offsets() const {
-        std::vector<size_t> results;
-
-        std::size_t index = 0;
-        for (auto&& edge_info: edges) {
-            results.push_back(index);
-            assert(index + edge_info.node_count >= index);
-            index += edge_info.node_count;
-        }
-        while(results.size() < edges.size() + 1)
-            results.push_back(index);
-
-        return results;
-    }
+    std::vector<std::size_t> offsets() const;
 
     static std::vector<subdivision_edge_info> make_subdivision_info(
             const adjacency_list<int> &triangulation,
