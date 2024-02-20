@@ -15,6 +15,7 @@
 #include "routing/default_neighbors_impl.h"
 #include "routing/router_impl.h"
 #include "routing/router_bidirectional_impl.h"
+#include "triangulation/fast_map_impl.h"
 #include "triangulation/steiner_neighbors_impl.h"
 #include "triangulation/compact_node_info_container_impl.h"
 #include "triangulation/steiner_graph_impl.h"
