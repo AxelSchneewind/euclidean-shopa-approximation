@@ -44,9 +44,9 @@ done
 compute_single "$VISIBILITY_GRAPH" "$OUTPUT_DIR/exact" "$QUERY_FILE" 0.0
 
 process_results "$OUTPUT_DIR/raw" "$OUTPUT_DIR/results-raw.csv"
-# process_results "$OUTPUT_DIR/raw-unref""$OUTPUT_DIR/results-raw-unref.csv"
-process_results "$OUTPUT_DIR/approximate""$OUTPUT_DIR/results-approximate.csv"
-# process_results "$OUTPUT_DIR/approximate-unref""$OUTPUT_DIR/results-approximate-ref.csv"
+# process_results "$OUTPUT_DIR/raw-unref" "$OUTPUT_DIR/results-raw-unref.csv"
+process_results "$OUTPUT_DIR/approximate" "$OUTPUT_DIR/results-approximate.csv"
+# process_results "$OUTPUT_DIR/approximate-unref" "$OUTPUT_DIR/results-approximate-ref.csv"
 process_results "$OUTPUT_DIR/exact" "$OUTPUT_DIR/results-exact.csv"
 
 process_all_results "$OUTPUT_DIR" "$OUTPUT_DIR"/results.csv
