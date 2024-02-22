@@ -3,7 +3,7 @@
 source utils.sh
 
 # number of queries
-NUM_QUERIES=5
+NUM_QUERIES=100
 
 # maximum tree size to write to files (0 to disable tree output)
 TREE_SIZE=0
