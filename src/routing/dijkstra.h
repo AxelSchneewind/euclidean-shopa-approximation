@@ -76,7 +76,7 @@ public:
      * @param start_node
      * @param target_node
      */
-    void init(node_id_type start_node, node_id_type target_node = none_value<node_id_type>);
+    void init(node_id_type start_node, node_id_type target_node = optional::none_value<node_id_type>);
 
     /**
      * get the current node without removing from queue

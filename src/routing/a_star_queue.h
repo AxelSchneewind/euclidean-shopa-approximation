@@ -11,7 +11,7 @@ private:
     distance_t _value;
 
 public:
-    constexpr a_star_info() : _value{none_value<distance_t>} {}
+    constexpr a_star_info() : _value{optional::none_value<distance_t>} {}
 
     constexpr a_star_info(distance_t value) : _value{value} {}
 
@@ -25,7 +25,7 @@ public:
 };
 
 template<>
-constexpr a_star_info none_value<a_star_info> = {infinity<distance_t>};
+constexpr a_star_info optional::none_value<a_star_info> = {infinity<distance_t>};
 
 struct compare_heuristic {
 public:
@@ -76,7 +76,6 @@ public:
             base_queue_type::emplace(ncp);
     }
 
-    [[deprecated("it is recommended to pass a span of the node coordinates as well")]]
     void push_range(std::span<NodeCostPair, std::dynamic_extent> nodes) {
         static std::vector<coordinate_t> coordinates;
 

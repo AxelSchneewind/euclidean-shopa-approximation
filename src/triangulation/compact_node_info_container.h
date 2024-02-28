@@ -37,10 +37,10 @@ private:
     std::array<Info, 1> default_span;
 
 public:
-    compact_node_info_container(std::vector<size_t> const& offsets, AggregateInfo default_aggregate_info = none_value<AggregateInfo>, Info default_info = none_value<Info>);;
+    compact_node_info_container(std::vector<size_t> const& offsets, AggregateInfo default_aggregate_info = optional::none_value<AggregateInfo>, Info default_info = optional::none_value<Info>);;
 
-    compact_node_info_container(std::vector<size_t>&& offsets, AggregateInfo default_aggregate_info = none_value<AggregateInfo>,
-                                Info default_info = none_value<Info>);;
+    compact_node_info_container(std::vector<size_t>&& offsets, AggregateInfo default_aggregate_info = optional::none_value<AggregateInfo>,
+                                Info default_info = optional::none_value<Info>);
 
     size_t aggregate_size(AggregateId agg_id) const;
 

@@ -100,9 +100,9 @@ public:
 };
 
 template<typename NodeId, typename Distance, typename Info>
-constexpr node_cost_pair<NodeId, Distance, Info> none_value<node_cost_pair<NodeId, Distance, Info>>
+constexpr node_cost_pair<NodeId, Distance, Info> optional::none_value<node_cost_pair<NodeId, Distance, Info>>
         = {none_value<NodeId>, none_value<NodeId>, infinity<Distance>, none_value<Info>};
 
 template<typename NodeId, typename Distance>
-constexpr node_cost_pair<NodeId, Distance> none_value<node_cost_pair<NodeId, Distance>>
+constexpr node_cost_pair<NodeId, Distance> optional::none_value<node_cost_pair<NodeId, Distance>>
         = {none_value<NodeId>, none_value<NodeId>, infinity<Distance>};

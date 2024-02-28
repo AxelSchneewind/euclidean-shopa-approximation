@@ -46,7 +46,7 @@ dijkstra<G, Q, L, N>::dijkstra(const G &graph, dijkstra &&other)
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
 dijkstra<G, Q, L, N>::dijkstra(const G &graph)
         : _graph(graph), _queue{_graph}, _labels(_graph), _neighbors{_graph, _labels},
-          _start_node{none_value<node_id_type>}, _target_node{none_value<node_id_type>} {}
+          _start_node{optional::none_value<node_id_type>}, _target_node{optional::none_value<node_id_type>} {}
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
         DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
@@ -64,7 +64,7 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
 dijkstra<G, Q, L, N>::node_cost_pair_type
 dijkstra<G, Q, L, N>::current() const {
     assert(!_queue.empty());
-    return _queue.empty() ? none_value<dijkstra<G, Q, L, N>::node_cost_pair_type> : _queue.top();
+    return _queue.empty() ? optional::none_value<dijkstra<G, Q, L, N>::node_cost_pair_type> : _queue.top();
 }
 
 
@@ -73,7 +73,7 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         NeighborsGetter<typename Q::value_type> N>
 bool
 dijkstra<G, Q, L, N>::reached(G::node_id_type node) const {
-    return !is_none(_labels.at(node).predecessor());
+    return !optional::is_none(_labels.at(node).predecessor());
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q,
@@ -96,7 +96,7 @@ dijkstra<G, Q, L, N>::init(node_id_type start_node, node_id_type target_node) {
     _labels.init(start_node, target_node);
 
     // add start node to queue
-    if (!is_none(start_node)) {
+    if (!optional::is_none(start_node)) {
         _queue.push(start_node, start_node, 0);
     }
 
@@ -115,7 +115,7 @@ dijkstra<G, Q, L, N>::expand(node_cost_pair_type node) {
     node_cost_pairs.clear();
     coordinates.clear();
 
-    assert(!is_none(node.node()));
+    assert(!optional::is_none(node.node()));
     assert(node.node() == _start_node || node.node() != node.predecessor());
 
     static constexpr bool geometric_queue     = requires(Q q, std::span<node_cost_pair_type> out, std::span<coordinate_t> coords_out) { q.push_range(out, coords_out);};
@@ -133,7 +133,7 @@ dijkstra<G, Q, L, N>::expand(node_cost_pair_type node) {
         auto const &successor = node_cost_pairs[i];
         node_id_type const &successor_node = successor.node();
 
-        assert(!is_none(successor_node));
+        assert(!optional::is_none(successor_node));
         assert(successor.predecessor() == node.node());
         assert(successor.distance() > 0);
         assert (successor_node == _start_node || _graph.has_edge(successor.predecessor(), successor_node));
@@ -154,7 +154,7 @@ dijkstra<G, Q, L, N>::expand(node_cost_pair_type node) {
             // label current node with preliminary value
             assert (_graph.has_edge(successor.predecessor(), successor_node));
             _labels.label(successor_node, successor);
-            _labels.at(successor_node).predecessor() = none_value<typename G::node_id_type>;
+            _labels.at(successor_node).predecessor() = optional::none_value<typename G::node_id_type>;
         }
     }
 
@@ -195,12 +195,12 @@ dijkstra<G, Q, L, N>::step() {
     _pull_count++;
 
     // label current node
-    assert(is_none(_labels.at(ncp.node()).predecessor()));
+    assert(optional::is_none(_labels.at(ncp.node()).predecessor()));
     assert(!reached(ncp.node()));
     _labels.label(ncp.node(), ncp);
 
     // remove already labelled nodes
-    while (!_queue.empty() && !is_none(_labels.at(_queue.top().node()).predecessor())) [[likely]] {
+    while (!_queue.empty() && !optional::is_none(_labels.at(_queue.top().node()).predecessor())) [[likely]] {
         _queue.pop();
     }
 }
@@ -217,10 +217,10 @@ G::path_type dijkstra<G, Q, L, N>::path(node_id_type target) const {
         return {std::move(result)};
 
 
-    while (!is_none(fwd_node) && fwd_node != _start_node) {
+    while (!optional::is_none(fwd_node) && fwd_node != _start_node) {
         fwd_node = get_label(fwd_node).predecessor();
 
-        if (is_none(fwd_node)) break;
+        if (optional::is_none(fwd_node)) break;
 
         result.push_back(fwd_node);
     }
@@ -254,7 +254,7 @@ G::subgraph_type dijkstra<G, Q, L, N>::shortest_path_tree(int max_node_count) co
         nodes.emplace_back(node_id);
         typename G::node_id_type predecessor = labels().at(node_id).predecessor();
 
-        if (is_none(predecessor) || predecessor == node_id)
+        if (optional::is_none(predecessor) || predecessor == node_id)
             continue;
 
         typename G::edge_id_type edge = _graph.topology().edge_id(predecessor, node_id);

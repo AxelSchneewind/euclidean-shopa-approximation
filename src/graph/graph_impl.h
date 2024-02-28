@@ -60,11 +60,11 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_graph(const Other & base_graph,
     // make one-directional adjacency list
     typename adjacency_list<NodeId, EdgeInfo>::builder forward_builder(node_count);
     for (auto&& edge: subgraph.edges) {
-        if (is_none(edge)) continue;
+        if (optional::is_none(edge)) continue;
 
         auto&& src = base_graph.source(edge);
         auto&& dest = base_graph.destination(edge);
-        assert(!is_none(src) && !is_none(dest));
+        assert(!optional::is_none(src) && !optional::is_none(dest));
         if(!base_graph.has_edge(src, dest) && !base_graph.has_edge(dest, src) || !new_node_ids.contains(src) || !new_node_ids.contains(dest)) continue;
 
         auto&& info = base_graph.edge(edge);
@@ -208,7 +208,7 @@ EdgeId graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::edge_id(node_id_type __src, no
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>
 bool graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::has_edge(node_id_type __src, node_id_type __dest) const {
-    return !is_none(edge_id(__src, __dest));
+    return !optional::is_none(edge_id(__src, __dest));
 }
 
 template<typename NodeInfo, typename EdgeInfo, typename NodeId, typename EdgeId>

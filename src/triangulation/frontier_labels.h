@@ -67,7 +67,7 @@ public:
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<aggregate_info>);
 
     frontier_labels(steiner_graph const &graph, distance_type frontier_width = 0.2,
-                    label_type default_value = none_value<label_type>);
+                    label_type default_value = optional::none_value<label_type>);
 
     frontier_labels(frontier_labels &&) noexcept = default;
 

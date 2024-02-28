@@ -3,6 +3,7 @@
 #include <cmath>
 #include <limits>
 #include <array>
+#include "../util/optional.h"
 
 
 using node_id_t = int;
@@ -75,20 +76,14 @@ struct coordinate {
 using cost_t = double;
 using distance_t = double;
 
-template<typename T>
-constexpr std::remove_cvref_t<T> none_value;
+template<>
+constexpr long optional::none_value<long> = -1;
 
 template<>
-constexpr long none_value<long> = -1;
+constexpr int optional::none_value<int> = -1;
 
 template<>
-constexpr int none_value<int> = -1;
-
-template<>
-constexpr short none_value<short> = -1;
-
-template<typename T>
-constexpr bool is_none(T val) { return val == none_value<T>; }
+constexpr short optional::none_value<short> = -1;
 
 
 template<typename T>
@@ -104,9 +99,9 @@ template<>
 constexpr distance_t infinity<distance_t> = std::numeric_limits<distance_t>::infinity();
 
 template<>
-constexpr float none_value<float> = infinity<float>;
+constexpr float optional::none_value<float> = infinity<float>;
 template<>
-constexpr double none_value<double> = infinity<double>;
+constexpr double optional::none_value<double> = infinity<double>;
 
 
 using triangle = std::array<node_id_t, 3>;

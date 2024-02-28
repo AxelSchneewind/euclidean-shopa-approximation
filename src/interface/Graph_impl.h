@@ -89,7 +89,7 @@ long Graph::GraphImplementation<GraphT>::node_at(coordinate_t &position) const {
         if (node.coordinates == position)
             return id;
     }
-    return none_value<long>;
+    return optional::none_value<long>;
 }
 
 template<>
@@ -106,7 +106,7 @@ long Graph::GraphImplementation<steiner_graph>::node_at(coordinate_t &position) 
             return graph.base_graph().node_count() - 1;
     }
 
-    return none_value<long>;
+    return optional::none_value<long>;
 }
 
 template<typename GraphT>
