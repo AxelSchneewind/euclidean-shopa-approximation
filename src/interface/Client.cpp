@@ -78,7 +78,7 @@ void Client::read_graph_file(std::string path) {
     }
     input.close();
 
-    std::cout << "\b\b\b, done";
+    std::cout << "\b\b\b, done\n";
 
     _router = {_graph, _routing_config};
 
@@ -103,7 +103,7 @@ void Client::read_graph_file(std::string path, double epsilon) {
     }
     input.close();
 
-    std::cout << "\b\b\b, done";
+    std::cout << "\b\b\b, done\n";
 
     _router = {_graph, _routing_config};
 

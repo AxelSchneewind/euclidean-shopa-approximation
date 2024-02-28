@@ -56,17 +56,21 @@ public:
 
     Query& query() { return _query; }
 
-    void compute_one_to_all(int from) {
-        /*_router.compute_one_to_all(from);*/
+    void compute_one_to_all(long from) {
+        _router.compute_route(from, -1);
+        _query = _router.query();
+        _result = _router.result();
+        _query.write(statistics);
+        _result.write(statistics);
     };
 
-    void compute_one_to_all(int from, std::ostream&out) {
+    void compute_one_to_all(long from, std::ostream&out) {
         /*_router.compute_one_to_all(from, out);*/
     };
 
     void write_route_file(std::string path) const { _result.path().write_graph_file(path, path_color, 2); };
 
-    void write_tree_file(std::string path) const;;
+    void write_tree_file(std::string path) const;
 
     void write_beeline_file(std::string path) const { _query.beeline().write_graph_file(path, beeline_color, 1); };
 

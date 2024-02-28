@@ -190,6 +190,8 @@ private:
 public:
     ~unidirectional_adjacency_list();
 
+    unidirectional_adjacency_list() = default;
+
     unidirectional_adjacency_list(std::size_t node_count,
                                   std::vector<adjacency_list_edge<NodeId, E> > &&edges);
 
