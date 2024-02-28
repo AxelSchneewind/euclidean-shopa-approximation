@@ -72,14 +72,14 @@ template<>
 QueryImplementation<steiner_graph>::QueryImplementation(steiner_graph const &graph, long from, long to, RoutingConfiguration const& config)
         : _from(from), _to(to), _from_internal(graph.from_base_node_id(from)),
           _to_internal(graph.from_base_node_id(to)),
-          _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates)),
-          _beeline(make_beeline(graph, _from_internal, _to_internal)),
+          _beeline((!optional::is_none(to)) ? make_beeline(graph, _from_internal, _to_internal) : std_graph_t{}),
+          _beeline_distance((!optional::is_none(to)) ? distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates) : infinity<distance_t>),
           _configuration(config) {};
 
 template<RoutableGraph GraphT>
-QueryImplementation<GraphT>::QueryImplementation() : _from_internal{none_value<node_id_type>},
-                                                     _to_internal{none_value<node_id_type>}, _from{none_value<long>},
-                                                     _to{none_value<long>} {}
+QueryImplementation<GraphT>::QueryImplementation() : _from_internal{optional::none_value<node_id_type>},
+                                                     _to_internal{optional::none_value<node_id_type>}, _from{optional::none_value<long>},
+                                                     _to{optional::none_value<long>} {}
 
 
 
