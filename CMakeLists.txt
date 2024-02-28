@@ -71,11 +71,10 @@ else (GENGETOPT)
 endif (GENGETOPT)
 
 
-set(CMAKE_CXX_FLAGS "") # -Wall -Wextra
-set(CMAKE_CXX_FLAGS_DEBUG "-g") #-D_GLIBCXX_DEBUG
+set(CMAKE_CXX_FLAGS "-march=native -Wall") # -Wextra
+set(CMAKE_CXX_FLAGS_DEBUG "-g -D_GLIBCXX_DEBUG")
 
-# performance options
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native") # -ffast-math
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 
 # 
 add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
@@ -83,7 +82,7 @@ add_executable(find_nodes src/find_nodes.cpp src/cli/cmdline_find_nodes.c)
 
 # compile implementation into one library file
 add_library(routing src/interface/Client.cpp)
-target_compile_options(routing PRIVATE "-ffast-math")
+target_compile_options(routing PUBLIC "-ffast-math")
 link_libraries(routing)
 
 # executables that will be linked against routing library
