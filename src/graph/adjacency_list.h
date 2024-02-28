@@ -34,6 +34,8 @@ private:
                    const std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> &backward);
 
 public:
+    adjacency_list() = default;
+
     // copy constructor/assignment
     adjacency_list(const adjacency_list<NodeId, E> &other) noexcept;
 

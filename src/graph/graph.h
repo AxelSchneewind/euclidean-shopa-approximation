@@ -48,7 +48,7 @@ public:
     static constexpr std::size_t SIZE_PER_NODE = sizeof(NodeInfo) + adjacency_list_type::SIZE_PER_NODE;
     static constexpr std::size_t SIZE_PER_EDGE = adjacency_list_type::SIZE_PER_EDGE;
 
-
+    graph() = default;
 
     // move constructor
     graph(graph &&graph) noexcept;
