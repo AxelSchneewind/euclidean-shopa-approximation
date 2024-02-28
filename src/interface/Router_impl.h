@@ -109,7 +109,7 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
 
     auto const before = std::chrono::high_resolution_clock::now();
 
-    _router.compute_route();
+    _router.compute();
 
     auto const after = std::chrono::high_resolution_clock::now();
     done = true;

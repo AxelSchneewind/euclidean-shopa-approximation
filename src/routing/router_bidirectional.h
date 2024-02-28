@@ -28,16 +28,6 @@ private:
      */
     distance_type min_route_distance(node_cost_pair_type node) const;
 
-    /**
-     * TODO implement
-     */
-    void compute_one_to_all();
-
-    /**
-     * TODO move from compute_route()
-     */
-    void compute_one_to_one();
-
 public:
     static constexpr size_t SIZE_PER_NODE = 2 * Dijkstra::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE = 2 * Dijkstra::SIZE_PER_EDGE;
@@ -65,7 +55,7 @@ public:
     /**
      * calculates a one to one route using bidirectional dijkstra. init() has to be called first
      */
-    void compute_route();
+    void compute();
 
     /**
      * returns the distance of the calculated route

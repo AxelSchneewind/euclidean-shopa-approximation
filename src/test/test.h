@@ -51,7 +51,7 @@ test_routing(const Graph &graph, Router &router, const std::vector<Query> &queri
         std::cout << "routing from " << from << " to " << to << ": " << std::flush;
 
         router.init(from, to);
-        router.compute_route();
+        router.compute();
         if (router.route_found()) {
             path route = router.route();
 
@@ -122,7 +122,7 @@ test_routes(router<N, E> *router, const std::vector<node_id_t> &sources, const s
     for (int i = 0; i < sources.size(); i++) {
         node_id_t from = sources[i];
         node_id_t to = targets[i];
-        router->compute_route(from, to);
+        router->compute(from, to);
         assert_equal (distances[i], router->distance());
     }
 }
