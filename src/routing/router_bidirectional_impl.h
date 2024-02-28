@@ -21,7 +21,7 @@ template<typename Graph, typename Dijkstra>
 bidirectional_router<Graph, Dijkstra>::bidirectional_router(bidirectional_router&&routing) noexcept
         : base(routing._graph),
           _backward_search(base::_graph, std::move(routing._backward_search)) {
-    routing._mid_node = none_value<typename Graph::node_id_type>;
+    routing._mid_node = optional::none_value<typename Graph::node_id_type>;
 }
 
 template<typename Graph, typename Dijkstra>
@@ -30,7 +30,7 @@ bidirectional_router<Graph, Dijkstra>::step_forward() {
     assert(!base::_forward_search.queue_empty());
 
     base::_forward_current = base::_forward_search.current();
-    assert(!is_none(base::_forward_current.node()));
+    assert(!optional::is_none(base::_forward_current.node()));
 
     base::_forward_search.step();
 
@@ -46,7 +46,7 @@ bidirectional_router<Graph, Dijkstra>::step_backward() {
     assert(!_backward_search.queue_empty());
 
     _backward_current = _backward_search.current();
-    assert(!is_none(_backward_current.node()));
+    assert(!optional::is_none(_backward_current.node()));
 
     _backward_search.step();
 
@@ -58,7 +58,7 @@ bidirectional_router<Graph, Dijkstra>::step_backward() {
 
 template<typename Graph, typename Dijkstra>
 void
-bidirectional_router<Graph, Dijkstra>::compute_route() {
+bidirectional_router<Graph, Dijkstra>::compute() {
     bool done = false;
     std::size_t step_count = 0;
     while (!done) {
@@ -83,7 +83,7 @@ bidirectional_router<Graph, Dijkstra>::compute_route() {
 template<typename Graph, typename Dijkstra>
 typename bidirectional_router<Graph, Dijkstra>::distance_type
 bidirectional_router<Graph, Dijkstra>::distance(const node_id_type& node) const {
-    if (is_none(node) || !base::_forward_search.reached(node) ||
+    if (optional::is_none(node) || !base::_forward_search.reached(node) ||
         !_backward_search.reached(node)) {
         return infinity<typename Graph::distance_type>;
     }
@@ -93,7 +93,7 @@ bidirectional_router<Graph, Dijkstra>::distance(const node_id_type& node) const 
 template<typename Graph, typename Dijkstra>
 typename bidirectional_router<Graph, Dijkstra>::distance_type
 bidirectional_router<Graph, Dijkstra>::distance() const {
-    if (is_none(base::_mid_node)) {
+    if (optional::is_none(base::_mid_node)) {
         return infinity<typename Graph::distance_type>;
     }
     return base::_forward_search.get_label(base::_mid_node).distance() + _backward_search.get_label(base::_mid_node).distance();
@@ -102,7 +102,7 @@ bidirectional_router<Graph, Dijkstra>::distance() const {
 template<typename Graph, typename Dijkstra>
 Graph::path_type
 bidirectional_router<Graph, Dijkstra>::route() const {
-    if (is_none(base::_mid_node))
+    if (optional::is_none(base::_mid_node))
         return path<Graph>();
 
     auto path_fwd = base::_forward_search.path(base::_mid_node);
@@ -137,7 +137,7 @@ bidirectional_router<Graph, Dijkstra>::mid_node() const {
 template<typename Graph, typename Dijkstra>
 bool
 bidirectional_router<Graph, Dijkstra>::route_found() const {
-    return !is_none(base::_mid_node) && base::_forward_search.reached(base::_mid_node) && _backward_search.reached(base::_mid_node);
+    return !optional::is_none(base::_mid_node) && base::_forward_search.reached(base::_mid_node) && _backward_search.reached(base::_mid_node);
 }
 
 template<typename Graph, typename Dijkstra>
@@ -145,7 +145,7 @@ void
 bidirectional_router<Graph, Dijkstra>::init(node_id_type start_node, node_id_type target_node) {
     base::_start_node = start_node;
     base::_target_node = target_node;
-    base::_mid_node = none_value<node_id_type>;
+    base::_mid_node = optional::none_value<node_id_type>;
 
     base::_forward_search.init(base::_start_node, base::_target_node);
     _backward_search.init(base::_target_node, base::_start_node);

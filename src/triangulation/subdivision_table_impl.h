@@ -77,7 +77,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
         double angle3 = 0; // between node2->node1 and node2->node3
 
         for (auto &&edge: polyhedron.edges(i)) {
-            if (is_none(edge)) continue;
+            if (optional::is_none(edge)) continue;
 
             // make sure node3 is different from node1 and node2
             auto node3 = triangulation.destination(edge);

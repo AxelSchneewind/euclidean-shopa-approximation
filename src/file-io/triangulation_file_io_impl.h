@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../graph/base_types.h"
 #include "triangulation_file_io.h"
 
 #include "../graph/graph.h"
@@ -101,7 +102,7 @@ void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text>(s
     for (int e = 0; e < graph.base_graph().edge_count(); ++e) {
         auto triangles = graph.base_polyhedron().edge_faces(e);
         for (auto triangle: triangles) {
-            if (is_none(triangle)) continue;
+            if (optional::is_none(triangle)) continue;
 
             auto edges = graph.base_polyhedron().face_edges(triangle);
 

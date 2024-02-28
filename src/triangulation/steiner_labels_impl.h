@@ -27,8 +27,8 @@ steiner_labels<G, N>::all_visited() const {
 template<RoutableGraph G, typename N>
 steiner_labels<G, N>::steiner_labels(G const &graph)
         : _graph(graph),
-          _labels(graph.base_graph().edge_count(), none_value<N>),
-          _base_labels(_graph.base_graph().node_count(), none_value<N>),
+          _labels(graph.base_graph().edge_count(), optional::none_value<N>),
+          _base_labels(_graph.base_graph().node_count(), optional::none_value<N>),
           _edge_touched(_graph.base_graph().edge_count(), false) {
 }
 
@@ -37,16 +37,16 @@ void
 steiner_labels<G, N>::init(steiner_labels<G, N>::node_id_type /*start_node*/,
                            steiner_labels<G, N>::node_id_type /*target_node*/) {
     _labels.reset();
-    std::fill(_base_labels.begin(), _base_labels.end(), (none_value<N>));
+    std::fill(_base_labels.begin(), _base_labels.end(), (optional::none_value<N>));
     std::fill(_edge_touched.begin(), _edge_touched.end(), false);
 }
 
 template<RoutableGraph G, typename N>
 N
 steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) const {
-    assert(!is_none(node));
+    assert(!optional::is_none(node));
     if (_graph.is_base_node(node)) [[unlikely]] {
-        assert(!is_none(_graph.base_node_id(node)));
+        assert(!optional::is_none(_graph.base_node_id(node)));
         return _base_labels[_graph.base_node_id(node)];
     }
 
@@ -57,10 +57,10 @@ steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) const {
 template<RoutableGraph G, typename N>
 N &
 steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) {
-    assert(!is_none(node));
+    assert(!optional::is_none(node));
 
     if (_graph.is_base_node(node)) [[unlikely]] {
-        assert(!is_none(_graph.base_node_id(node)));
+        assert(!optional::is_none(_graph.base_node_id(node)));
         return _base_labels[_graph.base_node_id(node)];
     }
 
@@ -76,12 +76,12 @@ void
 steiner_labels<G, N>::label(node_id_type const &node, N const &label) {
     auto const &edge_id = node.edge;
 
-    assert(!is_none(node));
+    assert(!optional::is_none(node));
 
     _edge_touched[edge_id] = true;
 
     if (_graph.is_base_node(node)) { [[unlikely]]
-        assert(!is_none(_graph.base_node_id(node)));
+        assert(!optional::is_none(_graph.base_node_id(node)));
         _base_labels[_graph.base_node_id(node)] = label;
     } else {
         if (!_labels.contains(node.edge)) {

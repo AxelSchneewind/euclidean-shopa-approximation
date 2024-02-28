@@ -208,7 +208,7 @@ unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::reorder_nodes(
     // count nodes
     _node_count = 0;
     for (auto &&id: new_node_ids)
-        if (!is_none(id))
+        if (!optional::is_none(id))
             _node_count = std::max(_node_count, (std::size_t) id);
     _node_count++;
 
@@ -220,7 +220,7 @@ unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::reorder_nodes(
 
     // remove edges containing removed nodes (nodes that have none_value<...> as the new id)
     for (int i = 0; i < _edge_count;) {
-        if (is_none(_edges[i].source) || is_none(_edges[i].destination)) {
+        if (optional::is_none(_edges[i].source) || optional::is_none(_edges[i].destination)) {
             _edges[i] = _edges.back();
             _edges.pop_back();
         } else {
@@ -258,7 +258,7 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::filter_no
         if (node_predicate(i)) {
             new_node_ids[i] = j++;
         } else {
-            new_node_ids[i] = none_value<NodeId>;
+            new_node_ids[i] = optional::none_value<NodeId>;
         }
     }
 
@@ -298,14 +298,14 @@ unidirectional_adjacency_list<NodeId, E>::edge_count() const {
 
 template<typename NodeId, typename E>
 bool unidirectional_adjacency_list<NodeId, E>::contains_node(node_id_type node_id) const {
-    return !is_none(node_id) && node_id >= 0 && node_id < node_count();
+    return !optional::is_none(node_id) && node_id >= 0 && node_id < node_count();
 }
 
 
 template<typename NodeId, typename E>
 bool unidirectional_adjacency_list<NodeId, E>::contains_edge(
         unidirectional_adjacency_list::edge_index_type edge_index) const {
-    return !is_none(edge_index) && edge_index >= 0 && edge_index < edge_count();
+    return !optional::is_none(edge_index) && edge_index >= 0 && edge_index < edge_count();
 }
 
 
@@ -330,7 +330,7 @@ unidirectional_adjacency_list<NodeId, E>::edge_id(NodeId source, NodeId dest) co
     assert(contains_node(source));
     assert(contains_node(dest));
 
-    edge_id_t result = none_value<edge_index_type>;
+    edge_id_t result = optional::none_value<edge_index_type>;
 
     for (int idx = _M_offsets[source]; idx < _M_offsets[source + 1]; ++idx) {
         if (_M_edges[idx].destination == dest)
@@ -353,7 +353,7 @@ unidirectional_adjacency_list<NodeId, E>::edge_id(NodeId source) const {
 template<typename NodeId, typename E>
 inline bool
 unidirectional_adjacency_list<NodeId, E>::has_edge(NodeId source, NodeId dest) const {
-    return !is_none(edge_id(source, dest));
+    return !optional::is_none(edge_id(source, dest));
 }
 
 template<typename NodeId, typename E>
@@ -408,7 +408,7 @@ unidirectional_adjacency_list<NodeId, E>::unidirectional_adjacency_list(size_t n
     // make offset and source arrays
     int index = 0;
     for (auto&& edge: edges) {
-        assert(!is_none(edge.source));
+        assert(!optional::is_none(edge.source));
         while (_M_offsets.size() <= edge.source) {
             _M_offsets.emplace_back(index);
         }

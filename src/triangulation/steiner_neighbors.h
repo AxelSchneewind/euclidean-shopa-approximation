@@ -40,7 +40,7 @@ public:
 };
 
 template<typename NodeCostPair, typename Graph>
-constexpr geometric_node_cost_pair<NodeCostPair, Graph> none_value<geometric_node_cost_pair<NodeCostPair, Graph>> = {
+constexpr geometric_node_cost_pair<NodeCostPair, Graph> optional::none_value<geometric_node_cost_pair<NodeCostPair, Graph>> = {
         none_value<NodeCostPair>, none_value<typename Graph::node_id_type>};
 
 

@@ -11,7 +11,7 @@ struct steiner_node_id {
     edge_id_type edge;
     intra_edge_id_type steiner_index;
 
-    steiner_node_id() : edge(none_value<edge_id_type>), steiner_index(none_value<intra_edge_id_type>) {};
+    constexpr steiner_node_id() : edge(optional::none_value<edge_id_type>), steiner_index(optional::none_value<intra_edge_id_type>) {};
 
     constexpr steiner_node_id(EdgeId edge, IntraEdgeId steiner_index) : edge(edge),
                                                                             steiner_index(steiner_index) {}
@@ -46,7 +46,7 @@ struct std::hash<steiner_node_id<E, I>> {
 
 
 template<typename E, typename I>
-constexpr steiner_node_id<E,I> none_value<steiner_node_id<E, I>> = {none_value<E>, none_value<I>};
+constexpr steiner_node_id<E,I> optional::none_value<steiner_node_id<E, I>> = {optional::none_value<E>, optional::none_value<I>};
 
 template<typename E, typename I>
 std::ostream &operator<<(std::ostream &output, steiner_node_id<E, I> id);
@@ -66,9 +66,9 @@ struct steiner_edge_id {
 };
 
 
-template<typename N>
-constexpr steiner_edge_id<N> none_value<steiner_edge_id<N>> = {none_value<N>,
-                                                               none_value<N>};
+// template<typename N>
+// constexpr steiner_edge_id<N> none_value<steiner_edge_id<N>> = {none_value<N>,
+//                                                                none_value<N>};
 
 template<typename N>
 std::ostream &operator<<(std::ostream &output, steiner_edge_id<N> id);

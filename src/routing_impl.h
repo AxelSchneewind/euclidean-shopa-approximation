@@ -37,7 +37,7 @@ public:
     };
 
     constexpr label_type() : _distance(infinity<typename G::distance_type>),
-                             _predecessor(none_value<typename G::node_id_type>) {
+                             _predecessor(optional::none_value<typename G::node_id_type>) {
     };
 
     // TODO remove these constructors and instead use a template parameter for conversion in node_labels classes
@@ -74,7 +74,7 @@ private:
     distance_type _distance;
 public:
 
-    static constexpr steiner_graph::node_id_type predecessor = none_value<steiner_graph::node_id_type>;
+    static constexpr steiner_graph::node_id_type predecessor = optional::none_value<steiner_graph::node_id_type>;
 
     constexpr distance_label() : _distance(infinity<distance_type>) {}
 
@@ -90,8 +90,8 @@ public:
     requires HasDistance<NCP>
     operator NCP() {
         return {
-                none_value<steiner_graph::node_id_type>,
-                none_value<steiner_graph::node_id_type>,
+                optional::none_value<steiner_graph::node_id_type>,
+                optional::none_value<steiner_graph::node_id_type>,
                 _distance,
         };
     }

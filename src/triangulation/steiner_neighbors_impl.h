@@ -11,7 +11,7 @@ template<typename Graph, typename Labels>
 template<typename NodeCostPair>
 requires HasFaceCrossingPredecessor<NodeCostPair, Graph>
 typename Graph::node_id_type const &steiner_neighbors<Graph, Labels>::find_face_crossing_predecessor( const NodeCostPair &node) {
-    assert(!is_none(node.face_crossing_predecessor()));
+    assert(!optional::is_none(node.face_crossing_predecessor()));
     return node.face_crossing_predecessor();
 }
 
@@ -40,7 +40,7 @@ template<typename Graph, typename Labels>
 template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels>::operator()(const NodeCostPair &node, std::vector<NodeCostPair> &out, std::vector<coordinate_t>& coordinates_out) {
     auto const &node_id = node.node();
-    assert(!is_none(node_id));
+    assert(!optional::is_none(node_id));
 
     _source_coordinate = _graph.node_coordinates(node_id);
 
@@ -51,7 +51,7 @@ void steiner_neighbors<Graph, Labels>::operator()(const NodeCostPair &node, std:
 
     if constexpr (HasFaceCrossingPredecessor<NodeCostPair, Graph>) {
         assert(is_start_node ||
-               (!is_none(node.face_crossing_predecessor()) && node.face_crossing_predecessor() != node.node()));
+               (!optional::is_none(node.face_crossing_predecessor()) && node.face_crossing_predecessor() != node.node()));
     }
 
     if (!is_base_node && !is_start_node) [[likely]] {
@@ -71,10 +71,10 @@ void steiner_neighbors<Graph, Labels>::operator()(const NodeCostPair &node, std:
     // set face crossing predecessor of neighbors
     if constexpr (HasFaceCrossingPredecessor<NodeCostPair, Graph>) {
         // if this node is a boundary node, set it as the new face crossing predecessor
-        auto fcp = (is_none(node.face_crossing_predecessor()) || is_boundary_node)
+        auto fcp = (optional::is_none(node.face_crossing_predecessor()) || is_boundary_node)
                    ? node.node() : node.face_crossing_predecessor();
 
-        assert(!is_none(fcp));
+        assert(!optional::is_none(fcp));
         for (int e = 0; e < out.size(); ++e) [[likely]] {
             out[e].face_crossing_predecessor() = fcp;
         }
