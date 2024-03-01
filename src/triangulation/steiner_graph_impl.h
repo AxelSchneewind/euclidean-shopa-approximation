@@ -1,7 +1,7 @@
 #pragma once
 
-#include "graph/adjacency_list.h"
-#include "graph/subgraph.h"
+#include "../graph/adjacency_list.h"
+#include "../graph/subgraph.h"
 #include "polyhedron.h"
 #include "steiner_graph.h"
 

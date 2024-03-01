@@ -2,9 +2,9 @@
 
 #include "Router.h"
 
-#include "routing_impl.h"
-#include "routing/dijkstra_concepts.h"
-#include "triangulation/geometric_node_cost_pair.h"
+#include "../routing_impl.h"
+#include "../routing/dijkstra_concepts.h"
+#include "../triangulation/geometric_node_cost_pair.h"
 
 #include <thread>
 
