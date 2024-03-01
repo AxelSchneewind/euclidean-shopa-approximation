@@ -16,8 +16,23 @@ public:
     };
 };
 
-template<RoutableGraph Graph, HasDistance NodeCostPair, typename Comp = compare_distance>
-class dijkstra_queue : protected std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp> {
+struct compare_heuristic {
+public:
+    compare_heuristic() = default;
+
+    template<typename NodeCostPair>
+    constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
+        return n1.value() > n2.value();
+    };
+};
+
+
+template<RoutableGraph Graph, typename NodeCostPair, typename Comp = compare_distance>
+class dijkstra_queue{};
+
+template<RoutableGraph Graph, typename NodeCostPair, typename Comp> requires
+    requires {requires HasPredecessor<NodeCostPair> && HasDistance<NodeCostPair> && !HasHeuristic<NodeCostPair>;}
+class dijkstra_queue<Graph, NodeCostPair, Comp> : protected std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp> {
 private:
     std::size_t _max_size{0};
 
@@ -31,20 +46,22 @@ public:
             : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(comp) {}
 
     void init(Graph::node_id_type start_node, Graph::node_id_type target_node) {
-        while (!empty())
-            pop();
+        base_queue_type::c.clear();
 
         _max_size = 0;
     };
 
-    void push(base_queue_type::value_type const& ncp) {
+    void push(base_queue_type::value_type&& ncp) {
         assert(ncp.distance() != infinity<decltype(ncp.distance())>);
         base_queue_type::emplace(ncp);
+        _max_size = std::max(_max_size, base_queue_type::size());
     }
 
-    void push(Graph::node_id_type node, Graph::node_id_type predecessor, distance_t dist) {
-        NodeCostPair ncp(node, predecessor, dist);
-        push(ncp);
+    template<typename... Args>
+    void push(Args... args) {
+        NodeCostPair ncp(args...);
+        base_queue_type::emplace(ncp);
+        _max_size = std::max(_max_size, base_queue_type::size());
     }
 
     void push_range(std::span<NodeCostPair, std::dynamic_extent> nodes) {
@@ -52,16 +69,9 @@ public:
             push(ncp);
     }
 
-    bool empty() const { return base_queue_type::empty(); }
-
-    void pop() {
-        _max_size = std::max(_max_size, base_queue_type::size());
-        return base_queue_type::pop();
-    }
-
-    NodeCostPair top() const {
-        return base_queue_type::top();
-    }
+    using base_queue_type::empty;
+    using base_queue_type::pop;
+    using base_queue_type::top;
 
     size_t max_size() const { return _max_size; }
 };

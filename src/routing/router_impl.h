@@ -12,11 +12,12 @@ router<Graph, Dijkstra>::min_route_distance(Dijkstra::node_cost_pair_type node) 
 
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(Graph const&graph)
-    : _graph(graph),
-      _forward_search(_graph),
-      _start_node(optional::none_value<typename Graph::node_id_type>),
-      _target_node(optional::none_value<typename Graph::node_id_type>),
-      _mid_node(optional::none_value<typename Graph::node_id_type>) {
+    : _graph{graph},
+      _forward_search{_graph},
+      _start_node{optional::none_value<typename Graph::node_id_type>},
+      _target_node{optional::none_value<typename Graph::node_id_type>},
+      _forward_current{optional::none_value<typename Dijkstra::node_cost_pair_type>},
+      _mid_node{optional::none_value<typename Graph::node_id_type>} {
 }
 
 template<typename Graph, typename Dijkstra>
@@ -24,6 +25,7 @@ router<Graph, Dijkstra>::router(router&&routing) noexcept
     : _graph(routing._graph),
       _forward_search(_graph, std::move(routing._forward_search)),
       _start_node(routing._start_node), _target_node(routing._target_node),
+      _forward_current{routing._forward_current},
       _mid_node(routing._mid_node) {
     routing._mid_node = optional::none_value<typename Graph::node_id_type>;
 }

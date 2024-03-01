@@ -15,7 +15,7 @@ remove_duplicates(std::vector<T> &items) {
 
     size_t j = 0;
     for (size_t i = 0; i < items.size(); ++i) {
-        auto element = items[i];
+        auto&& element = items[i];
 
         if (!found.contains(element)) {
             found[element] = true;

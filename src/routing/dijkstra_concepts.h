@@ -16,6 +16,11 @@ concept HasNode = requires(T t){
     t.node();
 };
 
+template <typename T>
+concept HasHeuristic = requires(T t) {
+    t.heuristic();
+};
+
 
 template<typename T>
 concept Topology = requires {
@@ -31,15 +36,26 @@ concept Topology = requires {
     { t.destination(e) } -> std::convertible_to<typename T::node_id_type>;
 };
 
-template<typename T>
+template <typename T>
 concept NodeSet = requires {
     typename T::node_id_type;
 } && requires(T t) {
     t.node_ids();
+} && requires(T t, T::node_id_type i) {
+    t.node(i);
+};
+
+template <typename T>
+concept GeometricNodeSet = NodeSet<T>
+&& requires {
+    typename T::coordinate_type;
+} && requires (T t, T::node_id_type i) {
+    {t.node_coordinates(i)} -> std::convertible_to<typename T::coordinate_type>;
 };
 
 template<typename T>
 concept EdgeSet = requires {
+    typename T::node_id_type;
     typename T::edge_id_type;
 } && requires(T t) {
     t.edge_ids();
@@ -47,14 +63,17 @@ concept EdgeSet = requires {
 
 template<typename T>
 concept EdgeInfo = requires {
+    typename T::node_id_type;
     typename T::edge_id_type;
     typename T::edge_info_type;
 } && requires(T t, typename T::edge_id_type id) {
     { t.edge(id) } -> std::convertible_to<typename T::edge_info_type>;
+} && requires (T t, T::node_id_type i) {
+    { t.edge(i, i) } -> std::convertible_to<typename T::edge_info_type>;
 };
 
 template<typename T>
-concept Routable = requires {
+concept EdgeEnumerator = requires {
     typename T::node_id_type;
     typename T::edge_info_type;
 } && requires(T t, typename T::node_id_type src) {
@@ -67,11 +86,10 @@ concept Routable = requires {
 };
 
 template<typename G>
-concept RoutableGraph = NodeSet<G> && Topology<G> && Routable<G>;
+concept RoutableGraph = NodeSet<G> && Topology<G>;
 
 template<typename Q, typename G>
-concept DijkstraQueue = std::move_constructible<Q> && std::copy_constructible<Q>
-                        && requires {
+concept DijkstraQueue = requires {
     typename Q::value_type;
 } && requires(Q q, typename G::node_id_type n) {
     q.init(n, n);

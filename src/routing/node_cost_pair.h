@@ -44,13 +44,13 @@ public:
 
     Distance const &distance() const { return _distance; }
 
-    auto min_distance() { return _info.min_distance(); };
+    auto& heuristic() { return _info; }
 
-    auto min_distance() const { return _info.min_distance(); }
+    auto const& heuristic() const { return _info; }
 
-    auto& value() { return _info.value(); }
+    auto& value() { return _info; }
 
-    auto const& value() const { return _info.value(); }
+    auto const& value() const { return _info; }
 };
 
 template<typename NodeId, typename Distance>
@@ -60,7 +60,6 @@ private:
     NodeId _predecessor;
     Distance _distance;
 public:
-
     using info_type = void;
 
     node_cost_pair() = default;

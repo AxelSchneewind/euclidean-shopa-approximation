@@ -2,6 +2,7 @@
 
 #include "../graph/subgraph.h"
 #include "subdivision_info.h"
+#include "../graph/geometry.h"
 
 template<typename EdgeId, typename IntraEdgeId>
 struct steiner_node_id {
@@ -230,7 +231,25 @@ public:
     [[gnu::pure]]
     [[gnu::hot]]
     [[gnu::always_inline]]
+    [[deprecated("use node_coordinates_*() instead when knowing which type of point is needed")]]
     inline coordinate_t node_coordinates(node_id_type id) const;
+
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    inline coordinate_t node_coordinates_steiner(node_id_type id) const;
+
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    inline coordinate_t const& node_coordinates_first(triangle_edge_id_type id) const;
+
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    inline coordinate_t node_coordinates_mid(triangle_edge_id_type id) const;
+
+    [[gnu::pure]]
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    inline coordinate_t const& node_coordinates_last(triangle_edge_id_type id) const;
 
     // computes the coordinates of a node with given id
     [[gnu::pure]]
@@ -238,9 +257,9 @@ public:
     [[gnu::always_inline]]
     inline coordinate_t const& node_coordinates(triangle_node_id_type id) const;
 
+    inline distance_type on_edge_distance(triangle_edge_id_type edge, intra_edge_id_type first, intra_edge_id_type second) const;
 
     node_info_type node(node_id_type id) const;
-
     node_info_type node(triangle_node_id_type id) const;
     node_info_type& node(triangle_node_id_type id) { return _base_nodes[id]; };
 

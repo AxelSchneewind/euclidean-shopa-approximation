@@ -16,7 +16,7 @@ public:
     using steiner_index_type = int;
 
 private:
-    static constexpr steiner_index_type max_steiner_count_per_edge = std::numeric_limits<steiner_index_type>::max();
+    static constexpr steiner_index_type max_steiner_count_per_edge = std::numeric_limits<unsigned short>::max();// std::numeric_limits<steiner_index_type>::max();
 
     // here, some lower bounds can be imposed to prevent numerical issues
     static constexpr long double min_base = 1.0 + std::numeric_limits<double>::epsilon();
@@ -61,9 +61,12 @@ public:
     [[gnu::hot]]
     [[gnu::pure]]
     [[gnu::always_inline]]
+    [[deprecated("use relative_position() functions")]]
     coordinate_t node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_t const& c1, coordinate_t const& c2) const;
 
     double relative_position(edge_id_t edge, steiner_index_type steiner_index) const;
+    double relative_position_mid(edge_id_t edge) const;
+    double relative_position_steiner(edge_id_t edge, steiner_index_type steiner_index) const;
     steiner_index_type index(edge_id_t edge, double relative) const;
 
     subdivision_edge_info& edge(edge_id_t edge);

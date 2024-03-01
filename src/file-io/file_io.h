@@ -24,7 +24,7 @@ namespace file_io {
     write_edges(std::ostream &output, std::span<Edge> edges);
 
     template<typename NodeId, typename formatter=stream_encoders::encode_text>
-    void
+    std::size_t
     read_triangles(std::istream &input, std::span<std::array<NodeId, 3>> faces);
 
     template<typename NodeId, typename formatter=stream_encoders::encode_text>

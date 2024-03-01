@@ -19,7 +19,7 @@ struct adjacency_list_edge {
     template <typename... Args>
     adjacency_list_edge(NodeId source, NodeId dest, Args&&... args) : source{source}, destination{dest}, info(std::forward<Args...>(args...)){}
 
-    adjacency_list_edge(NodeId source, NodeId dest) : source{source}, destination{dest} {}
+    adjacency_list_edge(NodeId source, NodeId dest) : source{source}, destination{dest}, info{} {}
 
     adjacency_list_edge() = default;
 

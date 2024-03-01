@@ -60,7 +60,8 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     faces.resize(triangle_count);
 
     file_io::read_nodes<steiner_graph::node_info_type, f>(input_nodes, {nodes.begin(), nodes.end()});
-    file_io::read_triangles<steiner_graph::base_topology_type::node_id_type, f>(input_triangles, {faces.begin(), faces.end()});
+    triangle_count = file_io::read_triangles<steiner_graph::base_topology_type::node_id_type, f>(input_triangles, {faces.begin(), faces.end()});
+    faces.resize(triangle_count);
 
     steiner_graph::adjacency_list_type::builder adj_list_builder;
     adj_list_builder.add_edges_from_triangulation(faces);

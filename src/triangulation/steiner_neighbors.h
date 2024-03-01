@@ -9,44 +9,31 @@
 #include <cmath>
 #include <vector>
 
+
 template<typename NodeCostPair, typename Graph>
 concept HasFaceCrossingPredecessor = requires {
     typename Graph::node_id_type;
 } && requires( NodeCostPair &n) {
-    { n.face_crossing_predecessor() } -> std::convertible_to<typename Graph::node_id_type &>;
+    { n.face_crossing_predecessor() } -> std::convertible_to<typename Graph::node_id_type&>;
 } && requires( NodeCostPair const &n) {
     { n.face_crossing_predecessor() } -> std::convertible_to<typename Graph::node_id_type>;
 };
 
-template<typename NodeCostPair, typename Graph>
-struct geometric_node_cost_pair : public NodeCostPair {
-private:
-    typename Graph::node_id_type _face_crossing_predecessor;
-public:
-    constexpr geometric_node_cost_pair() = default;
-
-    constexpr geometric_node_cost_pair(const NodeCostPair &other, typename Graph::node_id_type n) : NodeCostPair(other),
-                                                                                                    _face_crossing_predecessor{n} {};
-
-    template<typename ...Args>
-    geometric_node_cost_pair(Args... args) : NodeCostPair(args...), _face_crossing_predecessor{this->predecessor()} {};
 
 
-    typename Graph::node_id_type &face_crossing_predecessor() { return _face_crossing_predecessor; }
-
-    typename Graph::node_id_type const &face_crossing_predecessor() const { return _face_crossing_predecessor; }
-
-    static_assert(HasFaceCrossingPredecessor<geometric_node_cost_pair, Graph>);
+enum class Configuration {
+    LINALG,
+    BINSEARCH,
+    ATAN2
 };
 
-template<typename NodeCostPair, typename Graph>
-constexpr geometric_node_cost_pair<NodeCostPair, Graph> optional::none_value<geometric_node_cost_pair<NodeCostPair, Graph>> = {
-        none_value<NodeCostPair>, none_value<typename Graph::node_id_type>};
-
-
-template<typename Graph, typename Labels>
+template<typename Graph, typename Labels, Configuration Config = Configuration::LINALG>
 struct steiner_neighbors {
 private:
+    using node_id_type = typename Graph::node_id_type;
+    using base_node_id_type = typename Graph::base_topology_type::node_id_type;
+    using base_edge_id_type = typename Graph::base_topology_type::edge_id_type;
+
     Graph const &_graph;
     Labels &_labels;
 
@@ -54,8 +41,8 @@ private:
     coordinate_t::component_type _spanner_angle_cos;
 
     coordinate_t::component_type _max_angle;
-    coordinate_t::component_type _max_angle_cos;
 
+    node_id_type _source;
     coordinate_t _source_coordinate;
 
     // statistics
@@ -69,55 +56,50 @@ private:
 
     std::size_t _steiner_point_angle_test_count{0};
 
-    using node_id_type = typename Graph::node_id_type;
-    using base_node_id_type = typename Graph::base_topology_type::node_id_type;
-    using base_edge_id_type = typename Graph::base_topology_type::edge_id_type;
-
     template<typename NodeCostPair>
     [[gnu::hot]]
     [[gnu::always_inline]]
     void on_edge_neighbors(NodeCostPair const &node, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out);
 
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    coordinate_t::component_type min_angle_relative_value_matmul(base_edge_id_type edge_id, coordinate_t direction) const;
 
     [[gnu::hot]]
     [[gnu::always_inline]]
-    coordinate_t::component_type min_angle_relative_value(base_edge_id_type edge_id, coordinate_t const& direction) const;
+    coordinate_t::component_type min_angle_relative_value_atan2(base_edge_id_type edge_id, coordinate_t const& direction) const;
 
     [[gnu::hot]]
     [[gnu::always_inline]]
-    coordinate_t::component_type min_angle_relative_value(base_edge_id_type edge_id,
-                                                          coordinate_t left,
-                                                          coordinate_t right,
-                                                          coordinate_t::component_type direction_left,
-                                                          coordinate_t::component_type direction_dir) const;
+    coordinate_t::component_type min_angle_relative_value_atan2(base_edge_id_type edge_id,
+                                                                coordinate_t left,
+                                                                coordinate_t right,
+                                                                coordinate_t::component_type direction_left,
+                                                                coordinate_t::component_type direction_dir) const;
 
-    [[gnu::cold]]
+    [[gnu::hot]]
+    [[gnu::always_inline]]
     node_id_type
-    find_min_angle_neighbors_hinted(base_edge_id_type const &edge_id,
-                            coordinate_t const &direction, node_id_type const& hint, coordinate_t::component_type & cos, coordinate_t::component_type& cos2);
+    min_angle_neighbor_matmul(base_edge_id_type const &edge_id,
+                              coordinate_t const &direction);
+
+    [[gnu::hot]]
+    [[gnu::always_inline]]
+    node_id_type min_angle_neighbor_atan2(base_edge_id_type edge_id, const coordinate_t &direction) const;
 
 
-    [[gnu::cold]]
+    [[gnu::hot]]
+    [[gnu::always_inline]]
     node_id_type
-    find_min_angle_neighbors(base_edge_id_type const &edge_id,
-                            coordinate_t const &direction, coordinate_t::component_type & cos, coordinate_t::component_type & cos2);
+    min_angle_neighbor_binary_search(base_edge_id_type const &edge_id,
+                                     const coordinate_t &direction);
 
     template<typename NodeCostPair>
     [[gnu::hot]]
     [[gnu::always_inline]]
     void
-    add_min_angle_neighbor( NodeCostPair const &node, base_edge_id_type const &edge_id,
-            coordinate_t const& left, coordinate_t const& right, coordinate_t::component_type angle_left_dir, coordinate_t::component_type angle_dir,
+    add_min_angle_neighbor(NodeCostPair const &node, coordinate_t const& direction,
             std::vector<NodeCostPair> &out, std::vector<coordinate_t> &out_coordinates);
-
-
-    template<typename NodeCostPair>
-    [[gnu::hot]]
-    [[gnu::always_inline]]
-    void
-    add_min_angle_neighbor(NodeCostPair const &node, base_edge_id_type const &edge_id,
-                           coordinate_t const&direction, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &out_coordinates);
-
 
     template<typename NodeCostPair>
     void epsilon_spanner(NodeCostPair const &node,
@@ -150,8 +132,8 @@ public:
             : _graph(graph), _labels(labels),
               _spanner_angle{std::clamp(std::numbers::pi * graph.epsilon(), 0.0, std::numbers::pi_v<coordinate_t::component_type>)},
               _spanner_angle_cos{std::cos(_spanner_angle)},
-              _max_angle{std::clamp(std::numbers::pi / 2 * graph.epsilon(), std::numeric_limits<coordinate_t::component_type>::min(), std::numbers::pi / 4)},
-              _max_angle_cos{std::cos(_max_angle)} { }
+              _max_angle{std::clamp(std::numbers::pi / 2 * graph.epsilon(), std::numeric_limits<coordinate_t::component_type>::min(), std::numbers::pi / 4)}
+              {}
 
     template<typename... Args>
     steiner_neighbors(Graph const &graph, Labels &labels, Args const &...) : steiner_neighbors(graph, labels) { }

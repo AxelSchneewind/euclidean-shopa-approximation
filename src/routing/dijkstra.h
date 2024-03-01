@@ -109,7 +109,7 @@ public:
      * @param Dijkstra
      * @return
      */
-    G::subgraph_type shortest_path_tree(int max_node_count = 1000000) const;
+    G::subgraph_type shortest_path_tree(std::size_t max_node_count = 1000000) const;
 
     /**
      * returns the path from source to target node (if found, otherwise throws exception)

@@ -104,36 +104,3 @@ public:
 using std_graph_t = graph<node_t, edge_t, node_id_t, edge_id_t>;
 using gl_graph_t = graph<node_t, gl_edge_t, node_id_t, edge_id_t>;
 using ch_graph_t = graph<ch_node_t, ch_edge_t, node_id_t, edge_id_t>;
-
-using default_node_cost_pair = node_cost_pair<std_graph_t::node_id_type, std_graph_t::distance_type>;
-
-using a_star_node_cost_pair = node_cost_pair<std_graph_t::node_id_type, std_graph_t::distance_type, a_star_info>;
-
-
-using default_queue_t = dijkstra_queue<std_graph_t, default_node_cost_pair, compare_distance>;
-
-
-using default_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
-using a_star_queue_t = a_star_queue<std_graph_t, a_star_node_cost_pair>;
-using a_star_labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
-
-using std_dijkstra = dijkstra<std_graph_t, default_queue_t, default_labels_t, default_neighbors<std_graph_t>>;
-using a_star_dijkstra = dijkstra<std_graph_t, a_star_queue_t, a_star_labels_t, default_neighbors<std_graph_t>>;
-
-using std_routing_t = bidirectional_router<std_graph_t, std_dijkstra>;
-using a_star_routing_t = bidirectional_router<std_graph_t, a_star_dijkstra>;
-
-using default_ch_labels_t = node_labels<ch_graph_t, label_type<ch_graph_t>>;
-using default_ch_queue_t = dijkstra_queue<ch_graph_t, default_node_cost_pair, compare_distance>;
-using ch_dijkstra = dijkstra<ch_graph_t, default_ch_queue_t, default_ch_labels_t, default_neighbors<ch_graph_t>>;
-using ch_routing_t = router<ch_graph_t, ch_dijkstra>;
-
-
-using steiner_a_star_node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type,
-        a_star_info>;
-using steiner_node_cost_pair = node_cost_pair<steiner_graph::node_id_type, steiner_graph::distance_type, void>;
-
-using steiner_queue_t = dijkstra_queue<steiner_graph, steiner_node_cost_pair>;
-using steiner_labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
-using steiner_dijkstra = dijkstra<steiner_graph, steiner_queue_t, steiner_labels_t, steiner_neighbors<steiner_graph, steiner_labels_t>>;
-using steiner_routing_t = router<steiner_graph, steiner_dijkstra>;

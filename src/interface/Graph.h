@@ -12,10 +12,9 @@
 
 
 enum class GraphType {
-    STD_GRAPH_DIRECTED,
-    STD_GRAPH_UNDIRECTED,
-    STEINER_GRAPH_DIRECTED,
-    STEINER_GRAPH_UNDIRECTED
+    NONE,
+    STD_GRAPH,
+    STEINER_GRAPH,
 };
 
 class GraphInterface {
@@ -51,7 +50,7 @@ private:
     private:
     public:
         GraphT graph;
-        GraphType _type;
+        GraphType _type {GraphType::NONE};
 
         GraphImplementation(GraphT&& graph) : graph{std::move(graph)} {}
 

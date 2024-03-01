@@ -202,7 +202,6 @@ subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, 
         auto const index = steiner_index - 1;
         assert(index >= 0);
 
-        // auto &&relative = std::pow(info.base_first, index) * info.r_first;
         auto &&relative = std::exp(info.base_first * index) * info.r_first;
         assert(index != 0 || relative == info.r_first);
         assert(relative >= info.r_first - 0.002F);
@@ -213,7 +212,6 @@ subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, 
     auto const index = info.node_count - steiner_index - 2;
     assert(index >= 0);
 
-    // auto &&relative = std::pow(info.base_second, index) * info.r_second;
     auto &&relative = std::exp(info.base_second * index) * info.r_second;
     assert(steiner_index != info.node_count - 2 || index == 0);
     assert(index != 0 || relative == info.r_second);
@@ -222,13 +220,43 @@ subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, 
     return interpolate_linear(c2, c1, relative);
 }
 
+inline double subdivision::relative_position_mid(edge_id_t const edge) const {
+    return edges[edge].mid_position;
+}
+
+inline double subdivision::relative_position_steiner(edge_id_t const edge, steiner_index_type const steiner_index) const {
+    auto &&info = edges[edge];
+
+    if (steiner_index < info.mid_index) [[likely]] {
+        auto const index = steiner_index - 1;
+        assert(index >= 0);
+
+        auto relative = std::exp(info.base_first * index) * info.r_first;
+        assert(index != 0 || relative == info.r_first);
+        assert(relative >= info.r_first - 0.002F);
+        assert(relative <= info.mid_position + 0.002F);
+        return std::clamp(relative, 0.0, 1.0);
+    }
+
+    auto const index = info.node_count - steiner_index - 2;
+    assert(index >= 0);
+
+    auto relative = std::exp(info.base_second * index) * info.r_second;
+    assert(steiner_index != info.node_count - 2 || index == 0);
+    assert(index != 0 || relative == info.r_second);
+    assert(relative >= info.r_second - 0.002F);
+    assert(relative <= 1.0F - info.mid_position + 0.002F);
+    return std::clamp(1.0 - relative, 0.0, 1.0);
+}
+
+
 inline double subdivision::relative_position(edge_id_t const edge, steiner_index_type const steiner_index) const {
     auto &&info = edges[edge];
 
     if (steiner_index == 0)
-        return 0;
+        return 0.0;
     if (steiner_index == info.node_count - 1)
-        return 1;
+        return 1.0;
 
     if (steiner_index == info.mid_index)
         return info.mid_position;
@@ -237,8 +265,7 @@ inline double subdivision::relative_position(edge_id_t const edge, steiner_index
         auto const index = steiner_index - 1;
         assert(index >= 0);
 
-        // auto &&relative = std::pow(info.base_first, index) * info.r_first;
-        auto &&relative = std::exp(info.base_first * index) * info.r_first;
+        auto relative = std::exp(info.base_first * index) * info.r_first;
         assert(index != 0 || relative == info.r_first);
         assert(relative >= info.r_first - 0.002F);
         assert(relative <= info.mid_position + 0.002F);
@@ -248,13 +275,12 @@ inline double subdivision::relative_position(edge_id_t const edge, steiner_index
     auto const index = info.node_count - steiner_index - 2;
     assert(index >= 0);
 
-    // auto &&relative = std::pow(info.base_second, index) * info.r_second;
-    auto &&relative = std::exp(info.base_second * index) * info.r_second;
+    auto relative = std::exp(info.base_second * index) * info.r_second;
     assert(steiner_index != info.node_count - 2 || index == 0);
     assert(index != 0 || relative == info.r_second);
     assert(relative >= info.r_second - 0.002F);
     assert(relative <= 1.0F - info.mid_position + 0.002F);
-    return 1 - relative;
+    return (1.0 - relative);
 }
 
 inline subdivision::steiner_index_type subdivision::index(const edge_id_t edge, double relative) const {

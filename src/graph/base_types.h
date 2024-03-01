@@ -25,6 +25,12 @@ struct coordinate {
     component_type latitude;
     component_type longitude;
 
+    inline coordinate& rotate_right() {
+        std::swap(latitude, longitude);
+        longitude *= -1;
+        return *this;
+    }
+
     [[gnu::always_inline]]
     inline component_type length() const { return std::sqrt((latitude * latitude) + (longitude * longitude)); }
     [[gnu::always_inline]]

@@ -10,12 +10,12 @@
 
 template<typename GraphT>
 GraphType Graph::GraphImplementation<GraphT>::type() const {
-    return GraphType::STD_GRAPH_DIRECTED;
+    return GraphType::STD_GRAPH;
 }
 
 template<>
 GraphType Graph::GraphImplementation<steiner_graph>::type() const {
-    return GraphType::STEINER_GRAPH_UNDIRECTED;
+    return GraphType::STEINER_GRAPH;
 }
 
 

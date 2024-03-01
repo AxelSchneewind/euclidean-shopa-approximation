@@ -71,8 +71,8 @@ else (GENGETOPT)
 endif (GENGETOPT)
 
 
-set(CMAKE_CXX_FLAGS "-march=native -Wall") # -Wextra
-set(CMAKE_CXX_FLAGS_DEBUG "-g -D_GLIBCXX_DEBUG")
+set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall") # -Wextra
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Og") # -D_GLIBCXX_DEBUG
 
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 

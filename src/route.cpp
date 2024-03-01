@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include <filesystem>
+#include <string>
 
 
 int
@@ -32,7 +33,8 @@ main(int argc, char *argv[]) {
     config.bidirectional = false;
     config.use_a_star = arguments.astar_flag;
     config.live_status = arguments.live_status_flag;
-    config.tree_size = (arguments.tree_given) * arguments.tree_arg;
+    config.min_angle_neighbor_method = RoutingConfiguration::LINALG;
+    config.tree_size = (arguments.tree_given) ? arguments.tree_arg : 0;
 
     // read graph
     Client client;
@@ -44,20 +46,20 @@ main(int argc, char *argv[]) {
 
     if (output_csv)
         client.write_csv_header(std::cout);
-    else client.write_graph_stats(std::cout);
+    else
+        client.write_graph_stats(std::cout);
 
-    bool done = false;
     bool from_stdin = (arguments.query_given < 1) || (arguments.stdin_flag != 0);
-    int query_index = 0;
+    std::size_t query_index = 0;
 
-    while (!done) {
+    while (true) {
         // get query
-        int src_node(0);
-        int dest_node(0);
+        unsigned long src_node{0};
+        unsigned long dest_node{0};
 
         if (query_index + 1 < arguments.query_given) {
             if (nodes_by_coordinates) {
-                throw std::runtime_error("not implemented");
+                throw std::runtime_error("passing start and target nodes by coordinates is not yet implemented, sorry");
             } else {
                 src_node = std::stoi(arguments.query_arg[query_index++]);
                 dest_node = std::stoi(arguments.query_arg[query_index++]);
@@ -97,7 +99,7 @@ main(int argc, char *argv[]) {
         output_info << std::flush;
 
         if (arguments.query_given >= 2)
-            std::cout << "computing route " << (query_index / 2) << ": " << src_node << ',' << dest_node << "\n";
+            std::cout << "computing route " << (query_index / 2) << " of " << (arguments.query_given/2) << ": " << src_node << ',' << dest_node << "\n";
 
         if (dest_node >= 0)
             client.compute_route(src_node, dest_node);

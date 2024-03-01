@@ -42,8 +42,7 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::add_edge(
     add_node(source);
     add_node(destination);
 
-    adjacency_list_edge<NodeId, E> edge(source, destination);
-    _edges.emplace_back(edge);
+    _edges.emplace_back(source, destination);
     ++_edge_count;
 
     _offsets_valid = false;

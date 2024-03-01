@@ -1,7 +1,7 @@
 #pragma once
 
-#include "/home/axel/Dokumente/Studium/Semester_7/routing/src/graph/adjacency_list.h"
-#include "/home/axel/Dokumente/Studium/Semester_7/routing/src/graph/subgraph.h"
+#include "graph/adjacency_list.h"
+#include "graph/subgraph.h"
 #include "polyhedron.h"
 #include "steiner_graph.h"
 
@@ -10,6 +10,7 @@
 
 
 #include "../util/set_minus.h"
+#include <functional>
 #include <span>
 #include <unordered_map>
 #include <cmath>
@@ -300,12 +301,38 @@ steiner_graph::steiner_graph(std::vector<steiner_graph::node_info_type> &&triang
 }
 
 
+coordinate_t const& steiner_graph::node_coordinates_first(steiner_graph::triangle_edge_id_type id) const {
+    return _base_nodes[_base_topology.source(id)].coordinates;
+}
+
+coordinate_t steiner_graph::node_coordinates_mid(steiner_graph::triangle_edge_id_type id) const {
+    const coordinate_t &c2 = _base_nodes[_base_topology.destination(id)].coordinates;
+    const coordinate_t &c1 = _base_nodes[_base_topology.source(id)].coordinates;
+    const auto relative = _table.relative_position_mid(id);
+
+    return interpolate_linear(c1, c2, relative);
+}
+
+coordinate_t const& steiner_graph::node_coordinates_last(steiner_graph::triangle_edge_id_type id) const {
+    return _base_nodes[_base_topology.destination(id)].coordinates;
+}
+
 coordinate_t steiner_graph::node_coordinates(steiner_graph::node_id_type id) const {
     const coordinate_t &c2 = _base_nodes[_base_topology.destination(id.edge)].coordinates;
     const coordinate_t &c1 = _base_nodes[_base_topology.source(id.edge)].coordinates;
 
     return _table.node_coordinates(id.edge, id.steiner_index, c1, c2);
 }
+
+coordinate_t steiner_graph::node_coordinates_steiner(steiner_graph::node_id_type id) const {
+    const coordinate_t &c2 = _base_nodes[_base_topology.destination(id.edge)].coordinates;
+    const coordinate_t &c1 = _base_nodes[_base_topology.source(id.edge)].coordinates;
+    const auto relative = _table.relative_position_steiner(id.edge, id.steiner_index);
+
+    return interpolate_linear(node_coordinates_first(id.edge), node_coordinates_last(id.edge), relative);
+}
+
+
 coordinate_t const& steiner_graph::node_coordinates(steiner_graph::triangle_node_id_type id) const {
     return _base_nodes[id].coordinates;
 }
@@ -626,6 +653,15 @@ steiner_graph::node_id_type steiner_graph::from_base_node_id(int node) const {
 
     [[unlikely]]
     return optional::none_value<node_id_type>;
+}
+
+steiner_graph::distance_type
+steiner_graph::on_edge_distance(steiner_graph::triangle_edge_id_type edge, steiner_graph::intra_edge_id_type first,
+                                steiner_graph::intra_edge_id_type second) const {
+    auto relative1 = _table.relative_position(edge, first);
+    auto relative2 = _table.relative_position(edge, second);
+    auto length = (node_coordinates_last(edge) - node_coordinates_first(edge)).length();
+    return (relative2 - relative1) * length;
 }
 
 steiner_graph::node_id_iterator_type steiner_graph::node_id_iterator_type::operator++() {

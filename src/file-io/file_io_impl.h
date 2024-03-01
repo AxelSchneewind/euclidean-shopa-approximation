@@ -44,10 +44,16 @@ file_io::write_edges(std::ostream &output, std::span<Edge> edges) {
 }
 
 template<typename NodeId, typename formatter>
-void
+std::size_t
 file_io::read_triangles(std::istream &input, std::span<std::array<NodeId, 3>> faces) {
-    for (auto& face : faces)
-        face = formatter::template read<std::array<NodeId, 3>>(input);
+    std::size_t index = 0;
+    for (int i = 0; i < faces.size(); ++i) {
+        auto face = formatter::template read<std::array<NodeId, 3>>(input);
+        if (face[0] != face[1] && face[0] != face[2] && face[1] != face[2]) {
+            faces[index++] = face;
+        }
+    }
+    return index;
 }
 
 

@@ -8,7 +8,7 @@
 template<typename Graph, typename Dijkstra>
 typename bidirectional_router<Graph, Dijkstra>::distance_type
 bidirectional_router<Graph, Dijkstra>::min_route_distance(node_cost_pair_type node) const {
-    return node.min_distance();
+    return node.value();
 }
 
 template<typename Graph, typename Dijkstra>

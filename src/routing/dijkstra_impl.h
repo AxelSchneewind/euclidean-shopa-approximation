@@ -97,7 +97,7 @@ dijkstra<G, Q, L, N>::init(node_id_type start_node, node_id_type target_node) {
 
     // add start node to queue
     if (!optional::is_none(start_node)) {
-        _queue.push(start_node, start_node, 0);
+        _queue.push(start_node, start_node, 0.0);
     }
 
     _pull_count = 0;
@@ -138,8 +138,8 @@ dijkstra<G, Q, L, N>::expand(node_cost_pair_type node) {
         assert(successor.distance() > 0);
         assert (successor_node == _start_node || _graph.has_edge(successor.predecessor(), successor_node));
 
-        const distance_t successor_cost = _labels.at(successor_node).distance(); // use shortest distance
-        const distance_t &new_cost = successor.distance();
+        const distance_t& successor_cost = _labels.at(successor_node).distance(); // use shortest distance
+        const distance_t& new_cost = successor.distance();
 
         assert(new_cost >= node.distance());
         if (new_cost < successor_cost) [[likely]] {
@@ -235,7 +235,7 @@ G::path_type dijkstra<G, Q, L, N>::path(node_id_type target) const {
 }
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N>
-G::subgraph_type dijkstra<G, Q, L, N>::shortest_path_tree(int max_node_count) const {
+G::subgraph_type dijkstra<G, Q, L, N>::shortest_path_tree(std::size_t max_node_count) const {
     std::vector<typename G::node_id_type> nodes;
     std::vector<typename G::edge_id_type> edges;
 
