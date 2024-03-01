@@ -16,15 +16,12 @@ public:
     using steiner_index_type = int;
 
 private:
-    static constexpr steiner_index_type max_steiner_count_per_edge = std::numeric_limits<unsigned short>::max();// std::numeric_limits<steiner_index_type>::max();
+    static constexpr steiner_index_type max_steiner_count_per_edge = std::numeric_limits<unsigned short>::max() / 2;// std::numeric_limits<steiner_index_type>::max();
 
     // here, some lower bounds can be imposed to prevent numerical issues
-    static constexpr long double min_base = 1.0 + std::numeric_limits<double>::epsilon();
-    static constexpr double min_r_value = 0x1.0p-9;
+    static constexpr long double min_r_value = 0x1p-6;
 
 public:
-    static constexpr long double min_angle = 0x1.p-48;
-
     struct subdivision_edge_info {
         // r(v), relative to this edge
         float r_first;

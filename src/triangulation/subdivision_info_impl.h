@@ -17,7 +17,6 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
                                         const std::vector<node_t> &nodes,
                                         const polyhedron<adjacency_list<int>, 3> &polyhedron,
                                         const std::vector<double> &r_values, double epsilon) {
-
     // store subdivision information here
     std::vector<subdivision_edge_info> result;
     result.reserve(triangulation.edge_count());
@@ -58,29 +57,33 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
             if (a2 < angle2)
                 angle2 = a2;
         }
-        angle1 = std::clamp(angle1, min_angle, std::numbers::pi_v<long double> / 2);
-        angle2 = std::clamp(angle2, min_angle, std::numbers::pi_v<long double> / 2);
-        angle3 = std::numbers::pi - angle2 - angle1;
+        angle1 = std::clamp(angle1, 0.0l, std::numbers::pi_v<long double> / 2);
+        angle2 = std::clamp(angle2, 0.0l, std::numbers::pi_v<long double> / 2);
+        angle3 = std::numbers::pi_v<long double> - angle2 - angle1;
 
         // length |e| of the edge
         double const length = distance(c2, c1);
 
         // relative value where the mid-point (with max distance to other edges) lies between node1 and node2
-        double const mid_position = 1.0l / (1.0l + std::sin(angle1) / std::sin(angle2));
+        long double const mid_position = 1.0l / (1.0l + (std::sin(angle1) / std::sin(angle2)));
         {
-            double mid_value_second = 1.0l / (1.0l + std::sin(angle2) / std::sin(angle1));
+            long double mid_value_second = 1.0l / (1.0l + std::sin(angle2) / std::sin(angle1));
             assert(std::abs(mid_position + mid_value_second - 1.0) < 0.01);
             assert(mid_position <= 1 && mid_position >= 0);
         }
 
         // distance values have been computed already, convert to r(v) relative to this edges length
-        double const factor = epsilon / 5;
-        double const r_first  = std::clamp(factor * (r_values[node1] / length), min_r_value, 1.0);
-        double const r_second = std::clamp(factor * (r_values[node2] / length), min_r_value, 1.0);
+        long double const factor = epsilon / 5;
+        long double const r_first  = std::clamp(factor * (r_values[node1] / length), min_r_value, 1.0l);
+        long double const r_second = std::clamp(factor * (r_values[node2] / length), min_r_value, 1.0l);
 
         // the base for computing relative node positions
-        long double const base_first = std::clamp(1.0l + epsilon * std::sin(angle1), min_base, 10.0l);
-        long double const base_second = std::clamp(1.0l + epsilon * std::sin(angle2), min_base, 10.0l);
+        long double min_base_first = std::pow(r_first, -2.0 / max_steiner_count_per_edge);
+        long double min_base_second = std::pow(r_second, -2.0 / max_steiner_count_per_edge);
+        assert(r_first * std::pow(min_base_first, max_steiner_count_per_edge) >= 1.0);
+        assert(r_second * std::pow(min_base_second, max_steiner_count_per_edge) >= 1.0);
+        long double const base_first = std::clamp(1.0l + epsilon * std::sin(angle1), min_base_first, 10.0l);
+        long double const base_second = std::clamp(1.0l + epsilon * std::sin(angle2), min_base_second, 10.0l);
 
         // get interval in first half that is between r and mid_value
         size_t left_count;
@@ -162,8 +165,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
             || !is_in_range(mid_index, 0, count - 1)
             || !is_in_range(r_first,  0, 1.1)
             || !is_in_range(r_second, 0, 1.1)
-            || !is_in_range(base_first,  min_base, std::numeric_limits<float>::max())
-            || !is_in_range(base_second, min_base, std::numeric_limits<float>::max())
+            || !is_in_range(base_first,  min_base_first, std::numeric_limits<float>::max())
+            || !is_in_range(base_second, min_base_second, std::numeric_limits<float>::max())
             || !is_in_range(left_count,  0, max_steiner_count_per_edge / 2)
             || !is_in_range(right_count, 0, max_steiner_count_per_edge / 2))
             throw std::invalid_argument("some value does not fit");
@@ -289,14 +292,15 @@ inline subdivision::steiner_index_type subdivision::index(const edge_id_t edge, 
     assert(relative >= 0 && relative <= 1);
 
     if (relative < info.mid_position) {
-        int const exponent = std::max(std::min(static_cast<int>(std::floor(std::log(relative / info.r_first) / info.base_first)), info.mid_index - 2), 0);
+        steiner_index_type const exponent = std::clamp(static_cast<steiner_index_type>(std::floor(std::log(relative / info.r_first) / info.base_first)), 0, info.mid_index - 2);
         steiner_index_type const index = exponent + 1;
         assert(index > 0 && index <= info.mid_index + 1 && index < info.node_count);
         return index;
     }
 
     relative = 1 - relative;
-    int const exponent = std::max(std::min(static_cast<int>(std::ceil(std::log(relative / info.r_second) / info.base_second)), info.node_count - info.mid_index - 2), 0);
+    steiner_index_type const exponent = std::clamp(static_cast<steiner_index_type>(std::ceil(std::log(relative / info.r_second) / info.base_second)), 0, info.node_count - info.mid_index - 2);
+    assert(exponent >= 0 && exponent < info.node_count - 2);
     steiner_index_type const index = (info.node_count - 2) - exponent;
     assert(index >= 0 && index >= info.mid_index - 1 && index < info.node_count);
     return index;
