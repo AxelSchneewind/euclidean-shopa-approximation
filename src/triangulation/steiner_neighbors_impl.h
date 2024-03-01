@@ -420,7 +420,6 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
 
     // face-crossing edges
     for (auto &&edge_id: _graph.base_polyhedron().edges(node.node().edge)) [[likely]] {
-
         // get neighbor
         node_id_type other;
         if constexpr (Configuration::ATAN2 == Config) {
@@ -444,13 +443,13 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
 
         ++other.steiner_index;
 
-        if (other.steiner_index < _graph.steiner_info(edge_id).node_count) [[likely]] {
+        if (other.steiner_index < steiner_info.node_count) [[likely]] {
             destination_coordinate = _graph.node_coordinates(other);
             out.emplace_back(other, node.node(), node.distance());
             out_coordinates.emplace_back(destination_coordinate);
         }
 
-        // break;
+        break;
     }
 }
 
