@@ -6,7 +6,7 @@ MAKE_GL=make_gl
 PRUNE_GRAPH=prune_graph
 PROJECT=project_graph
 
-GRAPH_DIR=/home/axel/Studium/Semester_7/graphs/
+GRAPH_DIR=/opt/routing/graphs/
 INPUT_GRAPH=$GRAPH_DIR/visibility_aegaeis/aegaeis10-ref-projected.graph
 
 
