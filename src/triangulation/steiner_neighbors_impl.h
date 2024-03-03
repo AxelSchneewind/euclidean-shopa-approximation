@@ -241,10 +241,25 @@ steiner_neighbors<Graph, Labels, Config>::min_angle_relative_value_atan2(base_ed
 }
 
 
-static bool orientation_test_right(coordinate_t const &source, coordinate_t const &right, coordinate_t point) {
+static double angle_sin(coordinate_t const &direction, coordinate_t forward) {
+    forward.rotate_right();
+    double product = direction * forward;
+    product /= (direction.length() * forward.length());
+    assert(product >= -1.01 && product <= 1.01);
+    return product;
+}
+
+static double angle_sin(coordinate_t const &source, coordinate_t const &right, coordinate_t point) {
     point -= source;
     double product = point * right;
-    return !std::signbit(product);
+    product /= (point.length() * right.length());
+    assert(product >= -1.01 && product <= 1.0);
+    return product;
+}
+
+static bool orientation_right(coordinate_t const &source, coordinate_t const &right, coordinate_t point) {
+    double sin_value = angle_sin(source, right, point);
+    return !std::signbit(sin_value);
 }
 
 inline bool
@@ -325,7 +340,7 @@ steiner_neighbors<Graph, Labels, Config>::min_angle_neighbor_binary_search(const
         destination_coords = _graph.node_coordinates(destination);
 
         // compute cos values
-        orientation = orientation_test_right(_source_coordinate, right, destination_coords);
+        orientation = orientation_right(_source_coordinate, right, destination_coords);
         norientation = !orientation;
     }
 
@@ -356,7 +371,7 @@ steiner_neighbors<Graph, Labels, Config>::min_angle_neighbor_binary_search(const
         assert(destination_coords != _source_coordinate);
 
         // compute cos values
-        orientation = orientation_test_right(_source_coordinate, right, destination_coords);
+        orientation = orientation_right(_source_coordinate, right, destination_coords);
         norientation = !orientation;
 
         // update range
@@ -420,6 +435,9 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
 
     // face-crossing edges
     for (auto &&edge_id: _graph.base_polyhedron().edges(node.node().edge)) [[likely]] {
+        if (edge_id == node.node().edge) [[unlikely]]
+            continue;
+
         // get neighbor
         node_id_type other;
         if constexpr (Configuration::ATAN2 == Config) {
@@ -430,7 +448,7 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
             other = min_angle_neighbor_matmul(edge_id, direction);
         }
 
-        if (optional::is_none(other) || other.steiner_index < 0 || other.steiner_index >= _graph.steiner_info(edge_id).node_count)
+        if (optional::is_none(other))
             continue;
 
         assert(other.steiner_index >= 0);
@@ -448,8 +466,6 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
             out.emplace_back(other, node.node(), node.distance());
             out_coordinates.emplace_back(destination_coordinate);
         }
-
-        break;
     }
 }
 
@@ -604,15 +620,16 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
 
     node_id_type next{edge_id, destination_steiner_info.mid_index};
     coordinate_t last_direction = direction * -1;
+    last_direction.rotate_right();
     for (auto j = next.steiner_index; j >= 1; --j) [[likely]] {
         steiner_graph::node_id_type const destination(edge_id, j);
         coordinate_t const destination_coordinate{_graph.node_coordinates(destination)};
         coordinate_t const new_direction{destination_coordinate - _source_coordinate};
 
+        if (std::abs(angle_sin(new_direction, last_direction)) < _spanner_angle_sin) [[likely]]
+            continue;
         if (angle_cos(direction, new_direction) < max_angle_cos) [[unlikely]]
             break;
-        if (angle_cos(last_direction, new_direction) > _spanner_angle_cos) [[likely]]
-            continue;
 
         assert(_graph.has_edge(node_id, destination));
         out.emplace_back(destination, node_id, node.distance());
@@ -621,15 +638,16 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
     }
 
     last_direction = direction * -1;
+    last_direction.rotate_right();
     for (auto j = next.steiner_index + 1; j < destination_steiner_info.node_count - 1; ++j) [[likely]] {
         steiner_graph::node_id_type const destination(edge_id, j);
         coordinate_t const destination_coordinate{_graph.node_coordinates(destination)};
         coordinate_t const new_direction{destination_coordinate - _source_coordinate};
 
+        if (std::abs(angle_sin(new_direction, last_direction)) < _spanner_angle_sin) [[likely]]
+            continue;
         if (angle_cos(direction, new_direction) < max_angle_cos) [[unlikely]]
             break;
-        if (angle_cos(last_direction, new_direction) > _spanner_angle_cos) [[likely]]
-            continue;
 
         assert(_graph.has_edge(node_id, destination));
         out.emplace_back(destination, node_id, node.distance());

@@ -39,6 +39,7 @@ private:
 
     coordinate_t::component_type _spanner_angle;
     coordinate_t::component_type _spanner_angle_cos;
+    coordinate_t::component_type _spanner_angle_sin;
 
     coordinate_t::component_type _max_angle;
 
@@ -132,6 +133,7 @@ public:
             : _graph(graph), _labels(labels),
               _spanner_angle{std::clamp(std::numbers::pi * graph.epsilon(), 0.0, std::numbers::pi_v<coordinate_t::component_type>)},
               _spanner_angle_cos{std::cos(_spanner_angle)},
+              _spanner_angle_sin{std::sin(_spanner_angle)},
               _max_angle{std::clamp(std::numbers::pi / 2 * graph.epsilon(), std::numeric_limits<coordinate_t::component_type>::min(), std::numbers::pi / 4)}
               {}
 
