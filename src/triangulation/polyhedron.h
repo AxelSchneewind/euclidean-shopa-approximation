@@ -33,8 +33,8 @@ private:
     std::size_t _boundary_node_count;
     std::size_t _boundary_edge_count;
 
-    std::vector<bool> _is_boundary_edge;
     std::vector<bool> _is_boundary_node;
+    std::vector<bool> _is_boundary_edge;
 
     // for each triangle
     std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>> _face_info;

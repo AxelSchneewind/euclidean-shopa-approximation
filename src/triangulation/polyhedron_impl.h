@@ -204,15 +204,16 @@ polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
         std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&adjacent_faces,
         std::vector<bool> &&is_boundary_node, std::vector<bool> &&is_boundary_edge,
         std::vector<edge_id_type> &&node_edges, std::vector<int> &&node_edge_offsets)
-        : _face_info(std::move(adjacent_edges)),
-          _node_edges_offsets(std::move(node_edge_offsets)),
-          _node_edges(std::move(node_edges)),
-          _edge_info(std::move(adjacent_faces)),
-          _edge_links(),
-          _is_boundary_node(std::move(is_boundary_node)),
-          _is_boundary_edge(std::move(is_boundary_edge)),
-          _boundary_edge_count(0),
-          _boundary_node_count(0) {
+        : _boundary_edge_count{0},
+          _boundary_node_count{0},
+          _is_boundary_node{std::move(is_boundary_node)},
+          _is_boundary_edge{std::move(is_boundary_edge)},
+          _face_info{std::move(adjacent_edges)},
+          _edge_info{std::move(adjacent_faces)},
+          _edge_links{},
+          _node_edges_offsets{std::move(node_edge_offsets)},
+          _node_edges{std::move(node_edges)}
+          {
 
     for (auto &&boundary: _is_boundary_edge) {
         _boundary_edge_count += boundary;
