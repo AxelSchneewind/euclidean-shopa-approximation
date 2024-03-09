@@ -1,6 +1,8 @@
-#include <memory>
+#pragma once
+
 
 template<typename NodeId, typename Distance, typename Info = void>
+[[deprecated]]
 struct node_cost_pair {
 private:
     NodeId _node;
@@ -10,6 +12,8 @@ private:
 
 public:
     using info_type = Info;
+    using node_id_type = NodeId;
+    using distance_type = Distance;
 
     constexpr node_cost_pair() = default;
 
@@ -105,3 +109,5 @@ constexpr node_cost_pair<NodeId, Distance, Info> optional::none_value<node_cost_
 template<typename NodeId, typename Distance>
 constexpr node_cost_pair<NodeId, Distance> optional::none_value<node_cost_pair<NodeId, Distance>>
         = {none_value<NodeId>, none_value<NodeId>, infinity<Distance>};
+
+
