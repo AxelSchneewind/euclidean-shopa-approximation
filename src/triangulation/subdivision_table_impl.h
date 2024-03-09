@@ -90,8 +90,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
             // compute angles
             auto a1 = inner_angle(c1, c2, c1, c3);
             auto a2 = inner_angle(c2, c1, c2, c3);
-            auto a3 = inner_angle(c3, c1, c3, c2);
-            assert(std::fabs((a1 + a2 + a3) - std::numbers::pi) <
+            assert(std::fabs((a1 + a2 + inner_angle(c3, c1, c3, c2)) - std::numbers::pi) <
                    std::numbers::pi / 180); // check that sum of inner angles is 180º (+- 1º for rounding)
 
             if (a1 < angle1)
