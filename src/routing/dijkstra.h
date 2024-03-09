@@ -2,12 +2,14 @@
 
 #include "dijkstra_concepts.h"
 
-template<RoutableGraph G, DijkstraQueue<G> Q,
-        DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L,
-        NeighborsGetter<typename Q::value_type> N>
+template< RoutableGraph G
+        , DijkstraQueue<G> Q
+        , DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L
+        , NeighborsGetter<typename Q::value_type> N
+        , typename H = no_heuristic>
 class dijkstra {
 public:
-    using type = dijkstra<G, Q, L, N>;
+    using type = dijkstra<G, Q, L, N, H>;
     using node_cost_pair_type = typename Q::value_type;
     using node_id_type = typename G::node_id_type;
     using distance_type = typename G::distance_type;
@@ -16,20 +18,22 @@ public:
     using queue_type = Q;
     using labels_type = L;
     using neighbor_getter_type = N;
+    using heuristic_type = H;
 
     static constexpr size_t SIZE_PER_NODE = L::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE = L::SIZE_PER_EDGE;
 
 private:
-    G const &_graph;
+    std::shared_ptr<G> _graph;
+    std::shared_ptr<L> _labels;
 
     node_id_type _start_node;
     node_id_type _target_node;
 
     Q _queue;
-    L _labels;
 
     N _neighbors;
+    H _heuristic;
 
     std::size_t _push_count{0};
     std::size_t _pull_count{0};
@@ -39,16 +43,14 @@ private:
     void expand(node_cost_pair_type node);
 
 public:
-    dijkstra(dijkstra &&other) noexcept;
-
+    dijkstra(dijkstra &&other) noexcept : _graph{std::move(other._graph)}, _labels{std::move(other._labels)}, _queue{other._queue}, _neighbors{other._neighbors}, _heuristic{other._heuristic} {};
     dijkstra(const dijkstra &other) = delete;
 
     // constructs a dijkstra object for the given graph
-    explicit dijkstra(G const &graph);
+    explicit dijkstra(std::shared_ptr<G> graph);
 
-    explicit dijkstra(G const &graph, dijkstra&& other);
-
-    explicit dijkstra(G const &graph, Q &&queue, L &&labels, N &&neighbors);
+    [[deprecated]]
+    explicit dijkstra(std::shared_ptr<G> graph, Q &&queue, L &&labels, N &&neighbors);
 
     ~dijkstra() = default;
 

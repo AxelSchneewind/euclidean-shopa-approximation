@@ -9,27 +9,22 @@ steiner_labels<G, Label>::steiner_labels(steiner_labels &&other) noexcept
         : _graph(other._graph), _edge_touched(std::move(other._edge_touched)),
           _base_labels(std::move(other._base_labels)), _labels(std::move(other._labels)) {}
 
-template<RoutableGraph G, typename Label>
-steiner_labels<G, Label>::steiner_labels(const G &graph, steiner_labels &&other) noexcept
-        : _graph(graph), _edge_touched(std::move(other._edge_touched)), _base_labels(std::move(other._base_labels)),
-          _labels(std::move(other._labels)) {}
-
 template<RoutableGraph G, typename N>
 steiner_labels<G, N>::label_iterator_type
 steiner_labels<G, N>::all_visited() const {
     return label_iterator_type(_edge_touched.begin(), _edge_touched.end(),
                                std::function<steiner_graph::node_id_iterator_type(std::size_t)>(
                                        [this](std::size_t edge) -> steiner_graph::node_id_iterator_type {
-                                           return _graph.node_ids(edge);
+                                           return _graph->node_ids(edge);
                                        }));
 }
 
 template<RoutableGraph G, typename N>
-steiner_labels<G, N>::steiner_labels(G const &graph)
-        : _graph(graph),
-          _labels(graph.base_graph().edge_count(), optional::none_value<N>),
-          _base_labels(_graph.base_graph().node_count(), optional::none_value<N>),
-          _edge_touched(_graph.base_graph().edge_count(), false) {
+steiner_labels<G, N>::steiner_labels(std::shared_ptr<G> graph)
+        : _graph(std::move(graph)),
+          _labels(_graph->base_graph().edge_count(), optional::none_value<N>),
+          _base_labels(_graph->base_graph().node_count(), optional::none_value<N>),
+          _edge_touched(_graph->base_graph().edge_count(), false) {
 }
 
 template<RoutableGraph G, typename N>
@@ -45,9 +40,9 @@ template<RoutableGraph G, typename N>
 N
 steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) const {
     assert(!optional::is_none(node));
-    if (_graph.is_base_node(node)) [[unlikely]] {
-        assert(!optional::is_none(_graph.base_node_id(node)));
-        return _base_labels[_graph.base_node_id(node)];
+    if (_graph->is_base_node(node)) [[unlikely]] {
+        assert(!optional::is_none(_graph->base_node_id(node)));
+        return _base_labels[_graph->base_node_id(node)];
     }
 
     assert(_labels.contains(node.edge));
@@ -59,34 +54,26 @@ N &
 steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) {
     assert(!optional::is_none(node));
 
-    if (_graph.is_base_node(node)) [[unlikely]] {
-        assert(!optional::is_none(_graph.base_node_id(node)));
-        return _base_labels[_graph.base_node_id(node)];
+    if (_graph->is_base_node(node)) [[unlikely]] {
+        assert(!optional::is_none(_graph->base_node_id(node)));
+        return _base_labels[_graph->base_node_id(node)];
     }
 
     if (!_labels.contains(node.edge)) {
-        _labels.append(node.edge, _graph.steiner_info(node.edge).node_count - 2);
+        _labels.append(node.edge, _graph->steiner_info(node.edge).node_count - 2);
     }
     return _labels.node_info(node.edge, node.steiner_index - 1);
 }
 
 
-template<RoutableGraph G, typename N>
-void
-steiner_labels<G, N>::label(node_id_type const &node, N const &label) {
-    auto const &edge_id = node.edge;
-
+template<RoutableGraph G, typename Label>
+Label &steiner_labels<G, Label>::operator[](const node_id_type &node) {
     assert(!optional::is_none(node));
 
-    _edge_touched[edge_id] = true;
-
-    if (_graph.is_base_node(node)) { [[unlikely]]
-        assert(!optional::is_none(_graph.base_node_id(node)));
-        _base_labels[_graph.base_node_id(node)] = label;
-    } else {
-        if (!_labels.contains(node.edge)) {
-            _labels.append(node.edge, _graph.steiner_info(node.edge).node_count - 2);
-        }
-        _labels.node_info(edge_id, node.steiner_index - 1) = label;
+    if (_graph->is_base_node(node)) [[unlikely]] {
+        assert(!optional::is_none(_graph->base_node_id(node)));
+        return _base_labels[_graph->base_node_id(node)];
     }
+
+    return _labels.node_info(node.edge, node.steiner_index - 1);
 }

@@ -7,6 +7,7 @@
 #include "../triangulation/geometric_node_cost_pair.h"
 
 #include <thread>
+#include "../routing/node_label.h"
 
 
 template<typename GraphImplementation, bool use_a_star, bool bidirectional, Configuration n>
@@ -25,11 +26,32 @@ struct Implementation<steiner_graph, use_a_star, bidirectional, n> {
     using node_id_t = typename graph_t::node_id_type;
     using base_node_id_t = typename graph_t::triangle_node_id_type;
     using distance_t = typename graph_t::distance_type;
-    using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
-    using queue_t = dijkstra_queue<steiner_graph, node_cost_pair_t, compare_heuristic>;
-    using labels_t = steiner_labels<steiner_graph, label_type<steiner_graph>>;
+
+    struct ncp_impl {
+        double    _distance;
+        float     _heuristic;
+        node_id_t _predecessor;
+        node_id_t _node{optional::none_value<node_id_t>};
+        node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
+    };
+
+    struct label_impl {
+    distance_t _distance;
+    distance_t _heuristic;
+    node_id_t _predecessor;
+    //    double    _distance;
+    //    float     _heuristic;
+    //    node_id_t _node;
+    //    node_id_t _predecessor;
+    };
+    using node_cost_pair_t = node_label<ncp_impl>;
+    using label_t = label_type<steiner_graph>;//node_label<label_impl>;
+
+    // using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
+    using labels_t = steiner_labels<steiner_graph, label_t>;
+    using queue_t = dijkstra_queue<node_cost_pair_t, compare_heuristic_remote<labels_t>>;
     using neighbors_t = steiner_neighbors<steiner_graph, labels_t, n>;
-    using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t>;
+    using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, a_star_heuristic<steiner_graph>>;
     using routing_t = router<steiner_graph, dijkstra_t>;
 };
 
@@ -40,7 +62,7 @@ struct Implementation<steiner_graph, false, bidirectional, n> {
     using base_node_id_t = typename graph_t::triangle_node_id_type;
     using distance_t = typename graph_t::distance_type;
     using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
-    using queue_t = dijkstra_queue<steiner_graph, node_cost_pair_t, compare_distance>;
+    using queue_t = dijkstra_queue<node_cost_pair_t, compare_distance>;
     using labels_t = steiner_labels<graph_t, label_type<graph_t>>;
     using neighbors_t = steiner_neighbors<graph_t, labels_t, n>;
     using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t>;
@@ -54,7 +76,7 @@ struct Implementation<steiner_graph, false, true, n> {
     using base_node_id_t = typename graph_t::triangle_node_id_type;
     using distance_t = typename graph_t::distance_type;
     using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, void, node_id_t>;
-    using queue_t = dijkstra_queue<graph_t, node_cost_pair_t, compare_distance>;
+    using queue_t = dijkstra_queue<node_cost_pair_t, compare_distance>;
     using labels_t = steiner_labels<graph_t, label_type<graph_t>>;
     using neighbors_t = steiner_neighbors<graph_t, labels_t, n>;
     using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t>;
@@ -66,10 +88,10 @@ template<bool use_a_star, bool bidirectional, Configuration n>
 struct Implementation<std_graph_t, use_a_star, bidirectional, n> {
     using graph_t = std_graph_t;
     using node_cost_pair_t = node_cost_pair<graph_t::node_id_type, graph_t::distance_type, float>;
-    using queue_t = dijkstra_queue<graph_t, node_cost_pair_t, compare_heuristic>;
+    using queue_t = dijkstra_queue<node_cost_pair_t, compare_heuristic>;
     using labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
     using neighbors_t = default_neighbors<graph_t>;
-    using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t>;
+    using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t, a_star_heuristic<std_graph_t>>;
     using routing_t = router<graph_t, dijkstra_t>;
 };
 
@@ -159,7 +181,7 @@ Router::Router(const Graph &graph, RoutingConfiguration const &config)
 
 template<typename GraphT, typename RouterT>
 void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, long to) {
-    QueryImplementation<GraphT> query_impl(_graph, from, to, _config);
+    QueryImplementation<GraphT> query_impl(*_graph, from, to, _config);
     Query query(std::make_shared<QueryImplementation<GraphT>>(query_impl));
     perform_query(query);
 }
@@ -182,7 +204,7 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
 
                 if constexpr (requires { requires HasHeuristic<typename RouterT::node_cost_pair_type>; }) {
                     std::cout << " (" << std::setw(12) /*<< std::setprecision(3)*/
-                              << _router.forward_current().value() << ") ";
+                              << _router.forward_current().heuristic() << ") ";
                 }
                 std::cout << ", of "
                           << _query_ptr->beeline_distance() << ", ";
@@ -209,10 +231,9 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
     auto const after = std::chrono::high_resolution_clock::now();
     done = true;
     if (_config.live_status)
-        status.
-
-                join();
+        status.join();
 
     auto const duration = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
-    _result_ptr = std::make_shared<ResultImplementation<GraphT>>(_graph, *_query_ptr, _router, duration);
+    _result_ptr = std::make_shared<ResultImplementation<GraphT>>(*_graph, *_query_ptr, _router, duration);
+
 }

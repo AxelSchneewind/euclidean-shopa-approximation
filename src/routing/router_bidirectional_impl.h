@@ -12,7 +12,7 @@ bidirectional_router<Graph, Dijkstra>::min_route_distance(node_cost_pair_type no
 }
 
 template<typename Graph, typename Dijkstra>
-bidirectional_router<Graph, Dijkstra>::bidirectional_router(Graph const&graph)
+bidirectional_router<Graph, Dijkstra>::bidirectional_router(std::shared_ptr<Graph> graph)
     : base(graph),
       _backward_search(base::_graph) {
 }
@@ -20,7 +20,7 @@ bidirectional_router<Graph, Dijkstra>::bidirectional_router(Graph const&graph)
 template<typename Graph, typename Dijkstra>
 bidirectional_router<Graph, Dijkstra>::bidirectional_router(bidirectional_router&&routing) noexcept
         : base(routing._graph),
-          _backward_search(base::_graph, std::move(routing._backward_search)) {
+          _backward_search(std::move(routing._backward_search)) {
     routing._mid_node = optional::none_value<typename Graph::node_id_type>;
 }
 

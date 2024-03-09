@@ -11,6 +11,7 @@ public:
     compare_distance() = default;
 
     template<HasDistance NodeCostPair>
+    [[using gnu : always_inline, hot]]
     constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
         return n1.distance() > n2.distance();
     };
@@ -21,50 +22,122 @@ public:
     compare_heuristic() = default;
 
     template<typename NodeCostPair>
+    [[using gnu : always_inline, hot]]
     constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
-        return n1.value() > n2.value();
+        return n1.heuristic() > n2.heuristic();
     };
 };
 
-
-template<RoutableGraph Graph, typename NodeCostPair, typename Comp = compare_distance>
-class dijkstra_queue{};
-
-template<RoutableGraph Graph, typename NodeCostPair, typename Comp> requires
-    requires {requires HasPredecessor<NodeCostPair> && HasDistance<NodeCostPair> && !HasHeuristic<NodeCostPair>;}
-class dijkstra_queue<Graph, NodeCostPair, Comp> : protected std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp> {
+template<typename Labels>
+struct compare_heuristic_remote {
 private:
-    std::size_t _max_size{0};
+    std::shared_ptr<Labels> _labels;
+public:
+    template<typename Graph>
+    compare_heuristic_remote(Graph&&, std::shared_ptr<Labels> labels) : _labels{std::move(labels)} {};
 
+    template<typename NodeCostPair>
+    [[using gnu : always_inline, hot]]
+    constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
+        return _labels->at(n1.node()).heuristic() > _labels->at(n2.node()).heuristic();
+    };
+};
+
+struct no_heuristic {
+    template <typename Graph, typename Labels>
+    no_heuristic(Graph&&, Labels&&) {};
+
+    template<typename R>
+    void operator()(R&& nodes) {
+        if constexpr(HasHeuristic<decltype(*nodes.begin())>) {
+            for(auto&& n : nodes)
+                n.heuristic() = n.distance();
+        }
+    }
+};
+
+template<typename Graph>
+struct a_star_heuristic {
+private:
+    using node_id_type    = typename Graph::node_id_type;
+    using distance_type   = typename Graph::distance_type;
+    using coordinate_type = typename Graph::coordinate_type;
+
+    std::shared_ptr<Graph const> _graph;
+    coordinate_type _target_coordinate{};
+
+    // static constexpr typename Graph::distance_type factor = 1.0;
+
+public:
+    constexpr a_star_heuristic(std::shared_ptr<Graph> graph) : _graph{graph} {}
+
+    template<typename Labels>
+    constexpr a_star_heuristic(std::shared_ptr<Graph> graph, Labels&&) : _graph{graph} {}
+
+    void init(node_id_type /*source*/, node_id_type target) {
+        _target_coordinate = _graph->node_coordinates(target);
+    }
+
+    template<typename R>
+    void operator()(R&& nodes) {
+        static std::vector<typename Graph::coordinate_type> coordinates;
+
+        coordinates.resize(nodes.size());
+        for (int i = 0; i < nodes.size(); ++i) {
+            coordinates[i] = _graph->node_coordinates(nodes[i].node());
+        }
+
+        operator()(nodes, coordinates);
+    }
+
+    template<typename R, typename C>
+    void operator()(R&& nodes, C&& coordinates) {
+        // can be vectorized
+        for (int i = 0; i < nodes.size(); ++i) {
+            nodes[i].heuristic() = nodes[i].distance() + /*factor */ distance(coordinates[i], _target_coordinate);
+            assert(nodes[i].heuristic() >= nodes[i].distance());
+        }
+    }
+};
+
+
+template<typename NodeCostPair, typename Comp = compare_distance>
+class dijkstra_queue : protected std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp> {
 protected:
     using base_queue_type = std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>;
 
 public:
     using value_type = NodeCostPair;
 
-    dijkstra_queue(Graph const &graph, Comp comp = Comp{})
-            : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(comp) {}
+    template <typename Graph, typename Labels>
+    dijkstra_queue(std::shared_ptr<Graph> graph, std::shared_ptr<Labels> labels) requires requires { Comp(graph, labels); }
+        : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(Comp(graph, labels)) {}
 
-    void init(Graph::node_id_type start_node, Graph::node_id_type target_node) {
+    template <typename Graph, typename Labels>
+    dijkstra_queue(std::shared_ptr<Graph> graph, std::shared_ptr<Labels> labels)
+        : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(Comp{}) {}
+
+    dijkstra_queue(Comp comp = {})
+        : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(comp) {}
+
+    template <typename NodeId>
+    void init(NodeId /*start_node*/, NodeId /*target_node*/) {
         base_queue_type::c.clear();
-
-        _max_size = 0;
     };
-
-    void push(base_queue_type::value_type&& ncp) {
-        assert(ncp.distance() != infinity<decltype(ncp.distance())>);
-        base_queue_type::emplace(ncp);
-        _max_size = std::max(_max_size, base_queue_type::size());
-    }
 
     template<typename... Args>
     void push(Args... args) {
-        NodeCostPair ncp(args...);
-        base_queue_type::emplace(ncp);
-        _max_size = std::max(_max_size, base_queue_type::size());
+        base_queue_type::emplace(args...);
     }
 
-    void push_range(std::span<NodeCostPair, std::dynamic_extent> nodes) {
+    void push(base_queue_type::value_type&& ncp) {
+        assert(ncp.distance() != infinity<decltype(ncp.distance())>);
+        base_queue_type::emplace(std::move(ncp));
+    }
+
+
+    template <typename R>
+    void push_range(R&& nodes) {
         for (auto&& ncp: nodes)
             push(ncp);
     }
@@ -72,6 +145,9 @@ public:
     using base_queue_type::empty;
     using base_queue_type::pop;
     using base_queue_type::top;
+    using base_queue_type::size;
 
-    size_t max_size() const { return _max_size; }
+    void clear() {
+        base_queue_type::c.clear();
+    }
 };

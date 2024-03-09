@@ -14,7 +14,7 @@ public:
 
     using node_cost_pair_type = typename search_type::node_cost_pair_type;
 protected:
-    graph_type const&_graph;
+    std::shared_ptr<graph_type> _graph;
 
     search_type _forward_search;
 
@@ -38,7 +38,7 @@ public:
     static constexpr size_t SIZE_PER_NODE = 2 * Dijkstra::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE = 2 * Dijkstra::SIZE_PER_EDGE;
 
-    explicit router(Graph const&graph);
+    explicit router(std::shared_ptr<Graph> graph);
 
     router(const router&other) = delete;
 

@@ -33,7 +33,7 @@ public:
     static constexpr size_t SIZE_PER_EDGE = 2 * Dijkstra::SIZE_PER_EDGE;
 
 
-    explicit bidirectional_router(Graph const&graph);
+    explicit bidirectional_router(std::shared_ptr<Graph> graph);
 
     bidirectional_router(const bidirectional_router&other) = delete;
 

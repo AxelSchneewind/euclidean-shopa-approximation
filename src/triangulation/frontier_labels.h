@@ -44,7 +44,7 @@ private:
     };
 
 
-    steiner_graph const &_graph;
+    std::shared_ptr<steiner_graph> _graph;
 
     // nodes with lower value (minimal path length) will not be labelled again, assuming nodes are labelled with ascending value()
     distance_type _min_value;
@@ -55,7 +55,7 @@ private:
     distance_type _frontier_width;
 
     // std::unordered_map<base_node_id_type, std::shared_ptr<aggregate_info>> _expanded_node_aggregates;
-    compact_node_info_container<base_edge_id_type, short unsigned int, nullptr_t, label_type> _expanded_node_aggregates;
+    compact_node_info_container<base_edge_id_type, short unsigned int, std::nullptr_t, label_type> _expanded_node_aggregates;
 
     label_type _default_value;
 
@@ -66,7 +66,7 @@ public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<aggregate_info>);
 
-    frontier_labels(steiner_graph const &graph, distance_type frontier_width = 0.2,
+    frontier_labels(std::shared_ptr<steiner_graph> graph, distance_type frontier_width = 0.2,
                     label_type default_value = optional::none_value<label_type>);
 
     frontier_labels(frontier_labels &&) noexcept = default;
@@ -94,8 +94,10 @@ public:
 
     void set_frontier_width(distance_type new_width);
 
+    [[deprecated]]
     void label_preliminary(steiner_graph::node_id_type node, node_cost_pair_type node_cost_pair);
 
+    [[deprecated]]
     void label(steiner_graph::node_id_type node, node_cost_pair_type node_cost_pair);;
 };
 
@@ -160,11 +162,11 @@ size_t frontier_labels<NodeCostPair, Label>::aggregate_count() const {
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
-frontier_labels<NodeCostPair, Label>::frontier_labels(const steiner_graph &graph,
+frontier_labels<NodeCostPair, Label>::frontier_labels(std::shared_ptr<steiner_graph> graph,
                                                       frontier_labels::distance_type frontier_width,
                                                       label_type default_value)
         : _graph(graph),
-          _expanded_node_aggregates{graph.subdivision_info().offsets(), nullptr, default_value},
+          _expanded_node_aggregates{graph->subdivision_info().offsets(), nullptr, default_value},
           _min_value{0.0},
           _max_distance{0.0},
           _default_value(default_value),

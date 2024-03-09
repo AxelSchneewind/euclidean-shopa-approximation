@@ -11,22 +11,22 @@ router<Graph, Dijkstra>::min_route_distance(Dijkstra::node_cost_pair_type node) 
 }
 
 template<typename Graph, typename Dijkstra>
-router<Graph, Dijkstra>::router(Graph const&graph)
+router<Graph, Dijkstra>::router(std::shared_ptr<Graph> graph)
     : _graph{graph},
       _forward_search{_graph},
       _start_node{optional::none_value<typename Graph::node_id_type>},
       _target_node{optional::none_value<typename Graph::node_id_type>},
-      _forward_current{optional::none_value<typename Dijkstra::node_cost_pair_type>},
-      _mid_node{optional::none_value<typename Graph::node_id_type>} {
+      _mid_node{optional::none_value<typename Graph::node_id_type>},
+      _forward_current{optional::none_value<typename Dijkstra::node_cost_pair_type>} {
 }
 
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(router&&routing) noexcept
-    : _graph(routing._graph),
-      _forward_search(_graph, std::move(routing._forward_search)),
+    : _graph(std::move(routing._graph)),
+      _forward_search(std::move(routing._forward_search)),
       _start_node(routing._start_node), _target_node(routing._target_node),
-      _forward_current{routing._forward_current},
-      _mid_node(routing._mid_node) {
+      _mid_node(routing._mid_node),
+      _forward_current{routing._forward_current} {
     routing._mid_node = optional::none_value<typename Graph::node_id_type>;
 }
 
@@ -38,9 +38,10 @@ router<Graph, Dijkstra>::step_forward() {
     _forward_search.step();
 
     // update mid node if target found
-    if (_forward_current.node() == _target_node)
+    if (_forward_current.node() == _target_node) {
         // TODO why is this not always executed
         _mid_node = _target_node;
+    }
 
     // update current node
     _forward_current = _forward_search.current();
@@ -53,15 +54,12 @@ router<Graph, Dijkstra>::compute() {
     assert(optional::is_none(_target_node) || !_forward_search.reached(_target_node));
 
     bool done = _forward_search.queue_empty();
-    std::size_t step_count = 0;
     while (!done) {
         step_forward();
 
         done = _forward_search.queue_empty();
         done |= !optional::is_none(_target_node) && _forward_search.reached(_target_node);
         done |= !optional::is_none(_mid_node);
-
-        step_count++;
     }
 
     // TODO make possible to remove
@@ -92,8 +90,9 @@ router<Graph, Dijkstra>::distance() const {
 template<typename Graph, typename Dijkstra>
 typename Graph::path_type
 router<Graph, Dijkstra>::route() const {
-    if (optional::is_none(_mid_node))
+    if (optional::is_none(_mid_node)) {
         return path<Graph>();
+    }
 
     return _forward_search.path(_mid_node);
 };
