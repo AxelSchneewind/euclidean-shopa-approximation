@@ -77,7 +77,7 @@ public:
         : geometric_node_cost_pair<NodeId, Distance, void, BendingPoint>{}, _heuristic{} {};
 
     constexpr geometric_node_cost_pair(node_id_type node, node_id_type predecessor, distance_type distance)
-            : geometric_node_cost_pair<NodeId, Distance, void, BendingPoint>{node, predecessor, distance}, _heuristic{distance} {};
+            : geometric_node_cost_pair<NodeId, Distance, void, BendingPoint>{node, predecessor, distance}, _heuristic(distance) {};
 
     constexpr geometric_node_cost_pair(node_id_type node, node_id_type predecessor, distance_type distance,
                                        heuristic_type heuristic, predecessor_node_id_type bending_point)
