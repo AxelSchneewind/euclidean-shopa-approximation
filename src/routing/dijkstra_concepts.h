@@ -101,11 +101,12 @@ concept DijkstraQueue = requires {
     q.push(n, n, d);
 };
 
+template <typename T, typename N>
+concept HasInit = requires (T t, N n1, N n2) { t.init(n1, n2); };
+
 template<typename L, typename NodeId, typename NodeCostPair, typename Label>
 concept DijkstraLabels = requires(L l, NodeId node, NodeCostPair ncp, Label label) {
-    requires std::convertible_to<NodeCostPair, Label>;
     l.at(node);
-    l.label(node, label);
 };
 
 
