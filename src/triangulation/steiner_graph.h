@@ -99,6 +99,7 @@ public:
     using edge_info_type = edge_t;
 
     using triangle_node_info_type = node_t;
+    using coordinate_type = coordinate_t;
     using triangle_edge_info_type = void;
 
     using base_topology_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
@@ -153,7 +154,7 @@ public:
                    _current_node.steiner_index == other._current_node.steiner_index;
         }
 
-        bool operator==(end_type other) const {
+        bool operator==(end_type) const {
             return _current_node.edge >= _last_node.edge;
         }
 
@@ -215,6 +216,8 @@ public:
 
     const polyhedron_type &base_polyhedron() const { return _polyhedron; }
 
+    std::span<const node_info_type> base_nodes() const { return { _base_nodes.begin(), _base_nodes.end() }; }
+
     size_t node_count() const { return _node_count; }
 
     size_t edge_count() const { return _edge_count; }
@@ -228,34 +231,24 @@ public:
     node_id_iterator_type node_ids(triangle_edge_id_type edge) const;
 
     // computes the coordinates of a node with given id
-    [[gnu::pure]]
-    [[gnu::hot]]
-    [[gnu::always_inline]]
-    [[deprecated("use node_coordinates_*() instead when knowing which type of point is needed")]]
-    inline coordinate_t node_coordinates(node_id_type id) const;
+    [[using gnu: pure, hot, always_inline]]
+    inline coordinate_type node_coordinates(node_id_type id) const;
 
-    [[gnu::hot]]
-    [[gnu::always_inline]]
-    inline coordinate_t node_coordinates_steiner(node_id_type id) const;
+    [[using gnu : hot, always_inline]]
+    inline coordinate_type node_coordinates_steiner(node_id_type id) const;
 
-    [[gnu::hot]]
-    [[gnu::always_inline]]
-    inline coordinate_t const& node_coordinates_first(triangle_edge_id_type id) const;
+    [[using gnu : hot, always_inline]]
+    inline coordinate_type const& node_coordinates_first(triangle_edge_id_type id) const;
 
-    [[gnu::hot]]
-    [[gnu::always_inline]]
-    inline coordinate_t node_coordinates_mid(triangle_edge_id_type id) const;
+    [[using gnu : hot, always_inline]]
+    inline coordinate_type node_coordinates_mid(triangle_edge_id_type id) const;
 
-    [[gnu::pure]]
-    [[gnu::hot]]
-    [[gnu::always_inline]]
-    inline coordinate_t const& node_coordinates_last(triangle_edge_id_type id) const;
+    [[using gnu : pure, hot, always_inline]]
+    inline coordinate_type const& node_coordinates_last(triangle_edge_id_type id) const;
 
     // computes the coordinates of a node with given id
-    [[gnu::pure]]
-    [[gnu::hot]]
-    [[gnu::always_inline]]
-    inline coordinate_t const& node_coordinates(triangle_node_id_type id) const;
+    [[using gnu : pure, hot, always_inline]]
+    inline coordinate_type const& node_coordinates(triangle_node_id_type id) const;
 
     inline distance_type on_edge_distance(triangle_edge_id_type edge, intra_edge_id_type first, intra_edge_id_type second) const;
 
