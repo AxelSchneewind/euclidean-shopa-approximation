@@ -47,7 +47,7 @@ template<typename NodeId, typename formatter>
 std::size_t
 file_io::read_triangles(std::istream &input, std::span<std::array<NodeId, 3>> faces) {
     std::size_t index = 0;
-    for (int i = 0; i < faces.size(); ++i) {
+    for (size_t i = 0; i < faces.size(); ++i) {
         auto face = formatter::template read<std::array<NodeId, 3>>(input);
         if (face[0] != face[1] && face[0] != face[2] && face[1] != face[2]) {
             faces[index++] = face;
