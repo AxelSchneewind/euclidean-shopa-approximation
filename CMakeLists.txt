@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(routing)
 
 set(CMAKE_CXX_STANDARD 20)
+# set(CMAKE_CXX_COMPILER /home/axel/software/aocc-compiler-4.2.0/bin/clang++)
 set(CMAKE_CXX_COMPILER g++)
 
 include_directories(include)
@@ -71,10 +72,9 @@ else (GENGETOPT)
 endif (GENGETOPT)
 
 
-set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall") # -Wextra
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Og") # -D_GLIBCXX_DEBUG
-
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
+set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall -Wextra -fopenmp") # -Wextra
+set(CMAKE_CXX_FLAGS_DEBUG "-g -fsanitize=address") # -D_GLIBCXX_DEBUG
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Ofast")
 
 # 
 add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)

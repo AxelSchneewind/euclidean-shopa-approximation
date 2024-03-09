@@ -19,8 +19,9 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
                                         const std::vector<double> &r_values, double epsilon) {
     // store subdivision information here
     std::vector<subdivision_edge_info> result;
-    result.reserve(triangulation.edge_count());
+    result.resize(triangulation.edge_count());
 
+#pragma omp parallel for
     for (size_t i = 0; i < triangulation.edge_count(); i++) {
         auto node1 = triangulation.source(i);
         auto node2 = triangulation.destination(i);
@@ -171,8 +172,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
             || !is_in_range(right_count, 0, max_steiner_count_per_edge / 2))
             throw std::invalid_argument("some value does not fit");
 
-        result.emplace_back();
-        auto& entry = result.back();
+        auto& entry = result[i];
         entry.mid_position = mid_position;
         entry.mid_index = mid_index;
         entry.node_count = count;
