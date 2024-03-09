@@ -13,7 +13,7 @@
 
 class subdivision_table {
 private:
-    using steiner_index_type = unsigned int;
+    using steiner_index_type = int;
     static constexpr steiner_index_type max_steiner_count_per_edge = std::numeric_limits<steiner_index_type>::max() / 2;
 
 public:
