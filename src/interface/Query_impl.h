@@ -21,16 +21,16 @@ ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImp
                                                    std::chrono::duration<double, std::milli> duration)
         : _query(query),
           _route_found(router.route_found()),
+          _distance(router.distance()),
+          _duration(duration),
           _path(std_graph_t::make_graph(graph, graph.make_subgraph(router.route()))),
           _tree_forward(std_graph_t::make_graph(graph, router.shortest_path_tree(query.max_tree_size()))),
           _tree_backward(std_graph_t::make_graph(graph, router.shortest_path_tree(0))),
           _nodes_visited(_tree_forward.node_count()),
-          _distance(router.distance()),
-          _duration(duration),
+          _edges_visited(router.forward_search().edges_checked()),
           _pull_count(router.forward_search().pull_count()),
           _push_count(router.forward_search().push_count()),
-          _edges_visited(router.forward_search().edges_checked()),
-          _queue_max_size(router.forward_search().queue().max_size()),
+          _queue_max_size{0},
           _base_node_count{0},
           _boundary_node_count{0},
           _steiner_point_count{0},
@@ -38,7 +38,7 @@ ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImp
           _boundary_node_neighbor_count{0},
           _steiner_point_neighbor_count{0},
           _steiner_point_angle_check_count{0} {
-  if constexpr (requires (typename RouterT::search_type::neighbor_getter_type const& n) { n.base_node_count(); }) {
+    if constexpr (requires (typename RouterT::search_type::neighbor_getter_type const& n) { n.base_node_count(); }) {
       _base_node_count = router.forward_search().neighbors().base_node_count();
       _boundary_node_count = router.forward_search().neighbors().boundary_node_count();
       _steiner_point_count = router.forward_search().neighbors().steiner_point_count();
@@ -63,9 +63,10 @@ std_graph_t make_beeline(GraphT const &graph, typename GraphT::node_id_type from
 
 template<RoutableGraph GraphT>
 QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to, RoutingConfiguration const& config)
-        : _from(from), _to(to), _from_internal(from), _to_internal(to),
-          _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates)),
+        : _from(from), _to(to)
+        , _from_internal(from), _to_internal(to),
           _beeline(make_beeline(graph, _from_internal, _to_internal)),
+          _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates)),
           _configuration(config) {};
 
 template<>

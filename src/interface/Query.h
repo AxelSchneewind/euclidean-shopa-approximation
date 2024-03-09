@@ -144,10 +144,11 @@ private:
     bool _route_found = false;
 
     distance_t _distance = infinity<distance_t>;
+    std::chrono::duration<double, std::milli> _duration;
 
+    Graph _path;
     Graph _tree_forward;
     Graph _tree_backward;
-    Graph _path;
 
     std::size_t _nodes_visited{0};
     std::size_t _edges_visited{0};
@@ -163,9 +164,6 @@ private:
     std::size_t _boundary_node_neighbor_count{0};
     std::size_t _steiner_point_neighbor_count{0};
     std::size_t _steiner_point_angle_check_count{0};
-
-
-    std::chrono::duration<double, std::milli> _duration;
 
 public:
     ResultImplementation() = default;
@@ -215,36 +213,36 @@ public:
     Result& operator=(Result const&) noexcept =  default;
 
     template <typename GraphT>
-    Result(ResultImplementation<GraphT> const&impl) : Base<ResultInterface>(impl){};
+    Result(ResultImplementation<GraphT> const&impl) : Base<ResultInterface>(impl){}
 
     template <typename GraphT>
-    Result(ResultImplementation<GraphT> &&impl) : Base<ResultInterface>(std::move(impl)){};
+    Result(ResultImplementation<GraphT> &&impl) : Base<ResultInterface>(std::move(impl)){}
 
     template <typename GraphT>
-    Result(std::shared_ptr<ResultImplementation<GraphT>> impl) : Base<ResultInterface>(std::move(impl)){};
+    Result(std::shared_ptr<ResultImplementation<GraphT>> impl) : Base<ResultInterface>(std::move(impl)){}
 
     template <typename GraphT, typename RouterT>
     Result(GraphT const& graph, QueryImplementation<GraphT> query, RouterT const& router, std::chrono::duration<double, std::milli> duration);
 
-    Query query() const { return impl->query(); };
+    Query query() const { return impl->query(); }
 
-    bool route_found() const { return impl->route_found(); };
+    bool route_found() const { return impl->route_found(); }
 
-    distance_t distance() const { return impl->distance(); };
+    distance_t distance() const { return impl->distance(); }
 
-    Graph & tree_forward() { return impl->tree_forward(); };
-    Graph & tree_backward() { return impl->tree_backward(); };
-    Graph & path() { return impl->path(); };
-    Graph const& tree_forward() const { return impl->tree_forward(); };
-    Graph const& tree_backward() const { return impl->tree_backward(); };
-    Graph const& path() const { return impl->path(); };
+    Graph & tree_forward() { return impl->tree_forward(); }
+    Graph & tree_backward() { return impl->tree_backward(); }
+    Graph & path() { return impl->path(); }
+    Graph const& tree_forward() const { return impl->tree_forward(); }
+    Graph const& tree_backward() const { return impl->tree_backward(); }
+    Graph const& path() const { return impl->path(); }
 
-    std::size_t nodes_visited() const { return impl->nodes_visited(); };
-    std::size_t edges_visited() const { return impl->edges_visited(); };
-    std::size_t pull_count() const { return impl->pull_count(); };
-    std::size_t push_count() const { return impl->push_count(); };
+    std::size_t nodes_visited() const { return impl->nodes_visited(); }
+    std::size_t edges_visited() const { return impl->edges_visited(); }
+    std::size_t pull_count() const { return impl->pull_count(); }
+    std::size_t push_count() const { return impl->push_count(); }
 
-    std::chrono::duration<double, std::milli> duration() const { return impl->duration(); };
+    std::chrono::duration<double, std::milli> duration() const { return impl->duration(); }
 
-    void write(table& out) const { impl->write(out); };
+    void write(table& out) const { impl->write(out); }
 };
