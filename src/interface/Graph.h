@@ -49,10 +49,10 @@ private:
     class GraphImplementation : public GraphInterface {
     private:
     public:
-        GraphT graph;
+        std::shared_ptr<GraphT> graph;
         GraphType _type {GraphType::NONE};
 
-        GraphImplementation(GraphT&& graph) : graph{std::move(graph)} {}
+        GraphImplementation(GraphT&& graph) : graph{std::make_shared<GraphT>(std::move(graph))} {}
 
         GraphImplementation(GraphImplementation&&) noexcept = default;
         GraphImplementation& operator=(GraphImplementation&&) noexcept = default;
@@ -82,7 +82,7 @@ private:
 
 
     template <typename GraphT>
-    Graph(GraphImplementation<GraphT>&& impl) : Base<GraphInterface>(std::move(impl)) {};
+    Graph(GraphImplementation<GraphT>&& impl) : Base<GraphInterface>(std::move(impl)) {}
 
 public:
     Graph() = default;
@@ -93,7 +93,7 @@ public:
     Graph& operator=(Graph&&) = default;
 
     template <typename GraphT>
-    Graph(GraphT&& graph) : Graph(GraphImplementation<GraphT>( std::forward<GraphT>( graph ) ) ) {};
+    Graph(GraphT&& graph) : Graph(GraphImplementation<GraphT>( std::forward<GraphT>( graph ) ) ) {}
 
     template<typename ...Args>
     void read_graph_file(std::string path, Args... args);
@@ -101,33 +101,33 @@ public:
     template<typename ...Args>
     void read_graph_file(std::string path, double epsilon, Args... args);
 
-    long node_at(coordinate_t& coordinates) const override { return impl->node_at(coordinates); };
+    long node_at(coordinate_t& coordinates) const override { return impl->node_at(coordinates); }
 
-    void project(Projection projection) override { impl->project(projection); };
+    void project(Projection projection) override { impl->project(projection); }
 
     void write_graph_file(std::string path) const override { impl->write_graph_file(path); }
     void write_graph_file(std::string path, int color, int linewidth) const override { impl->write_graph_file(path, color, linewidth); }
 
-    void write_graph_stats(std::ostream &output) const override { impl->write_graph_stats(output); };
-    void write_graph_stats(table& out) const override { impl->write_graph_stats(out); };
+    void write_graph_stats(std::ostream &output) const override { impl->write_graph_stats(output); }
+    void write_graph_stats(table& out) const override { impl->write_graph_stats(out); }
 
-    void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const override { impl->write_subgraph_file(path, bottom_left, top_right); };
+    void write_subgraph_file(std::string path, coordinate_t bottom_left, coordinate_t top_right) const override { impl->write_subgraph_file(path, bottom_left, top_right); }
 
     std::size_t node_count() const override { return impl->node_count(); }
 
     std::size_t edge_count() const override { return impl->edge_count(); }
 
-    coordinate_t node_coordinates(long node_id) const override { return impl->node_coordinates(node_id); };
+    coordinate_t node_coordinates(long node_id) const override { return impl->node_coordinates(node_id); }
 
-    GraphType type() const { return impl->type(); };
+    GraphType type() const override { return impl->type(); }
 
     template<typename G>
-    G& get_implementation() {
+    std::shared_ptr<G> get_implementation() {
         return Base<GraphInterface>::get_implementation<GraphImplementation<G>>().graph;
     }
 
     template<typename G>
-    G& get_implementation() const {
+    std::shared_ptr<G> get_implementation() const {
         return Base<GraphInterface>::get_implementation<GraphImplementation<G>>().graph;
     }
 };
