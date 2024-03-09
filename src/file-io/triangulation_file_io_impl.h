@@ -14,7 +14,9 @@
 #include "../util/is_in_range.h"
 
 #include <iomanip>
-
+#include <utility>
+#include <vector>
+#include <algorithm>
 
 
 template<Topology Graph, typename formatter>
@@ -77,8 +79,8 @@ steiner_graph triangulation_file_io::read<steiner_graph>(std::istream &input) {
 
 
 template<Topology Graph, typename format>
-void triangulation_file_io::write(std::ostream &output, const Graph &graph) {
-    return;
+void triangulation_file_io::write(std::ostream &/*output*/, const Graph &/*graph*/) {
+    throw;
 }
 
 template<>
@@ -91,18 +93,16 @@ void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text>(s
     f.write(output, graph.base_polyhedron().face_count());
     f.write(output, '\n');
 
-    for (int i = 0; i < graph.base_graph().node_count(); ++i) {
-        auto n = graph.node(i);
-
+    std::ranges::for_each(graph.base_nodes(), [ &f, &output](auto&& node) {
         f.write(output, std::setprecision(20));
-        f.write(output, n.coordinates.latitude) << ' ';
-        f.write(output, n.coordinates.longitude);
+        f.write(output, node.coordinates.latitude) << ' ';
+        f.write(output, node.coordinates.longitude);
         f.write(output, '\n');
-    }
+    });
 
-    for (int e = 0; e < graph.base_graph().edge_count(); ++e) {
+    for (auto&& e : graph.base_graph().edge_ids()) {
         auto triangles = graph.base_polyhedron().edge_faces(e);
-        for (auto triangle: triangles) {
+        for (auto&& triangle: triangles) {
             if (optional::is_none(triangle)) continue;
 
             auto edges = graph.base_polyhedron().face_edges(triangle);
