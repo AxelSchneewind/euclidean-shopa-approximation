@@ -10,7 +10,6 @@
 #include "graph/unidirectional_adjacency_list_impl.h"
 #include "routing/node_cost_pair.h"
 #include "routing/dijkstra_queues.h"
-#include "routing/a_star_queue.h"
 #include "routing/dijkstra_impl.h"
 #include "routing/default_neighbors_impl.h"
 #include "routing/router_impl.h"
@@ -27,9 +26,10 @@
 #include "graph/geometry_impl.h"
 
 template<RoutableGraph G>
-struct label_type {
+struct label_type{
 private:
     typename G::distance_type _distance;
+    typename G::distance_type _heuristic;
     typename G::node_id_type _predecessor;
 public:
     constexpr label_type(G::distance_type distance, G::node_id_type predecessor) : _distance(distance),
@@ -37,7 +37,8 @@ public:
     };
 
     constexpr label_type() : _distance(infinity<typename G::distance_type>),
-                             _predecessor(optional::none_value<typename G::node_id_type>) {
+                          _heuristic(infinity<typename G::distance_type>),
+                          _predecessor(optional::none_value<typename G::node_id_type>) {
     };
 
     // TODO remove these constructors and instead use a template parameter for conversion in node_labels classes
@@ -50,19 +51,16 @@ public:
     // requires HasDistance<NCP> && HasPredecessor<NCP> && HasFaceCrossingPredecessor<NCP, G>
     // label_type(NCP const &ncp) : _distance{ncp.distance()}, _predecessor{ncp.face_crossing_predecessor()} {};
 
-    template<typename NCP>
-    requires HasDistance<NCP> && HasPredecessor<NCP>
-    label_type &operator=(NCP const &ncp) {
-        _distance = ncp.distance();
-        _predecessor = ncp.predecessor();
-        return *this;
-    };
-
     typename G::distance_type &distance() { return _distance; };
+
+    typename G::distance_type & heuristic() { return _heuristic; };
 
     typename G::node_id_type &predecessor() { return _predecessor; };
 
     typename G::distance_type const& distance() const { return _distance; };
+
+    typename G::distance_type const& value() const { return _heuristic; };
+    typename G::distance_type const& heuristic() const { return _heuristic; };
 
     typename G::node_id_type const& predecessor() const { return _predecessor; };
 };
