@@ -54,8 +54,8 @@ main(int argc, char *argv[]) {
 
     while (true) {
         // get query
-        unsigned long src_node{0};
-        unsigned long dest_node{0};
+        long src_node{0};
+        long dest_node{0};
 
         if (query_index + 1 < arguments.query_given) {
             if (nodes_by_coordinates) {
