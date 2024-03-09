@@ -14,10 +14,10 @@ struct path {
     path(path &other) = default;
     path &operator=(path const&other) = default;
 
-    path(std::vector<node_id_type> &&__n) : nodes{__n} {};
+    path(std::vector<node_id_type> &&n) : nodes{n} {};
 
     void invert() {
-        for (int i = 0; i < nodes.size() / 2; ++i) {
+        for (size_t i = 0; i < nodes.size() / 2; ++i) {
             std::swap(nodes[i], nodes[nodes.size() - 1 - i]);
         }
     }
@@ -25,7 +25,7 @@ struct path {
     static path concat(path const& first, path const& other) {
         auto nodes = first.nodes;
 
-        for (int i = 0; i < other.nodes.size(); ++i) {
+        for (size_t i = 0; i < other.nodes.size(); ++i) {
             nodes.emplace_back(other.nodes[i]);
         }
 
