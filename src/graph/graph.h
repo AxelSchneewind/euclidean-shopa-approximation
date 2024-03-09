@@ -27,6 +27,7 @@ public:
     using node_id_type = NodeId;
     using edge_id_type = EdgeId;
     using node_info_type = NodeInfo;
+    using coordinate_type = coordinate_t;
     using distance_type = distance_t;
     using edge_info_type = EdgeInfo;
     using adjacency_list_type = adjacency_list<NodeId, EdgeInfo>;
@@ -64,18 +65,21 @@ public:
     // destructor
     ~graph();
 
-    inline std::span<const NodeInfo> nodes() const;
+    std::span<NodeInfo> nodes() const;
 
     counter<node_id_type> node_ids() const;
 
     counter<edge_id_type> edge_ids() const { return {edge_count()}; };
 
-    inline size_t node_count() const;
+    size_t node_count() const;
 
-    inline size_t edge_count() const;
+    size_t edge_count() const;
 
-    inline NodeInfo node(NodeId node_id) const;
-    inline NodeInfo& node(NodeId node_id) { return _M_node_list[node_id]; };
+    NodeInfo node(NodeId node_id) const;
+    NodeInfo& node(NodeId node_id) { return _M_node_list[node_id]; };
+
+    coordinate_type node_coordinates(NodeId node_id) const requires requires (node_info_type n){ n.coordinates; } { return _M_node_list[node_id].coordinates; }
+    coordinate_type& node_coordinates(NodeId node_id)      requires requires (node_info_type n){ n.coordinates; } { return _M_node_list[node_id].coordinates; }
 
     EdgeInfo edge(EdgeId edge_id) const;
 
