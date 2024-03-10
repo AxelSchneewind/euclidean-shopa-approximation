@@ -59,9 +59,7 @@ steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) {
         return _base_labels[_graph->base_node_id(node)];
     }
 
-    if (!_labels.contains(node.edge)) {
-        _labels.append(node.edge, _graph->steiner_info(node.edge).node_count - 2);
-    }
+    assert (_labels.contains(node.edge));
     return _labels.node_info(node.edge, node.steiner_index - 1);
 }
 
@@ -75,5 +73,10 @@ Label &steiner_labels<G, Label>::operator[](const node_id_type &node) {
         return _base_labels[_graph->base_node_id(node)];
     }
 
+    if (!_labels.contains(node.edge)) {
+        _labels.append(node.edge, _graph->steiner_info(node.edge).node_count - 2);
+    }
+
+    assert (_labels.contains(node.edge));
     return _labels.node_info(node.edge, node.steiner_index - 1);
 }

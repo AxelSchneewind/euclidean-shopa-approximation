@@ -77,7 +77,6 @@ public:
 template<RoutableGraph G, typename Label>
 class steiner_labels {
 public:
-    using label_type = Label;
     using value_type = Label;
 
     using label_iterator_type = nested_iterator<typename std::vector<bool>::const_iterator, steiner_graph::node_id_iterator_type>;
@@ -88,13 +87,13 @@ private:
     using intra_edge_id_type = typename G::triangle_edge_id_type;
     using distance_type = typename G::distance_type;
 
-    using labels_type = fast_map<edge_id_type, intra_edge_id_type, label_type>;
+    using labels_type = fast_map<edge_id_type, intra_edge_id_type, value_type>;
 
     std::shared_ptr<G> _graph;
 
     std::vector<bool> _edge_touched;
 
-    std::vector<label_type> _base_labels;
+    std::vector<value_type> _base_labels;
     labels_type _labels;
 
 public:
@@ -119,6 +118,9 @@ public:
     Label& at(node_id_type node);
     [[gnu::hot]]
     Label at(node_id_type node) const;
+
+    Label& at(typename G::triangle_node_id_type node) { return _base_labels[node]; };
+    Label at(typename G::triangle_node_id_type node) const { return _base_labels[node]; };
 
     [[gnu::cold]]
     label_iterator_type all_visited() const;
