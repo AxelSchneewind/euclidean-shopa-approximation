@@ -28,28 +28,32 @@ struct Implementation<steiner_graph, use_a_star, bidirectional, n> {
     using distance_t = typename graph_t::distance_type;
 
     struct ncp_impl {
-        double    _distance;
-        float     _heuristic;
-        node_id_t _predecessor;
-        node_id_t _node{optional::none_value<node_id_t>};
-        node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
+        distance_t _distance;
+        node_id_t  _node{optional::none_value<node_id_t>};
+        float      _heuristic;
     };
+    static_assert(sizeof(ncp_impl) == 24);      // ensure that no padding is added
 
     struct label_impl {
-    distance_t _distance;
-    distance_t _heuristic;
-    node_id_t _predecessor;
-    //    double    _distance;
-    //    float     _heuristic;
-    //    node_id_t _node;
-    //    node_id_t _predecessor;
+        distance_t _distance{infinity<distance_t>};
+        distance_t _heuristic{infinity<distance_t>};
+        node_id_t _predecessor{optional::none_value<node_id_t>};
+        node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
     };
+    static_assert(sizeof(label_impl) == 32);   // ensure that no padding is added
+
     using node_cost_pair_t = node_label<ncp_impl>;
-    using label_t = label_type<steiner_graph>;//node_label<label_impl>;
+    using label_t = node_label<label_impl>;
+
+    // check that no space is wasted due to node_label<>
+    static_assert(sizeof(label_impl) == sizeof(label_t));
+    static_assert(alignof(label_impl) == alignof(label_t));
+    static_assert(sizeof(ncp_impl) == sizeof(node_cost_pair_t));
+    static_assert(alignof(ncp_impl) == alignof(node_cost_pair_t ));
 
     // using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
     using labels_t = steiner_labels<steiner_graph, label_t>;
-    using queue_t = dijkstra_queue<node_cost_pair_t, compare_heuristic_remote<labels_t>>;
+    using queue_t = dijkstra_queue<node_cost_pair_t, compare_heuristic>;
     using neighbors_t = steiner_neighbors<steiner_graph, labels_t, n>;
     using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, a_star_heuristic<steiner_graph>>;
     using routing_t = router<steiner_graph, dijkstra_t>;
@@ -61,9 +65,26 @@ struct Implementation<steiner_graph, false, bidirectional, n> {
     using node_id_t = typename graph_t::node_id_type;
     using base_node_id_t = typename graph_t::triangle_node_id_type;
     using distance_t = typename graph_t::distance_type;
-    using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
+
+
+    struct ncp_impl {
+        distance_t _distance;
+        node_id_t  _node{optional::none_value<node_id_t>};
+    };
+    static_assert(sizeof(ncp_impl) == 16);      // ensure that no padding is added
+
+    struct label_impl {
+        distance_t _distance{infinity<distance_t>};
+        node_id_t _predecessor{optional::none_value<node_id_t>};
+        node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
+    };
+    static_assert(sizeof(label_impl) == 24);   // ensure that no padding is added
+
+    using node_cost_pair_t = node_label<ncp_impl>;
+    using label_t = node_label<label_impl>;
+
     using queue_t = dijkstra_queue<node_cost_pair_t, compare_distance>;
-    using labels_t = steiner_labels<graph_t, label_type<graph_t>>;
+    using labels_t = steiner_labels<graph_t, label_t>;
     using neighbors_t = steiner_neighbors<graph_t, labels_t, n>;
     using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t>;
     using routing_t = router<graph_t, dijkstra_t>;
@@ -75,9 +96,26 @@ struct Implementation<steiner_graph, false, true, n> {
     using node_id_t = typename graph_t::node_id_type;
     using base_node_id_t = typename graph_t::triangle_node_id_type;
     using distance_t = typename graph_t::distance_type;
-    using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, void, node_id_t>;
+
+    struct ncp_impl {
+        distance_t _distance;
+        node_id_t  _node{optional::none_value<node_id_t>};
+    };
+    static_assert(sizeof(ncp_impl) == 16);      // ensure that no padding is added
+
+    struct label_impl {
+        distance_t _distance{infinity<distance_t>};
+        node_id_t _predecessor{optional::none_value<node_id_t>};
+        node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
+    };
+    static_assert(sizeof(label_impl) == 24);   // ensure that no padding is added
+
+    using node_cost_pair_t = node_label<ncp_impl>;
+    using label_t = node_label<label_impl>;
+
+
     using queue_t = dijkstra_queue<node_cost_pair_t, compare_distance>;
-    using labels_t = steiner_labels<graph_t, label_type<graph_t>>;
+    using labels_t = steiner_labels<graph_t, label_t>;
     using neighbors_t = steiner_neighbors<graph_t, labels_t, n>;
     using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t>;
     using routing_t = bidirectional_router<graph_t, dijkstra_t>;
@@ -87,7 +125,27 @@ struct Implementation<steiner_graph, false, true, n> {
 template<bool use_a_star, bool bidirectional, Configuration n>
 struct Implementation<std_graph_t, use_a_star, bidirectional, n> {
     using graph_t = std_graph_t;
-    using node_cost_pair_t = node_cost_pair<graph_t::node_id_type, graph_t::distance_type, float>;
+    using node_id_t = typename graph_t::node_id_type;
+    using distance_t = typename graph_t::distance_type;
+
+    struct ncp_impl {
+        node_id_t  _node{optional::none_value<node_id_t>};
+        node_id_t _predecessor{optional::none_value<node_id_t>};
+        distance_t _distance;
+        distance_t _heuristic;
+    };
+    static_assert(sizeof(ncp_impl) == 24);
+
+    struct label_impl {
+        distance_t _distance{infinity<distance_t>};
+        node_id_t _predecessor{optional::none_value<node_id_t>};
+    };
+    static_assert(sizeof(label_impl) == 16);
+
+    using node_cost_pair_t = node_label<ncp_impl>;
+    using label_t = node_label<label_impl>;
+
+
     using queue_t = dijkstra_queue<node_cost_pair_t, compare_heuristic>;
     using labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
     using neighbors_t = default_neighbors<graph_t>;
@@ -95,7 +153,7 @@ struct Implementation<std_graph_t, use_a_star, bidirectional, n> {
     using routing_t = router<graph_t, dijkstra_t>;
 };
 
-// TODO clean up this mess, make compile time type builder
+// TODO clean up this mess
 Router::Router(const Graph &graph, RoutingConfiguration const &config)
         : _config(config) {
     switch (graph.type()) {

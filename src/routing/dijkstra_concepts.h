@@ -97,8 +97,6 @@ concept DijkstraQueue = requires {
     q.pop();
     { q.top() } -> std::convertible_to<typename Q::value_type>;
     { q.empty() } -> std::convertible_to<bool>;
-} && requires(Q q, typename G::node_id_type n, typename G::distance_type d) {
-    q.push(n, n, d);
 };
 
 template <typename T, typename N>
