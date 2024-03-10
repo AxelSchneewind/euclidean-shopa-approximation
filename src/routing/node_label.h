@@ -28,8 +28,18 @@ private:
 
 public:
     constexpr node_label() : _impl{} {};
+
     template<typename... Args>
     constexpr node_label(Args... args) : _impl(std::forward<Args...>(args...)) {};
+
+    constexpr node_label(auto const& node, auto const& parent, auto const& distance ) {
+        if constexpr (HasNode)
+            _impl._node = node;
+        if constexpr (HasPredecessor)
+            _impl._predecessor = parent;
+        if constexpr (HasDistance)
+            _impl._distance = distance;
+    };
     constexpr node_label(Impl const& impl) : _impl{impl} {};
 
     auto &node() { return _impl._node; }
@@ -48,6 +58,7 @@ public:
 
     auto const& heuristic() const requires HasHeuristic { return _impl._heuristic; }
 
+    // only for reading to prevent confusion
     auto const& value() const {
         if constexpr(HasHeuristic)
             return _impl._heuristic;
