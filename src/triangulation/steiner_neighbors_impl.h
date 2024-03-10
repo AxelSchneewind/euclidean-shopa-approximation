@@ -469,7 +469,6 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
                                                                  coordinate_t const &direction,
                                                                  std::vector<NodeCostPair> &out,
                                                                  std::vector<coordinate_t> &out_coordinates) {
-    auto angle_dir = std::atan2(direction);
     auto const &node_id = node.node();
     auto &&steiner_info = _graph->steiner_info(node_id.edge);
 
