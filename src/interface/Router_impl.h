@@ -147,7 +147,7 @@ struct Implementation<std_graph_t, use_a_star, bidirectional, n> {
 
 
     using queue_t = dijkstra_queue<node_cost_pair_t, compare_heuristic>;
-    using labels_t = node_labels<std_graph_t, label_type<std_graph_t>>;
+    using labels_t = node_labels<std_graph_t, label_t>;
     using neighbors_t = default_neighbors<graph_t>;
     using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t, a_star_heuristic<std_graph_t>>;
     using routing_t = router<graph_t, dijkstra_t>;
