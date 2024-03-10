@@ -125,7 +125,7 @@ void steiner_neighbors<Graph, Labels, Config>::operator()(const NodeCostPair &no
     // compute distances (can be vectorized)
     if constexpr(HasDistance<NodeCostPair>) {
         assert(out.size() == coordinates_out.size());
-        for (int e = 0; e < out.size(); ++e) [[likely]] {
+        for (size_t e = 0; e < out.size(); ++e) [[likely]] {
             out[e].distance() = _labels->at(node.node()).distance() + distance(_source_coordinate, coordinates_out[e]);
             assert(out[e].distance() > 0);
         }
@@ -706,7 +706,6 @@ steiner_neighbors<Graph, Labels, Config>::on_edge_neighbors(const NodeCostPair &
     if (node_id.steiner_index < steiner_info.node_count - 1) [[likely]] {
         steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index + 1);
         // if (destination != reached_from) [[likely]] {
-            coordinate_t destination_coordinate{_graph->node_coordinates(destination)};
             assert(_graph->has_edge(node_id, destination));
             insert(destination, node, out, coordinates_out);
         // }
@@ -716,7 +715,6 @@ steiner_neighbors<Graph, Labels, Config>::on_edge_neighbors(const NodeCostPair &
     if (node_id.steiner_index > 0) [[likely]] {
         steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index - 1);
         // if (destination != reached_from) [[likely]] {
-            coordinate_t destination_coordinate{_graph->node_coordinates(destination)};
             assert(_graph->has_edge(node_id, destination));
             insert(destination, node, out, coordinates_out);
         // }
