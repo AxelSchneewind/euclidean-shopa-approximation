@@ -48,10 +48,9 @@ struct no_heuristic {
     no_heuristic(Graph&&, Labels&&) {};
 
     template<typename R>
-    void operator()(R&& nodes) {
-        if constexpr(HasHeuristic<decltype(*nodes.begin())>) {
-            for(auto&& n : nodes)
-                n.heuristic() = n.distance();
+    void operator()(R& node) {
+        if constexpr(HasHeuristic<std::remove_reference_t<R>>) {
+            node.heuristic() = node.distance();
         }
     }
 };
@@ -79,24 +78,19 @@ public:
     }
 
     template<typename R>
-    void operator()(R&& nodes) {
-        static std::vector<typename Graph::coordinate_type> coordinates;
-
-        coordinates.resize(nodes.size());
-        for (int i = 0; i < nodes.size(); ++i) {
-            coordinates[i] = _graph->node_coordinates(nodes[i].node());
-        }
-
-        operator()(nodes, coordinates);
+    void operator()(R& node) {
+        typename Graph::coordinate_type coordinate = _graph->node_coordinates(node.node());
+        operator()(node, coordinate);
     }
 
     template<typename R, typename C>
-    void operator()(R&& nodes, C&& coordinates) {
-        // can be vectorized
-        for (int i = 0; i < nodes.size(); ++i) {
-            nodes[i].heuristic() = nodes[i].distance() + /*factor */ distance(coordinates[i], _target_coordinate);
-            assert(nodes[i].heuristic() >= nodes[i].distance());
+    void operator()(R& node, C const& coordinate) {
+        if constexpr(HasDistance<typename std::remove_reference_t<R>>) {
+            node.heuristic() = node.distance() + /*factor */ distance(coordinate, _target_coordinate);
+        } else {
+            node.heuristic() += distance(coordinate, _target_coordinate);
         }
+        assert(node.heuristic() >= node.distance());
     }
 };
 
