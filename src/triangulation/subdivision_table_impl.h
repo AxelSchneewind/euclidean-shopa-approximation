@@ -127,8 +127,8 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
         auto index_second = class_index(angle2);
 
         // get interval in first half that is between r and mid_value
-        size_t left_start_index = 0;
-        size_t left_last_index;
+        std::size_t left_start_index = 0;
+        std::size_t left_last_index;
         {
             auto const &left_node_positions = table[index].node_positions;
             while (left_start_index < left_node_positions.size() && left_node_positions[left_start_index] < r_first)
@@ -138,13 +138,13 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
             while (left_last_index < left_node_positions.size() && left_node_positions[left_last_index] < mid_position)
                 left_last_index++;
             assert(left_start_index < left_last_index + 3);
-            assert(left_last_index - left_start_index >= 0);
+            assert(left_last_index >= left_start_index);
             assert(left_last_index < left_node_positions.size());
         }
 
         // get interval in second edge half that is between r and mid_value
-        size_t right_start_index = 0;
-        size_t right_last_index;
+        std::size_t right_start_index = 0;
+        std::size_t right_last_index;
         {
             auto const &right_node_positions = table[index_second].node_positions;
 
@@ -157,7 +157,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
                    right_node_positions[right_last_index] < (1 - mid_position))
                 right_last_index++;
             assert(right_start_index < right_last_index + 3);
-            assert(right_last_index - right_start_index >= 0);
+            assert(right_last_index >= right_start_index);
             assert(right_last_index < right_node_positions.size());
         }
 
