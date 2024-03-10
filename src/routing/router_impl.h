@@ -51,13 +51,14 @@ router<Graph, Dijkstra>::step_forward() {
 
     // update mid node if target found
     if (_forward_current.node() == _target_node) {
-        // TODO why is this not always executed
         _mid_node = _target_node;
     }
 
     // update current node
-    // if (!forward_search().queue_empty())
+    if (!forward_search().queue_empty())
         _forward_current = _forward_search.current();
+    else
+        _forward_current = optional::none_value<node_cost_pair_type>;
 }
 
 template<typename Graph, typename Dijkstra>
@@ -114,11 +115,6 @@ template<typename Graph, typename Dijkstra>
 typename Graph::subgraph_type
 router<Graph, Dijkstra>::shortest_path_tree(size_t max_tree_size) const {
     auto tree_fwd = _forward_search.shortest_path_tree(max_tree_size);
-
-    // filter_nodes(tree_fwd, [&](auto node) -> bool {
-    //     return _forward_search.get_label(node).distance() + ::distance(_graph.node(node).coordinates, _graph.node(_target_node).coordinates) <= distance();
-    // });
-
     return tree_fwd;
 }
 
