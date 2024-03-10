@@ -74,6 +74,7 @@ Label &steiner_labels<G, Label>::operator[](const node_id_type &node) {
     }
 
     if (!_labels.contains(node.edge)) {
+        _edge_touched[node.edge] = true;
         _labels.append(node.edge, _graph->steiner_info(node.edge).node_count - 2);
     }
 
