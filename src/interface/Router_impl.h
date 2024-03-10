@@ -29,8 +29,8 @@ struct Implementation<steiner_graph, use_a_star, bidirectional, n> {
 
     struct ncp_impl {
         distance_t _distance;
+        distance_t _heuristic;
         node_id_t  _node{optional::none_value<node_id_t>};
-        float      _heuristic;
     };
     static_assert(sizeof(ncp_impl) == 24);      // ensure that no padding is added
 
