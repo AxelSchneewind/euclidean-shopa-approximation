@@ -10,7 +10,7 @@
 
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, typename Heuristic>
-typename L::label_type dijkstra<G, Q, L, N, Heuristic>::get_label(node_id_type node) const { return _labels->at(node); }
+typename L::value_type dijkstra<G, Q, L, N, Heuristic>::get_label(node_id_type node) const { return _labels->at(node); }
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 L &dijkstra<G, Q, L, N, Heuristic>::labels() { return _labels; }
@@ -60,7 +60,8 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 dijkstra<G, Q, L, N, Heuristic>::node_cost_pair_type
 dijkstra<G, Q, L, N, Heuristic>::current() const {
-    assert(!_queue.empty());
+    // assert(!_queue.empty());
+    // TODO remove this check and pass reference
     return _queue.empty() ? optional::none_value<dijkstra<G, Q, L, N, Heuristic>::node_cost_pair_type> : _queue.top();
 }
 
@@ -99,15 +100,12 @@ dijkstra<G, Q, L, N, Heuristic>::init(node_id_type start_node, node_id_type targ
     if constexpr (HasInit<Q, node_id_type>) {
         _queue.init(start_node, target_node);
     }
-
     if constexpr (HasInit<L, node_id_type>) {
         _labels->init(start_node, target_node);
     }
-
     if constexpr (HasInit<N, node_id_type>) {
         _neighbors.init(start_node, target_node);
     }
-
     if constexpr (HasInit<Heuristic, node_id_type>) {
         _heuristic.init(start_node, target_node);
     }
@@ -116,12 +114,28 @@ dijkstra<G, Q, L, N, Heuristic>::init(node_id_type start_node, node_id_type targ
     if (!optional::is_none(start_node)) {
         typename Q::value_type ncp{};
         ncp.node() = start_node;
-        ncp.predecessor() = start_node;
-        ncp.distance() = 0.0;
+        if constexpr (HasPredecessor<typename Q::value_type>) {
+            ncp.predecessor() = start_node;
+        }
+        if constexpr (HasDistance<typename Q::value_type>) {
+            ncp.distance() = 0.0;
+        }
         if constexpr (HasHeuristic<typename Q::value_type>) {
             ncp.heuristic() = 0.0;
         }
-        _queue.push(std::move(ncp));
+        _queue.push(ncp);
+
+        auto& label = (*_labels)[start_node];
+        if constexpr (HasPredecessor<typename L::value_type>) {
+            label.predecessor() = start_node;
+        }
+        if constexpr (HasDistance<typename L::value_type>) {
+            label.distance() = 0.0;
+        }
+
+        if constexpr (HasHeuristic<typename L::value_type>) {
+            label.heuristic() = 0.0;
+        }
     }
 
     _pull_count = 0;
@@ -140,7 +154,7 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
     coordinates.clear();
 
     assert(!optional::is_none(node.node()));
-    assert(node.node() == _start_node || node.node() != node.predecessor());
+    // assert(node.node() == _start_node || node.node() != node.predecessor());
 
     //
     static constexpr bool geometric_heuristic = !std::is_same_v<Heuristic, void> && requires (Heuristic h) { h(node_cost_pairs, coordinates); };
@@ -161,16 +175,14 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
 
         // some checks
         assert(!optional::is_none(successor_node));
-        // assert(successor.predecessor() == node.node());
         assert(successor.distance() > 0);
-        assert (successor_node == _start_node || _graph->has_edge(successor.predecessor(), successor_node));
 
-        distance_t const& successor_cost = _labels->at(successor_node).distance(); // use shortest distance
+        distance_t const& successor_cost = (*_labels)[successor_node].distance(); // use shortest distance
         distance_t const& new_cost = successor.distance();
 
         assert(new_cost >= node.distance());
         if (new_cost < successor_cost) [[likely]] {
-            assert(successor_node != node.predecessor());
+            // assert(successor_node != node.predecessor());
 
             // (re-)insert node into the queue with updated priority
             if constexpr (geometric_neighbors && geometric_heuristic) {
@@ -181,7 +193,7 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
     }
     node_cost_pairs.resize(to_index);
 
-    // if heuristic requires coordinates and neighbors doesnt return them, get them now
+    // if heuristic requires coordinates and neighbor finder doesnt return them, get them now
     if constexpr (geometric_heuristic && !geometric_neighbors) {
         coordinates.resize(to_index);
         for (size_t i = 0; i < node_cost_pairs.size(); ++i) {
@@ -190,28 +202,35 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
     }
 
     // apply heuristic if given
-    if constexpr (!std::is_same_v<Heuristic, void>) {
-        _heuristic(node_cost_pairs);
+    if constexpr (!std::is_same_v<Heuristic, void> && geometric_heuristic) {
+        for (int i = 0; i < node_cost_pairs.size(); ++i) {
+            _heuristic(node_cost_pairs[i], coordinates[i]);
+        }
+    } else if constexpr (!std::is_same_v<Heuristic, void>) {
+        for (int i = 0; i < node_cost_pairs.size(); ++i) {
+            _heuristic(node_cost_pairs[i]);
+        }
     }
 
     // store label values
-    for (size_t i = 0; i < node_cost_pairs.size(); i++) {
-        node_cost_pair_type &successor = node_cost_pairs[i];
-        node_id_type const  &successor_node = successor.node();
+    for (node_cost_pair_type &successor : node_cost_pairs) {
+        auto& label = _labels->at(successor.node());
 
-        // label current node with preliminary value
-        assert (_graph->has_edge(node.node(), successor_node));
-        auto& label = _labels->at(successor_node);
+        // TODO write assign operation for node_info
+        if constexpr (HasDistance<typename Q::value_type>)
+            label.distance() = successor.distance();
+        else
+            label.distance() = _labels->at(node.node()).distance() + distance(_graph->node_coordinates(successor.node()), _graph->node_coordinates(node.node()));
 
-        label.distance() = successor.distance();
         if constexpr (HasPredecessor<typename L::value_type>)
             label.predecessor() = node.node();
+        if constexpr (HasPredecessor<typename Q::value_type>)
+            successor.predecessor() = node.node();
+
         if constexpr (HasHeuristic<typename L::value_type> && HasHeuristic<typename Q::value_type>)
             label.heuristic() = successor.heuristic();
         if constexpr (HasHeuristic<typename L::value_type> && !HasHeuristic<typename Q::value_type>)
             label.heuristic() = successor.distance();
-        if constexpr (HasPredecessor<typename L::value_type>)
-            successor.predecessor() = node.node();
     }
 
     // push all
@@ -235,7 +254,7 @@ dijkstra<G, Q, L, N, Heuristic>::step() {
     _pull_count++;
 
     // remove already labelled nodes
-    while (!_queue.empty() && _labels->at(_queue.top().node()).distance() < _queue.top().distance()) [[likely]] {
+    while (!_queue.empty() && _labels->at(_queue.top().node()).value() < _queue.top().value()) [[likely]] {
         _queue.pop();
     }
 }

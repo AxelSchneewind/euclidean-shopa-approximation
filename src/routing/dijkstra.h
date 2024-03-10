@@ -70,7 +70,7 @@ public:
 
     const N &neighbors() const;
 
-    typename L::label_type get_label(node_id_type node) const;
+    typename L::value_type get_label(node_id_type node) const;
 
     /**
      * init one to one
