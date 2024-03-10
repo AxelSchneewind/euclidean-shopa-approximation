@@ -11,6 +11,18 @@ router<Graph, Dijkstra>::min_route_distance(Dijkstra::node_cost_pair_type node) 
 }
 
 template<typename Graph, typename Dijkstra>
+router<Graph, Dijkstra>::node_cost_pair_type const &router<Graph, Dijkstra>::forward_current() const { return _forward_current; }
+
+template<typename Graph, typename Dijkstra>
+router<Graph, Dijkstra>::distance_type router<Graph, Dijkstra>::forward_distance() const { return forward_labels().at(_forward_current.node()).distance(); }
+
+template<typename Graph, typename Dijkstra>
+auto &&router<Graph, Dijkstra>::forward_search() const { return _forward_search; }
+
+template<typename Graph, typename Dijkstra>
+auto &&router<Graph, Dijkstra>::forward_labels() const { return _forward_search.labels(); }
+
+template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::router(std::shared_ptr<Graph> graph)
     : _graph{graph},
       _forward_search{_graph},
@@ -44,7 +56,8 @@ router<Graph, Dijkstra>::step_forward() {
     }
 
     // update current node
-    _forward_current = _forward_search.current();
+    // if (!forward_search().queue_empty())
+        _forward_current = _forward_search.current();
 }
 
 template<typename Graph, typename Dijkstra>

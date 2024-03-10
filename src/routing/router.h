@@ -75,13 +75,13 @@ public:
      */
     distance_type distance(const node_id_type& node) const;
 
-    distance_type forward_distance() const { return _forward_current.distance(); };
+    distance_type forward_distance() const;
 
-    node_cost_pair_type forward_current() const { return _forward_current; };
+    node_cost_pair_type const& forward_current() const;
 
-    auto&& forward_labels() const { return _forward_search.labels(); }
+    auto&& forward_labels() const;
 
-    auto&& forward_search() const { return _forward_search; }
+    auto&& forward_search() const;
 
     /**
      * checks if a valid route has been found
