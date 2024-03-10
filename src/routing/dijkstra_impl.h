@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <cmath>
 
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, typename Heuristic>
@@ -71,6 +70,7 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 bool
 dijkstra<G, Q, L, N, Heuristic>::reached(G::node_id_type node) const {
+    // TODO test and remove
     if constexpr (HasHeuristic<typename L::value_type> && HasHeuristic<typename Q::value_type>) {
         return _labels->contains(node) && _labels->at(node).heuristic() < current().heuristic();
     } else if constexpr (HasDistance<typename L::value_type> && HasDistance<typename Q::value_type>) {
@@ -180,7 +180,7 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
         distance_t const& successor_cost = (*_labels)[successor_node].distance(); // use shortest distance
         distance_t const& new_cost = successor.distance();
 
-        assert(new_cost >= node.distance());
+        // assert(new_cost >= node.distance());
         if (new_cost < successor_cost) [[likely]] {
             // assert(successor_node != node.predecessor());
 
@@ -297,21 +297,21 @@ G::subgraph_type dijkstra<G, Q, L, N, Heuristic>::shortest_path_tree(std::size_t
         return {std::move(nodes), std::move(edges)};
 
     // add nodes and edges that have been visited
-    auto &&visited = labels().all_visited();
+    auto &&visited = _labels->all_visited();
     for (auto const &node_id: visited) {
         if (nodes.size() >= max_node_count || edges.size() >= max_node_count)
             break;
 
-        if (!reached(node_id) || labels().at(node_id).distance() >= current().value())
+        if (!reached(node_id))
             continue;
 
         nodes.emplace_back(node_id);
-        typename G::node_id_type predecessor = labels().at(node_id).predecessor();
 
+        auto predecessor = _labels->at(node_id).predecessor();
         if (optional::is_none(predecessor) || predecessor == node_id)
             continue;
 
-        typename G::edge_id_type edge = _graph->topology().edge_id(predecessor, node_id);
+        auto&& edge = _graph->topology().edge_id(predecessor, node_id);
         edges.emplace_back(edge);
     }
 
@@ -319,7 +319,7 @@ G::subgraph_type dijkstra<G, Q, L, N, Heuristic>::shortest_path_tree(std::size_t
     remove_duplicates(edges);
 
     typename G::subgraph_type subgraph{std::move(nodes), std::move(edges)};
-    filter_nodes(subgraph, [&](auto const &node) -> bool { return get_label(node).distance() < current().value(); });
+    filter_nodes(subgraph, [&](auto const &node) -> bool { return get_label(node).value() < current().value(); });
 
     return subgraph;
 }

@@ -99,5 +99,5 @@ public:
      * returns the trees of the search
      * @return
      */
-    typename Graph::subgraph_type shortest_path_tree(size_t max_tree_size = 50000000) const;
+    typename Graph::subgraph_type shortest_path_tree(size_t max_tree_size = std::numeric_limits<size_t>::max()) const;
 };
