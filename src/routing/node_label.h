@@ -2,7 +2,7 @@
 #include "../util/optional.h"
 
 template <typename Impl>
-class node_label {
+struct node_label {
 private:
     Impl _impl;
 
@@ -40,9 +40,9 @@ public:
 
     auto const &predecessor() const requires HasPredecessor { return _impl._predecessor; }
 
-    auto &distance() { return _impl._distance; }
+    auto &distance() requires HasDistance { return _impl._distance; }
 
-    auto const &distance() const { return _impl._distance; }
+    auto const &distance() const requires HasDistance { return _impl._distance; }
 
     auto& heuristic() requires HasHeuristic { return _impl._heuristic; }
 
