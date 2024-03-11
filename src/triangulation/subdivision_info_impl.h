@@ -34,7 +34,6 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         // treat angles > 90 degrees like 90 degrees
         long double angle1 = std::numbers::pi_v<long double> / 2; // between node1->node2 and node1->node3
         long double angle2 = std::numbers::pi_v<long double> / 2; // between node2->node1 and node2->node3
-        long double angle3 = 0; // between node2->node1 and node2->node3
 
         for (auto&& edge: polyhedron.edges(i)) {
             if (optional::is_none(edge)) continue;
@@ -50,8 +49,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
             // compute angles
             auto a1 = inner_angle(c1, c2, c1, c3);
             auto a2 = inner_angle(c2, c1, c2, c3);
-            auto a3 = inner_angle(c3, c1, c3, c2);
-            assert(std::fabs((a1 + a2 + a3) - std::numbers::pi) < std::numbers::pi / 180); // check that sum of inner angles is 180º (+- 1º for rounding)
+            assert(std::fabs((a1 + a2 + inner_angle(c3, c1, c3, c2)) - std::numbers::pi) < std::numbers::pi / 180); // check that sum of inner angles is 180º (+- 1º for rounding)
 
             if (a1 < angle1)
                 angle1 = a1;
@@ -60,7 +58,6 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         }
         angle1 = std::clamp(angle1, 0.0l, std::numbers::pi_v<long double> / 2);
         angle2 = std::clamp(angle2, 0.0l, std::numbers::pi_v<long double> / 2);
-        angle3 = std::numbers::pi_v<long double> - angle2 - angle1;
 
         // length |e| of the edge
         double const length = distance(c2, c1);
@@ -68,8 +65,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         // relative value where the mid-point (with max distance to other edges) lies between node1 and node2
         long double const mid_position = 1.0l / (1.0l + (std::sin(angle1) / std::sin(angle2)));
         {
-            long double mid_value_second = 1.0l / (1.0l + std::sin(angle2) / std::sin(angle1));
-            assert(std::abs(mid_position + mid_value_second - 1.0) < 0.01);
+            assert(std::abs(mid_position + (1.0l / (1.0l + std::sin(angle2) / std::sin(angle1))) - 1.0) < 0.01);
             assert(mid_position <= 1 && mid_position >= 0);
         }
 
@@ -104,6 +100,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
                     max_count = (max_count + left_count) / 2;
             }
 
+#ifndef NDEBUG
             // sanity check
             assert(left_count >= 0);
             auto relative = std::pow(base_first, (left_count-1)) * r_first;
@@ -111,6 +108,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
             assert(left_count == 0 || left_count >= max_steiner_count_per_edge / 4 || relative <= mid_position + 0.002F);
             relative = std::pow(base_first, (left_count)) * r_first;
             assert(left_count >= max_steiner_count_per_edge / 4 || relative >= mid_position - 0.002F);
+#endif
         }
 
         // get interval in second edge half that is between r and mid_value
@@ -131,6 +129,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
                     max_count = (max_count + right_count) / 2;
             }
 
+#ifndef NDEBUG
             // sanity check
             assert(right_count >= 0);
             auto relative = std::pow(base_second, (right_count - 1)) * r_second;
@@ -138,6 +137,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
             assert(right_count == 0 || right_count >= max_steiner_count_per_edge / 4 || relative <= (1 - mid_position) + 0.002F);
             relative = std::pow(base_second, (right_count)) * r_second;
             assert(right_count >= max_steiner_count_per_edge / 4 || relative >= (1 - mid_position) - 0.002F);
+#endif
         }
 
         // number of points on first half of edge
@@ -146,11 +146,13 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         if (r_first >= mid_position) {
             mid_index--;
         }
+#ifndef NDEBUG
         {
             auto relative = std::pow(base_first, mid_index - 2) * r_first;
             assert(mid_index < 2 || relative >= r_first - 0.002F);
             assert(mid_index < 2 || relative <= mid_position + 0.002F);
         }
+#endif
 
         // number of points (points on first half + mid_node + points on second half + c2
         auto count = 1 + left_count + 1 + right_count + 1;
@@ -161,15 +163,15 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         assert(count >= 2);
 
         // check that values are in bounds
-        if (!is_in_range(count, 2, max_steiner_count_per_edge)
+        if (!is_in_range(count, 2UL, max_steiner_count_per_edge)
             || !is_in_range(mid_position, 0.0, 1.0)
-            || !is_in_range(mid_index, 0, count - 1)
-            || !is_in_range(r_first,  0, 1.1)
-            || !is_in_range(r_second, 0, 1.1)
+            || !is_in_range(mid_index, 0UL, count - 1)
+            || !is_in_range(r_first,  0.0, 1.1)
+            || !is_in_range(r_second, 0.0, 1.1)
             || !is_in_range(base_first,  min_base_first, std::numeric_limits<float>::max())
             || !is_in_range(base_second, min_base_second, std::numeric_limits<float>::max())
-            || !is_in_range(left_count,  0, max_steiner_count_per_edge / 2)
-            || !is_in_range(right_count, 0, max_steiner_count_per_edge / 2))
+            || !is_in_range(left_count,  0UL, max_steiner_count_per_edge / 2)
+            || !is_in_range(right_count, 0UL, max_steiner_count_per_edge / 2))
             throw std::invalid_argument("some value does not fit");
 
         auto& entry = result[i];

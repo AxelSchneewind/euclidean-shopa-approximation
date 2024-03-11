@@ -52,7 +52,7 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
 
     std::vector<steiner_graph::triangle_edge_id_type> adjacent_edge_ids;
     std::vector<steiner_graph::triangle_edge_id_type> triangle_edge_ids;
-    for (int node = 0; node < triangulation.node_count(); ++node) {
+    for (auto&& node : triangulation.node_ids()) {
         adjacent_edge_ids.emplace_back(optional::none_value<steiner_graph::triangle_edge_id_type>);
         // get edges and triangles adjacent to node
         for (auto&& edge: triangulation.outgoing_edges(node)) {
@@ -166,7 +166,7 @@ steiner_graph steiner_graph::make_graph(const steiner_graph &other, const subgra
 
     // make faces with new node ids
     std::vector<std::array<triangle_node_id_type, 3>> faces;
-    for (int i = 0; i < other.base_polyhedron().face_count(); ++i) {
+    for (size_t i = 0; i < other.base_polyhedron().face_count(); ++i) {
         auto &&face = other.base_polyhedron().face_edges(i);
 
         std::vector<triangle_node_id_type> nodes;
@@ -219,12 +219,13 @@ steiner_graph steiner_graph::make_graph(const steiner_graph &other, const subgra
     auto list = base_topology_type::make_bidirectional(builder.get());
     assert(list.node_count() == node_count);
 
-    // check that
+#ifndef NDEBUG
     for (auto const &triangle: faces) {
         assert(list.has_edge(triangle[0], triangle[1]) || list.has_edge(triangle[1], triangle[0]));
         assert(list.has_edge(triangle[0], triangle[2]) || list.has_edge(triangle[2], triangle[0]));
         assert(list.has_edge(triangle[1], triangle[2]) || list.has_edge(triangle[2], triangle[1]));
     }
+#endif
 
 
     return steiner_graph::make_graph(std::move(nodes), std::move(list), std::move(faces), other.epsilon());
@@ -325,10 +326,7 @@ coordinate_t steiner_graph::node_coordinates(steiner_graph::node_id_type id) con
 }
 
 coordinate_t steiner_graph::node_coordinates_steiner(steiner_graph::node_id_type id) const {
-    const coordinate_t &c2 = _base_nodes[_base_topology.destination(id.edge)].coordinates;
-    const coordinate_t &c1 = _base_nodes[_base_topology.source(id.edge)].coordinates;
     const auto relative = _table.relative_position_steiner(id.edge, id.steiner_index);
-
     return interpolate_linear(node_coordinates_first(id.edge), node_coordinates_last(id.edge), relative);
 }
 
@@ -447,7 +445,7 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
     }
 
     // compute distances (can be vectorized)
-    for (int e = 0; e < edges.size(); ++e) [[likely]] {
+    for (size_t e = 0; e < edges.size(); ++e) [[likely]] {
         edges[e].info.cost = distance(source_coordinate, destination_coordinates[e]);
     }
 

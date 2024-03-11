@@ -21,10 +21,11 @@ steiner_labels<G, N>::all_visited() const {
 
 template<RoutableGraph G, typename N>
 steiner_labels<G, N>::steiner_labels(std::shared_ptr<G> graph)
-        : _graph(std::move(graph)),
-          _labels(_graph->base_graph().edge_count(), optional::none_value<N>),
-          _base_labels(_graph->base_graph().node_count(), optional::none_value<N>),
-          _edge_touched(_graph->base_graph().edge_count(), false) {
+        : _graph(std::move(graph))
+        , _edge_touched(_graph->base_graph().edge_count(), false)
+        , _base_labels(_graph->base_graph().node_count(), optional::none_value<N>)
+        , _labels(_graph->base_graph().edge_count(), optional::none_value<N>)
+{
 }
 
 template<RoutableGraph G, typename N>

@@ -74,7 +74,6 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
         // treat angles > 90 degrees like 90 degrees
         double angle1 = std::numbers::pi / 2; // between node1->node2 and node1->node3
         double angle2 = std::numbers::pi / 2; // between node2->node1 and node2->node3
-        double angle3 = 0; // between node2->node1 and node2->node3
 
         for (auto &&edge: polyhedron.edges(i)) {
             if (optional::is_none(edge)) continue;
@@ -102,7 +101,6 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
         angle2 = std::max(angle2, min_angle);
         angle1 = std::min(angle1, max_angle);
         angle2 = std::min(angle2, max_angle);
-        angle3 = std::numbers::pi - angle2 - angle1;
 
         // length |e| of the edge
         double length = distance(c2, c1);
@@ -110,8 +108,7 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
         // relative value where the mid-point (with max distance to other edges) lies between node1 and node2
         double mid_position = 1 / (1 + std::sin(angle1) / std::sin(angle2));
         {
-            double mid_value_second = 1 / (1 + std::sin(angle2) / std::sin(angle1));
-            assert(std::abs(mid_position + mid_value_second - 1.0) < 0.001);
+            assert(std::abs(mid_position + (1 / (1 + std::sin(angle2) / std::sin(angle1))) - 1.0) < 0.001);
             assert(mid_position < 1 && mid_position > 0);
         }
 
@@ -179,15 +176,15 @@ subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulatio
         assert(count >= 2);
 
         // check that values are in bounds
-        if (!is_in_range(count, 2, max_steiner_count_per_edge)
+        if (!is_in_range(count, 2UL, max_steiner_count_per_edge)
             || !is_in_range(mid_position, 0, 1)
-            || !is_in_range(mid_index, 1, count)
-            || !is_in_range(r_first, 0, 1)
-            || !is_in_range(r_second, 0, 1)
+            || !is_in_range(mid_index, 1UL, count)
+            || !is_in_range(r_first, 0.0, 1.0)
+            || !is_in_range(r_second, 0.0, 1.0)
             || !is_in_range(index, 0, std::numeric_limits<unsigned char>::max())
             || !is_in_range(index_second, 0, std::numeric_limits<unsigned char>::max())
-            || !is_in_range(left_start_index, 0, max_steiner_count_per_edge)
-            || !is_in_range(right_start_index, 0, max_steiner_count_per_edge))
+            || !is_in_range(left_start_index, 0UL, max_steiner_count_per_edge)
+            || !is_in_range(right_start_index, 0UL, max_steiner_count_per_edge))
             throw std::invalid_argument("some value does not fit");
 
         result.emplace_back();

@@ -278,7 +278,7 @@ steiner_neighbors<Graph, Labels, Config>::min_angle_relative_value_atan2(coordin
 }
 
 
-[[using gnu: hot, always_inline]]
+[[using gnu: hot]]
 static double angle_sin(coordinate_t const &direction, coordinate_t forward) {
     forward.rotate_right();
     double product = direction * forward;
@@ -287,7 +287,7 @@ static double angle_sin(coordinate_t const &direction, coordinate_t forward) {
     return product;
 }
 
-[[using gnu: hot, always_inline]]
+[[using gnu: hot]]
 static double angle_sin(coordinate_t const &source, coordinate_t const &right, coordinate_t point) {
     point -= source;
     double product = point * right;
@@ -296,7 +296,7 @@ static double angle_sin(coordinate_t const &source, coordinate_t const &right, c
     return product;
 }
 
-[[using gnu: hot, always_inline]]
+[[using gnu: hot]]
 static bool orientation_right(coordinate_t const &source, coordinate_t const &right, coordinate_t point) {
     double sin_value = angle_sin(source, right, point);
     return !std::signbit(sin_value);

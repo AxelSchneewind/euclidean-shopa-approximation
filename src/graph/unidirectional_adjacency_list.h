@@ -93,14 +93,14 @@ public:
 
     class adjacency_list_builder {
     private:
-        std::size_t _node_count;
-        std::size_t _edge_count;
+        std::size_t _node_count{0};
+        std::size_t _edge_count{0};
 
         std::vector<adjacency_list_edge<NodeId, E>> _edges;
         std::vector<edge_index_type> _offsets;
 
-        bool _edges_sorted;
-        bool _offsets_valid;
+        bool _edges_sorted{false};
+        bool _offsets_valid{false};
 
         [[gnu::cold]]
         void make_offsets();
@@ -108,14 +108,13 @@ public:
     public:
         using edge_type = adjacency_list_edge<NodeId, E>;
 
-        adjacency_list_builder() : _node_count(0), _edge_count(0), _edges_sorted(true), _offsets_valid(true) {};
+        adjacency_list_builder() {};
 
         adjacency_list_builder(adjacency_list_builder &&other) = default;
 
         adjacency_list_builder(const adjacency_list_builder &other) = default;
 
-        adjacency_list_builder(std::size_t node_count) : _node_count(node_count), _edge_count(0), _offsets_valid(false),
-                                                    _edges_sorted(false) { _edges.reserve(_node_count); };
+        adjacency_list_builder(std::size_t node_count) : _node_count(node_count) { _edges.reserve(4 * _node_count); };
 
         ~adjacency_list_builder() = default;
 
@@ -135,11 +134,11 @@ public:
 
         void remove_unconnected_nodes();
 
-        template<std::predicate<node_id_type> NodePredicate>
-        void filter_nodes(NodePredicate &&node_predicate);
+        // template<std::predicate<node_id_type> NodePredicate>
+        // void filter_nodes(NodePredicate &&node_predicate);
 
-        template<std::predicate<edge_info_type> EdgePredicate>
-        void filter_edges(EdgePredicate &&edge_predicate);
+        // template<std::predicate<edge_info_type> EdgePredicate>
+        // void filter_edges(EdgePredicate &&edge_predicate);
 
         void reorder_nodes(std::span<node_id_type> new_node_ids);
 

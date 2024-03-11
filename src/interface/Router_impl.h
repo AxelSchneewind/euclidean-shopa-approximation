@@ -230,6 +230,8 @@ Router::Router(const Graph &graph, RoutingConfiguration const &config)
                         graph.get_implementation<std_graph_t>()), _config);
             }
             break;
+        default:
+            throw std::runtime_error("can't create router for this graph type");
     }
 
     if (!impl) {

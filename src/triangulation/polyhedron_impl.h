@@ -15,8 +15,6 @@ namespace {
                          const std::vector<std::array<typename BaseGraph::node_id_type, MaxNodesPerFace>> &faces,
                          std::vector<std::array<typename BaseGraph::edge_id_type, MaxNodesPerFace>> &face_edges,
                          std::vector<std::array<int, 2>> &edge_faces) {
-        constexpr std::size_t edges_per_face = 3;
-
         face_edges.clear();
         face_edges.reserve(faces.size());
 
@@ -30,7 +28,7 @@ namespace {
         for (auto face: faces) {
             adjacent_edges.clear();
 
-            for (int i = 0; i < MaxNodesPerFace; ++i) {
+            for (size_t i = 0; i < MaxNodesPerFace; ++i) {
                 auto node_id = face[i % MaxNodesPerFace];
                 auto node_id_n = face[(i + 1) % MaxNodesPerFace];
 
@@ -66,7 +64,7 @@ namespace {
         }
 
         // fill with -1 for edges that are only part of one face
-        for (int i = 0; i < base.edge_count(); ++i) {
+        for (size_t i = 0; i < base.edge_count(); ++i) {
             // assert(triangle_count[i] >= 1);
             assert(triangle_count[i] <= 2);
             while (triangle_count[i] < 2)
@@ -79,7 +77,7 @@ namespace {
         result.clear();
         result.resize(base.edge_count());
 
-        for (int i = 0; i < base.edge_count(); ++i) {
+        for (size_t i = 0; i < base.edge_count(); ++i) {
             auto src = base.source(i);
             auto dest = base.destination(i);
             result[i] = base.edge_id(dest, src);
@@ -93,7 +91,7 @@ namespace {
         out.resize(triangulation.node_count(), false);
 
         // a vertex is a boundary vertex if there exists an edge that only has one adjacent face
-        for (int i = 0; i < triangulation.edge_count(); i++) {
+        for (size_t i = 0; i < triangulation.edge_count(); i++) {
             auto &&src = triangulation.source(i);
             auto &&dest = triangulation.destination(i);
             bool one_adjacent_face = optional::is_none(edge_faces[i][1]);
@@ -109,7 +107,7 @@ namespace {
         out.resize(triangulation.edge_count(), false);
 
         // a vertex is a boundary vertex if there exists an edge that only has one adjacent face
-        for (int i = 0; i < triangulation.edge_count(); i++) {
+        for (size_t i = 0; i < triangulation.edge_count(); i++) {
             const bool one_adjacent_face = optional::is_none(edge_faces[i][1]);
             out[i] = one_adjacent_face;
         }
@@ -167,7 +165,6 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(BaseGraph const &triangu
             // get edges that are only reachable via a triangle
             remove_duplicates_sorted(triangle_edge_ids);
             remove_duplicates_sorted(adjacent_edge_ids);
-            int edge_count = 0;
             if (!triangle_edge_ids.empty())
                 set_minus_sorted<int>(triangle_edge_ids, adjacent_edge_ids, triangle_edge_ids);
 
@@ -204,16 +201,16 @@ polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
         std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&adjacent_faces,
         std::vector<bool> &&is_boundary_node, std::vector<bool> &&is_boundary_edge,
         std::vector<edge_id_type> &&node_edges, std::vector<int> &&node_edge_offsets)
-        : _boundary_edge_count{0},
-          _boundary_node_count{0},
-          _is_boundary_node{std::move(is_boundary_node)},
-          _is_boundary_edge{std::move(is_boundary_edge)},
-          _face_info{std::move(adjacent_edges)},
-          _edge_info{std::move(adjacent_faces)},
-          _edge_links{},
-          _node_edges_offsets{std::move(node_edge_offsets)},
-          _node_edges{std::move(node_edges)}
-          {
+        : _boundary_node_count{0}
+        , _boundary_edge_count{0}
+        , _is_boundary_node{std::move(is_boundary_node)}
+        , _is_boundary_edge{std::move(is_boundary_edge)}
+        , _face_info{std::move(adjacent_edges)}
+        , _edge_info{std::move(adjacent_faces)}
+        , _edge_links{}
+        , _node_edges_offsets{std::move(node_edge_offsets)}
+        , _node_edges{std::move(node_edges)}
+{
 
     for (auto &&boundary: _is_boundary_edge) {
         _boundary_edge_count += boundary;
@@ -228,7 +225,7 @@ polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
     _edge_links.reserve(_edge_info.size());
     edge_id_type current = 0;
     for (auto &&edge_info: _edge_info) {
-        int count = 0;
+        size_t count = 0;
         _edge_links.emplace_back();
         for (auto &&face: edge_info) {
             if (optional::is_none(face)) continue;
