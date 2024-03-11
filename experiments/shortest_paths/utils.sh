@@ -5,7 +5,7 @@ ROUTER=route
 FIND_NODES=find_nodes
 
 compute_single() {
-    if [[ -z "$4" ]] then
+    if [[ -z "$4" ]]; then
 	    echo "usage: compute_single path/to/graph_file.graph path/to/results/ path/to/queries.txt epsilon"
 	    exit
     fi
@@ -26,7 +26,7 @@ compute_single() {
 }
 
 make_queries(){
-    if [[ -z "$2" ]] then
+    if [[ -z "$2" ]]; then
 	    echo "usage: make_queries path/to/graph_file.graph path/to/queries.txt count"
 	    exit
     fi
@@ -102,11 +102,10 @@ compute() {
     echo " ##################################### computing exact values:  ##################################### "
     echo "$ROUTER --graph-file $GRAPH_FILE_VISIBILITY --output-directory $OUTPUT_DIR_VIS -e 0.0 --query $QUERY -p wgs84 -a $ASTAR -t$TREE_SIZE"
     $ROUTER -e 0.0 -p wgs84 -a "$ASTAR" -t$TREE_SIZE -l --graph-file "$GRAPH_FILE_VISIBILITY" --output-directory "$OUTPUT_DIR_VIS" --query "$QUERY"
-
 }
 
 process_results() {
-    if [[ -z "$2" ]] then
+    if [[ -z "$2" ]]; then
 	    echo "usage: process_results path/to/results path/to/results.csv"
 	    exit
     fi
@@ -118,14 +117,25 @@ process_results() {
     local GRAPH_NAME=${GRAPH_NAME%.graph}
     
     cat "$OUTPUT_DIR"/*/info.csv > "$CSV_RESULTS"
+
+    # remove headers
     sed -e '1p;/,NODE.*/d' -i "$CSV_RESULTS"
+    # remove ms unit for timings
     sed -e 's/ms//g' -i "$CSV_RESULTS"
+
+    # add column with benchmark name
+    sed -e '1,1s/$/,benchmark/' -i "$CSV_RESULTS"
+    sed -e '2,$s/,$/,OUTPUT_DIR,/' -i "$CSV_RESULTS"
+    local BENCH="${OUTPUT_DIR//\//\\\/}"
+    local BENCH="${BENCH/results/}"
+    sed -e "s/OUTPUT_DIR/$BENCH/" -i "$CSV_RESULTS"
+
     # echo "$(csvsort -c EPSILON,FROM,TO "$CSV_RESULTS")" > "$CSV_RESULTS"
 }
 
 
 process_all_results() {
-    if [[ -z "$2" ]] then
+    if [[ -z "$2" ]]; then
 	    echo "usage: process_results path/to/results path/to/results.csv"
 	    exit
     fi
