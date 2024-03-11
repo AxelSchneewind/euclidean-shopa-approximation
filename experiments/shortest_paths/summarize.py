@@ -15,8 +15,10 @@ dtypes = {
     'STORED EDGE COUNT' : int
 }
 
-def load(file):
-    data = pd.read_csv(file, dtype=dtypes)
+def load(files):
+    data = pd.DataFrame()
+    for f in files:
+        data = pd.concat([data, pd.read_csv(f, dtype=dtypes)], ignore_index=True)
     return data
 
 def reference(data, row):
@@ -62,7 +64,7 @@ def filter(data):
 
 
 def main():
-    data = load(sys.argv[1])
+    data = load([sys.argv[1], sys.argv[2]])
     data = filter(data)
 
     data = add_optimal_cost(data)
