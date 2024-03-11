@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
         // find triangles in selected area and their respective nodes
         std::unordered_map<int, bool> contained;
         face_count = 0;
-        for (int i = 0; i < triangles.size(); ++i) {
+        for (size_t i = 0; i < triangles.size(); ++i) {
             auto& triangle = triangles[i];
             if (is_in_rectangle(nodes[triangle[0]].coordinates, bottom_left, top_right) &&
                 is_in_rectangle(nodes[triangle[1]].coordinates, bottom_left, top_right) &&
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
         // assign new node ids
         std::unordered_map<node_id_t, node_id_t> new_node_id;
         node_count = 0;
-        for (int id = 0; id < nodes.size(); id++) {
+        for (size_t id = 0; id < nodes.size(); id++) {
             if (contained.contains(id) && contained[id])
                 new_node_id[id] = node_count++;
         }
@@ -78,9 +78,9 @@ int main(int argc, char *argv[]) {
         }
 
         // reorder node information
-        for (int i = 0; i < nodes.size(); ++i) {
+        for (size_t i = 0; i < nodes.size(); ++i) {
             if (new_node_id.contains(i)) {
-                assert(new_node_id[i] <= i);
+                assert(static_cast<size_t>(new_node_id[i]) <= i);
                 nodes.at(new_node_id[i]) = nodes[i];
             }
         }
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
         // find edges in selected area and their respective nodes
         std::unordered_map<int, bool> contained;
         edge_count = 0;
-        for (int i = 0; i < edges.size(); ++i) {
+        for (size_t i = 0; i < edges.size(); ++i) {
             if (is_in_rectangle(nodes[edges[i].source].coordinates, bottom_left, top_right) &&
                 is_in_rectangle(nodes[edges[i].destination].coordinates, bottom_left, top_right)) {
 
@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
         // assign new node ids
         std::unordered_map<node_id_t, node_id_t> new_node_id;
         node_count = 0;
-        for (int id = 0; id < nodes.size(); id++) {
+        for (size_t id = 0; id < nodes.size(); id++) {
             if (contained.contains(id) && contained[id])
                 new_node_id[id] = node_count++;
         }
@@ -139,9 +139,9 @@ int main(int argc, char *argv[]) {
         }
 
         // reorder node information
-        for (int i = 0; i < nodes.size(); ++i) {
+        for (size_t i = 0; i < nodes.size(); ++i) {
             if (new_node_id.contains(i)) {
-                assert(new_node_id[i] <= i);
+                assert(static_cast<size_t>(new_node_id[i]) <= i);
                 nodes.at(new_node_id[i]) = nodes[i];
             }
         }

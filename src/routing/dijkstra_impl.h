@@ -3,8 +3,8 @@
 #include "dijkstra.h"
 
 #include "../graph/base_types.h"
+#include "../util/contract.h"
 
-#include <cassert>
 #include <cstddef>
 
 

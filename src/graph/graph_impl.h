@@ -28,8 +28,8 @@ graph<NodeInfo, EdgeInfo, NodeId, EdgeId>::make_subgraph(
     for (size_t i = 0; i + 1 < route.nodes.size(); i++) {
         auto id_current = route.nodes[i];
         auto id_next = route.nodes[i + 1];
-        assert (id_current < node_count());
-        assert (id_next < node_count());
+        assert (static_cast<size_t>(id_current) < node_count());
+        assert (static_cast<size_t>(id_next) < node_count());
 
         nodes.push_back(id_next);
         edges.push_back(_M_adjacency_list.edge_id(id_current, id_next));

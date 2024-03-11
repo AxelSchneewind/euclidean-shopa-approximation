@@ -14,7 +14,7 @@ public:
     [[using gnu : always_inline, hot]]
     constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
         return n1.distance() > n2.distance();
-    };
+    }
 };
 
 struct compare_heuristic {
@@ -25,7 +25,7 @@ public:
     [[using gnu : always_inline, hot]]
     constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
         return n1.heuristic() > n2.heuristic();
-    };
+    }
 };
 
 template<typename Labels>
@@ -34,18 +34,18 @@ private:
     std::shared_ptr<Labels> _labels;
 public:
     template<typename Graph>
-    compare_heuristic_remote(Graph&&, std::shared_ptr<Labels> labels) : _labels{std::move(labels)} {};
+    compare_heuristic_remote(Graph&&, std::shared_ptr<Labels> labels) : _labels{std::move(labels)} {}
 
     template<typename NodeCostPair>
     [[using gnu : always_inline, hot]]
     constexpr bool operator()(const NodeCostPair &n1, const NodeCostPair &n2) {
         return _labels->at(n1.node()).heuristic() > _labels->at(n2.node()).heuristic();
-    };
+    }
 };
 
 struct no_heuristic {
     template <typename Graph, typename Labels>
-    no_heuristic(Graph&&, Labels&&) {};
+    no_heuristic(Graph&&, Labels&&) {}
 
     template<typename R>
     void operator()(R& node) {
@@ -117,7 +117,7 @@ public:
     template <typename NodeId>
     void init(NodeId /*start_node*/, NodeId /*target_node*/) {
         base_queue_type::c.clear();
-    };
+    }
 
     template<typename... Args>
     void push(Args... args) {

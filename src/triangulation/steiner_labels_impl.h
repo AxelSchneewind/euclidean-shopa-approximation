@@ -1,7 +1,7 @@
 #pragma once
 
 #include "steiner_labels.h"
-#include <cassert>
+#include "../util/contract.h"
 
 
 template<RoutableGraph G, typename Label>

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cassert>
-
+#include "../util/contract.h"
 #include "router.h"
+
 
 template<typename Graph, typename Dijkstra>
 typename router<Graph, Dijkstra>::distance_type

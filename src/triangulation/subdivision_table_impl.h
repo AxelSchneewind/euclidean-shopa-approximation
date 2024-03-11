@@ -250,7 +250,7 @@ subdivision_table::node_coordinates(edge_id_t edge, steiner_index_type steiner_i
     if (steiner_index < info.mid_index) {
         auto index = steiner_index - 2 + info.first_start_index;
         assert(index >= 0);
-        assert(index < triangle_classes[info.edge_class_first].node_positions.size());
+        assert(static_cast<size_t>(index) < triangle_classes[info.edge_class_first].node_positions.size());
 
         auto &&relative = triangle_classes[info.edge_class_first].node_positions[index];
         assert(relative >= info.r_first - 0.002F);
@@ -260,7 +260,7 @@ subdivision_table::node_coordinates(edge_id_t edge, steiner_index_type steiner_i
         auto index = info.node_count - 1 - steiner_index;
         index = index - 2 + info.second_start_index;
         assert(index >= 0);
-        assert(index < triangle_classes[info.edge_class_second].node_positions.size());
+        assert(static_cast<size_t>(index) < triangle_classes[info.edge_class_second].node_positions.size());
 
         auto &&relative = triangle_classes[info.edge_class_second].node_positions[index];
         assert(relative >= info.r_second - 0.002F);

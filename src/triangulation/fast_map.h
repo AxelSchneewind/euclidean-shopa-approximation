@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <vector>
-#include <cassert>
 
 
 template <typename AggregateId, typename IntraAggregateId, typename Info>

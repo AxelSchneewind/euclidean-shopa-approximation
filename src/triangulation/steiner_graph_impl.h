@@ -194,7 +194,7 @@ steiner_graph steiner_graph::make_graph(const steiner_graph &other, const subgra
     // assign new node ids
     std::unordered_map<triangle_node_id_type, triangle_node_id_type> new_node_id;
     std::vector<triangle_node_info_type> nodes;
-    triangle_node_id_type node_count = 0;
+    size_t node_count = 0;
     for (triangle_node_id_type id: subgraph.nodes) {
         if (contained.contains(id) && contained[id]) {
             new_node_id[id] = node_count++;
@@ -475,7 +475,7 @@ steiner_graph::edge_info_type steiner_graph::edge(steiner_graph::edge_id_type id
 steiner_graph::edge_id_type
 steiner_graph::edge_id(steiner_graph::node_id_type src, steiner_graph::node_id_type dest) const {
     assert(src.edge >= 0 && src.steiner_index >= 0);
-    assert(src.edge < _base_topology.edge_count() &&
+    assert(static_cast<size_t>(src.edge) < _base_topology.edge_count() &&
            src.steiner_index < _table.edge(src.edge).node_count);
     // assert(has_edge(src, dest));
 

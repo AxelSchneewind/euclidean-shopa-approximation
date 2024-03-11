@@ -14,12 +14,10 @@ file_io::read_nodes(std::istream &input, std::span<NodeInfo> nodes) {
 
 template<typename NodeInfo, typename formatter>
 void file_io::write_nodes(std::ostream &output, std::span<NodeInfo> nodes) {
-    for (int i = 0; i < nodes.size(); ++i) {
-        NodeInfo const &n = nodes[i];
-        formatter::write(output, n);
+    for (auto&& node : nodes) {
+        formatter::write(output, node);
         formatter::write(output, '\n');
     }
-
 }
 
 template<typename Edge, typename formatter>

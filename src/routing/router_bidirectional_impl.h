@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cassert>
+#include "../util/contract.h"
 
 #include "router_bidirectional.h"
 

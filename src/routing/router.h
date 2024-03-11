@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cassert>
-
 
 template<typename Graph, typename Dijkstra>
 class router {

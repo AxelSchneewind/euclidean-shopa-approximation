@@ -3,7 +3,6 @@
 #include "../graph/adjacency_list.h"
 #include "polyhedron.h"
 
-#include <cassert>
 #include <limits>
 #include <utility>
 #include <vector>

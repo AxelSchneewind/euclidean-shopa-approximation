@@ -2,8 +2,9 @@
 
 #include "../interface/Query.h"
 #include "../routing_impl.h"
+#include "../util/contract.h"
+
 #include <array>
-#include <cassert>
 #include <chrono>
 #include <fstream>
 #include <iostream>

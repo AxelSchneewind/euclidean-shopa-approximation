@@ -44,11 +44,11 @@ namespace {
 
             std::sort(adjacent_edges.begin(), adjacent_edges.end());
             remove_duplicates_sorted(adjacent_edges);
-            assert(adjacent_edges.size() == edges_per_face);
+            assert(adjacent_edges.size() == MaxNodesPerFace);
 
             // add edges array to face
             face_edges.emplace_back();
-            int index = 0;
+            size_t index = 0;
             for (auto e: adjacent_edges) {
                 assert(base.source(e) < base.destination(e));
                 face_edges.back().at(index++) = e;

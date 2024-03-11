@@ -56,12 +56,12 @@ int main(int argc, char** argv) {
 
         // find nodes matching filter
         std::vector<triangle_node_properties> properties(node_count);
-        for (int i = 0; i < node_count; ++i) {
+        for (size_t i = 0; i < node_count; ++i) {
             properties[i].is_in_box = is_in_rectangle(nodes[i].coordinates, bottom_left, top_right);
         }
 
         // mark nodes as connected and increment out and in degree
-        for (int t = 0; t < face_count; ++t) {
+        for (size_t t = 0; t < face_count; ++t) {
             auto&& triangle = triangles[t];
             properties[triangle[0]].connected = true;
             properties[triangle[1]].connected = true;
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
 
         // count faces for each edge
         std::unordered_map<long, char> adjacent_face_count;
-        for (int t = 0; t < face_count; ++t) {
+        for (size_t t = 0; t < face_count; ++t) {
             auto&& triangle = triangles[t];
 
             adjacent_face_count[((long)triangle[0] << 32) + triangle[1]]++;

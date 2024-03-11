@@ -2,9 +2,9 @@
 
 #include "base_types.h"
 #include "../util/counting_iterator.h"
+#include "../util/contract.h"
 
 #include <array>
-#include <cassert>
 #include <span>
 #include <vector>
 

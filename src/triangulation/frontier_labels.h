@@ -78,7 +78,7 @@ public:
     size_t aggregate_count() const;
 
     // init for given query
-    void init(node_id_type start_node, node_id_type target_node);;
+    void init(node_id_type start_node, node_id_type target_node);
 
     bool reached(node_id_type node) const;
 
@@ -93,28 +93,8 @@ public:
     void set_frontier_distance(distance_type new_distance);
 
     void set_frontier_width(distance_type new_width);
-
-    [[deprecated]]
-    void label_preliminary(steiner_graph::node_id_type node, node_cost_pair_type node_cost_pair);
-
-    [[deprecated]]
-    void label(steiner_graph::node_id_type node, node_cost_pair_type node_cost_pair);;
 };
 
-template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
-void frontier_labels<NodeCostPair, Label>::label(steiner_graph::node_id_type node, node_cost_pair_type node_cost_pair) {
-    label_preliminary(node, node_cost_pair);
-    _max_distance = std::max(_max_distance, node_cost_pair.distance);
-    set_frontier_distance(node_cost_pair.value() - _frontier_width);
-}
-
-template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
-void frontier_labels<NodeCostPair, Label>::label_preliminary(steiner_graph::node_id_type node,
-                                                             node_cost_pair_type node_cost_pair) {
-    if (_expanded_node_aggregates.node_info(node.edge, node.steiner_index).distance >
-        node_cost_pair.distance)
-        _expanded_node_aggregates.node_info(node.edge, node.steiner_index) = node_cost_pair;
-}
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 void frontier_labels<NodeCostPair, Label>::set_frontier_width(frontier_labels::distance_type new_width) {

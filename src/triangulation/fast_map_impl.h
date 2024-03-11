@@ -1,9 +1,9 @@
 #include "fast_map.h"
+#include "../util/contract.h"
 
 #include <algorithm>
 #include <cstddef>
 #include <vector>
-#include <cassert>
 
 template<typename AggregateId, typename IntraAggregateId, typename Info>
 std::size_t fast_map<AggregateId, IntraAggregateId, Info>::edge_count() const { return _edge_index.size(); }
@@ -31,7 +31,7 @@ fast_map<AggregateId, IntraAggregateId, Info>::node_info(edge_id_type edge_id, i
 
 template<typename AggregateId, typename IntraAggregateId, typename Info>
 void fast_map<AggregateId, IntraAggregateId, Info>::append(aggregate_id_type id, intra_aggregate_id_type count) {
-    assert(id >= 0 && id < _edge_index.size());
+    assert(id >= 0 && static_cast<size_t>(id) < _edge_index.size());
 
     _edge_index[id] = _entries.size();
     _entries.resize(_entries.size() + count, _default_value);

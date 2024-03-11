@@ -3,9 +3,9 @@
 #include "unidirectional_adjacency_list.h"
 
 #include "../util/remove_duplicates.h"
+#include "../util/contract.h"
 
 #include <algorithm>
-#include <cassert>
 #include <concepts>
 #include <cstddef>
 #include <span>
@@ -298,14 +298,14 @@ unidirectional_adjacency_list<NodeId, E>::edge_count() const {
 
 template<typename NodeId, typename E>
 bool unidirectional_adjacency_list<NodeId, E>::contains_node(node_id_type node_id) const {
-    return !optional::is_none(node_id) && node_id >= 0 && node_id < node_count();
+    return !optional::is_none(node_id) && node_id >= 0 && static_cast<size_t>(node_id) < node_count();
 }
 
 
 template<typename NodeId, typename E>
 bool unidirectional_adjacency_list<NodeId, E>::contains_edge(
         unidirectional_adjacency_list::edge_index_type edge_index) const {
-    return !optional::is_none(edge_index) && edge_index >= 0 && edge_index < edge_count();
+    return !optional::is_none(edge_index) && edge_index >= 0 && static_cast<size_t>(edge_index) < edge_count();
 }
 
 
@@ -360,7 +360,7 @@ template<typename NodeId, typename E>
 inline std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
 unidirectional_adjacency_list<NodeId, E>::outgoing_edges(NodeId node) const {
     assert(contains_node(node));
-    assert(contains_edge(offset(node)) || offset(node) == edge_count());
+    assert(contains_edge(offset(node)) || static_cast<size_t>(offset(node)) == edge_count());
 
     auto first = _M_edges.begin() + (size_t) offset(node);
     auto last = _M_edges.begin() + (size_t) offset_next(node);
