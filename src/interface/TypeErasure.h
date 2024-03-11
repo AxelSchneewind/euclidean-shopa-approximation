@@ -17,10 +17,10 @@ public:
     Base() = default;
 
     template<typename Implementation>
-    Base& operator=(Implementation&& implementation) { impl = std::shared_ptr<Interface>(std::forward(implementation)); };
+    Base& operator=(Implementation&& implementation) { impl = std::shared_ptr<Interface>(std::forward(implementation)); }
 
     template <typename Implementation>
-    Base& operator=(std::shared_ptr<Implementation> implementation) { impl = std::move(implementation); };
+    Base& operator=(std::shared_ptr<Implementation> implementation) { impl = std::move(implementation); }
 
     template<typename Implementation>
     Implementation& get_implementation() {
@@ -29,6 +29,7 @@ public:
         else
             throw std::runtime_error("Object cannot be interpreted as the given type");
     }
+
     template<typename Implementation>
     Implementation& get_implementation() const {
         if (typeid(std::remove_cvref_t<Implementation>) == typeid(*(impl.get())))
