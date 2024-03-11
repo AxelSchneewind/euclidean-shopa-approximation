@@ -125,9 +125,9 @@ process_results() {
 
     # add column with benchmark name
     sed -e '1,1s/$/,benchmark/' -i "$CSV_RESULTS"
-    sed -e '2,$s/,$/,OUTPUT_DIR,/' -i "$CSV_RESULTS"
+    sed -e '2,$s/,$/,,OUTPUT_DIR/' -i "$CSV_RESULTS"
     local BENCH="${OUTPUT_DIR//\//\\\/}"
-    local BENCH="${BENCH/results/}"
+    local BENCH="${BENCH/results//}"
     sed -e "s/OUTPUT_DIR/$BENCH/" -i "$CSV_RESULTS"
 
     # echo "$(csvsort -c EPSILON,FROM,TO "$CSV_RESULTS")" > "$CSV_RESULTS"
