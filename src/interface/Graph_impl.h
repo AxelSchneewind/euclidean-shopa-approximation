@@ -298,7 +298,7 @@ void Graph::read_graph_file(std::string path, double epsilon, Args... args) {
 
 
 template<typename... Args>
-void Graph::read_graph_file(std::string path, Args... args) {
+void Graph::read_graph_file(std::string path, Args... /*args*/) {
     std::ifstream input(path);
 
     if (input.fail()){

@@ -108,7 +108,7 @@ public:
         : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(Comp(graph, labels)) {}
 
     template <typename Graph, typename Labels>
-    dijkstra_queue(std::shared_ptr<Graph> graph, std::shared_ptr<Labels> labels)
+    dijkstra_queue(std::shared_ptr<Graph> /*graph*/, std::shared_ptr<Labels> /*labels*/)
         : std::priority_queue<NodeCostPair, std::vector<NodeCostPair>, Comp>(Comp{}) {}
 
     dijkstra_queue(Comp comp = {})

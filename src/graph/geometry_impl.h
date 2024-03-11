@@ -7,7 +7,6 @@
 
 
 template <typename N>
-[[gnu::always_inline]]
 inline constexpr N atan_scalar_approximation(N x) {
     constexpr N a1  =  0.99997726;
     constexpr N a3  = -0.33262347;
@@ -21,7 +20,7 @@ inline constexpr N atan_scalar_approximation(N x) {
 }
 
 void atan2_approximation(size_t num_points, const coordinate_t* coordinates, coordinate_t::component_type* out) {
-    for (int i = 0; i < num_points; ++i) {
+    for (size_t i = 0; i < num_points; ++i) {
         // Ensure input is in [-1, +1]
         auto y = coordinates[i].latitude;
         auto x = coordinates[i].longitude;

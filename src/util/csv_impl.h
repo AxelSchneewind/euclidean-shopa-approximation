@@ -18,7 +18,7 @@ void table::new_line() {
 std::size_t table::row_count() const { return values.size(); }
 
 std::size_t table::column_index(std::string_view c) {
-    for (int i = 0; i < _columns.size(); ++i) {
+    for (size_t i = 0; i < _columns.size(); ++i) {
         if (_columns[i] == c)
             return i;
     }

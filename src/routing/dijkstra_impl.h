@@ -46,11 +46,12 @@ template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id
 dijkstra<G, Q, L, N, Heuristic>::dijkstra(std::shared_ptr<G> graph)
         : _graph(std::move(graph))
         , _labels{std::make_shared<L>(_graph)}
-        , _queue{_graph, _labels}
-        , _heuristic{_graph, _labels}
-        , _neighbors{_graph, _labels}
         , _start_node{optional::none_value<node_id_type>}
-        , _target_node{optional::none_value<node_id_type>} {}
+        , _target_node{optional::none_value<node_id_type>}
+        , _queue{_graph, _labels}
+        , _neighbors{_graph, _labels}
+        , _heuristic{_graph, _labels}
+        {}
 
 
 
@@ -168,7 +169,7 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
     _edges_checked += node_cost_pairs.size();
 
     // filter which neighbors are improved
-    int to_index = 0;
+    size_t to_index = 0;
     for (size_t i = 0; i < node_cost_pairs.size(); i++) {
         node_cost_pair_type &successor = node_cost_pairs[i];
         node_id_type const  &successor_node = successor.node();
@@ -203,11 +204,11 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
 
     // apply heuristic if given
     if constexpr (!std::is_same_v<Heuristic, void> && geometric_heuristic) {
-        for (int i = 0; i < node_cost_pairs.size(); ++i) {
+        for (size_t i = 0; i < node_cost_pairs.size(); ++i) {
             _heuristic(node_cost_pairs[i], coordinates[i]);
         }
     } else if constexpr (!std::is_same_v<Heuristic, void>) {
-        for (int i = 0; i < node_cost_pairs.size(); ++i) {
+        for (size_t i = 0; i < node_cost_pairs.size(); ++i) {
             _heuristic(node_cost_pairs[i]);
         }
     }

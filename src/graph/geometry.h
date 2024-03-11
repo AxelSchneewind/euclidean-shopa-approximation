@@ -10,9 +10,7 @@ void atan2_approximation(std::size_t num_points, const coordinate_t* coordinates
 
 
 namespace std {
-    [[gnu::hot]]
-    [[gnu::always_inline]]
-    [[gnu::const]]
+    [[using gnu : hot, const]]
     coordinate_t::component_type atan2(coordinate_t const direction);
 }
 
