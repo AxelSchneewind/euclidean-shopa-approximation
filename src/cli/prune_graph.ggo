@@ -1,0 +1,17 @@
+package "Routing"
+purpose ""
+usage "prune_graph -g graph_file.graph -o output_file.graph -x 0 -X 1 -y 0 -Y 1"
+description "computes the shortest path for each given pair of source and destination node."
+
+args ""
+
+
+section "input/output files"
+option "graph-file" g "path to graph file (of type .fmi or .graph or .gl)" string typestr="FILE" required
+option "output-file" o "path to output file" string typestr="FILE" default="out.graph" optional
+
+section "bounding box for pruning"
+option "minX" x "minimal x coordinate (or longitude) of nodes to keep" double required
+option "maxX" X "maximal x coordinate (or longitude) of nodes to keep" double required
+option "minY" y "minimal y coordinate (or latitude) of nodes to keep" double required
+option "maxY" Y "maximal y coordinate (or latitude) of nodes to keep" double required

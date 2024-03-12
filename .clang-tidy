@@ -1,66 +1,80 @@
 # Generated from CLion Inspection settings
 ---
 Checks: '-*,
-cppcoreguidelines-*,
-mpi-*,
-readability-*,
--*,readability-identifier-naming
-CheckOptions:
-  - { key: readability-identifier-naming.NamespaceCase,       value: lower_case }
-  - { key: readability-identifier-naming.ClassCase,           value: CamelCase  }
-  - { key: readability-identifier-naming.PrivateMemberPrefix, value: m_         }
-  - { key: readability-identifier-naming.StructCase,          value: CamelCase  }
-  - { key: readability-identifier-naming.FunctionCase,        value: lower_case }
-  - { key: readability-identifier-naming.VariableCase,        value: lower_case }
-  - { key: readability-identifier-naming.GlobalConstantCase,  value: UPPER_CASE }
 bugprone-*,
--bugprone-signal-handler,
--bugprone-narrowing-conversions,
--bugprone-redundant-branch-condition,
--bugprone-exception-escape,
--bugprone-multiple-new-in-one-expression,
--bugprone-unchecked-optional-access,
--bugprone-shared-ptr-array-mismatch,
--bugprone-implicit-widening-of-multiplication-result,
--bugprone-signed-char-misuse,
--bugprone-assignment-in-if-condition,
--bugprone-bool-pointer-implicit-conversion,
--bugprone-unhandled-exception-at-new,
--bugprone-unsafe-functions,
--bugprone-infinite-loop,
--bugprone-easily-swappable-parameters,
--bugprone-non-zero-enum-to-bool-conversion,
--bugprone-standalone-empty,
--bugprone-stringview-nullptr,
-cert-err52-cpp,
-cert-err60-cpp,
-cert-err34-c,
-cert-str34-c,
-cert-dcl21-cpp,
-cert-msc50-cpp,
-cert-msc51-cpp,
-cert-dcl58-cpp,
-cert-flp30-c,
-google-default-arguments,
-google-runtime-operator,
-google-explicit-constructor,
-hicpp-multiway-paths-covered,
-hicpp-exception-baseclass,
-misc-unconventional-assign-operator,
-misc-misplaced-const,
-misc-new-delete-overloads,
-misc-non-copyable-objects,
-misc-no-recursion,
-misc-throw-by-value-catch-by-reference,
-misc-uniqueptr-reset-release,
+cppcoreguidelines-*,
 modernize-*,
--modernize-use-trailing-return-type,
--modernize-type-traits,
--modernize-use-using,
--modernize-use-default-member-init,
--modernize-macro-to-enum,
-openmp-use-default-none,
 performance-*,
--performance-no-int-to-ptr,
--performance-avoid-endl,
-portability-simd-intrinsics'
+readability-*
+-*-reserved-identifier,
+-*-easily-swappable-parameters,
+-*-use-trailing-return-type,
+-*-nodiscard,
+-*-use-trailing-return-type'
+
+# misc-*,
+# openmp-use-default-none,
+
+# CheckOptions:
+#   - { key: readability-identifier-naming.NamespaceCase,       value: lower_case }
+#   - { key: readability-identifier-naming.ClassCase,           value: lower_case }
+#   - { key: readability-identifier-naming.PrivateMemberPrefix, value: _ }
+#   - { key: readability-identifier-naming.StructCase,          value: lower_case }
+#   - { key: readability-identifier-naming.FunctionCase,        value: lower_case }
+#   - { key: readability-identifier-naming.VariableCase,        value: lower_case }
+#   - { key: readability-identifier-naming.GlobalConstantCase,  value: UPPER_CASE }
+#   - { key: readability-identifier-naming.ParameterPrefix,     value:  }
+#   - { key: readability-identifier-naming.TemplateParameterCase,value: CamelCase }
+
+CheckOptions:
+  - key: readability-identifier-naming.ClassCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstexprVariablePrefix
+    value: ''
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantPrefix
+    value: ''
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalConstantPrefix
+    value: ''
+  - key: readability-identifier-naming.StaticConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.StaticConstantPrefix
+    value: ''
+  - key: readability-identifier-naming.StaticVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.MacroDefinitionIgnoredRegexp
+    value: '^[A-Z]+(_[A-Z]+)*_$'
+  - key: readability-identifier-naming.MemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: _
+  - key: readability-identifier-naming.PublicMemberPrefix
+    value: ''
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.IgnoreMainLikeFunctions
+    value: 1
+
+
+

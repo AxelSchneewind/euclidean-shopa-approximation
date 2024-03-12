@@ -1,0 +1,25 @@
+package "Routing"
+purpose ""
+usage "find_nodes -g graph_file.graph ..."
+description "outputs all or some randomly selected nodes matching a filter"
+
+args ""
+
+section "input/output files"
+option "graph-file" g "path to graph file (of type .fmi or .graph or .gl)" string typestr="FILE" required
+option "output-file" o "path to output file" string typestr="FILE" optional
+
+section "select random"
+option "pick-random" r "number of nodes to pick randomly (from filtered nodes)" int optional
+option "seed" s "seed for selecting random nodes" int default="0xC0FFEE" dependon="pick-random" optional
+
+section "coordinates"
+option "minX" x "minimal x coordinate (or longitude) of nodes" double optional
+option "maxX" X "maximal x coordinate (or longitude) of nodes" double optional
+option "minY" y "minimal y coordinate (or latitude) of nodes" double optional
+option "maxY" Y "maximal y coordinate (or latitude) of nodes" double optional
+option "exact" - "output the node id for (x,y) (and (X,Y) if given)" dependon="minX" dependon="minY" optional
+
+section "triangulation"
+option "boundary-nodes" b "only keep boundary nodes" flag off
+option "connected" c "only keep nodes that have edges" flag on
