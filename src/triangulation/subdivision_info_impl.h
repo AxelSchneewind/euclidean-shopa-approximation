@@ -231,6 +231,8 @@ inline double subdivision::relative_position_mid(edge_id_t const edge) const {
 
 inline double subdivision::relative_position_steiner(edge_id_t const edge, steiner_index_type const steiner_index) const {
     auto &&info = edges[edge];
+    assert(steiner_index > 0);
+    assert(steiner_index < info.node_count - 1);
 
     if (steiner_index < info.mid_index) [[likely]] {
         auto const index = steiner_index - 1;
@@ -257,6 +259,9 @@ inline double subdivision::relative_position_steiner(edge_id_t const edge, stein
 
 inline double subdivision::relative_position(edge_id_t const edge, steiner_index_type const steiner_index) const {
     auto &&info = edges[edge];
+
+    assert(steiner_index >= 0);
+    assert(steiner_index < info.node_count);
 
     if (steiner_index == 0)
         return 0.0;

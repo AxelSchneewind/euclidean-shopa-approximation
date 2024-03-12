@@ -33,6 +33,7 @@ private:
     std::size_t _boundary_node_count{0};
     std::size_t _boundary_edge_count{0};
 
+    // TODO add flags for convexity
     std::vector<bool> _is_boundary_node;
     std::vector<bool> _is_boundary_edge;
 
@@ -48,12 +49,12 @@ private:
     std::vector<edge_id_type> _node_edges;
 
 
-    polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>>&&adjacent_edges,
-               std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>>&&adjacent_faces,
+    polyhedron(std::vector<std::array<edge_id_type, EDGE_COUNT_PER_FACE>>&& adjacent_edges,
+               std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>>&& adjacent_faces,
                std::vector<bool>&& is_boundary_node,
                std::vector<bool>&& is_boundary_edge,
-               std::vector<edge_id_type>&&node_edges,
-               std::vector<int>&&node_edge_offsets);
+               std::vector<edge_id_type>&& node_edges,
+               std::vector<int>&& node_edge_offsets);
 
 public:
     static constexpr std::size_t SIZE_PER_NODE = 0;

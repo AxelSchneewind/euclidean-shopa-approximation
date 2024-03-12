@@ -146,7 +146,7 @@ template<typename Graph, typename Labels, Configuration Config>
 coordinate_t::component_type
 steiner_neighbors<Graph, Labels, Config>::min_angle_relative_value_matmul(base_edge_id_type edge_id,
                                                                           coordinate_t direction_source) const {
-    // compute intersection point_source + b*direction_source = point_target + result * direction_target
+    // compute intersection point_source + b * direction_source = point_target + result * direction_target
 
     // point vectors
     // coordinate_t     point_source = _source_coordinate;
@@ -173,8 +173,8 @@ steiner_neighbors<Graph, Labels, Config>::min_angle_relative_value_matmul(base_e
 
     //
     coordinate_t const right_side = point_target - _source_coordinate;
-    coordinate_t::component_type result = (right_side.longitude * direction_source.latitude) - (right_side.latitude * direction_source.longitude);
-    double factor = (-direction_target.longitude * direction_source.latitude) + (direction_source.longitude * direction_target.latitude);
+    coordinate_t::component_type const result = (right_side.longitude * direction_source.latitude) - (right_side.latitude * direction_source.longitude);
+    double const factor = (direction_source.longitude * direction_target.latitude) - (direction_target.longitude * direction_source.latitude);
     return result / factor;
 }
 

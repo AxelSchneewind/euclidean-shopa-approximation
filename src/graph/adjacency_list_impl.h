@@ -2,9 +2,9 @@
 
 #include "adjacency_list.h"
 #include "graph_properties.h"
+#include "../util/contract.h"
 
 #include <memory>
-#include <cassert>
 
 
 template<typename NodeId, typename E>

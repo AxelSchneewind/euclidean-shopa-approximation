@@ -96,8 +96,8 @@ main(int argc, char const *argv[]) {
     } else if (mode == "angles") {
         std::ifstream input(graph_path);
 
-        constexpr int bin_count = 180;
-        constexpr double step_size = M_PI / (bin_count - 1);
+        static constexpr int bin_count = 180;
+        static constexpr double step_size = M_PI / (bin_count - 1);
         double min_angle = M_PI;
         double max_angle = 0.0;
         std::vector<std::size_t> angle_count(bin_count, 0);
@@ -142,12 +142,12 @@ main(int argc, char const *argv[]) {
             max_angle = std::max(max_angle, alpha);
             max_angle = std::max(max_angle, beta);
             max_angle = std::max(max_angle, gamma);
+            assert(alpha >= 0 && beta >= 0 && gamma >= 0);
 
-            int index_alpha, index_beta, index_gamma;
+            size_t index_alpha, index_beta, index_gamma;
             index_alpha = std::floor(alpha / step_size);
             index_beta = std::floor(beta / step_size);
             index_gamma = std::floor(gamma / step_size);
-            assert(index_alpha >= 0 && index_beta >= 0 && index_gamma >= 0);
             assert(index_alpha < angle_count.size() && index_beta < angle_count.size() &&
                    index_gamma < angle_count.size());
 
@@ -161,7 +161,7 @@ main(int argc, char const *argv[]) {
         if (header)
             std::cout << "angle,count\n";
 
-        for (int index = 0; index < angle_count.size(); ++index) {
+        for (size_t index = 0; index < angle_count.size(); ++index) {
             std::cout << (index * step_size)
                       << ',' << angle_count[index] << '\n';
         }
@@ -173,7 +173,7 @@ main(int argc, char const *argv[]) {
         if (header)
             std::cout << "edge,nodes\n";
 
-        for (int e = 0; e < graph.base_graph().edge_count(); ++e) {
+        for (size_t e = 0; e < graph.base_graph().edge_count(); ++e) {
             auto &&steiner_info = graph.steiner_info(e);
             std::cout << e << ',' << steiner_info.node_count << '\n';
         }
@@ -185,7 +185,7 @@ main(int argc, char const *argv[]) {
         if (header)
             std::cout << "edge,r1,r2\n";
 
-        for (int e = 0; e < graph.base_graph().edge_count(); ++e) {
+        for (size_t e = 0; e < graph.base_graph().edge_count(); ++e) {
             auto &&steiner_info = graph.steiner_info(e);
             std::cout << e << ',' << steiner_info.r_first << ',' << steiner_info.r_second << '\n';
         }

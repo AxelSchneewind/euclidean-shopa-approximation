@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 
+// TODO throw out this garbage
 template<typename AggregateId, typename IntraAggregateId, typename AggregateInfo, typename Info>
 class compact_node_info_container {
 public:
@@ -37,7 +38,7 @@ private:
     std::array<Info, 1> default_span;
 
 public:
-    compact_node_info_container(std::vector<size_t> const& offsets, AggregateInfo default_aggregate_info = optional::none_value<AggregateInfo>, Info default_info = optional::none_value<Info>);;
+    compact_node_info_container(std::vector<size_t> const& offsets, AggregateInfo default_aggregate_info = optional::none_value<AggregateInfo>, Info default_info = optional::none_value<Info>);
 
     compact_node_info_container(std::vector<size_t>&& offsets, AggregateInfo default_aggregate_info = optional::none_value<AggregateInfo>,
                                 Info default_info = optional::none_value<Info>);

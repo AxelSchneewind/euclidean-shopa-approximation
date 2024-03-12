@@ -22,6 +22,10 @@ private:
 
 public:
     struct subdivision_edge_info {
+        // (1+ epsilon * sin(alpha)) for both sides of this edge
+        double base_first;
+        double base_second;
+
         // r(v), relative to this edge
         float r_first;
 
@@ -33,10 +37,6 @@ public:
 
         // number of steiner points on this edge (counting the source and if present, middle nodes), >= 2
         steiner_index_type node_count;
-
-        // which classes of edges this one belongs to (first and second half)
-        double base_first;
-        double base_second;
 
         steiner_index_type mid_index;
 

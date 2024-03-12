@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../routing/dijkstra_concepts.h"
 #include "polyhedron.h"
 
+#include "../routing/dijkstra_concepts.h"
 #include "../util/list_intersection.h"
 #include "../util/list_invert.h"
 

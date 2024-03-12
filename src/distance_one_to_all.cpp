@@ -2,6 +2,8 @@
 
 #include <fstream>
 #include <chrono>
+#include <ratio>
+#include <string>
 
 int main(int argc, const char *argv[]) {
     if (argc < 5)
@@ -21,13 +23,11 @@ int main(int argc, const char *argv[]) {
     output << "node,distance\n";
 
     // init timing
-    auto before
-            = std::chrono::high_resolution_clock::now();
+    auto before = std::chrono::high_resolution_clock::now();
 
     client.compute_one_to_all(src, output);
 
-    auto after
-            = std::chrono::high_resolution_clock::now();
+    auto after = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> duration = after - before;
 

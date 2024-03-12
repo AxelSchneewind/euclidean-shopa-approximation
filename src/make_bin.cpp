@@ -8,7 +8,7 @@
 #include "routing_impl.h"
 
 int
-main (int argc, char const *argv[])
+main ()
 {
   std::string directory;
   std::cout << "filename: " << std::flush;
