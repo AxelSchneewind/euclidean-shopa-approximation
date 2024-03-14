@@ -7,7 +7,7 @@ args ""
 
 section "input/output files"
 option "graph-file" g "path to graph file (of type .fmi or .graph or .gl)" string typestr="FILE" required
-option "epsilon" e "epsilon for generation of steiner graph" string default="1.0" optional
+option "epsilon" e "epsilon for generation of steiner graph" string default="1.0" optional argoptional
 option "header" h "print csv header" flag on
 
 section "type of information"
