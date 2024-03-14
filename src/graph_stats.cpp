@@ -17,7 +17,7 @@ static_assert(std_graph_t::SIZE_PER_NODE == 24);
 static_assert(std_graph_t::SIZE_PER_EDGE == 40);
 
 
-double parse_float_or_fraction(std::string const& epsilon_string) {
+double parse_float_or_fraction(std::string const &epsilon_string) {
     double epsilon;
     if (epsilon_string.find('/') != std::string::npos) {
         std::string numerator(epsilon_string, 0, epsilon_string.find('/'));
@@ -29,7 +29,7 @@ double parse_float_or_fraction(std::string const& epsilon_string) {
     return epsilon;
 }
 
-std::string parse_graph_name(std::string const& graph_path) {
+std::string parse_graph_name(std::string const &graph_path) {
     std::string graph_prefix(graph_path, graph_path.find_last_of('/') + 1);
     std::string graph_filename(graph_path, graph_path.find_last_of('/') + 1);
     std::string graph_name(graph_filename, 0, graph_filename.find_last_of('.'));
@@ -37,13 +37,12 @@ std::string parse_graph_name(std::string const& graph_path) {
 }
 
 
-
 template<enum_mode Mode>
-void show_info(gengetopt_args_info const& args);
+void show_info(gengetopt_args_info const &args);
 
 
 template<>
-void show_info<mode_arg_steiner_points_by_angle>(gengetopt_args_info const& args) {
+void show_info<mode_arg_steiner_points_by_angle>(gengetopt_args_info const &args) {
     if (args.header_flag)
         std::cout << "epsilon,angle,number of points,points\n";
     int index = 0;
@@ -54,7 +53,8 @@ void show_info<mode_arg_steiner_points_by_angle>(gengetopt_args_info const& args
     auto const table = subdivision_table::precompute(parse_float_or_fraction(args.epsilon_arg), min_r_value);
 
     for (auto const &triangle_class: table) {
-        std::cout << parse_float_or_fraction(args.epsilon_arg) << "," << std::setw(10) << subdivision_table::class_angle(index) << ","
+        std::cout << parse_float_or_fraction(args.epsilon_arg) << "," << std::setw(10)
+                  << subdivision_table::class_angle(index) << ","
                   << triangle_class.node_positions.size() << ",";
 
         for (auto const &point: triangle_class.node_positions) {
@@ -68,7 +68,7 @@ void show_info<mode_arg_steiner_points_by_angle>(gengetopt_args_info const& args
 }
 
 template<>
-void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const& args) {
+void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
     auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
     input.close();
@@ -86,7 +86,7 @@ void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const& args) {
 }
 
 template<>
-void show_info<mode_arg_points_per_edge>(gengetopt_args_info const& args) {
+void show_info<mode_arg_points_per_edge>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
     auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
 
@@ -101,7 +101,7 @@ void show_info<mode_arg_points_per_edge>(gengetopt_args_info const& args) {
 }
 
 template<>
-void show_info<mode_arg_node_radii>(gengetopt_args_info const& args) {
+void show_info<mode_arg_node_radii>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
     auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
 
@@ -117,7 +117,7 @@ void show_info<mode_arg_node_radii>(gengetopt_args_info const& args) {
 
 
 template<>
-void show_info<mode_arg_inangle_distribution>(gengetopt_args_info const& args) {
+void show_info<mode_arg_inangle_distribution>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
 
     static constexpr int bin_count = 180;
@@ -193,7 +193,7 @@ void show_info<mode_arg_inangle_distribution>(gengetopt_args_info const& args) {
 }
 
 template<>
-void show_info<mode_arg_bounding_box>(gengetopt_args_info const& args) {
+void show_info<mode_arg_bounding_box>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
 
     std::size_t node_count, triangle_count;
@@ -208,8 +208,9 @@ void show_info<mode_arg_bounding_box>(gengetopt_args_info const& args) {
     auto [min_longitude, max_longitude] = std::ranges::minmax(coordinates, std::ranges::less{},
                                                               &coordinate_t::longitude);
 
-    std::cout << "latitude:  (" << min_latitude.latitude << max_latitude.latitude << "),\n"
-              << "longitude: (" << min_longitude.longitude << max_longitude.longitude << ")\n";
+    std::cout   << std::setprecision(20)
+                << "latitude:  (" << min_latitude.latitude << ", " << max_latitude.latitude << "),\n"
+                << "longitude: (" << min_longitude.longitude << ", " << max_longitude.longitude << ")\n";
 }
 
 
@@ -218,27 +219,28 @@ main(int argc, char *argv[]) {
     gengetopt_args_info args;
     cmdline_parser(argc, static_cast<char **>(argv), &args);
 
-    switch (args.mode_arg) {
-        case mode_arg_steiner_points_by_angle:
-            show_info<mode_arg_steiner_points_by_angle>(args);
-            break;
-        case mode_arg_steiner_graph_size:
-            show_info<mode_arg_steiner_graph_size>(args);
-            break;
-        case mode_arg_inangle_distribution:
-            show_info<mode_arg_inangle_distribution>(args);
-            break;
-        case mode_arg_points_per_edge:
-            show_info<mode_arg_points_per_edge>(args);
-            break;
-        case mode_arg_node_radii:
-            show_info<mode_arg_node_radii>(args);
-            break;
-        case mode_arg_bounding_box:
-            show_info<mode_arg_bounding_box>(args);
-            break;
-        case mode__NULL:
-            cmdline_parser_print_help();
-            break;
-    }
+    for (auto const& mode: std::span{args.mode_arg, args.mode_arg + args.mode_given})
+        switch (mode) {
+            case mode_arg_steiner_points_by_angle:
+                show_info<mode_arg_steiner_points_by_angle>(args);
+                break;
+            case mode_arg_steiner_graph_size:
+                show_info<mode_arg_steiner_graph_size>(args);
+                break;
+            case mode_arg_inangle_distribution:
+                show_info<mode_arg_inangle_distribution>(args);
+                break;
+            case mode_arg_points_per_edge:
+                show_info<mode_arg_points_per_edge>(args);
+                break;
+            case mode_arg_node_radii:
+                show_info<mode_arg_node_radii>(args);
+                break;
+            case mode_arg_bounding_box:
+                show_info<mode_arg_bounding_box>(args);
+                break;
+            case mode__NULL:
+                cmdline_parser_print_help();
+                break;
+        }
 }

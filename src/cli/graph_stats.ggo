@@ -7,9 +7,9 @@ args ""
 
 section "input/output files"
 option "graph-file" g "path to graph file (of type .fmi or .graph or .gl)" string typestr="FILE" required
-option "epsilon" e "epsilon for generation of steiner graph" string default="1.0"
+option "epsilon" e "epsilon for generation of steiner graph" string default="1.0" optional
 option "header" h "print csv header" flag on
 
 section "type of information"
-option "mode" m "the type of information" values="steiner_graph_size","bounding_box","inangle_distribution","node_radii","points_per_edge","steiner_points_by_angle" enum default="steiner_graph_size"
+option "mode" m "the type of information" values="steiner_graph_size","bounding_box","inangle_distribution","node_radii","points_per_edge","steiner_points_by_angle" enum default="steiner_graph_size" multiple
 
