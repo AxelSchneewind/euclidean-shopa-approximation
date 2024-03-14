@@ -40,6 +40,15 @@ endif (DOXYGEN_FOUND)
 # gengetopt
 find_program(GENGETOPT gengetopt)
 if (GENGETOPT)
+    add_custom_target(cmdline_graph_stats ALL
+            COMMAND cp src/cli/graph_stats.ggo ${CMAKE_BINARY_DIR}/graph_stats.ggo
+            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/graph_stats.ggo
+            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/graph_stats.ggo -F cmdline_graph_stats --output-dir=src/cli  #--set-version=${VERSION}
+            SOURCES src/cli/graph_stats.ggo
+            DEPENDS version
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            VERBATIM)
+
     add_custom_target(cmdline_route ALL
             COMMAND cp src/cli/route.ggo ${CMAKE_BINARY_DIR}/route.ggo
             COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/route.ggo
@@ -72,7 +81,7 @@ else (GENGETOPT)
 endif (GENGETOPT)
 
 
-set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall -Wextra -fopenmp") # -Wextra
+set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall -Wextra -Wpedantic -fopenmp") # -Wextra
 set(CMAKE_CXX_FLAGS_DEBUG "-g -fsanitize=address") # -D_GLIBCXX_DEBUG
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Ofast")
 
@@ -95,16 +104,17 @@ add_executable(make_bin src/make_bin.cpp)
 add_executable(route src/route.cpp src/cli/cmdline_route.c)
 
 add_executable(distance_one_to_all src/distance_one_to_all.cpp)
-add_executable(subdivision_stats src/subdivision_stats.cpp)
+add_executable(graph_stats src/graph_stats.cpp src/cli/cmdline_graph_stats.c)
 
 if (GENGETOPT)
     add_dependencies(route cmdline_route)
     add_dependencies(prune_graph cmdline_prune_graph)
     add_dependencies(find_nodes cmdline_find_nodes)
+    add_dependencies(graph_stats cmdline_graph_stats)
 endif(GENGETOPT)
 
 # installation
 set(CMAKE_INSTALL_PREFIX /opt/routing)
-install(TARGETS route subdivision_stats make_gl prune_graph project_graph find_nodes RUNTIME DESTINATION bin)
+install(TARGETS route graph_stats make_gl prune_graph project_graph find_nodes RUNTIME DESTINATION bin)
 
 include(CPack)
