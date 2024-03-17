@@ -80,6 +80,7 @@ def main():
     parser.add_argument('--file', '-f', required=True, action='append', help='path to the input file')
     parser.add_argument('--output-epsilon', '-e', default='stdout', help='path to the output file for statistics per epsilon')
     parser.add_argument('--output-queries', '-q', default='stdout', help='path to the output file for statistics per query')
+    parser.add_argument('--column', '-c', default='TIME', help='the column to summarize')
     args = parser.parse_args()
 
     # load data and filter out unusable results
@@ -93,18 +94,26 @@ def main():
 
     # by epsilon
     eps_file = args.output_epsilon if args.output_epsilon != 'stdout' else sys.stdout
-    print('epsilon,mean ratio,max ratio,mean time,max time', sep='', file=eps_file)
+    print('epsilon,count,mean,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=eps_file)
     for epsilon in data['EPSILON'].unique():
         by_epsilon = filter_epsilon(data, epsilon)
-        print(epsilon, by_epsilon['RATIO'].mean(), by_epsilon['RATIO'].max(), by_epsilon['TIME'].mean(), by_epsilon['TIME'].max(), sep=',', file=eps_file)
+        by_epsilon = by_epsilon[args.column]
+        print(epsilon, by_epsilon.count(), by_epsilon.mean(), by_epsilon.min(), by_epsilon.median(), by_epsilon.max(), by_epsilon.std(),
+              by_epsilon.quantile(0.01), by_epsilon.quantile(0.1), by_epsilon.quantile(0.25),
+              by_epsilon.quantile(0.75), by_epsilon.quantile(0.9), by_epsilon.quantile(0.99),
+              sep=',', file=eps_file)
 
     # info on each query
     q_file = args.output_queries if args.output_queries != 'stdout' else sys.stdout
-    print('from,to,mean ratio,max ratio,mean time,max time', sep='', file=q_file)
+    print('from,to,count,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=q_file)
     for s in data['FROM'].unique():
         for t in data[(data['FROM'] == s)]['TO'].unique():
             by_query = data[(data['FROM'] == s) & (data['TO'] == t)]
-            print(s,t, by_query['RATIO'].mean(), by_query['RATIO'].max(), by_query['TIME'].mean(), by_query['TIME'].max(), sep=',', file=q_file)
+            by_query = by_query[args.column]
+            print(s, t, by_query.count(), by_query.mean(), by_query.min(), by_query.median(), by_query.max(), by_query.std(),
+                by_query.quantile(0.01), by_query.quantile(0.1), by_query.quantile(0.25),
+                by_query.quantile(0.75), by_query.quantile(0.9), by_query.quantile(0.99),
+                sep=',', file=q_file)
 
     #
 
