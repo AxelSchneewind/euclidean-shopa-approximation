@@ -8,16 +8,16 @@ import math
 import argparse
 
 dtypes = {
-    'EPSILON': float,
-    'FROM': int,
-    'TO': int,
-    'NODE COUNT': int,
-    'EDGE COUNT': int,
-    'STORED NODE COUNT': int,
-    'STORED EDGE COUNT': int,
-    'TIME': float,
-    'COST': float,
-    'TREE SIZE': int,
+    'epsilon': float,
+    'from': int,
+    'to': int,
+    'node count': int,
+    'edge count': int,
+    'stored node count': int,
+    'stored edge count': int,
+    'time': float,
+    'cost': float,
+    'tree size': int,
 }
 
 converters = {
@@ -33,9 +33,9 @@ def load(files):
 
 
 def reference(data, row):
-    fr = row['FROM']
-    to = row['TO']
-    matches = data.loc[(data['EPSILON'] == 0.0) & (data['FROM'] == fr) & (data['TO'] == to)]
+    fr = row['from']
+    to = row['to']
+    matches = data.loc[(data['epsilon'] == 0.0) & (data['from'] == fr) & (data['to'] == to)]
     return matches
 
 
@@ -43,30 +43,30 @@ def add_optimal_cost(data):
     r = []
     for i, row in data.iterrows():
         ref = reference(data, row)
-        r = r + [ref['COST'].item()]
-    data['OPTIMAL COST'] = r
+        r = r + [ref['cost'].item()]
+    data['optimal cost'] = r
     return data
 
 
 def add_ratios(data):
-    data['RATIO'] = (data['COST'] / data['OPTIMAL COST'])
+    data['ratio'] = (data['cost'] / data['optimal cost'])
     return data
 
 
 def filter_epsilon(data, eps):
-    return data[data['EPSILON'] == eps]
+    return data[data['epsilon'] == eps]
 
 
 def exclude_epsilon(data, eps):
-    return data[data['EPSILON'] != eps]
+    return data[data['epsilon'] != eps]
 
 
 def filter(data):
-    invalid_cost = data.loc[(data['COST'] == math.inf) | (data['COST'] == math.nan)]
+    invalid_cost = data.loc[(data['cost'] == math.inf) | (data['cost'] == math.nan)]
     if len(invalid_cost) != 0:
         print('ignored by cost value: ', file=sys.stderr)
         print(invalid_cost, file=sys.stderr)
-    data = data.loc[(data['COST'] != math.inf) & (data['COST'] != math.nan)]
+    data = data.loc[(data['cost'] != math.inf) & (data['cost'] != math.nan)]
     has_reference = np.array([reference(data, row).shape[0] != 0 for i, row in data.iterrows()], dtype='bool')
     if len(has_reference[(has_reference == False)]) != 0:
         print('exact value missing for some queries', file=sys.stderr)
@@ -80,7 +80,7 @@ def main():
     parser.add_argument('--file', '-f', required=True, action='append', help='path to the input file')
     parser.add_argument('--output-epsilon', '-e', default='stdout', help='path to the output file for statistics per epsilon')
     parser.add_argument('--output-queries', '-q', default='stdout', help='path to the output file for statistics per query')
-    parser.add_argument('--column', '-c', default='TIME', help='the column to summarize')
+    parser.add_argument('--column', '-c', default='time', help='the column to summarize')
     args = parser.parse_args()
 
     # load data and filter out unusable results
@@ -95,7 +95,7 @@ def main():
     # by epsilon
     eps_file = args.output_epsilon if args.output_epsilon != 'stdout' else sys.stdout
     print('epsilon,count,mean,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=eps_file)
-    for epsilon in data['EPSILON'].unique():
+    for epsilon in data['epsilon'].unique():
         by_epsilon = filter_epsilon(data, epsilon)
         by_epsilon = by_epsilon[args.column]
         print(epsilon, by_epsilon.count(), by_epsilon.mean(), by_epsilon.min(), by_epsilon.median(), by_epsilon.max(), by_epsilon.std(),
@@ -106,9 +106,9 @@ def main():
     # info on each query
     q_file = args.output_queries if args.output_queries != 'stdout' else sys.stdout
     print('from,to,count,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=q_file)
-    for s in data['FROM'].unique():
-        for t in data[(data['FROM'] == s)]['TO'].unique():
-            by_query = data[(data['FROM'] == s) & (data['TO'] == t)]
+    for s in data['from'].unique():
+        for t in data[(data['from'] == s)]['to'].unique():
+            by_query = data[(data['from'] == s) & (data['to'] == t)]
             by_query = by_query[args.column]
             print(s, t, by_query.count(), by_query.mean(), by_query.min(), by_query.median(), by_query.max(), by_query.std(),
                 by_query.quantile(0.01), by_query.quantile(0.1), by_query.quantile(0.25),

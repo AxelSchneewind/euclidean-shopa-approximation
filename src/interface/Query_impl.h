@@ -26,7 +26,7 @@ ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImp
           _path(std_graph_t::make_graph(graph, graph.make_subgraph(router.route()))),
           _tree_forward(std_graph_t::make_graph(graph, router.shortest_path_tree(query.max_tree_size()))),
           _tree_backward(std_graph_t::make_graph(graph, router.shortest_path_tree(0))),
-          _nodes_visited(_tree_forward.node_count()),
+          _nodes_visited((_tree_forward.node_count() == 0) ? router.forward_search().pull_count() : _tree_forward.node_count()),
           _edges_visited(router.forward_search().edges_checked()),
           _pull_count(router.forward_search().pull_count()),
           _push_count(router.forward_search().push_count()),
