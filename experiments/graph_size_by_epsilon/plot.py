@@ -21,14 +21,18 @@ def plot(data, x_column, y_column):
     plt.scatter(x_values, y_values, marker='x', label=label)
 
 # make theoretical upper bound
-def plot_theory(data, x_column, graph):
-    label = 'rough estimate for $|V| + \\sum D(e)$ for {}'.format(graph)
+def plot_theory(data, x_column, graph, angle):
+    label = 'estimate for $|V_\\varepsilon| = |V| + \\sum D(e)$ for {}'.format(graph.replace('.graph',''))
 
     base_node_count = int(data[data['graph'] == graph]['stored node count'].iloc[0])
     base_edge_count = int(data[data['graph'] == graph]['stored edge count'].iloc[0])
 
     x_values = data[x_column].drop_duplicates().sort_values()
-    r = [base_node_count + 3 * base_edge_count + base_edge_count * 10/eps * max(1, math.log2(2/eps)) for eps in x_values]
+
+    # instance dependent factor
+    C = 2/math.sin(angle) * math.log2(25/math.sin(angle))  
+    # size by epsilon
+    r = [base_node_count + 3 * base_edge_count + base_edge_count * C * 1/eps * max(0, math.log2(2/eps)) for eps in x_values]
 
     plt.plot(x_values, r, label=label)
 
@@ -47,7 +51,7 @@ if __name__ == "__main__":
     for graph in data['graph'].drop_duplicates():
         d = data[data['graph'] == graph]
         plot(d, x, y)
-        plot_theory(d, x, graph)
+        plot_theory(d, x, graph, math.pi / 6)
 
 
     plt.xlabel(r'$\varepsilon$')

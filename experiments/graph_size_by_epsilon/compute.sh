@@ -2,6 +2,7 @@
 
 # specify paths to graph files here
 GRAPH_AEGS=/opt/routing/graphs/aegaeis/aegaeis-ref-new.graph
+GRAPH_AEGS_UNREF=/opt/routing/graphs/aegaeis/aegaeis-unref.graph
 GRAPH_PATA=/opt/routing/graphs/pata/pata-ref.graph
 GRAPH_MEDI=/opt/routing/graphs/medi/medi-ref.graph
 
@@ -9,7 +10,7 @@ GRAPH_MEDI=/opt/routing/graphs/medi/medi-ref.graph
 mkdir -p results
 rm -rf results/*
 
-# 
+# usage: compute path/to/graph-file.graph
 compute () {
 graph_name=$(basename "$1")
 graph_name=${graph_name%.graph}
@@ -19,8 +20,9 @@ eps=8.0
 echo -e -n "\rstep 0: graph_stats --mode steiner_graph_size -g $1 -e $eps >> results/results_${graph_name}.csv"
 graph_stats --mode steiner_graph_size -g "$1" -e "$eps" > results/results_${graph_name}.csv
 
-for i in {1..16};
+for i in {1..48};
 do
+  # halve epsilon
   eps=$(bc -l <<< "$eps / 2")
   # compute graph sizes
   echo -e -n "\rstep $i: graph_stats --mode graph -g $1 -e $eps >> results/results_${graph_name}.csv"
@@ -30,10 +32,10 @@ echo -e "                                           \rdone"
 }
 
 compute $GRAPH_AEGS
-compute $GRAPH_PATA
-compute $GRAPH_MEDI
-#
+compute $GRAPH_AEGS_UNREF
+# compute $GRAPH_PATA
+# compute $GRAPH_MEDI
 
+# combine results
 csvstack results/result_*.csv > results/results.csv
-
 csvlook results/results.csv
