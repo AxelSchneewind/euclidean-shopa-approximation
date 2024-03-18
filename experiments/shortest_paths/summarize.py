@@ -73,7 +73,7 @@ def filter(data):
     has_reference = np.array([reference(data, row).shape[0] != 0 for i, row in data.iterrows()], dtype='bool')
     if len(has_reference[(has_reference == False)]) != 0:
         print('exact value missing for some queries', file=sys.stderr)
-        print(has_reference[has_reference == False], file=sys.stderr)
+        print(data.loc[has_reference == False], file=sys.stderr)
     data = data.loc[has_reference]
 
     # check that coordinates of source and target coordinates match
@@ -84,7 +84,7 @@ def filter(data):
         and reference(data, row)['target longitude'] == row['target longitude'] for i,row in data.iterrows() ], dtype='bool')
     if len(coords_match[(coords_match == False)]) != 0:
         print('mismatch in source/target coordinates', file=sys.stderr)
-        print(coords_match[coords_match == False], file=sys.stderr)
+        print(data.loc[coords_match == False], file=sys.stderr)
     data = data.loc[coords_match]
 
     return data
