@@ -88,5 +88,5 @@ process_all_results() {
 
     cat "$OUTPUT_DIR"/results-*.csv > "$CSV_RESULTS"
     # remove headers
-    sed -e '1p;/,NODE.*/d' -i "$CSV_RESULTS"
+    sed -e '1p;/,node.*/d' -i "$CSV_RESULTS"
 }
