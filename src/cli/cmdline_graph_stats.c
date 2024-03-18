@@ -34,12 +34,12 @@ const char *gengetopt_args_info_versiontext = "";
 const char *gengetopt_args_info_description = "prints information about the given graph";
 
 const char *gengetopt_args_info_help[] = {
-  "      --help              Print help and exit",
+  "  -h, --help              Print help and exit",
   "  -V, --version           Print version and exit",
   "\ninput/output files:",
   "  -g, --graph-file=FILE   path to graph file (of type .fmi or .graph or .gl)",
   "  -e, --epsilon[=STRING]  epsilon for generation of steiner graph\n                            (default=`1.0')",
-  "  -h, --header            print csv header  (default=on)",
+  "      --no-header         do not print csv header  (default=on)",
   "\ntype of information:",
   "  -m, --mode=ENUM         the type of information  (possible\n                            values=\"steiner_graph_size\", \"bounding_box\",\n                            \"inangle_distribution\", \"node_radii\",\n                            \"points_per_edge\", \"steiner_points_by_angle\"\n                            default=`steiner_graph_size')",
     0
@@ -75,7 +75,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->version_given = 0 ;
   args_info->graph_file_given = 0 ;
   args_info->epsilon_given = 0 ;
-  args_info->header_given = 0 ;
+  args_info->no_header_given = 0 ;
   args_info->mode_given = 0 ;
 }
 
@@ -87,7 +87,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->graph_file_orig = NULL;
   args_info->epsilon_arg = gengetopt_strdup ("1.0");
   args_info->epsilon_orig = NULL;
-  args_info->header_flag = 1;
+  args_info->no_header_flag = 1;
   args_info->mode_arg = NULL;
   args_info->mode_orig = NULL;
   
@@ -102,7 +102,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->version_help = gengetopt_args_info_help[1] ;
   args_info->graph_file_help = gengetopt_args_info_help[3] ;
   args_info->epsilon_help = gengetopt_args_info_help[4] ;
-  args_info->header_help = gengetopt_args_info_help[5] ;
+  args_info->no_header_help = gengetopt_args_info_help[5] ;
   args_info->mode_help = gengetopt_args_info_help[7] ;
   args_info->mode_min = 0;
   args_info->mode_max = 0;
@@ -333,8 +333,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "graph-file", args_info->graph_file_orig, 0);
   if (args_info->epsilon_given)
     write_into_file(outfile, "epsilon", args_info->epsilon_orig, 0);
-  if (args_info->header_given)
-    write_into_file(outfile, "header", 0, 0 );
+  if (args_info->no_header_given)
+    write_into_file(outfile, "no-header", 0, 0 );
   write_multiple_into_file(outfile, args_info->mode_given, "mode", args_info->mode_orig, cmdline_parser_mode_values);
   
 
@@ -902,21 +902,26 @@ cmdline_parser_internal (
       int option_index = 0;
 
       static struct option long_options[] = {
-        { "help",	0, NULL, 0 },
+        { "help",	0, NULL, 'h' },
         { "version",	0, NULL, 'V' },
         { "graph-file",	1, NULL, 'g' },
         { "epsilon",	2, NULL, 'e' },
-        { "header",	0, NULL, 'h' },
+        { "no-header",	0, NULL, 0 },
         { "mode",	1, NULL, 'm' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "Vg:e::hm:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:e::m:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
       switch (c)
         {
+        case 'h':	/* Print help and exit.  */
+          cmdline_parser_print_help ();
+          cmdline_parser_free (&local_args_info);
+          exit (EXIT_SUCCESS);
+
         case 'V':	/* Print version and exit.  */
           cmdline_parser_print_version ();
           cmdline_parser_free (&local_args_info);
@@ -946,16 +951,6 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'h':	/* print csv header.  */
-        
-        
-          if (update_arg((void *)&(args_info->header_flag), 0, &(args_info->header_given),
-              &(local_args_info.header_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "header", 'h',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'm':	/* the type of information.  */
         
           if (update_multiple_arg_temp(&mode_list, 
@@ -967,12 +962,20 @@ cmdline_parser_internal (
           break;
 
         case 0:	/* Long option with no short option */
-          if (strcmp (long_options[option_index].name, "help") == 0) {
-            cmdline_parser_print_help ();
-            cmdline_parser_free (&local_args_info);
-            exit (EXIT_SUCCESS);
+          /* do not print csv header.  */
+          if (strcmp (long_options[option_index].name, "no-header") == 0)
+          {
+          
+          
+            if (update_arg((void *)&(args_info->no_header_flag), 0, &(args_info->no_header_given),
+                &(local_args_info.no_header_given), optarg, 0, 0, ARG_FLAG,
+                check_ambiguity, override, 1, 0, "no-header", '-',
+                additional_error))
+              goto failure;
+          
           }
-
+          
+          break;
         case '?':	/* Invalid option.  */
           /* `getopt_long' already printed an error message.  */
           goto failure;

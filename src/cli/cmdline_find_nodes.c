@@ -41,7 +41,7 @@ const char *gengetopt_args_info_help[] = {
   "  -o, --output-file=FILE  path to output file",
   "\nselect random:",
   "  -r, --pick-random=INT   number of nodes to pick randomly (from filtered\n                            nodes)",
-  "  -s, --seed=INT          seed for selecting random nodes  (default=`0xC0FFEE')",
+  "  -s, --seed[=INT]        seed for selecting random nodes  (default=`0xC0FFEE')",
   "\ncoordinates:",
   "  -x, --minX=DOUBLE       minimal x coordinate (or longitude) of nodes",
   "  -X, --maxX=DOUBLE       maximal x coordinate (or longitude) of nodes",
@@ -594,7 +594,7 @@ cmdline_parser_internal (
         { "graph-file",	1, NULL, 'g' },
         { "output-file",	1, NULL, 'o' },
         { "pick-random",	1, NULL, 'r' },
-        { "seed",	1, NULL, 's' },
+        { "seed",	2, NULL, 's' },
         { "minX",	1, NULL, 'x' },
         { "maxX",	1, NULL, 'X' },
         { "minY",	1, NULL, 'y' },
@@ -605,7 +605,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:o:r:s:x:X:y:Y:bc", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:o:r:s::x:X:y:Y:bc", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
