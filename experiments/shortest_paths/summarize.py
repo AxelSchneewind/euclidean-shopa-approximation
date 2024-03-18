@@ -9,8 +9,8 @@ import argparse
 
 dtypes = {
     'epsilon': float,
-    'from': int,
-    'to': int,
+    'source': int,
+    'target': int,
     'node count': int,
     'edge count': int,
     'stored node count': int,
@@ -33,9 +33,9 @@ def load(files):
 
 
 def reference(data, row):
-    fr = row['from']
-    to = row['to']
-    matches = data.loc[(data['epsilon'] == 0.0) & (data['from'] == fr) & (data['to'] == to)]
+    fr = row['source']
+    to = row['target']
+    matches = data.loc[(data['epsilon'] == 0.0) & (data['source'] == fr) & (data['target'] == to)]
     return matches
 
 
@@ -105,10 +105,10 @@ def main():
 
     # info on each query
     q_file = args.output_queries if args.output_queries != 'stdout' else sys.stdout
-    print('from,to,count,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=q_file)
-    for s in data['from'].unique():
-        for t in data[(data['from'] == s)]['to'].unique():
-            by_query = data[(data['from'] == s) & (data['to'] == t)]
+    print('source,target,count,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=q_file)
+    for s in data['source'].unique():
+        for t in data[(data['source'] == s)]['target'].unique():
+            by_query = data[(data['source'] == s) & (data['target'] == t)]
             by_query = by_query[args.column]
             print(s, t, by_query.count(), by_query.mean(), by_query.min(), by_query.median(), by_query.max(), by_query.std(),
                 by_query.quantile(0.01), by_query.quantile(0.1), by_query.quantile(0.25),

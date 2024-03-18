@@ -31,10 +31,14 @@ template<RoutableGraph GraphT>
 class QueryImplementation : public QueryInterface{
 private:
     using node_id_type = typename GraphT::node_id_type;
+    using coordinate_type = typename GraphT::coordinate_type;
     long _from;
     long _to;
     node_id_type _from_internal;
     node_id_type _to_internal;
+
+    coordinate_type _from_coordinates;
+    coordinate_type _to_coordinates;
 
     Graph _beeline;
     distance_t _beeline_distance;
@@ -61,14 +65,9 @@ public:
     void write(std::ostream& out) const override { out <<   "query:                                    " << _from << ',' << _to
                                                        << "\nbeeline distance:                         " << beeline_distance(); }
 
-    void write(table& out) const override {
-        out.put(Statistics::FROM, _from);
-        out.put(Statistics::FROM_INTERNAL, _from_internal);
-        out.put(Statistics::TO, _to);
-        out.put(Statistics::TO_INTERNAL, _to_internal);
-        out.put(Statistics::BEELINE_DISTANCE, beeline_distance());
-    }
+    void write(table& out) const override;
 };
+
 
 class Query : public Base<QueryInterface> {
 public:

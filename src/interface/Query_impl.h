@@ -7,6 +7,7 @@
 
 #include "../graph/graph.h"
 #include "Graph.h"
+#include <stdfloat>
 
 template<typename GraphT, typename RouterT>
 Result::Result(GraphT const &graph, QueryImplementation<GraphT> query, RouterT const &router,
@@ -63,19 +64,27 @@ std_graph_t make_beeline(GraphT const &graph, typename GraphT::node_id_type from
 
 template<RoutableGraph GraphT>
 QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to, RoutingConfiguration const& config)
-        : _from(from), _to(to)
-        , _from_internal(from), _to_internal(to),
-          _beeline(make_beeline(graph, _from_internal, _to_internal)),
-          _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates)),
-          _configuration(config) {};
+        : _from(from)
+        , _to(to)
+        , _from_internal(from)
+        , _to_internal(to)
+        , _from_coordinates(graph.node_coordinates(_from_internal))
+        , _to_coordinates(graph.node_coordinates(_to_internal))
+        , _beeline(make_beeline(graph, _from_internal, _to_internal))
+        , _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates))
+        , _configuration(config) {};
 
 template<>
 QueryImplementation<steiner_graph>::QueryImplementation(steiner_graph const &graph, long from, long to, RoutingConfiguration const& config)
-        : _from(from), _to(to), _from_internal(graph.from_base_node_id(from)),
-          _to_internal(graph.from_base_node_id(to)),
-          _beeline((!optional::is_none(to)) ? make_beeline(graph, _from_internal, _to_internal) : std_graph_t{}),
-          _beeline_distance((!optional::is_none(to)) ? distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates) : infinity<distance_t>),
-          _configuration(config) {};
+        : _from(from)
+        , _to(to)
+        , _from_internal(graph.from_base_node_id(from))
+        , _to_internal(graph.from_base_node_id(to))
+        , _from_coordinates(graph.node_coordinates(_from_internal))
+        , _to_coordinates(graph.node_coordinates(_to_internal))
+        , _beeline((!optional::is_none(to)) ? make_beeline(graph, _from_internal, _to_internal) : std_graph_t{})
+        , _beeline_distance((!optional::is_none(to)) ? distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates) : infinity<distance_t>)
+        , _configuration(config) {};
 
 template<RoutableGraph GraphT>
 QueryImplementation<GraphT>::QueryImplementation() : _from_internal{optional::none_value<node_id_type>},
@@ -83,6 +92,25 @@ QueryImplementation<GraphT>::QueryImplementation() : _from_internal{optional::no
                                                      _to{optional::none_value<long>} {}
 
 
+template<RoutableGraph GraphT>
+void QueryImplementation<GraphT>::write(table &out) const {
+    // node ids
+    out.put(Statistics::FROM, _from);
+    out.put(Statistics::TO, _to);
+
+    // internal (graph-type-specific) id representations
+    out.put(Statistics::FROM_INTERNAL, _from_internal);
+    out.put(Statistics::TO_INTERNAL, _to_internal);
+
+    // coordinates (cast to float to remove differences due to different input data precisions)
+    out.put(Statistics::FROM_LAT, static_cast<std::float16_t>(_from_coordinates.latitude));
+    out.put(Statistics::FROM_LON, static_cast<std::float16_t>(_from_coordinates.longitude));
+    out.put(Statistics::TO_LAT, static_cast<std::float16_t>(_to_coordinates.latitude));
+    out.put(Statistics::TO_LON, static_cast<std::float16_t>(_to_coordinates.longitude));
+
+    //
+    out.put(Statistics::BEELINE_DISTANCE, beeline_distance());
+}
 
 template<RoutableGraph GraphT>
 void ResultImplementation<GraphT>::write(table &out) const {
