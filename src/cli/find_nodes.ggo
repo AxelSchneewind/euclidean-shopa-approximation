@@ -11,7 +11,7 @@ option "output-file" o "path to output file" string typestr="FILE" optional
 
 section "select random"
 option "pick-random" r "number of nodes to pick randomly (from filtered nodes)" int optional
-option "seed" s "seed for selecting random nodes" int default="0xC0FFEE" dependon="pick-random" optional
+option "seed" s "seed for selecting random nodes" int default="0xC0FFEE" dependon="pick-random" optional argoptional
 
 section "coordinates"
 option "minX" x "minimal x coordinate (or longitude) of nodes" double optional
