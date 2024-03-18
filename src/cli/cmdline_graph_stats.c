@@ -39,7 +39,7 @@ const char *gengetopt_args_info_help[] = {
   "\ninput/output files:",
   "  -g, --graph-file=FILE   path to graph file (of type .fmi or .graph or .gl)",
   "  -e, --epsilon[=STRING]  epsilon for generation of steiner graph\n                            (default=`1.0')",
-  "      --no-header         do not print csv header  (default=on)",
+  "      --no-header         do not print csv header  (default=off)",
   "\ntype of information:",
   "  -m, --mode=ENUM         the type of information  (possible\n                            values=\"steiner_graph_size\", \"bounding_box\",\n                            \"inangle_distribution\", \"node_radii\",\n                            \"points_per_edge\", \"steiner_points_by_angle\"\n                            default=`steiner_graph_size')",
     0
@@ -87,7 +87,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->graph_file_orig = NULL;
   args_info->epsilon_arg = gengetopt_strdup ("1.0");
   args_info->epsilon_orig = NULL;
-  args_info->no_header_flag = 1;
+  args_info->no_header_flag = 0;
   args_info->mode_arg = NULL;
   args_info->mode_orig = NULL;
   

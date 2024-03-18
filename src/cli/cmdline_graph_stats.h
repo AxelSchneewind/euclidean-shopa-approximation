@@ -47,7 +47,7 @@ struct gengetopt_args_info
   char * epsilon_arg;	/**< @brief epsilon for generation of steiner graph (default='1.0').  */
   char * epsilon_orig;	/**< @brief epsilon for generation of steiner graph original value given at command line.  */
   const char *epsilon_help; /**< @brief epsilon for generation of steiner graph help description.  */
-  int no_header_flag;	/**< @brief do not print csv header (default=on).  */
+  int no_header_flag;	/**< @brief do not print csv header (default=off).  */
   const char *no_header_help; /**< @brief do not print csv header help description.  */
   enum enum_mode *mode_arg;	/**< @brief the type of information (default='steiner_graph_size').  */
   char ** mode_orig;	/**< @brief the type of information original value given at command line.  */

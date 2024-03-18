@@ -43,7 +43,7 @@ void show_info(gengetopt_args_info const &args);
 
 template<>
 void show_info<mode_arg_steiner_points_by_angle>(gengetopt_args_info const &args) {
-    if (args.header_flag)
+    if (!args.no_header_flag)
         std::cout << "epsilon,angle,number of points,points\n";
     int index = 0;
 
@@ -72,7 +72,7 @@ void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
     auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
     input.close();
-    if (args.header_flag)
+    if (!args.no_header_flag)
         std::cout
                 << "graph,epsilon,stored node count,stored edge count,stored boundary edge count,face count,node count,edge count\n";
     std::cout << parse_graph_name(args.graph_file_arg)
@@ -90,7 +90,7 @@ void show_info<mode_arg_points_per_edge>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
     auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
 
-    if (args.header_flag)
+    if (!args.no_header_flag)
         std::cout << "edge,nodes\n";
 
     for (size_t e = 0; e < graph.base_graph().edge_count(); ++e) {
@@ -105,7 +105,7 @@ void show_info<mode_arg_node_radii>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
     auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
 
-    if (args.header_flag)
+    if (!args.no_header_flag)
         std::cout << "edge,r1,r2\n";
 
     for (size_t e = 0; e < graph.base_graph().edge_count(); ++e) {
@@ -182,7 +182,7 @@ void show_info<mode_arg_inangle_distribution>(gengetopt_args_info const &args) {
 
     input.close();
 
-    if (args.header_flag)
+    if (!args.no_header_flag)
         std::cout << "angle,count\n";
 
     for (size_t index = 0; index < angle_count.size(); ++index) {
