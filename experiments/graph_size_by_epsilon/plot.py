@@ -1,6 +1,8 @@
 #!python3
 
 
+import matplotlib
+matplotlib.use("pgf")
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
@@ -8,7 +10,15 @@ import pandas as pd
 import sys
 import math
 
-plt.rcParams['text.usetex'] = True
+
+matplotlib.rcParams.update({
+    "pgf.texsystem": "xelatex",
+    "pgf.preamble": '',
+    'font.family': 'serif',
+    'text.usetex': True,
+    'pgf.rcfonts': False,
+})
+
 
 def read(file):
     return pd.read_csv(file)
@@ -61,5 +71,7 @@ if __name__ == "__main__":
     plt.xlim((plt.xlim()[1], plt.xlim()[0])) 
     plt.tight_layout() 
     plt.legend()
-    plt.show()
+    # plt.show()
+    plt.savefig('out.pgf')
+    plt.savefig('out.pdf')
 

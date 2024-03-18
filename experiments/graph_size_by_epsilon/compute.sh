@@ -20,7 +20,7 @@ eps=8.0
 echo -e -n "\rstep 0: graph_stats --mode steiner_graph_size -g $1 -e $eps >> results/results_${graph_name}.csv"
 graph_stats --mode steiner_graph_size -g "$1" -e "$eps" > results/results_${graph_name}.csv
 
-for i in {1..48};
+for i in {1..40};
 do
   # halve epsilon
   eps=$(bc -l <<< "$eps / 2")
@@ -37,5 +37,5 @@ compute $GRAPH_AEGS_UNREF
 # compute $GRAPH_MEDI
 
 # combine results
-csvstack results/result_*.csv > results/results.csv
+csvstack results/results_*.csv > results/results.csv
 csvlook results/results.csv
