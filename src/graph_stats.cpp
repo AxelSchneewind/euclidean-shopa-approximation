@@ -11,7 +11,7 @@
 
 // just to have the sizes somewhere and see when they change
 static_assert(steiner_graph::SIZE_PER_NODE == 24);
-static_assert(steiner_graph::SIZE_PER_EDGE == 64);
+static_assert(steiner_graph::SIZE_PER_EDGE == 56);
 
 static_assert(std_graph_t::SIZE_PER_NODE == 24);
 static_assert(std_graph_t::SIZE_PER_EDGE == 40);

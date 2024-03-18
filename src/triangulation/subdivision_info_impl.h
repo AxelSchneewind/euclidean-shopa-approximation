@@ -306,14 +306,18 @@ inline subdivision::steiner_index_type subdivision::index(const edge_id_t edge, 
     assert(relative >= 0 && relative <= 1);
 
     if (relative < info.mid_position) {
-        steiner_index_type const exponent = std::clamp(static_cast<steiner_index_type>(std::floor(std::log(relative / info.r_first) / info.base_first)), 0, info.mid_index - 2);
+        steiner_index_type const exponent = std::clamp( static_cast<steiner_index_type>(std::floor(std::log(relative / info.r_first) / info.base_first))
+                                                      , static_cast<steiner_index_type>(0)
+                                                      , static_cast<steiner_index_type>(info.mid_index - 2));
         steiner_index_type const index = exponent + 1;
         assert(index > 0 && index <= info.mid_index + 1 && index < info.node_count);
         return index;
     }
 
     relative = 1 - relative;
-    steiner_index_type const exponent = std::clamp(static_cast<steiner_index_type>(std::ceil(std::log(relative / info.r_second) / info.base_second)), 0, info.node_count - info.mid_index - 2);
+    steiner_index_type const exponent = std::clamp( static_cast<steiner_index_type>(std::ceil(std::log(relative / info.r_second) / info.base_second))
+                                                  , static_cast<steiner_index_type>(0)
+                                                  , static_cast<steiner_index_type>(info.node_count - info.mid_index - 2));
     assert(exponent >= 0 && exponent < info.node_count - 2);
     steiner_index_type const index = (info.node_count - 2) - exponent;
     assert(index >= 0 && index >= info.mid_index - 1 && index < info.node_count);

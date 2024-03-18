@@ -12,7 +12,7 @@
 
 class subdivision {
 public:
-    using steiner_index_type = int;
+    using steiner_index_type = short;
 
     struct subdivision_edge_info {
         // (1+ epsilon * sin(alpha)) for both sides of this edge
@@ -37,7 +37,7 @@ public:
     };
 
 private:
-    static constexpr size_t max_steiner_count_per_edge = std::numeric_limits<unsigned short>::max();
+    static constexpr size_t max_steiner_count_per_edge = std::numeric_limits<short>::max();
 
     // here, some lower bounds can be imposed to prevent numerical issues
     static constexpr long double min_r_value = 0x1p-6;
