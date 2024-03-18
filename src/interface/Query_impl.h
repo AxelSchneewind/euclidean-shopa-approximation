@@ -7,7 +7,6 @@
 
 #include "../graph/graph.h"
 #include "Graph.h"
-#include <stdfloat>
 
 template<typename GraphT, typename RouterT>
 Result::Result(GraphT const &graph, QueryImplementation<GraphT> query, RouterT const &router,
@@ -102,11 +101,21 @@ void QueryImplementation<GraphT>::write(table &out) const {
     out.put(Statistics::FROM_INTERNAL, _from_internal);
     out.put(Statistics::TO_INTERNAL, _to_internal);
 
-    // coordinates (cast to float to remove differences due to different input data precisions)
-    out.put(Statistics::FROM_LAT, static_cast<std::float16_t>(_from_coordinates.latitude));
-    out.put(Statistics::FROM_LON, static_cast<std::float16_t>(_from_coordinates.longitude));
-    out.put(Statistics::TO_LAT, static_cast<std::float16_t>(_to_coordinates.latitude));
-    out.put(Statistics::TO_LON, static_cast<std::float16_t>(_to_coordinates.longitude));
+    // coordinates (with low precision to remove differences due to different input precisions)
+    int precision = 4;
+    std::stringstream src_lat;
+    src_lat << std::setprecision(precision) << _from_coordinates.latitude;
+    std::stringstream src_lon;
+    src_lon << std::setprecision(precision) << _from_coordinates.longitude;
+    std::stringstream tgt_lat;
+    tgt_lat << std::setprecision(precision) << _to_coordinates.latitude;
+    std::stringstream tgt_lon;
+    tgt_lon << std::setprecision(precision) << _to_coordinates.longitude;
+
+    out.put(Statistics::FROM_LAT, src_lat.str());
+    out.put(Statistics::FROM_LON, src_lon.str());
+    out.put(Statistics::TO_LAT, tgt_lat.str());
+    out.put(Statistics::TO_LON, tgt_lon.str());
 
     //
     out.put(Statistics::BEELINE_DISTANCE, beeline_distance());

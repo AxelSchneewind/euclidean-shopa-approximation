@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(routing)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 # set(CMAKE_CXX_COMPILER /home/axel/software/aocc-compiler-4.2.0/bin/clang++)
 set(CMAKE_CXX_COMPILER g++)
 
