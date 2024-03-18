@@ -17,6 +17,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
                                         const std::vector<node_t> &nodes,
                                         const polyhedron<adjacency_list<int>, 3> &polyhedron,
                                         const std::vector<double> &r_values, double epsilon) {
+    size_t edges_capped = 0;
+
     // store subdivision information here
     std::vector<subdivision_edge_info> result;
     result.resize(triangulation.edge_count());
@@ -81,6 +83,11 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         assert(r_second * std::pow(min_base_second, max_steiner_count_per_edge) >= 1.0);
         long double const base_first = std::clamp(1.0l + epsilon * std::sin(angle1), min_base_first, 10.0l);
         long double const base_second = std::clamp(1.0l + epsilon * std::sin(angle2), min_base_second, 10.0l);
+        if (base_first == min_base_first || base_second == min_base_second) {
+            edges_capped++;
+            std::cerr << "number of points on edge " << i << " is bounded by index datatype\n";
+        }
+
 
         // get interval in first half that is between r and mid_value
         size_t left_count;

@@ -14,13 +14,6 @@ class subdivision {
 public:
     using steiner_index_type = int;
 
-private:
-    static constexpr size_t max_steiner_count_per_edge = std::numeric_limits<unsigned short>::max() / 2;
-
-    // here, some lower bounds can be imposed to prevent numerical issues
-    static constexpr long double min_r_value = 0x1p-6;
-
-public:
     struct subdivision_edge_info {
         // (1+ epsilon * sin(alpha)) for both sides of this edge
         double base_first;
@@ -43,8 +36,17 @@ public:
         bool operator==(const subdivision_edge_info &other) const = default;
     };
 
+private:
+    static constexpr size_t max_steiner_count_per_edge = std::numeric_limits<unsigned short>::max();
+
+    // here, some lower bounds can be imposed to prevent numerical issues
+    static constexpr long double min_r_value = 0x1p-6;
+
     std::vector<subdivision_edge_info> edges;
 
+    size_t edges_capped{0};
+
+public:
     static constexpr std::size_t SIZE_PER_NODE = 0;
     static constexpr std::size_t SIZE_PER_EDGE = sizeof(subdivision_edge_info);
 
