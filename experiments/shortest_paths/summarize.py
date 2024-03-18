@@ -11,6 +11,10 @@ dtypes = {
     'epsilon': float,
     'source': int,
     'target': int,
+    'source latitude': float,
+    'source longitude': float,
+    'target latitude': float,
+    'target longitude': float,
     'node count': int,
     'edge count': int,
     'stored node count': int,
@@ -70,18 +74,18 @@ def filter(data):
     data = data.loc[(data['cost'] != math.inf) & (data['cost'] != math.nan)]
 
     # check that exact value exists
-    has_reference = np.array([reference(data, row).shape[0] != 0 for i, row in data.iterrows()], dtype='bool')
-    if len(has_reference[(has_reference == False)]) != 0:
-        print('exact value missing for some queries', file=sys.stderr)
-        print(data.loc[has_reference == False], file=sys.stderr)
-    data = data.loc[has_reference]
+    # has_reference = np.array([reference(data, row).shape[0] != 0 for i, row in data.iterrows()], dtype='bool')
+    # if len(has_reference[(has_reference == False)]) != 0:
+    #     print('exact value missing for some queries', file=sys.stderr)
+    #     print(data.loc[has_reference == False], file=sys.stderr)
+    # data = data.loc[has_reference]
 
     # check that coordinates of source and target coordinates match
     coords_match = np.array([
-        reference(data, row)['source latitude'] == row['source latitude']
-        and reference(data, row)['source longitude'] == row['source longitude']
-        and reference(data, row)['target latitude'] == row['target latitude']
-        and reference(data, row)['target longitude'] == row['target longitude'] for i,row in data.iterrows() ], dtype='bool')
+        (reference(data, row)['source latitude'] == row['source latitude'])
+        & (reference(data, row)['source longitude'] == row['source longitude'])
+        & (reference(data, row)['target latitude'] == row['target latitude'])
+        & (reference(data, row)['target longitude'] == row['target longitude']).all() for i,row in data.iterrows() ], dtype='bool')
     if len(coords_match[(coords_match == False)]) != 0:
         print('mismatch in source/target coordinates', file=sys.stderr)
         print(data.loc[coords_match == False], file=sys.stderr)
@@ -105,7 +109,6 @@ def main():
     # derive new columns from existing ones
     data = add_optimal_cost(data)
     data = add_ratios(data)
-
 
     # by epsilon
     eps_file = args.output_epsilon if args.output_epsilon != 'stdout' else sys.stdout
