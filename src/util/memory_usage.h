@@ -27,3 +27,9 @@ void process_mem_usage(double& vm_usage, double& resident_set)
     vm_usage = vsize / 1024.0;
     resident_set = rss * page_size_kb;
 }
+
+double memory_usage_kilo_bytes () {
+    double vm, res;
+    process_mem_usage(vm, res);
+    return vm;
+}

@@ -44,11 +44,14 @@ struct gengetopt_args_info
   char * graph_file_arg;	/**< @brief path to graph file (of type .fmi or .graph or .gl).  */
   char * graph_file_orig;	/**< @brief path to graph file (of type .fmi or .graph or .gl) original value given at command line.  */
   const char *graph_file_help; /**< @brief path to graph file (of type .fmi or .graph or .gl) help description.  */
+  int no_header_flag;	/**< @brief do not print csv header (default=off).  */
+  const char *no_header_help; /**< @brief do not print csv header help description.  */
   char * epsilon_arg;	/**< @brief epsilon for generation of steiner graph (default='1.0').  */
   char * epsilon_orig;	/**< @brief epsilon for generation of steiner graph original value given at command line.  */
   const char *epsilon_help; /**< @brief epsilon for generation of steiner graph help description.  */
-  int no_header_flag;	/**< @brief do not print csv header (default=off).  */
-  const char *no_header_help; /**< @brief do not print csv header help description.  */
+  int bins_arg;	/**< @brief number of bins for distributions (default='200').  */
+  char * bins_orig;	/**< @brief number of bins for distributions original value given at command line.  */
+  const char *bins_help; /**< @brief number of bins for distributions help description.  */
   enum enum_mode *mode_arg;	/**< @brief the type of information (default='steiner_graph_size').  */
   char ** mode_orig;	/**< @brief the type of information original value given at command line.  */
   unsigned int mode_min; /**< @brief the type of information's minimum occurreces */
@@ -58,8 +61,9 @@ struct gengetopt_args_info
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int graph_file_given ;	/**< @brief Whether graph-file was given.  */
-  unsigned int epsilon_given ;	/**< @brief Whether epsilon was given.  */
   unsigned int no_header_given ;	/**< @brief Whether no-header was given.  */
+  unsigned int epsilon_given ;	/**< @brief Whether epsilon was given.  */
+  unsigned int bins_given ;	/**< @brief Whether bins was given.  */
   unsigned int mode_given ;	/**< @brief Whether mode was given.  */
 
 } ;

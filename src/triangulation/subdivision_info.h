@@ -36,8 +36,8 @@ public:
         bool operator==(const subdivision_edge_info &other) const = default;
     };
 
-private:
     static constexpr size_t max_steiner_count_per_edge = std::numeric_limits<short>::max();
+private:
 
     // here, some lower bounds can be imposed to prevent numerical issues
     static constexpr long double min_r_value = 0x1p-6;

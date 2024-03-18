@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iomanip>
 #include "cli/cmdline_graph_stats.h"
+#include "util/memory_usage.h"
 
 
 // just to have the sizes somewhere and see when they change
@@ -47,9 +48,9 @@ void show_info<mode_arg_steiner_points_by_angle>(gengetopt_args_info const &args
         std::cout << "epsilon,angle,number of points,points\n";
     int index = 0;
 
-    const double min_inner_angle = M_PI / 720; // 1/4º
+    const double min_inner_angle = std::numbers::pi / 720; // 1/4º
     const double min_r_value = std::sin(min_inner_angle) *
-                               (1 / (1 + std::sin(min_inner_angle) / std::sin(M_PI - min_inner_angle)));
+                               (1 / (1 + std::sin(min_inner_angle) / std::sin(std::numbers::pi - min_inner_angle)));
     auto const table = subdivision_table::precompute(parse_float_or_fraction(args.epsilon_arg), min_r_value);
 
     for (auto const &triangle_class: table) {
@@ -74,7 +75,7 @@ void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
     input.close();
     if (!args.no_header_flag)
         std::cout
-                << "graph,epsilon,stored node count,stored edge count,stored boundary edge count,face count,node count,edge count\n";
+                << "graph,epsilon,stored node count,stored edge count,stored boundary edge count,face count,node count,edge count,memory usage\n";
     std::cout << parse_graph_name(args.graph_file_arg)
               << ',' << args.epsilon_arg
               << ',' << graph.base_graph().node_count()
@@ -82,7 +83,8 @@ void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
               << ',' << graph.base_polyhedron().boundary_edge_count()
               << ',' << graph.base_polyhedron().face_count()
               << ',' << graph.node_count()
-              << ',' << graph.edge_count() << '\n';
+              << ',' << graph.edge_count()
+              << ',' << memory_usage_kilo_bytes() << '\n';
 }
 
 template<>
@@ -90,12 +92,21 @@ void show_info<mode_arg_points_per_edge>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
     auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
 
-    if (!args.no_header_flag)
-        std::cout << "edge,nodes\n";
+    // set up bins
+    static constexpr size_t max_size  = subdivision::max_steiner_count_per_edge;
+    std::vector<std::size_t> count(args.bins_arg, 0);
 
     for (size_t e = 0; e < graph.base_graph().edge_count(); ++e) {
         auto &&steiner_info = graph.steiner_info(e);
-        std::cout << e << ',' << steiner_info.node_count << '\n';
+        size_t bin = std::floor((std::log2(steiner_info.node_count) * args.bins_arg) / max_size);
+        count[bin]++;
+    }
+
+    if (!args.no_header_flag)
+        std::cout << "log(number of points),number of edges\n";
+
+    for (int b = 0; b < args.bins_arg; ++b) {
+        std::cout << b << ',' << count[b] << '\n';
     }
     std::cout << std::flush;
 }
@@ -120,11 +131,10 @@ template<>
 void show_info<mode_arg_inangle_distribution>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
 
-    static constexpr int bin_count = 180;
-    static constexpr double step_size = M_PI / (bin_count - 1);
-    double min_angle = M_PI;
+    double step_size = std::numbers::pi / (args.bins_arg - 1);
+    double min_angle = std::numbers::pi;
     double max_angle = 0.0;
-    std::vector<std::size_t> angle_count(bin_count, 0);
+    std::vector<std::size_t> angle_count(args.bins_arg, 0);
 
     std::size_t node_count, triangle_count;
     input >> node_count >> triangle_count;

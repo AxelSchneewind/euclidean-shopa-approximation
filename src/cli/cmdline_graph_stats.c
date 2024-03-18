@@ -34,20 +34,22 @@ const char *gengetopt_args_info_versiontext = "";
 const char *gengetopt_args_info_description = "prints information about the given graph";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help              Print help and exit",
-  "  -V, --version           Print version and exit",
+  "  -h, --help             Print help and exit",
+  "  -V, --version          Print version and exit",
   "\ninput/output files:",
-  "  -g, --graph-file=FILE   path to graph file (of type .fmi or .graph or .gl)",
-  "  -e, --epsilon[=STRING]  epsilon for generation of steiner graph\n                            (default=`1.0')",
-  "      --no-header         do not print csv header  (default=off)",
+  "  -g, --graph-file=FILE  path to graph file (of type .fmi or .graph or .gl)",
+  "      --no-header        do not print csv header  (default=off)",
+  "  -e, --epsilon=STRING   epsilon for generation of steiner graph\n                           (default=`1.0')",
   "\ntype of information:",
-  "  -m, --mode=ENUM         the type of information  (possible\n                            values=\"steiner_graph_size\", \"bounding_box\",\n                            \"inangle_distribution\", \"node_radii\",\n                            \"points_per_edge\", \"steiner_points_by_angle\"\n                            default=`steiner_graph_size')",
+  "  -b, --bins=INT         number of bins for distributions  (default=`200')",
+  "  -m, --mode=ENUM        the type of information  (possible\n                           values=\"steiner_graph_size\", \"bounding_box\",\n                           \"inangle_distribution\", \"node_radii\",\n                           \"points_per_edge\", \"steiner_points_by_angle\"\n                           default=`steiner_graph_size')",
     0
 };
 
 typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
+  , ARG_INT
   , ARG_ENUM
 } cmdline_parser_arg_type;
 
@@ -74,8 +76,9 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->help_given = 0 ;
   args_info->version_given = 0 ;
   args_info->graph_file_given = 0 ;
-  args_info->epsilon_given = 0 ;
   args_info->no_header_given = 0 ;
+  args_info->epsilon_given = 0 ;
+  args_info->bins_given = 0 ;
   args_info->mode_given = 0 ;
 }
 
@@ -85,9 +88,11 @@ void clear_args (struct gengetopt_args_info *args_info)
   FIX_UNUSED (args_info);
   args_info->graph_file_arg = NULL;
   args_info->graph_file_orig = NULL;
+  args_info->no_header_flag = 0;
   args_info->epsilon_arg = gengetopt_strdup ("1.0");
   args_info->epsilon_orig = NULL;
-  args_info->no_header_flag = 0;
+  args_info->bins_arg = 200;
+  args_info->bins_orig = NULL;
   args_info->mode_arg = NULL;
   args_info->mode_orig = NULL;
   
@@ -101,9 +106,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
   args_info->graph_file_help = gengetopt_args_info_help[3] ;
-  args_info->epsilon_help = gengetopt_args_info_help[4] ;
-  args_info->no_header_help = gengetopt_args_info_help[5] ;
-  args_info->mode_help = gengetopt_args_info_help[7] ;
+  args_info->no_header_help = gengetopt_args_info_help[4] ;
+  args_info->epsilon_help = gengetopt_args_info_help[5] ;
+  args_info->bins_help = gengetopt_args_info_help[7] ;
+  args_info->mode_help = gengetopt_args_info_help[8] ;
   args_info->mode_min = 0;
   args_info->mode_max = 0;
   
@@ -244,6 +250,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->graph_file_orig));
   free_string_field (&(args_info->epsilon_arg));
   free_string_field (&(args_info->epsilon_orig));
+  free_string_field (&(args_info->bins_orig));
   free_multiple_field (args_info->mode_given, (void *)(args_info->mode_arg), &(args_info->mode_orig));
   args_info->mode_arg = 0;
   
@@ -331,10 +338,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "version", 0, 0 );
   if (args_info->graph_file_given)
     write_into_file(outfile, "graph-file", args_info->graph_file_orig, 0);
-  if (args_info->epsilon_given)
-    write_into_file(outfile, "epsilon", args_info->epsilon_orig, 0);
   if (args_info->no_header_given)
     write_into_file(outfile, "no-header", 0, 0 );
+  if (args_info->epsilon_given)
+    write_into_file(outfile, "epsilon", args_info->epsilon_orig, 0);
+  if (args_info->bins_given)
+    write_into_file(outfile, "bins", args_info->bins_orig, 0);
   write_multiple_into_file(outfile, args_info->mode_given, "mode", args_info->mode_orig, cmdline_parser_mode_values);
   
 
@@ -688,6 +697,9 @@ int update_arg(void *field, char **orig_field,
   case ARG_FLAG:
     *((int *)field) = !*((int *)field);
     break;
+  case ARG_INT:
+    if (val) *((int *)field) = strtol (val, &stop_char, 0);
+    break;
   case ARG_ENUM:
     if (val) *((int *)field) = found;
     break;
@@ -703,8 +715,18 @@ int update_arg(void *field, char **orig_field,
     break;
   };
 
-	FIX_UNUSED(stop_char);
-	
+  /* check numeric conversion */
+  switch(arg_type) {
+  case ARG_INT:
+    if (val && !(stop_char && *stop_char == '\0')) {
+      fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
+      return 1; /* failure */
+    }
+    break;
+  default:
+    ;
+  };
+
   /* store the original value */
   switch(arg_type) {
   case ARG_NO:
@@ -808,6 +830,7 @@ void update_multiple_arg(void *field, char ***orig_field,
     *orig_field = (char **) realloc (*orig_field, (field_given + prev_given) * sizeof (char *));
 
     switch(arg_type) {
+    case ARG_INT:
     case ARG_ENUM:
       *((int **)field) = (int *)realloc (*((int **)field), (field_given + prev_given) * sizeof (int)); break;
     case ARG_STRING:
@@ -821,6 +844,8 @@ void update_multiple_arg(void *field, char ***orig_field,
         tmp = list;
         
         switch(arg_type) {
+        case ARG_INT:
+          (*((int **)field))[i + field_given] = tmp->arg.int_arg; break;
         case ARG_ENUM:
           (*((int **)field))[i + field_given] = tmp->arg.int_arg; break;
         case ARG_STRING:
@@ -835,6 +860,7 @@ void update_multiple_arg(void *field, char ***orig_field,
   } else { /* set the default value */
     if (default_value && ! field_given) {
       switch(arg_type) {
+      case ARG_INT:
       case ARG_ENUM:
         if (! *((int **)field)) {
           *((int **)field) = (int *)malloc (sizeof (int));
@@ -905,13 +931,14 @@ cmdline_parser_internal (
         { "help",	0, NULL, 'h' },
         { "version",	0, NULL, 'V' },
         { "graph-file",	1, NULL, 'g' },
-        { "epsilon",	2, NULL, 'e' },
         { "no-header",	0, NULL, 0 },
+        { "epsilon",	1, NULL, 'e' },
+        { "bins",	1, NULL, 'b' },
         { "mode",	1, NULL, 'm' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:e::m:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:e:b:m:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -947,6 +974,18 @@ cmdline_parser_internal (
               &(local_args_info.epsilon_given), optarg, 0, "1.0", ARG_STRING,
               check_ambiguity, override, 0, 0,
               "epsilon", 'e',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'b':	/* number of bins for distributions.  */
+        
+        
+          if (update_arg( (void *)&(args_info->bins_arg), 
+               &(args_info->bins_orig), &(args_info->bins_given),
+              &(local_args_info.bins_given), optarg, 0, "200", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "bins", 'b',
               additional_error))
             goto failure;
         
