@@ -149,8 +149,8 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 void
 dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
-    static std::vector<node_cost_pair_type> node_cost_pairs;
-    static std::vector<coordinate_t > coordinates;
+    static std::vector<node_cost_pair_type> node_cost_pairs(128);
+    static std::vector<coordinate_t > coordinates(128);
     node_cost_pairs.clear();
     coordinates.clear();
 
