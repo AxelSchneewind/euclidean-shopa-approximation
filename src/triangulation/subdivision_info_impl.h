@@ -77,8 +77,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         long double const r_second = std::clamp(factor * (r_values[node2] / length), min_r_value, 1.0l);
 
         // the base for computing relative node positions
-        long double min_base_first = std::pow(r_first, -2.0 / max_steiner_count_per_edge);
-        long double min_base_second = std::pow(r_second, -2.0 / max_steiner_count_per_edge);
+        long double min_base_first = std::pow(r_first, -1.0 / (max_steiner_count_per_edge / 2));
+        long double min_base_second = std::pow(r_second, -1.0 / (max_steiner_count_per_edge / 2));
         assert(r_first * std::pow(min_base_first, max_steiner_count_per_edge) >= 1.0);
         assert(r_second * std::pow(min_base_second, max_steiner_count_per_edge) >= 1.0);
         long double const base_first = std::clamp(1.0l + epsilon * std::sin(angle1), min_base_first, 10.0l);
