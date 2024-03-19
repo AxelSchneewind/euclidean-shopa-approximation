@@ -45,6 +45,7 @@ private:
 
     node_id_type _source;
     coordinate_t _source_coordinate;
+    coordinate_t _direction;
 
     bool _first_call{true};
 
@@ -65,7 +66,11 @@ private:
 
     template<typename NodeCostPair>
     [[using gnu : hot]]
-    void insert(node_id_type neighbor, NodeCostPair current, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out) const;
+    void insert(node_id_type const& neighbor, coordinate_t const& neighbor_coordinate, NodeCostPair const& current, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out) const;
+
+    template<typename NodeCostPair>
+    [[using gnu : hot]]
+    void insert(node_id_type const& neighbor, NodeCostPair const& current, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out) const;
 
     template<typename NodeCostPair>
     [[gnu::hot]]
@@ -106,7 +111,6 @@ private:
     template<typename NodeCostPair>
     void epsilon_spanner(NodeCostPair const &node,
                          base_edge_id_type const &edge_id, coordinate_t::component_type const &max_angle_cos,
-                         coordinate_t const &direction,
                          std::vector<NodeCostPair> &out, std::vector<coordinate_t> &out_coordinates);
 
     template<typename NodeCostPair>
@@ -133,7 +137,7 @@ private:
 public:
     steiner_neighbors(std::shared_ptr<Graph> graph, std::shared_ptr<Labels> labels)
             : _graph(std::move(graph)), _labels(std::move(labels)),
-              _spanner_angle{std::clamp(std::numbers::pi * _graph->epsilon(), 0.0, std::numbers::pi_v<coordinate_t::component_type>)},
+              _spanner_angle{std::clamp(std::numbers::pi * _graph->epsilon() / 2, 0.0, std::numbers::pi_v<coordinate_t::component_type> / 2)},
               _spanner_angle_cos{std::cos(_spanner_angle)},
               _spanner_angle_sin{std::sin(_spanner_angle)},
               _max_angle{std::clamp(std::numbers::pi / 2 * _graph->epsilon(), std::numeric_limits<coordinate_t::component_type>::min(), std::numbers::pi / 4)}
@@ -149,7 +153,6 @@ public:
     steiner_neighbors &operator=(steiner_neighbors &&) noexcept = default;
 
     template<typename NodeCostPair>
-    [[gnu::hot]]
     void operator()(NodeCostPair const &node, std::vector<NodeCostPair> &out);
 
     template<typename NodeCostPair>
