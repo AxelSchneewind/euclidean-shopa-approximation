@@ -33,7 +33,6 @@ main(int argc, char *argv[]) {
     config.bidirectional = false;
     config.use_a_star = arguments.astar_flag;
     config.live_status = arguments.live_status_flag;
-    config.min_angle_neighbor_method;
     switch (arguments.neighbor_finding_arg) {
         case neighbor_finding_arg_linear:
             config.min_angle_neighbor_method = RoutingConfiguration::LINALG;
