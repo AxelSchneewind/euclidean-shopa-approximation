@@ -18,11 +18,11 @@ def main():
 
     # load data and filter out unusable results
     data = s.load(args.file)
-    #data = s.filter(data)
+    data = s.filter(data)
 
     # derive new columns from existing ones
-    #data = s.add_optimal_cost(data)
-    #data = s.add_ratios(data)
+    data = s.add_optimal_cost(data)
+    data = s.add_ratios(data)
 
     # by epsilon
     columns_by_epsilon = [ data[data['epsilon'] == eps][args.column] for eps in data['epsilon'].unique() ]
