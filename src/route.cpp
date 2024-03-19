@@ -33,7 +33,22 @@ main(int argc, char *argv[]) {
     config.bidirectional = false;
     config.use_a_star = arguments.astar_flag;
     config.live_status = arguments.live_status_flag;
-    config.min_angle_neighbor_method = RoutingConfiguration::LINALG;
+    config.min_angle_neighbor_method;
+    switch (arguments.neighbor_finding_arg) {
+        case neighbor_finding_arg_linear:
+            config.min_angle_neighbor_method = RoutingConfiguration::LINALG;
+            break;
+        case neighbor_finding_arg_trigonometry:
+            config.min_angle_neighbor_method = RoutingConfiguration::ATAN2;
+            break;
+        case neighbor_finding_arg_binary:
+            config.min_angle_neighbor_method = RoutingConfiguration::BINSEARCH;
+            break;
+        case neighbor_finding__NULL:
+            config.min_angle_neighbor_method = RoutingConfiguration::LINALG;
+            break;
+    }
+
     config.tree_size = (arguments.tree_given) ? arguments.tree_arg : 0;
 
     // read graph
