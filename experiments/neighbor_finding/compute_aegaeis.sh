@@ -31,7 +31,7 @@ fi
 ############################ refined graph using triangle (Shewchuk) ############################
 # refined graph (triangle) with steiner points
 if [ ! -d "$OUTPUT_DIR/ref-binary" ]; then
-	EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02")
+	EPSILONS=("1.0" "0.5" "0.2") # "0.1" "0.05" "0.02")
 	for eps in "${EPSILONS[@]}"; do
 	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-linear" "$QUERY_FILE" "$eps" --neighbor-finding=linear
 	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-trigon" "$QUERY_FILE" "$eps" --neighbor-finding=trigonometry
