@@ -7,6 +7,10 @@ set(CMAKE_CXX_COMPILER g++)
 
 include_directories(include)
 
+set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall -Wextra -Wpedantic -fopenmp") # -Wextra
+set(CMAKE_CXX_FLAGS_DEBUG "-g") # -D_GLIBCXX_DEBUG -fsanitize=address
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Ofast")
+
 
 # make file containing a version name
 add_custom_target(version
@@ -81,11 +85,7 @@ else (GENGETOPT)
 endif (GENGETOPT)
 
 
-set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall -Wextra -Wpedantic -fopenmp") # -Wextra
-set(CMAKE_CXX_FLAGS_DEBUG "-g -fsanitize=address") # -D_GLIBCXX_DEBUG
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Ofast")
-
-# 
+#
 add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
 add_executable(find_nodes src/find_nodes.cpp src/cli/cmdline_find_nodes.c)
 
