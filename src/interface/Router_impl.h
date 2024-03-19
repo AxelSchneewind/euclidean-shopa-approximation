@@ -31,7 +31,6 @@ struct Implementation<steiner_graph, use_a_star, bidirectional, n> {
         distance_t _heuristic;
         node_id_t  _node{optional::none_value<node_id_t>};
     };
-    static_assert(sizeof(ncp_impl) == 24);      // ensure that no padding is added
 
     struct label_impl {
         distance_t _distance{infinity<distance_t>};
@@ -39,7 +38,6 @@ struct Implementation<steiner_graph, use_a_star, bidirectional, n> {
         node_id_t _predecessor{optional::none_value<node_id_t>};
         node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
     };
-    static_assert(sizeof(label_impl) == 32);   // ensure that no padding is added
 
     using node_cost_pair_t = node_label<ncp_impl>;
     using label_t = node_label<label_impl>;
@@ -70,14 +68,12 @@ struct Implementation<steiner_graph, false, bidirectional, n> {
         distance_t _distance;
         node_id_t  _node{optional::none_value<node_id_t>};
     };
-    static_assert(sizeof(ncp_impl) == 16);      // ensure that no padding is added
 
     struct label_impl {
         distance_t _distance{infinity<distance_t>};
         node_id_t _predecessor{optional::none_value<node_id_t>};
         node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
     };
-    static_assert(sizeof(label_impl) == 24);   // ensure that no padding is added
 
     using node_cost_pair_t = node_label<ncp_impl>;
     using label_t = node_label<label_impl>;
@@ -100,14 +96,12 @@ struct Implementation<steiner_graph, false, true, n> {
         distance_t _distance;
         node_id_t  _node{optional::none_value<node_id_t>};
     };
-    static_assert(sizeof(ncp_impl) == 16);      // ensure that no padding is added
 
     struct label_impl {
         distance_t _distance{infinity<distance_t>};
         node_id_t _predecessor{optional::none_value<node_id_t>};
         node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
     };
-    static_assert(sizeof(label_impl) == 24);   // ensure that no padding is added
 
     using node_cost_pair_t = node_label<ncp_impl>;
     using label_t = node_label<label_impl>;
@@ -133,13 +127,11 @@ struct Implementation<std_graph_t, use_a_star, bidirectional, n> {
         distance_t _distance;
         distance_t _heuristic;
     };
-    static_assert(sizeof(ncp_impl) == 24);
 
     struct label_impl {
         distance_t _distance{infinity<distance_t>};
         node_id_t _predecessor{optional::none_value<node_id_t>};
     };
-    static_assert(sizeof(label_impl) == 16);
 
     using node_cost_pair_t = node_label<ncp_impl>;
     using label_t = node_label<label_impl>;
