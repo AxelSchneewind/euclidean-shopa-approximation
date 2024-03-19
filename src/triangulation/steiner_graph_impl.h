@@ -656,10 +656,10 @@ steiner_graph::node_id_type steiner_graph::from_base_node_id(int node) const {
 steiner_graph::distance_type
 steiner_graph::on_edge_distance(steiner_graph::triangle_edge_id_type edge, steiner_graph::intra_edge_id_type first,
                                 steiner_graph::intra_edge_id_type second) const {
-    auto relative1 = _table.relative_position(edge, first);
-    auto relative2 = _table.relative_position(edge, second);
-    auto length = (node_coordinates_last(edge) - node_coordinates_first(edge)).length();
-    return (relative2 - relative1) * length;
+    distance_type relative1 = _table.relative_position(edge, first);
+    distance_type relative2 = _table.relative_position(edge, second);
+    distance_type length = (node_coordinates_last(edge) - node_coordinates_first(edge)).length();
+    return std::abs(relative2 - relative1) * length;
 }
 
 steiner_graph::node_id_iterator_type steiner_graph::node_id_iterator_type::operator++() {
