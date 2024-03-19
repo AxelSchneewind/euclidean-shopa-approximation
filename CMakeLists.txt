@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.22)
 project(routing)
 
 set(CMAKE_CXX_STANDARD 20)
-# set(CMAKE_CXX_COMPILER /home/axel/software/aocc-compiler-4.2.0/bin/clang++)
 set(CMAKE_CXX_COMPILER g++)
 
 include_directories(include)
+
+include(CPack)
 
 set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall -Wextra -Wpedantic -fopenmp") # -Wextra
 set(CMAKE_CXX_FLAGS_DEBUG "-g") # -D_GLIBCXX_DEBUG -fsanitize=address
@@ -85,6 +86,7 @@ else (GENGETOPT)
 endif (GENGETOPT)
 
 
+################################### BINARIES ###################################
 #
 add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
 add_executable(find_nodes src/find_nodes.cpp src/cli/cmdline_find_nodes.c)
@@ -113,8 +115,11 @@ if (GENGETOPT)
     add_dependencies(graph_stats cmdline_graph_stats)
 endif(GENGETOPT)
 
-# installation
+################################# INSTALLATION #################################
+# if access to this directory is missing, add a different one and append it to your PATH
 set(CMAKE_INSTALL_PREFIX /opt/routing)
 install(TARGETS route graph_stats make_gl prune_graph project_graph find_nodes RUNTIME DESTINATION bin)
 
-include(CPack)
+# make sure this library is in your PYTHONPATH for experiments to work
+install(DIRECTORY model DESTINATION lib)
+

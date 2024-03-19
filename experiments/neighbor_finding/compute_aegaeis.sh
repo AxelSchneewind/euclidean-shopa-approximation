@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source utils.sh
+source ../utils.sh
 
 # number of queries
 NUM_QUERIES=100
@@ -44,20 +44,20 @@ process_results "$OUTPUT_DIR/ref-binary" "$OUTPUT_DIR/results-ref-binary.csv" bi
 
 
 
-######################################## unrefined graph ########################################
-# unrefined graph with steiner points
-if [ ! -d "$OUTPUT_DIR/unref-binary" ]; then
-	# EPSILONS=("1.0" "0.5" "0.2" "0.1")
-	EPSILONS=("1.0" "0.5")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-linear" "$QUERY_FILE" "$eps" --neighbor-finding=linear
-	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-trigon" "$QUERY_FILE" "$eps" --neighbor-finding=trigonometry
-	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-binary" "$QUERY_FILE" "$eps" --neighbor-finding=binary
-	done
-fi
-process_results "$OUTPUT_DIR/unref-linear" "$OUTPUT_DIR/results-unref-linear.csv" linear
-process_results "$OUTPUT_DIR/unref-trigon" "$OUTPUT_DIR/results-unref-trigon.csv" trigonometry
-process_results "$OUTPUT_DIR/unref-binary" "$OUTPUT_DIR/results-unref-binary.csv" binary
+# ######################################## unrefined graph ########################################
+# # unrefined graph with steiner points
+# if [ ! -d "$OUTPUT_DIR/unref-binary" ]; then
+# 	# EPSILONS=("1.0" "0.5" "0.2" "0.1")
+# 	EPSILONS=("1.0" "0.5")
+# 	for eps in "${EPSILONS[@]}"; do
+# 	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-linear" "$QUERY_FILE" "$eps" --neighbor-finding=linear
+# 	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-trigon" "$QUERY_FILE" "$eps" --neighbor-finding=trigonometry
+# 	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-binary" "$QUERY_FILE" "$eps" --neighbor-finding=binary
+# 	done
+# fi
+# process_results "$OUTPUT_DIR/unref-linear" "$OUTPUT_DIR/results-unref-linear.csv" linear
+# process_results "$OUTPUT_DIR/unref-trigon" "$OUTPUT_DIR/results-unref-trigon.csv" trigonometry
+# process_results "$OUTPUT_DIR/unref-binary" "$OUTPUT_DIR/results-unref-binary.csv" binary
 
 
 

@@ -7,55 +7,22 @@ import sys
 import math
 import argparse
 
-dtypes = {
-    'epsilon': float,
-    'source': int,
-    'target': int,
-    'source latitude': float,
-    'source longitude': float,
-    'target latitude': float,
-    'target longitude': float,
-    'node count': int,
-    'edge count': int,
-    'stored node count': int,
-    'stored edge count': int,
-    'time': float,
-    'cost': float,
-    'tree size': int,
+columns = {
+    'epsilon',
+    'source',
+    'target',
+    'source latitude',
+    'source longitude',
+    'target latitude',
+    'target longitude',
+    'node count',
+    'edge count',
+    'stored node count',
+    'stored edge count',
+    'time',
+    'cost',
+    'tree size'
 }
-
-converters = {
-
-}
-
-
-def load(files):
-    data = pd.DataFrame()
-    for f in files:
-        data = pd.concat([data, pd.read_csv(f, dtype=dtypes, usecols=list(dtypes), converters=converters)], ignore_index=True)
-    return data[list(dtypes)]       # to reorder the columns
-
-
-def reference(data, row):
-    fr = row['source']
-    to = row['target']
-    matches = data.loc[(data['epsilon'] == 0.0) & (data['source'] == fr) & (data['target'] == to)]
-    return matches
-
-
-def add_optimal_cost(data):
-    r = []
-    for i, row in data.iterrows():
-        ref = reference(data, row)
-        r = r + [ref['cost'].item()]
-    data['optimal cost'] = r
-    return data
-
-
-def add_ratios(data):
-    data['ratio'] = (data['cost'] / data['optimal cost'])
-    return data
-
 
 def filter_epsilon(data, eps):
     return data[data['epsilon'] == eps]
@@ -103,12 +70,8 @@ def main():
     args = parser.parse_args()
 
     # load data and filter out unusable results
-    data = load(args.file)
+    data = bench.load(args.file)
     data = filter(data)
-
-    # derive new columns from existing ones
-    data = add_optimal_cost(data)
-    data = add_ratios(data)
 
     # by epsilon
     eps_file = args.output_epsilon if args.output_epsilon != 'stdout' else sys.stdout
@@ -132,8 +95,6 @@ def main():
                 by_query.quantile(0.01), by_query.quantile(0.1), by_query.quantile(0.25),
                 by_query.quantile(0.75), by_query.quantile(0.9), by_query.quantile(0.99),
                 sep=',', file=q_file)
-
-    #
 
 
 if __name__ == "__main__":
