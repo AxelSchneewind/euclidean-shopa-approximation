@@ -68,7 +68,7 @@ QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from,
         , _from_internal(from)
         , _to_internal(to)
         , _from_coordinates(graph.node_coordinates(_from_internal))
-        , _to_coordinates(graph.node_coordinates(_to_internal))
+        , _to_coordinates( graph.node_coordinates(!optional::is_none(_to_internal) ? _to_internal : _from_internal))
         , _beeline(make_beeline(graph, _from_internal, _to_internal))
         , _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates))
         , _configuration(config) {};
@@ -80,7 +80,7 @@ QueryImplementation<steiner_graph>::QueryImplementation(steiner_graph const &gra
         , _from_internal(graph.from_base_node_id(from))
         , _to_internal(graph.from_base_node_id(to))
         , _from_coordinates(graph.node_coordinates(_from_internal))
-        , _to_coordinates(graph.node_coordinates(_to_internal))
+        , _to_coordinates( graph.node_coordinates(!optional::is_none(_to_internal) ? _to_internal : _from_internal))
         , _beeline((!optional::is_none(to)) ? make_beeline(graph, _from_internal, _to_internal) : std_graph_t{})
         , _beeline_distance((!optional::is_none(to)) ? distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates) : infinity<distance_t>)
         , _configuration(config) {};
