@@ -71,8 +71,8 @@ public:
     template<typename Labels>
     constexpr a_star_heuristic(std::shared_ptr<Graph> graph, Labels&&) : _graph{graph} {}
 
-    void init(node_id_type /*source*/, node_id_type target) {
-        _target_coordinate = _graph->node_coordinates(target);
+    void init(node_id_type source, node_id_type target) {
+        _target_coordinate = _graph->node_coordinates(!optional::is_none(target) ? target : source);
     }
 
     template<typename R>
