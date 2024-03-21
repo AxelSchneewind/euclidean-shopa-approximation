@@ -73,11 +73,11 @@ process_results() {
 
     # add columns with graph and benchmark name
     sed -e '1,1s/$/,graph/' -i "$CSV_RESULTS"
-    sed -e '2,$s/,$/,,GRAPH/' -i "$CSV_RESULTS"
+    sed -e '2,$s/$/,GRAPH/' -i "$CSV_RESULTS"
     sed -e "s/GRAPH/$GRAPH_NAME/" -i "$CSV_RESULTS"
 
     sed -e '1,1s/$/,benchmark/' -i "$CSV_RESULTS"
-    sed -e '2,$s/,$/,,NAME/' -i "$CSV_RESULTS"
+    sed -e '2,$s/$/,NAME/' -i "$CSV_RESULTS"
     sed -e "s/NAME/$NAME/" -i "$CSV_RESULTS"
 
     # echo "$(csvsort -c EPSILON,FROM,TO "$CSV_RESULTS")" > "$CSV_RESULTS"
