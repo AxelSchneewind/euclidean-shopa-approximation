@@ -99,6 +99,7 @@ link_libraries(routing)
 # executables that will be linked against routing library
 add_executable(project_graph src/project.cpp)
 
+add_executable(convert src/convert.cpp)
 add_executable(make_gl src/make_gl.cpp)
 add_executable(make_pruned_gl src/make_pruned_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)
@@ -118,7 +119,7 @@ endif(GENGETOPT)
 ################################# INSTALLATION #################################
 # if access to this directory is missing, add a different one and append it to your PATH
 set(CMAKE_INSTALL_PREFIX /opt/routing)
-install(TARGETS route graph_stats make_gl prune_graph project_graph find_nodes RUNTIME DESTINATION bin)
+install(TARGETS route graph_stats make_gl prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
 
 # make sure this library is in your PYTHONPATH for experiments to work
 install(DIRECTORY model DESTINATION lib)
