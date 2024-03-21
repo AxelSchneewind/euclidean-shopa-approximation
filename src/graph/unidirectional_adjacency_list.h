@@ -171,8 +171,8 @@ public:
     static constexpr std::size_t SIZE_PER_EDGE = sizeof(NodeId) + sizeof(internal_adjacency_list_edge<NodeId, E>);
 
 private:
-    std::size_t _M_node_count;
-    std::size_t _M_edge_count;
+    std::size_t _M_node_count {0};
+    std::size_t _M_edge_count {0};
 
     // per node
     std::vector<edge_index_type> _M_offsets;
