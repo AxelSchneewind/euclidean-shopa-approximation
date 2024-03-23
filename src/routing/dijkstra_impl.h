@@ -71,13 +71,10 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 bool
 dijkstra<G, Q, L, N, Heuristic>::reached(G::node_id_type node) const {
-    // TODO test and remove
     if constexpr (HasHeuristic<typename L::value_type> && HasHeuristic<typename Q::value_type>) {
         return _labels->contains(node) && _labels->at(node).heuristic() < current().heuristic();
     } else if constexpr (HasDistance<typename L::value_type> && HasDistance<typename Q::value_type>) {
         return _labels->contains(node) && _labels->at(node).distance() < current().distance();
-    } else {
-        return _labels->contains(node) && _labels->at(node).value() < current().value();
     }
 }
 
@@ -247,15 +244,15 @@ void
 dijkstra<G, Q, L, N, Heuristic>::step() {
     node_cost_pair_type ncp = current();
 
-    // expand to adjacent nodes
-    expand(ncp);
-
     // remove current node
     _queue.pop();
     _pull_count++;
 
+    // expand to adjacent nodes
+    expand(ncp);
+
     // remove already labelled nodes
-    while (!_queue.empty() && _labels->at(_queue.top().node()).value() < _queue.top().value()) [[likely]] {
+    while (!_queue.empty() && _labels->at(_queue.top().node()).distance() < _queue.top().distance()) [[likely]] {
         _queue.pop();
     }
 }

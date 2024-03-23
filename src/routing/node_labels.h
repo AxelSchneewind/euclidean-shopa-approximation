@@ -6,7 +6,6 @@
 
 template<RoutableGraph G, typename Label>
 class node_labels {
-private:
     using node_id_type = G::node_id_type;
     using distance_type = G::distance_type;
 
@@ -35,7 +34,7 @@ public:
     // init for given query
     void init(node_id_type start_node, node_id_type target_node);
 
-    bool contains(node_id_type node) const { return _node_labelled[node]; }
+    bool contains(node_id_type node) const { return true; }
 
     [[deprecated]]
     bool reached(node_id_type node) const;

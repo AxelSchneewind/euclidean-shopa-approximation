@@ -20,8 +20,8 @@ node_labels<G, N>::node_labels(std::shared_ptr<G> d)
 template<RoutableGraph G, typename N>
 void
 node_labels<G, N>::init(node_labels<G, N>::node_id_type /*start_node*/, node_labels<G, N>::node_id_type /*target_node*/) {
-    for (size_t index = 0; index < _touched.size(); ++index) {
-        node_id_type node = _touched[index];
+    for (size_t index = 0; index < /*_touched*/_labels.size(); ++index) {
+        node_id_type node = index;//_touched[index];
         _labels[node] = optional::none_value<N>;
         _node_labelled[node] = false;
     }
@@ -33,8 +33,7 @@ template<RoutableGraph G, typename N>
 bool
 node_labels<G, N>::reached(node_labels<G, N>::node_id_type node) const {
     assert(!optional::is_none(node));
-    return _node_labelled[node];
-    // return !optional::is_none(_labels[node].predecessor);
+    return !optional::is_none(_labels[node].predecessor);
 }
 
 template<RoutableGraph G, typename Label>
