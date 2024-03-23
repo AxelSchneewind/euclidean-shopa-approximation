@@ -27,7 +27,16 @@ private:
     };
 
 public:
-    constexpr node_label() : _impl{} {};
+    constexpr node_label() : _impl{} {
+        if consteval {
+            if constexpr (HasDistance) {
+                _impl._distance = std::numeric_limits<double>::infinity();
+            }
+            if constexpr (HasHeuristic) {
+                _impl._heuristic = std::numeric_limits<double>::infinity();
+            }
+        }
+    };
 
     template<typename... Args>
     constexpr node_label(Args... args) : _impl(std::forward<Args...>(args...)) {}
