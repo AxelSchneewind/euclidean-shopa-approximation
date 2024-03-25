@@ -34,7 +34,7 @@ public:
     // init for given query
     void init(node_id_type start_node, node_id_type target_node);
 
-    bool contains(node_id_type node) const { return node >= 0 && node < _labels.size(); }
+    bool contains(node_id_type node) const { return node >= 0 && static_cast<size_t>(node) < _labels.size(); }
 
     [[deprecated]]
     bool reached(node_id_type node) const;
