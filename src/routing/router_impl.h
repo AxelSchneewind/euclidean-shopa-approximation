@@ -3,13 +3,6 @@
 #include "../util/contract.h"
 #include "router.h"
 
-
-template<typename Graph, typename Dijkstra>
-typename router<Graph, Dijkstra>::distance_type
-router<Graph, Dijkstra>::min_route_distance(Dijkstra::node_cost_pair_type node) const {
-    return node.min_distance();
-}
-
 template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::node_cost_pair_type const &router<Graph, Dijkstra>::forward_current() const { return _forward_current; }
 
