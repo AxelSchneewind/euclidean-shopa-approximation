@@ -18,7 +18,6 @@ protected:
 
     node_id_type _start_node;
     node_id_type _target_node;
-    node_id_type _mid_node;
 
     node_cost_pair_type _forward_current;
 
