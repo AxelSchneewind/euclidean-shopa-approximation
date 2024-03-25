@@ -58,10 +58,12 @@ main(int argc, char *argv[]) {
     else
         client.read_graph_file(graph_file);
 
-    if (output_csv)
+    if (output_csv) {
         client.write_csv_header(std::cout);
-    else
+    } else {
         client.write_graph_stats(std::cout);
+        std::cout << "configuration: A* = "  << config.use_a_star << ", neighbor finding = " << config.min_angle_neighbor_method << ", bidirectional = " << config.bidirectional << ", epsilon = " << epsilon << '\n';
+    }
 
     bool from_stdin = (arguments.query_given < 1) || (arguments.stdin_flag != 0);
     std::size_t query_index = 0;
