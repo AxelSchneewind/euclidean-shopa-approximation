@@ -16,7 +16,7 @@ Result::Result(GraphT const &graph, QueryImplementation<GraphT> query, RouterT c
 
 template<RoutableGraph GraphT>
 template<typename RouterT>
-ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImplementation<GraphT> query,
+ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, const QueryImplementation<GraphT>& query,
                                                    const RouterT &router,
                                                    std::chrono::duration<double, std::milli> duration)
         : _query(query),

@@ -174,7 +174,7 @@ public:
     ResultImplementation& operator=(ResultImplementation &&)  noexcept = default;
 
     template<typename RouterT>
-    ResultImplementation(GraphT const& graph, QueryImplementation<GraphT> query, RouterT const& router, std::chrono::duration<double, std::milli> duration);
+    ResultImplementation(GraphT const& graph, QueryImplementation<GraphT> const& query, RouterT const& router, std::chrono::duration<double, std::milli> duration);
 
     Query query() const override { return Query( QueryImplementation<GraphT>( _query ) ) ; };
 
