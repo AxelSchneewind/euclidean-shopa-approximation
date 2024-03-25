@@ -35,6 +35,15 @@ public:
             if constexpr (HasHeuristic) {
                 _impl._heuristic = std::numeric_limits<double>::infinity();
             }
+            if constexpr (HasPredecessor) {
+                _impl._predecessor = optional::none_value<decltype(_impl._predecessor)>;
+            }
+            if constexpr (HasFaceCrossingPredecessor) {
+                _impl._face_crossing_predecessor = optional::none_value<decltype(_impl._face_crossing_predecessor)>;
+            }
+            if constexpr (HasNode) {
+                _impl._node = optional::none_value<decltype(_impl._node)>;
+            }
         }
     };
 
@@ -51,9 +60,35 @@ public:
     }
     constexpr node_label(Impl const& impl) : _impl{impl} {}
 
-    auto &node() { return _impl._node; }
+    template <typename OtherImpl>
+    friend struct node_label;
 
-    auto const &node() const { return _impl._node; }
+    template <typename OtherImpl>
+    node_label& operator=(node_label<OtherImpl> const& other) {
+        using other_type = node_label<OtherImpl>;
+        if constexpr (HasNode && other_type::HasNode) {
+            _impl._node = other._impl._node;
+        }
+        if constexpr (HasPredecessor && other_type::HasPredecessor) {
+            _impl._predecessor = other._impl._predecessor;
+        }
+        if constexpr (HasDistance && other_type::HasDistance) {
+            _impl._distance = other._impl._distance;
+        }
+        if constexpr (HasHeuristic) {
+            if constexpr (other_type::HasHeuristic) {
+                _impl._heuristic = other._impl._heuristic;
+            } else if constexpr (other_type::HasDistance) {
+                _impl._heuristic = other._impl._distance;
+            }
+        }
+
+        return *this;
+    }
+
+    auto &node() requires HasNode { return _impl._node; }
+
+    auto const &node() const requires HasNode { return _impl._node; }
 
     auto &predecessor() requires HasPredecessor { return _impl._predecessor; }
 
