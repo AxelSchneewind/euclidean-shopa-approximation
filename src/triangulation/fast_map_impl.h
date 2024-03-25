@@ -41,6 +41,7 @@ void fast_map<AggregateId, IntraAggregateId, Info>::append(aggregate_id_type id,
 
 template<typename AggregateId, typename IntraAggregateId, typename Info>
 bool fast_map<AggregateId, IntraAggregateId, Info>::contains(aggregate_id_type id) const {
+    assert(id >= 0 && static_cast<size_t>(id) < _edge_index.size());
     return -1 != _edge_index[id];
 }
 
