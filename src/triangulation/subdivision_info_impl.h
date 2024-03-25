@@ -197,6 +197,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
 inline coordinate_t
 subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_t const &c1,
                                     coordinate_t const &c2) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     auto &&info = edges[edge];
 
     assert(steiner_index >= 0);
@@ -233,10 +234,12 @@ subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, 
 }
 
 inline double subdivision::relative_position_mid(edge_id_t const edge) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     return edges[edge].mid_position;
 }
 
 inline double subdivision::relative_position_steiner(edge_id_t const edge, steiner_index_type const steiner_index) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     auto &&info = edges[edge];
     assert(steiner_index > 0);
     assert(steiner_index < info.node_count - 1);
@@ -265,6 +268,7 @@ inline double subdivision::relative_position_steiner(edge_id_t const edge, stein
 
 
 inline double subdivision::relative_position(edge_id_t const edge, steiner_index_type const steiner_index) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     auto &&info = edges[edge];
 
     assert(steiner_index >= 0);
@@ -301,6 +305,7 @@ inline double subdivision::relative_position(edge_id_t const edge, steiner_index
 }
 
 inline subdivision::steiner_index_type subdivision::index(const edge_id_t edge, double relative) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     auto &&info = edges[edge];
 
     assert(relative >= 0 && relative <= 1);
@@ -325,10 +330,12 @@ inline subdivision::steiner_index_type subdivision::index(const edge_id_t edge, 
 }
 
 inline subdivision::subdivision_edge_info &subdivision::edge(edge_id_t const edge) {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     return edges[edge];
 }
 
 inline const subdivision::subdivision_edge_info &subdivision::edge(edge_id_t const edge) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     return edges[edge];
 }
 
