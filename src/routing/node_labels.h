@@ -34,7 +34,7 @@ public:
     // init for given query
     void init(node_id_type start_node, node_id_type target_node);
 
-    bool contains(node_id_type node) const { return true; }
+    bool contains(node_id_type node) const { return node >= 0 && node < _labels.size(); }
 
     [[deprecated]]
     bool reached(node_id_type node) const;
@@ -45,5 +45,4 @@ public:
     Label const& at(node_id_type node) const;
 
     std::span<const node_id_type> all_visited() const;
-
 };
