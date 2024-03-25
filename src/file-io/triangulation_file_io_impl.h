@@ -38,7 +38,7 @@ triangulation_file_io::read(std::istream &input_size, std::istream &input_nodes,
     typename Graph::adjacency_list_type::builder adj_list_builder;
     adj_list_builder.add_edges_from_triangulation(faces);
 
-    auto adj_list = Graph::adjacency_list_type::make_bidirectional_undirected(adj_list_builder.get());
+    auto adj_list = Graph::adjacency_list_type::make_bidirectional(adj_list_builder.get());
     return Graph::make_graph(std::move(nodes), std::move(adj_list));
 }
 
