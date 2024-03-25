@@ -59,9 +59,6 @@ router<Graph, Dijkstra>::compute() {
         done = _forward_search.queue_empty();
         done |= !optional::is_none(_target_node) && _forward_search.reached(_target_node);
     }
-
-    if (!_forward_search.queue_empty())
-        step_forward();
 }
 
 template<typename Graph, typename Dijkstra>
