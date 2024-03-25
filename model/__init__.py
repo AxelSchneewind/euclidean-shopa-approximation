@@ -4,6 +4,9 @@ dtypes = {
     'epsilon': float,
     'source': int,
     'target': int,
+    'cost': float,
+    'time': float,
+    'tree size': int,
     'source latitude': float,
     'source longitude': float,
     'target latitude': float,
@@ -12,13 +15,9 @@ dtypes = {
     'edge count': int,
     'stored node count': int,
     'stored edge count': int,
-    'time': float,
-    'cost': float,
-    'tree size': int,
     'memory usage graph': float,
     'memory usage final': float,
     'beeline distance': float,
-    'tree size': int,
     'queue pull count': int,
     'queue push count': int,
     'queue max size': int,
@@ -38,6 +37,7 @@ converters = {
 
 }
 
+
 def reference(data, row):
     fr = row['source']
     to = row['target']
@@ -49,21 +49,23 @@ def add_optimal_cost(data):
     r = []
     for i, row in data.iterrows():
         ref = reference(data, row)
-        r = r + [ref.get('cost', 0)]
-    data['optimal cost'] = r
+        r = r + [ref['item'].item()]
+    data['optimal cost'] = numpy.array(r, dtype='float')
     return data
 
 
 def add_ratios(data):
-    data['ratio'] = (data['cost'] / data['optimal cost'])
+    data['ratio'] = (data['cost']/data['optimal cost']).to_numpy(dtype='float')
     return data
 
 
-
-def load(files, columns=list(dtypes)):
+def load(files, columns=None):
     data = pd.DataFrame()
     for f in files:
         data = pd.concat([data, pd.read_csv(f, dtype=dtypes, usecols=columns, converters=converters)], ignore_index=True)
+
+    if columns is None:
+        columns = list(dtypes)
     data = data[columns]
 
     # derive new columns from existing ones
