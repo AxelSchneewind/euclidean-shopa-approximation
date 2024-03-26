@@ -34,8 +34,8 @@ dijkstra<G, Q, L, N, Heuristic>::node_id_type dijkstra<G, Q, L, N, Heuristic>::s
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 dijkstra<G, Q, L, N, Heuristic>::dijkstra(std::shared_ptr<G> graph, Q &&queue, L &&labels, N &&neighbors)
-        : _graph(graph)// , _queue(std::move(queue)),
-        , _queue{*_graph, *_labels}
+        : _graph(graph)
+        , _queue(std::move(queue))
         , _labels(std::make_shared<L>(std::move(labels)))
         , _neighbors(std::move(neighbors)) {
     queue.clear();
@@ -71,13 +71,12 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 bool
 dijkstra<G, Q, L, N, Heuristic>::reached(G::node_id_type node) const {
-    // TODO test and remove
+    static_assert(  (HasHeuristic<typename L::value_type> && HasHeuristic<typename Q::value_type>)
+                 || (HasDistance<typename L::value_type> && HasDistance<typename Q::value_type>));
     if constexpr (HasHeuristic<typename L::value_type> && HasHeuristic<typename Q::value_type>) {
         return _labels->contains(node) && _labels->at(node).heuristic() < current().heuristic();
     } else if constexpr (HasDistance<typename L::value_type> && HasDistance<typename Q::value_type>) {
         return _labels->contains(node) && _labels->at(node).distance() < current().distance();
-    } else {
-        return _labels->contains(node) && _labels->at(node).value() < current().value();
     }
 }
 
@@ -123,19 +122,17 @@ dijkstra<G, Q, L, N, Heuristic>::init(node_id_type start_node, node_id_type targ
         }
         if constexpr (HasHeuristic<typename Q::value_type>) {
             ncp.heuristic() = 0.0;
+            _heuristic(ncp);
         }
         _queue.push(ncp);
 
         auto& label = (*_labels)[start_node];
+        label = ncp;
         if constexpr (HasPredecessor<typename L::value_type>) {
             label.predecessor() = start_node;
         }
         if constexpr (HasDistance<typename L::value_type>) {
             label.distance() = 0.0;
-        }
-
-        if constexpr (HasHeuristic<typename L::value_type>) {
-            label.heuristic() = 0.0;
         }
     }
 
@@ -149,8 +146,8 @@ template<RoutableGraph G, DijkstraQueue<G> Q,
         NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 void
 dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
-    static std::vector<node_cost_pair_type> node_cost_pairs;
-    static std::vector<coordinate_t > coordinates;
+    static std::vector<node_cost_pair_type> node_cost_pairs(128);
+    static std::vector<coordinate_t > coordinates(128);
     node_cost_pairs.clear();
     coordinates.clear();
 
@@ -174,14 +171,13 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
         node_cost_pair_type &successor = node_cost_pairs[i];
         node_id_type const  &successor_node = successor.node();
 
-        // some checks
         assert(!optional::is_none(successor_node));
         assert(successor.distance() > 0);
 
         distance_t const& successor_cost = (*_labels)[successor_node].distance(); // use shortest distance
         distance_t const& new_cost = successor.distance();
 
-        // assert(new_cost >= node.distance());
+        assert(new_cost >= node.distance());
         if (new_cost < successor_cost) [[likely]] {
             // assert(successor_node != node.predecessor());
 
@@ -198,7 +194,7 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
     if constexpr (geometric_heuristic && !geometric_neighbors) {
         coordinates.resize(to_index);
         for (size_t i = 0; i < node_cost_pairs.size(); ++i) {
-            coordinates[i] = _graph->node(node_cost_pairs[i].node()).coordinates;
+            coordinates[i] = _graph->node_coordinates(node_cost_pairs[i].node());
         }
     }
 
@@ -214,7 +210,7 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
     }
 
     // store label values
-    for (node_cost_pair_type &successor : node_cost_pairs) {
+    for (node_cost_pair_type & successor : node_cost_pairs) {
         auto& label = _labels->at(successor.node());
 
         // TODO write assign operation for node_info
@@ -255,7 +251,7 @@ dijkstra<G, Q, L, N, Heuristic>::step() {
     _pull_count++;
 
     // remove already labelled nodes
-    while (!_queue.empty() && _labels->at(_queue.top().node()).value() < _queue.top().value()) [[likely]] {
+    while (!_queue.empty() && _labels->at(_queue.top().node()).distance() < _queue.top().distance()) [[likely]] {
         _queue.pop();
     }
 }

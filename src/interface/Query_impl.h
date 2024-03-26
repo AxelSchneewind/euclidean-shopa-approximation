@@ -16,7 +16,7 @@ Result::Result(GraphT const &graph, QueryImplementation<GraphT> query, RouterT c
 
 template<RoutableGraph GraphT>
 template<typename RouterT>
-ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImplementation<GraphT> query,
+ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, const QueryImplementation<GraphT>& query,
                                                    const RouterT &router,
                                                    std::chrono::duration<double, std::milli> duration)
         : _query(query),
@@ -26,7 +26,7 @@ ResultImplementation<GraphT>::ResultImplementation(const GraphT &graph, QueryImp
           _path(std_graph_t::make_graph(graph, graph.make_subgraph(router.route()))),
           _tree_forward(std_graph_t::make_graph(graph, router.shortest_path_tree(query.max_tree_size()))),
           _tree_backward(std_graph_t::make_graph(graph, router.shortest_path_tree(0))),
-          _nodes_visited(_tree_forward.node_count()),
+          _nodes_visited((_tree_forward.node_count() == 0) ? router.forward_search().pull_count() : _tree_forward.node_count()),
           _edges_visited(router.forward_search().edges_checked()),
           _pull_count(router.forward_search().pull_count()),
           _push_count(router.forward_search().push_count()),
@@ -63,19 +63,27 @@ std_graph_t make_beeline(GraphT const &graph, typename GraphT::node_id_type from
 
 template<RoutableGraph GraphT>
 QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to, RoutingConfiguration const& config)
-        : _from(from), _to(to)
-        , _from_internal(from), _to_internal(to),
-          _beeline(make_beeline(graph, _from_internal, _to_internal)),
-          _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates)),
-          _configuration(config) {};
+        : _from(from)
+        , _to(to)
+        , _from_internal(from)
+        , _to_internal(to)
+        , _from_coordinates(graph.node_coordinates(_from_internal))
+        , _to_coordinates( graph.node_coordinates(!optional::is_none(_to_internal) ? _to_internal : _from_internal))
+        , _beeline(make_beeline(graph, _from_internal, _to_internal))
+        , _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates))
+        , _configuration(config) {};
 
 template<>
 QueryImplementation<steiner_graph>::QueryImplementation(steiner_graph const &graph, long from, long to, RoutingConfiguration const& config)
-        : _from(from), _to(to), _from_internal(graph.from_base_node_id(from)),
-          _to_internal(graph.from_base_node_id(to)),
-          _beeline((!optional::is_none(to)) ? make_beeline(graph, _from_internal, _to_internal) : std_graph_t{}),
-          _beeline_distance((!optional::is_none(to)) ? distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates) : infinity<distance_t>),
-          _configuration(config) {};
+        : _from(from)
+        , _to(to)
+        , _from_internal(graph.from_base_node_id(from))
+        , _to_internal(graph.from_base_node_id(to))
+        , _from_coordinates(graph.node_coordinates(_from_internal))
+        , _to_coordinates( graph.node_coordinates(!optional::is_none(_to_internal) ? _to_internal : _from_internal))
+        , _beeline((!optional::is_none(to)) ? make_beeline(graph, _from_internal, _to_internal) : std_graph_t{})
+        , _beeline_distance((!optional::is_none(to)) ? distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates) : infinity<distance_t>)
+        , _configuration(config) {};
 
 template<RoutableGraph GraphT>
 QueryImplementation<GraphT>::QueryImplementation() : _from_internal{optional::none_value<node_id_type>},
@@ -83,6 +91,39 @@ QueryImplementation<GraphT>::QueryImplementation() : _from_internal{optional::no
                                                      _to{optional::none_value<long>} {}
 
 
+template<RoutableGraph GraphT>
+void QueryImplementation<GraphT>::write(table &out) const {
+    // node ids
+    out.put(Statistics::FROM, _from);
+    out.put(Statistics::TO, _to);
+
+    // internal (graph-type-specific) id representations
+    out.put(Statistics::FROM_INTERNAL, _from_internal);
+    out.put(Statistics::TO_INTERNAL, _to_internal);
+
+    // coordinates (with lower precision to remove differences due to different input precisions)
+    int precision = 8;
+    std::stringstream src_lat;
+    src_lat << std::setprecision(precision) << static_cast<float>(_from_coordinates.latitude);
+    std::stringstream src_lon;
+    src_lon << std::setprecision(precision) << static_cast<float>(_from_coordinates.longitude);
+    std::stringstream tgt_lat;
+    tgt_lat << std::setprecision(precision) << static_cast<float>(_to_coordinates.latitude);
+    std::stringstream tgt_lon;
+    tgt_lon << std::setprecision(precision) << _to_coordinates.longitude;
+
+    out.put(Statistics::FROM_LAT, src_lat.str());
+    out.put(Statistics::FROM_LON, src_lon.str());
+    out.put(Statistics::TO_LAT, tgt_lat.str());
+    out.put(Statistics::TO_LON, tgt_lon.str());
+
+    // configuration
+    out.put(Statistics::ASTAR, _configuration.use_a_star);
+    out.put(Statistics::NEIGHBOR_FINDING, _configuration.min_angle_neighbor_method);
+
+    //
+    out.put(Statistics::BEELINE_DISTANCE, beeline_distance());
+}
 
 template<RoutableGraph GraphT>
 void ResultImplementation<GraphT>::write(table &out) const {

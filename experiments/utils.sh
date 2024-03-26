@@ -14,6 +14,7 @@ compute_single() {
     local OUTPUT_DIR=$2
     local QUERY_FILE=$3
     local EPSILON=$4
+    local PARAMS="$5"
     
     mkdir -p "$OUTPUT_DIR"
     
@@ -21,8 +22,8 @@ compute_single() {
     local QUERIES="$(cat ${QUERY_FILE})"
     
     # run computations
-    echo "$ROUTER --epsilon ${EPSILON} -p wgs84 -a $ASTAR -t$TREE_SIZE -l --graph-file ${GRAPH_FILE} --output-directory ${OUTPUT_DIR} --query ${QUERIES}"
-    $ROUTER --epsilon "${EPSILON}" -p wgs84 -a "$ASTAR" -t$TREE_SIZE -l --graph-file "${GRAPH_FILE}" --output-directory "${OUTPUT_DIR}" --query "${QUERIES}" > "${OUTPUT_DIR}/out.log"
+    echo "$ROUTER --epsilon ${EPSILON} ${PARAMS} -p wgs84 -a $ASTAR -t$TREE_SIZE -l --graph-file ${GRAPH_FILE} --output-directory ${OUTPUT_DIR} --query ${QUERIES}"
+    $ROUTER --epsilon "${EPSILON}" ${PARAMS} -p wgs84 -a "$ASTAR" -t$TREE_SIZE -l --graph-file "${GRAPH_FILE}" --output-directory "${OUTPUT_DIR}" --query "${QUERIES}" > "${OUTPUT_DIR}/out.log"
 }
 
 make_queries(){
@@ -50,8 +51,8 @@ make_queries(){
 
 
 process_results() {
-    if [[ -z "$2" ]]; then
-	    echo "usage: process_results path/to/results path/to/results.csv"
+    if [[ -z "$3" ]]; then
+	    echo "usage: process_results path/to/results path/to/results.csv benchmark_name"
 	    exit
     fi
 
@@ -60,20 +61,24 @@ process_results() {
     
     local GRAPH_NAME=$(basename "$GRAPH_FILE")
     local GRAPH_NAME=${GRAPH_NAME%.graph}
+
+    local NAME="${3:$GRAPH_NAME}"
     
     cat "$OUTPUT_DIR"/*/info.csv > "$CSV_RESULTS"
 
     # remove headers
-    sed -e '1p;/,NODE.*/d' -i "$CSV_RESULTS"
+    sed -e '1p;/,node.*/d' -i "$CSV_RESULTS"
     # remove ms unit for timings
     sed -e 's/ms//g' -i "$CSV_RESULTS"
 
-    # add column with benchmark name
+    # add columns with graph and benchmark name
+    sed -e '1,1s/$/,graph/' -i "$CSV_RESULTS"
+    sed -e '2,$s/$/,GRAPH/' -i "$CSV_RESULTS"
+    sed -e "s/GRAPH/$GRAPH_NAME/" -i "$CSV_RESULTS"
+
     sed -e '1,1s/$/,benchmark/' -i "$CSV_RESULTS"
-    sed -e '2,$s/,$/,,OUTPUT_DIR/' -i "$CSV_RESULTS"
-    local BENCH="${OUTPUT_DIR//\//\\\/}"
-    local BENCH="${BENCH/results/}"
-    sed -e "s/OUTPUT_DIR/$BENCH/" -i "$CSV_RESULTS"
+    sed -e '2,$s/$/,NAME/' -i "$CSV_RESULTS"
+    sed -e "s/NAME/$NAME/" -i "$CSV_RESULTS"
 
     # echo "$(csvsort -c EPSILON,FROM,TO "$CSV_RESULTS")" > "$CSV_RESULTS"
 }
@@ -90,5 +95,5 @@ process_all_results() {
 
     cat "$OUTPUT_DIR"/results-*.csv > "$CSV_RESULTS"
     # remove headers
-    sed -e '1p;/,NODE.*/d' -i "$CSV_RESULTS"
+    sed -e '1p;/,node.*/d' -i "$CSV_RESULTS"
 }

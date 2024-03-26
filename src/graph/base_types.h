@@ -1,9 +1,10 @@
 #pragma once
 
+#include "../util/optional.h"
+
 #include <cmath>
 #include <limits>
 #include <array>
-#include "../util/optional.h"
 
 
 using node_id_t = int;
@@ -18,9 +19,6 @@ template <typename C, std::size_t Dim>
 struct coordinate {
     using component_type = C;
     static constexpr std::size_t size  = Dim;
-
-    //
-    // std::array<component_type, Dim> components;
 
     component_type latitude;
     component_type longitude;

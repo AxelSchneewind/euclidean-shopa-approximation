@@ -22,12 +22,13 @@ concept HasFaceCrossingPredecessor = requires {
 
 
 enum class Configuration {
-    LINALG,
+    PARAM,
+    ATAN2,
     BINSEARCH,
-    ATAN2
+    LINEAR      // linear search, currently not implemented
 };
 
-template<typename Graph, typename Labels, Configuration Config = Configuration::LINALG>
+template<typename Graph, typename Labels, Configuration Config = Configuration::PARAM>
 struct steiner_neighbors {
 private:
     using node_id_type = typename Graph::node_id_type;
@@ -37,14 +38,18 @@ private:
     std::shared_ptr<Graph> _graph;
     std::shared_ptr<Labels> _labels;
 
+    // angle of a subcone of an epsilon-spanner
     coordinate_t::component_type _spanner_angle;
     coordinate_t::component_type _spanner_angle_cos;
     coordinate_t::component_type _spanner_angle_sin;
 
+    // maximal angle between two adjacent steiner points, seen from a reachable edge
     coordinate_t::component_type _max_angle;
 
+    // for storing information on the current neighbor query
     node_id_type _source;
     coordinate_t _source_coordinate;
+    coordinate_t _direction;
 
     bool _first_call{true};
 
@@ -57,7 +62,7 @@ private:
     std::size_t _boundary_node_neighbor_count{0};
     std::size_t _steiner_point_neighbor_count{0};
 
-    std::size_t _steiner_point_angle_test_count{0};
+    std::size_t _steiner_point_angle_test_count{0};     // for linear/binary search: number of iterations/tests
 
     void init(node_id_type /*source*/, node_id_type /*target*/) {
         _first_call = true;
@@ -65,37 +70,41 @@ private:
 
     template<typename NodeCostPair>
     [[using gnu : hot]]
-    void insert(node_id_type neighbor, NodeCostPair current, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out) const;
+    void insert(node_id_type const& neighbor, coordinate_t const& neighbor_coordinate, NodeCostPair const& current, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out) const;
+
+    template<typename NodeCostPair>
+    [[using gnu : hot]]
+    void insert(node_id_type const& neighbor, NodeCostPair const& current, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out) const;
 
     template<typename NodeCostPair>
     [[gnu::hot]]
     void on_edge_neighbors(NodeCostPair const &node, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out);
 
     [[gnu::hot]]
-    coordinate_t::component_type min_angle_relative_value_matmul(base_edge_id_type edge_id, coordinate_t direction) const;
+    coordinate_t::component_type min_angle_relative_value_matmul(base_edge_id_type edge_id, coordinate_t direction) const requires (Configuration::PARAM == Config);
 
     [[gnu::hot]]
-    coordinate_t::component_type min_angle_relative_value_atan2(base_edge_id_type edge_id, coordinate_t const& direction) const;
+    coordinate_t::component_type min_angle_relative_value_atan2(base_edge_id_type edge_id, coordinate_t const& direction) const requires (Configuration::ATAN2 == Config);
 
     [[gnu::hot]]
     coordinate_t::component_type min_angle_relative_value_atan2(coordinate_t left,
                                                                 coordinate_t right,
                                                                 coordinate_t::component_type direction_left,
-                                                                coordinate_t::component_type direction_dir) const;
+                                                                coordinate_t::component_type direction_dir) const requires (Configuration::ATAN2 == Config);
 
     [[gnu::hot]]
     node_id_type
     min_angle_neighbor_matmul(base_edge_id_type const &edge_id,
-                              coordinate_t const &direction);
+                              coordinate_t const &direction) requires (Configuration::PARAM == Config);
 
     [[gnu::hot]]
-    node_id_type min_angle_neighbor_atan2(base_edge_id_type edge_id, const coordinate_t &direction) const;
+    node_id_type min_angle_neighbor_atan2(base_edge_id_type edge_id, const coordinate_t &direction) const requires (Configuration::ATAN2 == Config);
 
 
     [[gnu::hot]]
     node_id_type
     min_angle_neighbor_binary_search(base_edge_id_type const &edge_id,
-                                     const coordinate_t &direction);
+                                     const coordinate_t &direction) requires (Configuration::BINSEARCH == Config);
 
     template<typename NodeCostPair>
     [[gnu::hot]]
@@ -106,7 +115,6 @@ private:
     template<typename NodeCostPair>
     void epsilon_spanner(NodeCostPair const &node,
                          base_edge_id_type const &edge_id, coordinate_t::component_type const &max_angle_cos,
-                         coordinate_t const &direction,
                          std::vector<NodeCostPair> &out, std::vector<coordinate_t> &out_coordinates);
 
     template<typename NodeCostPair>
@@ -132,12 +140,13 @@ private:
 
 public:
     steiner_neighbors(std::shared_ptr<Graph> graph, std::shared_ptr<Labels> labels)
-            : _graph(std::move(graph)), _labels(std::move(labels)),
-              _spanner_angle{std::clamp(std::numbers::pi * _graph->epsilon(), 0.0, std::numbers::pi_v<coordinate_t::component_type>)},
-              _spanner_angle_cos{std::cos(_spanner_angle)},
-              _spanner_angle_sin{std::sin(_spanner_angle)},
-              _max_angle{std::clamp(std::numbers::pi / 2 * _graph->epsilon(), std::numeric_limits<coordinate_t::component_type>::min(), std::numbers::pi / 4)}
-              {}
+            : _graph(std::move(graph))
+            , _labels(std::move(labels))
+            , _spanner_angle{std::clamp(std::numbers::pi * _graph->epsilon() / 2, 0.0, std::numbers::pi_v<coordinate_t::component_type> / 2)}
+            , _spanner_angle_cos{std::cos(_spanner_angle)}
+            , _spanner_angle_sin{std::sin(_spanner_angle)}
+            , _max_angle{std::clamp(std::numbers::pi / 2 * _graph->epsilon(), std::numeric_limits<coordinate_t::component_type>::min(), std::numbers::pi / 4)}
+            {}
 
     template<typename... Args>
     steiner_neighbors(std::shared_ptr<Graph> graph, Labels &labels, Args const &...) : steiner_neighbors(graph, labels) { }
@@ -149,7 +158,6 @@ public:
     steiner_neighbors &operator=(steiner_neighbors &&) noexcept = default;
 
     template<typename NodeCostPair>
-    [[gnu::hot]]
     void operator()(NodeCostPair const &node, std::vector<NodeCostPair> &out);
 
     template<typename NodeCostPair>

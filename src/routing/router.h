@@ -18,19 +18,11 @@ protected:
 
     node_id_type _start_node;
     node_id_type _target_node;
-    node_id_type _mid_node;
 
     node_cost_pair_type _forward_current;
 
 private:
     void step_forward();
-
-    /**
-     * gets the minimal distance a route via the given node can have
-     * @param node
-     * @return
-     */
-    distance_type min_route_distance(node_cost_pair_type node) const;
 
 public:
     static constexpr size_t SIZE_PER_NODE = 2 * Dijkstra::SIZE_PER_NODE;

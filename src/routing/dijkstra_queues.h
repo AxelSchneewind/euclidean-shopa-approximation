@@ -65,16 +65,14 @@ private:
     std::shared_ptr<Graph const> _graph;
     coordinate_type _target_coordinate{};
 
-    // static constexpr typename Graph::distance_type factor = 1.0;
-
 public:
     constexpr a_star_heuristic(std::shared_ptr<Graph> graph) : _graph{graph} {}
 
     template<typename Labels>
     constexpr a_star_heuristic(std::shared_ptr<Graph> graph, Labels&&) : _graph{graph} {}
 
-    void init(node_id_type /*source*/, node_id_type target) {
-        _target_coordinate = _graph->node_coordinates(target);
+    void init(node_id_type source, node_id_type target) {
+        _target_coordinate = _graph->node_coordinates(!optional::is_none(target) ? target : source);
     }
 
     template<typename R>
@@ -86,7 +84,7 @@ public:
     template<typename R, typename C>
     void operator()(R& node, C const& coordinate) {
         if constexpr(HasDistance<typename std::remove_reference_t<R>>) {
-            node.heuristic() = node.distance() + /*factor */ distance(coordinate, _target_coordinate);
+            node.heuristic() = node.distance() + distance(coordinate, _target_coordinate);
         } else {
             node.heuristic() += distance(coordinate, _target_coordinate);
         }

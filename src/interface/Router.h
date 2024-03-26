@@ -1,8 +1,9 @@
 #pragma once
 
-#include <memory>
 #include "Graph.h"
 #include "Query.h"
+
+#include <memory>
 
 
 class RouterInterface {
@@ -51,7 +52,7 @@ public:
 
     Router(Graph const&graph, RoutingConfiguration const&);
 
-    void compute_route(int from, int to) { impl->compute_route(from, to); };
+    void compute_route(long from, long to) { impl->compute_route(from, to); };
     void perform_query(Query const& query) { impl->perform_query(query); };
 
     Query query() { return impl->query(); }

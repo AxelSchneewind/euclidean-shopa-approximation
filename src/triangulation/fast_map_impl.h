@@ -41,6 +41,7 @@ void fast_map<AggregateId, IntraAggregateId, Info>::append(aggregate_id_type id,
 
 template<typename AggregateId, typename IntraAggregateId, typename Info>
 bool fast_map<AggregateId, IntraAggregateId, Info>::contains(aggregate_id_type id) const {
+    assert(id >= 0 && static_cast<size_t>(id) < _edge_index.size());
     return -1 != _edge_index[id];
 }
 
@@ -55,3 +56,6 @@ void fast_map<AggregateId, IntraAggregateId, Info>::clear() {
     std::fill(_edge_index.begin(), _edge_index.end(), -1);
     _entries.clear();
 }
+
+template<typename AggregateId, typename IntraAggregateId, typename Info>
+std::size_t fast_map<AggregateId, IntraAggregateId, Info>::size() const { return _entries.size(); }

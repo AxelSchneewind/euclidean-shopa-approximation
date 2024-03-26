@@ -17,6 +17,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
                                         const std::vector<node_t> &nodes,
                                         const polyhedron<adjacency_list<int>, 3> &polyhedron,
                                         const std::vector<double> &r_values, double epsilon) {
+    size_t edges_capped = 0;
+
     // store subdivision information here
     std::vector<subdivision_edge_info> result;
     result.resize(triangulation.edge_count());
@@ -75,12 +77,17 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         long double const r_second = std::clamp(factor * (r_values[node2] / length), min_r_value, 1.0l);
 
         // the base for computing relative node positions
-        long double min_base_first = std::pow(r_first, -2.0 / max_steiner_count_per_edge);
-        long double min_base_second = std::pow(r_second, -2.0 / max_steiner_count_per_edge);
+        long double min_base_first = std::pow(r_first, -1.0 / (max_steiner_count_per_edge / 2));
+        long double min_base_second = std::pow(r_second, -1.0 / (max_steiner_count_per_edge / 2));
         assert(r_first * std::pow(min_base_first, max_steiner_count_per_edge) >= 1.0);
         assert(r_second * std::pow(min_base_second, max_steiner_count_per_edge) >= 1.0);
         long double const base_first = std::clamp(1.0l + epsilon * std::sin(angle1), min_base_first, 10.0l);
         long double const base_second = std::clamp(1.0l + epsilon * std::sin(angle2), min_base_second, 10.0l);
+        if (base_first == min_base_first || base_second == min_base_second) {
+            edges_capped++;
+            std::cerr << "number of points on edge " << i << " is bounded by index datatype\n";
+        }
+
 
         // get interval in first half that is between r and mid_value
         size_t left_count;
@@ -143,7 +150,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         // number of points on first half of edge
         auto mid_index = left_count + 1; // c1, steiner points
         // remove point at r(v) if already over on other half of the edge
-        if (r_first >= mid_position) {
+        if (left_count > 0 && r_first >= mid_position) {
             mid_index--;
         }
 #ifndef NDEBUG
@@ -157,8 +164,8 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         // number of points (points on first half + mid_node + points on second half + c2
         auto count = 1 + left_count + 1 + right_count + 1;
         // remove point at r(v) if already over on other half of the edge
-        if (r_second >= 1 - mid_position) {
-            count = mid_index + 2;
+        if (right_count > 0 && r_second >= 1 - mid_position) {
+            count = mid_index + 1;
         }
         assert(count >= 2);
 
@@ -190,6 +197,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
 inline coordinate_t
 subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_t const &c1,
                                     coordinate_t const &c2) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     auto &&info = edges[edge];
 
     assert(steiner_index >= 0);
@@ -226,11 +234,14 @@ subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, 
 }
 
 inline double subdivision::relative_position_mid(edge_id_t const edge) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     return edges[edge].mid_position;
 }
 
 inline double subdivision::relative_position_steiner(edge_id_t const edge, steiner_index_type const steiner_index) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     auto &&info = edges[edge];
+
     assert(steiner_index > 0);
     assert(steiner_index < info.node_count - 1);
 
@@ -258,6 +269,7 @@ inline double subdivision::relative_position_steiner(edge_id_t const edge, stein
 
 
 inline double subdivision::relative_position(edge_id_t const edge, steiner_index_type const steiner_index) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     auto &&info = edges[edge];
 
     assert(steiner_index >= 0);
@@ -294,30 +306,37 @@ inline double subdivision::relative_position(edge_id_t const edge, steiner_index
 }
 
 inline subdivision::steiner_index_type subdivision::index(const edge_id_t edge, double relative) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     auto &&info = edges[edge];
 
     assert(relative >= 0 && relative <= 1);
 
     if (relative < info.mid_position) {
-        steiner_index_type const exponent = std::clamp(static_cast<steiner_index_type>(std::floor(std::log(relative / info.r_first) / info.base_first)), 0, info.mid_index - 2);
+        steiner_index_type const exponent = std::clamp( static_cast<steiner_index_type>(std::floor(std::log(relative / info.r_first) / info.base_first))
+                                                      , static_cast<steiner_index_type>(0)
+                                                      , static_cast<steiner_index_type>(info.mid_index - 1));
         steiner_index_type const index = exponent + 1;
         assert(index > 0 && index <= info.mid_index + 1 && index < info.node_count);
         return index;
     }
 
     relative = 1 - relative;
-    steiner_index_type const exponent = std::clamp(static_cast<steiner_index_type>(std::ceil(std::log(relative / info.r_second) / info.base_second)), 0, info.node_count - info.mid_index - 2);
-    assert(exponent >= 0 && exponent < info.node_count - 2);
-    steiner_index_type const index = (info.node_count - 2) - exponent;
+    steiner_index_type const exponent = std::clamp( static_cast<steiner_index_type>(std::ceil(std::log(relative / info.r_second) / info.base_second))
+                                                  , static_cast<steiner_index_type>(0)
+                                                  , static_cast<steiner_index_type>(info.node_count - info.mid_index - 1));
+    assert(exponent >= 0 && exponent <= info.node_count - 1);
+    steiner_index_type const index = (info.node_count - 1) - exponent;
     assert(index >= 0 && index >= info.mid_index - 1 && index < info.node_count);
     return index;
 }
 
 inline subdivision::subdivision_edge_info &subdivision::edge(edge_id_t const edge) {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     return edges[edge];
 }
 
 inline const subdivision::subdivision_edge_info &subdivision::edge(edge_id_t const edge) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
     return edges[edge];
 }
 
