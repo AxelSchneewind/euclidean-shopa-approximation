@@ -32,7 +32,7 @@ template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels, Config>::insert(node_id_type const &neighbor, NodeCostPair const &current,
                                                       std::vector<NodeCostPair> &out,
                                                       std::vector<coordinate_t> &out_coordinates) const {
-    coordinate_t destination_coordinate{ _graph->node_coordinates(neighbor) };
+    coordinate_t destination_coordinate{_graph->node_coordinates(neighbor)};
     return insert(neighbor, destination_coordinate, current, out, out_coordinates);
 }
 
@@ -157,7 +157,8 @@ void steiner_neighbors<Graph, Labels, Config>::operator()(const NodeCostPair &no
             if (_source.edge != out[e].node().edge) // use euclidean distance for face crossing segments
                 out[e].distance() += distance(_source_coordinate, coordinates_out[e]);
             else // use optimized distance for edge using segments
-                out[e].distance() += _graph->on_edge_distance(_source.edge, _source.steiner_index, out[e].node().steiner_index);
+                out[e].distance() += _graph->on_edge_distance(_source.edge, _source.steiner_index,
+                                                              out[e].node().steiner_index);
         }
     }
 
@@ -181,7 +182,8 @@ void steiner_neighbors<Graph, Labels, Config>::operator()(const NodeCostPair &no
 template<typename Graph, typename Labels, Configuration Config>
 coordinate_t::component_type
 steiner_neighbors<Graph, Labels, Config>::min_angle_relative_value_matmul(base_edge_id_type edge_id,
-                                                                          coordinate_t direction_source) const {
+                                                                          coordinate_t direction_source) const requires (
+Configuration::PARAM == Config) {
     // compute intersection point_source + b * direction_source = point_target + result * direction_target
 
     // point vectors
@@ -219,7 +221,8 @@ steiner_neighbors<Graph, Labels, Config>::min_angle_relative_value_matmul(base_e
 template<typename Graph, typename Labels, Configuration Config>
 coordinate_t::component_type
 steiner_neighbors<Graph, Labels, Config>::min_angle_relative_value_atan2(base_edge_id_type edge_id,
-                                                                         coordinate_t const &direction) const {
+                                                                         coordinate_t const &direction) const
+                                                                         requires (Configuration::ATAN2 == Config) {
     // src->left, right-left
     coordinate_t source_left;
     coordinate_t right_left;
@@ -274,7 +277,8 @@ coordinate_t::component_type
 steiner_neighbors<Graph, Labels, Config>::min_angle_relative_value_atan2(coordinate_t left,
                                                                          coordinate_t right,
                                                                          coordinate_t::component_type direction_left,
-                                                                         coordinate_t::component_type direction_dir) const {
+                                                                         coordinate_t::component_type direction_dir) const
+    requires (Configuration::ATAN2 == Config) {
     // left->right
     right = left - right;
     // source->left
@@ -378,14 +382,15 @@ ignore(const coordinate_t::component_type direction_left, const coordinate_t::co
 template<typename Graph, typename Labels, Configuration Config>
 steiner_neighbors<Graph, Labels, Config>::node_id_type
 steiner_neighbors<Graph, Labels, Config>::min_angle_neighbor_binary_search(const base_edge_id_type &edge_id,
-                                                                           const coordinate_t &direction) {
+                                                                           const coordinate_t &direction)
+                                                                           requires (Configuration::BINSEARCH == Config) {
     assert(direction.longitude != 0 || direction.latitude != 0);
     auto &&destination_steiner_info = _graph->steiner_info(edge_id);
     _steiner_point_angle_test_count++;
 
     // "right"-vector for orientation testing
     coordinate_t target_first = _graph->node_coordinates_first(edge_id);
-    coordinate_t target_last  = _graph->node_coordinates_last(edge_id);
+    coordinate_t target_last = _graph->node_coordinates_last(edge_id);
 
     // get direction rotated by 90º to the right
     coordinate_t right = direction;
@@ -435,10 +440,12 @@ steiner_neighbors<Graph, Labels, Config>::min_angle_neighbor_binary_search(const
 
     while (right_index - left_index >= 2) [[likely]] {
         // compute m-value,  can possibly be further improved
-        intra_edge_id_type step = std::floor(std::log((1 + std::exp(ln_base * (right_index - left_index))) / 2) * log_base_inv);
+        intra_edge_id_type step = std::floor(
+                std::log((1 + std::exp(ln_base * (right_index - left_index))) / 2) * log_base_inv);
         assert(step >= 0);
         mid_index = right_half ? (right_index - step) : (left_index + step);
-        mid_index = std::clamp(mid_index, (intra_edge_id_type) (left_index + 1), (intra_edge_id_type) (right_index - 1));
+        mid_index = std::clamp(mid_index, (intra_edge_id_type) (left_index + 1),
+                               (intra_edge_id_type) (right_index - 1));
         assert (left_index >= right_index || (left_index <= mid_index && mid_index <= right_index));
 
         // update node ids
@@ -466,7 +473,8 @@ steiner_neighbors<Graph, Labels, Config>::min_angle_neighbor_binary_search(const
 template<typename Graph, typename Labels, Configuration Config>
 steiner_neighbors<Graph, Labels, Config>::node_id_type
 steiner_neighbors<Graph, Labels, Config>::min_angle_neighbor_atan2(base_edge_id_type edge_id,
-                                                                   const coordinate_t &direction) const {
+                                                                   const coordinate_t &direction) const
+                                                                   requires (Configuration::ATAN2 == Config) {
     auto angle_dir{std::atan2(direction)};
     auto left{_graph->node_coordinates_first(edge_id)};
     auto right{_graph->node_coordinates_last(edge_id)};
@@ -491,7 +499,8 @@ steiner_neighbors<Graph, Labels, Config>::min_angle_neighbor_atan2(base_edge_id_
 template<typename Graph, typename Labels, Configuration Config>
 steiner_neighbors<Graph, Labels, Config>::node_id_type
 steiner_neighbors<Graph, Labels, Config>::min_angle_neighbor_matmul(const base_edge_id_type &edge_id,
-                                                                    const coordinate_t &direction) {
+                                                                    const coordinate_t &direction) requires (
+Configuration::PARAM == Config) {
     auto rel = min_angle_relative_value_matmul(edge_id, direction);
 
     if (!is_in_range(rel, 0.0, 1.0 + std::numeric_limits<double>::epsilon()))
@@ -508,7 +517,6 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
                                                                  std::vector<NodeCostPair> &out,
                                                                  std::vector<coordinate_t> &out_coordinates) {
     auto const &node_id = node.node();
-    auto &&steiner_info = _graph->steiner_info(node_id.edge);
 
     // face-crossing edges
     for (auto &&edge_id: _graph->base_polyhedron().edges(node.node().edge)) [[likely]] {
@@ -530,7 +538,7 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
         if (optional::is_none(other))
             continue;
 
-        auto&& destination_steiner_info = _graph->steiner_info(other.edge);
+        auto &&destination_steiner_info = _graph->steiner_info(other.edge);
 
         assert(other.steiner_index >= 0);
         assert(other.steiner_index < destination_steiner_info.node_count);

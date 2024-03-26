@@ -81,30 +81,30 @@ private:
     void on_edge_neighbors(NodeCostPair const &node, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out);
 
     [[gnu::hot]]
-    coordinate_t::component_type min_angle_relative_value_matmul(base_edge_id_type edge_id, coordinate_t direction) const;
+    coordinate_t::component_type min_angle_relative_value_matmul(base_edge_id_type edge_id, coordinate_t direction) const requires (Configuration::PARAM == Config);
 
     [[gnu::hot]]
-    coordinate_t::component_type min_angle_relative_value_atan2(base_edge_id_type edge_id, coordinate_t const& direction) const;
+    coordinate_t::component_type min_angle_relative_value_atan2(base_edge_id_type edge_id, coordinate_t const& direction) const requires (Configuration::ATAN2 == Config);
 
     [[gnu::hot]]
     coordinate_t::component_type min_angle_relative_value_atan2(coordinate_t left,
                                                                 coordinate_t right,
                                                                 coordinate_t::component_type direction_left,
-                                                                coordinate_t::component_type direction_dir) const;
+                                                                coordinate_t::component_type direction_dir) const requires (Configuration::ATAN2 == Config);
 
     [[gnu::hot]]
     node_id_type
     min_angle_neighbor_matmul(base_edge_id_type const &edge_id,
-                              coordinate_t const &direction);
+                              coordinate_t const &direction) requires (Configuration::PARAM == Config);
 
     [[gnu::hot]]
-    node_id_type min_angle_neighbor_atan2(base_edge_id_type edge_id, const coordinate_t &direction) const;
+    node_id_type min_angle_neighbor_atan2(base_edge_id_type edge_id, const coordinate_t &direction) const requires (Configuration::ATAN2 == Config);
 
 
     [[gnu::hot]]
     node_id_type
     min_angle_neighbor_binary_search(base_edge_id_type const &edge_id,
-                                     const coordinate_t &direction);
+                                     const coordinate_t &direction) requires (Configuration::BINSEARCH == Config);
 
     template<typename NodeCostPair>
     [[gnu::hot]]
