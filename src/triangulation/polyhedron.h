@@ -68,7 +68,7 @@ public:
 
     std::size_t boundary_edge_count() const;
 
-    bool is_boundary_edge(node_id_type node) const;
+    bool is_boundary_edge(edge_id_type edge) const;
 
     bool is_boundary_node(node_id_type node) const;
 

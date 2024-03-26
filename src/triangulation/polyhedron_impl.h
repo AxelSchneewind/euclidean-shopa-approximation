@@ -268,6 +268,7 @@ polyhedron<BaseGraph, MaxNodesPerFace>::edges(edge_id_type edge) const {
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 std::span<const typename polyhedron<BaseGraph, MaxNodesPerFace>::edge_id_type, std::dynamic_extent>
 polyhedron<BaseGraph, MaxNodesPerFace>::node_edges(node_id_type node) const {
+    assert(node >= 0 && static_cast<size_t>(node) < _node_edges_offsets.size() - 1);
     return {
             _node_edges.begin() + _node_edges_offsets[node],
             _node_edges.begin() + _node_edges_offsets[node + 1]
@@ -277,23 +278,27 @@ polyhedron<BaseGraph, MaxNodesPerFace>::node_edges(node_id_type node) const {
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 std::span<const typename polyhedron<BaseGraph, MaxNodesPerFace>::edge_id_type, polyhedron<BaseGraph, MaxNodesPerFace>::EDGE_COUNT_PER_FACE>
 polyhedron<BaseGraph, MaxNodesPerFace>::face_edges(polyhedron::face_id_type face) const {
+    assert(face >= 0 && static_cast<size_t>(face) < _face_info.size());
     return {_face_info[face]};
 }
 
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 std::span<const typename polyhedron<BaseGraph, MaxNodesPerFace>::face_id_type, polyhedron<BaseGraph, MaxNodesPerFace>::FACE_COUNT_PER_EDGE>
 polyhedron<BaseGraph, MaxNodesPerFace>::edge_faces(edge_id_type edge) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < _edge_info.size());
     return {_edge_info[edge]};
 }
 
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
 bool polyhedron<BaseGraph, MaxNodesPerFace>::is_boundary_node(node_id_type node) const {
+    assert(node >= 0 && static_cast<size_t>(node) < _is_boundary_node.size());
     return _is_boundary_node[node];
 }
 
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
-bool polyhedron<BaseGraph, MaxNodesPerFace>::is_boundary_edge(node_id_type node) const {
-    return _is_boundary_edge[node];
+bool polyhedron<BaseGraph, MaxNodesPerFace>::is_boundary_edge(edge_id_type edge) const {
+    assert(edge >= 0 && static_cast<size_t>(edge) < _is_boundary_edge.size());
+    return _is_boundary_edge[edge];
 }
 
 template<Topology BaseGraph, std::size_t MaxNodesPerFace>
