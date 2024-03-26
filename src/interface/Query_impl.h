@@ -117,6 +117,10 @@ void QueryImplementation<GraphT>::write(table &out) const {
     out.put(Statistics::TO_LAT, tgt_lat.str());
     out.put(Statistics::TO_LON, tgt_lon.str());
 
+    // configuration
+    out.put(Statistics::ASTAR, _configuration.use_a_star);
+    out.put(Statistics::NEIGHBOR_FINDING, _configuration.min_angle_neighbor_method);
+
     //
     out.put(Statistics::BEELINE_DISTANCE, beeline_distance());
 }

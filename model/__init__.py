@@ -7,6 +7,8 @@ dtypes = {
     'cost': float,
     'time': float,
     'tree size': int,
+    'astar': int,
+    'neighbor finding algorithm': int,
     'source latitude': float,
     'source longitude': float,
     'target latitude': float,
