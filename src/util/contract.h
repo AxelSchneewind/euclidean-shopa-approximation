@@ -1,5 +1,5 @@
 #ifdef NDEBUG
-#define assert(condition) [[assume(condition)]]
+#define assert(condition) [[gnu::assume(condition)]]
 #else
 #include <cassert>
 #endif
