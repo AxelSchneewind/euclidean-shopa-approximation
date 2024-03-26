@@ -101,14 +101,14 @@ void QueryImplementation<GraphT>::write(table &out) const {
     out.put(Statistics::FROM_INTERNAL, _from_internal);
     out.put(Statistics::TO_INTERNAL, _to_internal);
 
-    // coordinates (with low precision to remove differences due to different input precisions)
-    int precision = 4;
+    // coordinates (with lower precision to remove differences due to different input precisions)
+    int precision = 8;
     std::stringstream src_lat;
-    src_lat << std::setprecision(precision) << _from_coordinates.latitude;
+    src_lat << std::setprecision(precision) << static_cast<float>(_from_coordinates.latitude);
     std::stringstream src_lon;
-    src_lon << std::setprecision(precision) << _from_coordinates.longitude;
+    src_lon << std::setprecision(precision) << static_cast<float>(_from_coordinates.longitude);
     std::stringstream tgt_lat;
-    tgt_lat << std::setprecision(precision) << _to_coordinates.latitude;
+    tgt_lat << std::setprecision(precision) << static_cast<float>(_to_coordinates.latitude);
     std::stringstream tgt_lon;
     tgt_lon << std::setprecision(precision) << _to_coordinates.longitude;
 
