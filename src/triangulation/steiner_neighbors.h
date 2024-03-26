@@ -22,12 +22,13 @@ concept HasFaceCrossingPredecessor = requires {
 
 
 enum class Configuration {
-    LINALG,
+    PARAM,
+    ATAN2,
     BINSEARCH,
-    ATAN2
+    LINEAR      // linear search, currently not implemented
 };
 
-template<typename Graph, typename Labels, Configuration Config = Configuration::LINALG>
+template<typename Graph, typename Labels, Configuration Config = Configuration::PARAM>
 struct steiner_neighbors {
 private:
     using node_id_type = typename Graph::node_id_type;
@@ -37,12 +38,15 @@ private:
     std::shared_ptr<Graph> _graph;
     std::shared_ptr<Labels> _labels;
 
+    // angle of a subcone of an epsilon-spanner
     coordinate_t::component_type _spanner_angle;
     coordinate_t::component_type _spanner_angle_cos;
     coordinate_t::component_type _spanner_angle_sin;
 
+    // maximal angle between two adjacent steiner points, seen from a reachable edge
     coordinate_t::component_type _max_angle;
 
+    // for storing information on the current neighbor query
     node_id_type _source;
     coordinate_t _source_coordinate;
     coordinate_t _direction;
@@ -58,7 +62,7 @@ private:
     std::size_t _boundary_node_neighbor_count{0};
     std::size_t _steiner_point_neighbor_count{0};
 
-    std::size_t _steiner_point_angle_test_count{0};
+    std::size_t _steiner_point_angle_test_count{0};     // for linear/binary search: number of iterations/tests
 
     void init(node_id_type /*source*/, node_id_type /*target*/) {
         _first_call = true;
