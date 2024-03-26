@@ -521,8 +521,10 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
             other = min_angle_neighbor_atan2(edge_id, direction);
         } else if constexpr (Configuration::BINSEARCH == Config) {
             other = min_angle_neighbor_binary_search(edge_id, direction);
-        } else if constexpr (Configuration::LINALG == Config) {
+        } else if constexpr (Configuration::PARAM == Config) {
             other = min_angle_neighbor_matmul(edge_id, direction);
+        } else if constexpr (Configuration::LINEAR == Config) {
+            other = min_angle_neighbor_binary_search(edge_id, direction);
         }
 
         if (optional::is_none(other))

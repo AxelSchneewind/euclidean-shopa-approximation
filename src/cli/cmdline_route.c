@@ -53,7 +53,7 @@ const char *gengetopt_args_info_help[] = {
   "  -l, --live-status            show live status on route computation\n                                 (default=on)",
   "\nrouting algorithms:",
   "  -a, --astar                  use A* heuristic to speed up routing\n                                 (default=off)",
-  "  -n, --neighbor-finding=ENUM  the type of algorithm to find neighbors with\n                                 minimal bending angle  (possible\n                                 values=\"linear\", \"trigonometry\",\n                                 \"binary\" default=`linear')",
+  "  -n, --neighbor-finding=ENUM  the type of algorithm to find neighbors with\n                                 minimal bending angle  (possible\n                                 values=\"param\", \"trig\", \"binary\",\n                                 \"linear\" default=`param')",
     0
 };
 
@@ -78,7 +78,7 @@ static int
 cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error);
 
 const char *cmdline_parser_projection_values[] = {"none", "google_bing", "wgs84", 0}; /*< Possible values for projection. */
-const char *cmdline_parser_neighbor_finding_values[] = {"linear", "trigonometry", "binary", 0}; /*< Possible values for neighbor-finding. */
+const char *cmdline_parser_neighbor_finding_values[] = {"param", "trig", "binary", "linear", 0}; /*< Possible values for neighbor-finding. */
 
 static char *
 gengetopt_strdup (const char *s);
@@ -123,7 +123,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->tree_orig = NULL;
   args_info->live_status_flag = 1;
   args_info->astar_flag = 0;
-  args_info->neighbor_finding_arg = neighbor_finding_arg_linear;
+  args_info->neighbor_finding_arg = neighbor_finding_arg_param;
   args_info->neighbor_finding_orig = NULL;
   
 }
@@ -1148,7 +1148,7 @@ cmdline_parser_internal (
         
           if (update_arg( (void *)&(args_info->neighbor_finding_arg), 
                &(args_info->neighbor_finding_orig), &(args_info->neighbor_finding_given),
-              &(local_args_info.neighbor_finding_given), optarg, cmdline_parser_neighbor_finding_values, "linear", ARG_ENUM,
+              &(local_args_info.neighbor_finding_given), optarg, cmdline_parser_neighbor_finding_values, "param", ARG_ENUM,
               check_ambiguity, override, 0, 0,
               "neighbor-finding", 'n',
               additional_error))

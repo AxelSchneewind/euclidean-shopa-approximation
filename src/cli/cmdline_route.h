@@ -35,7 +35,7 @@ extern "C" {
 #endif
 
 enum enum_projection { projection__NULL = -1, projection_arg_none = 0, projection_arg_google_bing, projection_arg_wgs84 };
-enum enum_neighbor_finding { neighbor_finding__NULL = -1, neighbor_finding_arg_linear = 0, neighbor_finding_arg_trigonometry, neighbor_finding_arg_binary };
+enum enum_neighbor_finding { neighbor_finding__NULL = -1, neighbor_finding_arg_param = 0, neighbor_finding_arg_trig, neighbor_finding_arg_binary, neighbor_finding_arg_linear };
 
 /** @brief Where the command line options are stored */
 struct gengetopt_args_info
@@ -72,7 +72,7 @@ struct gengetopt_args_info
   const char *live_status_help; /**< @brief show live status on route computation help description.  */
   int astar_flag;	/**< @brief use A* heuristic to speed up routing (default=off).  */
   const char *astar_help; /**< @brief use A* heuristic to speed up routing help description.  */
-  enum enum_neighbor_finding neighbor_finding_arg;	/**< @brief the type of algorithm to find neighbors with minimal bending angle (default='linear').  */
+  enum enum_neighbor_finding neighbor_finding_arg;	/**< @brief the type of algorithm to find neighbors with minimal bending angle (default='param').  */
   char * neighbor_finding_orig;	/**< @brief the type of algorithm to find neighbors with minimal bending angle original value given at command line.  */
   const char *neighbor_finding_help; /**< @brief the type of algorithm to find neighbors with minimal bending angle help description.  */
   

@@ -122,14 +122,14 @@ Router::Router(const Graph &graph, RoutingConfiguration const &config)
         case GraphType::STEINER_GRAPH:
             if (_config.use_a_star) {
                 switch (_config.min_angle_neighbor_method) {
-                    case RoutingConfiguration::LINALG: {
+                    case RoutingConfiguration::PARAM: {
                         if (!_config.bidirectional) { // unidirectional routing
-                            using steiner_routing_t = Implementation<steiner_graph, true, false, Configuration::LINALG>::routing_t;
+                            using steiner_routing_t = Implementation<steiner_graph, true, false, Configuration::PARAM>::routing_t;
                             impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
                             (graph.get_implementation<steiner_graph>(), steiner_routing_t(
                                     graph.get_implementation<steiner_graph>()), _config);
                         } else { // bidirectional routing
-                            using steiner_routing_t = Implementation<steiner_graph, true, true, Configuration::LINALG>::routing_t;
+                            using steiner_routing_t = Implementation<steiner_graph, true, true, Configuration::PARAM>::routing_t;
                             impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
                             (graph.get_implementation<steiner_graph>(), steiner_routing_t(
                                     graph.get_implementation<steiner_graph>()), _config);
@@ -165,14 +165,14 @@ Router::Router(const Graph &graph, RoutingConfiguration const &config)
                         break;
                     }
                 }
-            } else {
+            } else { // A* disabled
                 if (!_config.bidirectional) { // unidirectional routing
-                    using steiner_routing_t = typename Implementation<steiner_graph, false, false, Configuration::LINALG>::routing_t;
+                    using steiner_routing_t = typename Implementation<steiner_graph, false, false, Configuration::PARAM>::routing_t;
                     impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
                     (graph.get_implementation<steiner_graph>(), steiner_routing_t(
                             graph.get_implementation<steiner_graph>()), _config);
                 } else { // bidirectional routing
-                    using steiner_routing_t = typename Implementation<steiner_graph, false, true, Configuration::LINALG>::routing_t;
+                    using steiner_routing_t = typename Implementation<steiner_graph, false, true, Configuration::PARAM>::routing_t;
                     impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
                     (graph.get_implementation<steiner_graph>(), steiner_routing_t(
                             graph.get_implementation<steiner_graph>()), _config);
@@ -181,12 +181,12 @@ Router::Router(const Graph &graph, RoutingConfiguration const &config)
             break;
         case GraphType::STD_GRAPH:
             if (_config.use_a_star) {
-                using routing_t = typename Implementation<std_graph_t, true, false, Configuration::LINALG>::routing_t;
+                using routing_t = typename Implementation<std_graph_t, true, false, Configuration::PARAM>::routing_t;
                 impl = std::make_shared<RouterImplementation < std_graph_t, routing_t>>
                 (graph.get_implementation<std_graph_t>(), routing_t(
                         graph.get_implementation<std_graph_t>()), _config);
             } else { // don't use A*
-                using routing_t = typename Implementation<std_graph_t, false, false, Configuration::LINALG>::routing_t;
+                using routing_t = typename Implementation<std_graph_t, false, false, Configuration::PARAM>::routing_t;
                 impl = std::make_shared<RouterImplementation < std_graph_t, routing_t>>
                 (graph.get_implementation<std_graph_t>(), routing_t(
                         graph.get_implementation<std_graph_t>()), _config);
@@ -217,7 +217,7 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
     std::thread status;
     bool volatile done = false;
     if (_config.live_status) {
-        status = std::thread([&]() -> void {
+        status = std::thread([&done,this]() -> void {
             while (!done) {
                 double vm, res;
                 process_mem_usage(vm, res);

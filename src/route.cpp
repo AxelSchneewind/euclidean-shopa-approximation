@@ -34,17 +34,20 @@ main(int argc, char *argv[]) {
     config.use_a_star = arguments.astar_flag;
     config.live_status = arguments.live_status_flag;
     switch (arguments.neighbor_finding_arg) {
-        case neighbor_finding_arg_linear:
-            config.min_angle_neighbor_method = RoutingConfiguration::LINALG;
+        case neighbor_finding_arg_param:
+            config.min_angle_neighbor_method = RoutingConfiguration::PARAM;
             break;
-        case neighbor_finding_arg_trigonometry:
+        case neighbor_finding_arg_trig:
             config.min_angle_neighbor_method = RoutingConfiguration::ATAN2;
             break;
         case neighbor_finding_arg_binary:
             config.min_angle_neighbor_method = RoutingConfiguration::BINSEARCH;
             break;
+        case neighbor_finding_arg_linear:
+            config.min_angle_neighbor_method = RoutingConfiguration::LINEAR;
+            break;
         case neighbor_finding__NULL:
-            config.min_angle_neighbor_method = RoutingConfiguration::LINALG;
+            config.min_angle_neighbor_method = RoutingConfiguration::PARAM;
             break;
     }
 
