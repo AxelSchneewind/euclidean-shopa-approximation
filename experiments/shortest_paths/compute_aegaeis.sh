@@ -58,7 +58,7 @@ process_results "$OUTPUT_DIR/raw-triangle" "$OUTPUT_DIR/results-raw-triangle.csv
 
 # refined graph (triangle) with steiner points
 if [ ! -d "$OUTPUT_DIR/approximate-triangle" ]; then
-	EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02")
+	EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
 	for eps in "${EPSILONS[@]}"; do
 	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate-triangle" "$QUERY_FILE" "$eps" "" 
 	done
