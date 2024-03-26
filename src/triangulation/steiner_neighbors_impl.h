@@ -31,8 +31,8 @@ template<typename Graph, typename Labels, Configuration Config>
 template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels, Config>::insert(node_id_type const &neighbor, NodeCostPair const &current,
                                                       std::vector<NodeCostPair> &out,
-                                                      std::vector<coordinate_t> &out_coordinates) const {
-    coordinate_t destination_coordinate{_graph->node_coordinates(neighbor)};
+                                                      std::vector<coordinate_t> &out_coordinates) {
+    coordinate_t destination_coordinate{ _graph->node_coordinates(neighbor) };
     return insert(neighbor, destination_coordinate, current, out, out_coordinates);
 }
 
@@ -708,7 +708,7 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
     }
 
     destination.steiner_index = destination_steiner_info.mid_index + 1;
-    last_direction = _direction * -1;
+    last_direction = _source_coordinate - _graph->node_coordinates(destination);
     for (; destination.steiner_index <
            destination_steiner_info.node_count - 1; ++destination.steiner_index) [[likely]] {
         coordinate_t const destination_coordinate{_graph->node_coordinates(destination)};

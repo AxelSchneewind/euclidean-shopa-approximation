@@ -140,12 +140,13 @@ private:
 
 public:
     steiner_neighbors(std::shared_ptr<Graph> graph, std::shared_ptr<Labels> labels)
-            : _graph(std::move(graph)), _labels(std::move(labels)),
-              _spanner_angle{std::clamp(std::numbers::pi * _graph->epsilon() / 2, 0.0, std::numbers::pi_v<coordinate_t::component_type> / 2)},
-              _spanner_angle_cos{std::cos(_spanner_angle)},
-              _spanner_angle_sin{std::sin(_spanner_angle)},
-              _max_angle{std::clamp(std::numbers::pi / 2 * _graph->epsilon(), std::numeric_limits<coordinate_t::component_type>::min(), std::numbers::pi / 4)}
-              {}
+            : _graph(std::move(graph))
+            , _labels(std::move(labels))
+            , _spanner_angle{std::clamp(std::numbers::pi * _graph->epsilon() / 2, 0.0, std::numbers::pi_v<coordinate_t::component_type> / 2)}
+            , _spanner_angle_cos{std::cos(_spanner_angle)}
+            , _spanner_angle_sin{std::sin(_spanner_angle)}
+            , _max_angle{std::clamp(std::numbers::pi / 2 * _graph->epsilon(), std::numeric_limits<coordinate_t::component_type>::min(), std::numbers::pi / 4)}
+            {}
 
     template<typename... Args>
     steiner_neighbors(std::shared_ptr<Graph> graph, Labels &labels, Args const &...) : steiner_neighbors(graph, labels) { }
