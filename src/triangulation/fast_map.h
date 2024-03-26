@@ -38,4 +38,6 @@ public:
     void reset();
 
     std::size_t edge_count() const;
+
+    std::size_t size() const;
 };

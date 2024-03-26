@@ -56,3 +56,6 @@ void fast_map<AggregateId, IntraAggregateId, Info>::clear() {
     std::fill(_edge_index.begin(), _edge_index.end(), -1);
     _entries.clear();
 }
+
+template<typename AggregateId, typename IntraAggregateId, typename Info>
+std::size_t fast_map<AggregateId, IntraAggregateId, Info>::size() const { return _entries.size(); }
