@@ -194,7 +194,7 @@ dijkstra<G, Q, L, N, Heuristic>::expand(node_cost_pair_type node) {
     if constexpr (geometric_heuristic && !geometric_neighbors) {
         coordinates.resize(to_index);
         for (size_t i = 0; i < node_cost_pairs.size(); ++i) {
-            coordinates[i] = _graph->node(node_cost_pairs[i].node()).coordinates;
+            coordinates[i] = _graph->node_coordinates(node_cost_pairs[i].node());
         }
     }
 
