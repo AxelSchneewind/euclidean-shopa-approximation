@@ -530,8 +530,10 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
         if (optional::is_none(other))
             continue;
 
+        auto&& destination_steiner_info = _graph->steiner_info(other.edge);
+
         assert(other.steiner_index >= 0);
-        assert(other.steiner_index < _graph->steiner_info(edge_id).node_count);
+        assert(other.steiner_index < destination_steiner_info.node_count);
 
         // add point and next steiner point if found
         insert(other, node, out, out_coordinates);
@@ -539,7 +541,7 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
         ++other.steiner_index;
 
         // add if still valid index
-        if (other.steiner_index < steiner_info.node_count) [[likely]] {
+        if (other.steiner_index < destination_steiner_info.node_count) [[likely]] {
             insert(other, node, out, out_coordinates);
         }
     }
