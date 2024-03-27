@@ -51,7 +51,7 @@ def add_optimal_cost(data):
     r = []
     for i, row in data.iterrows():
         ref = reference(data, row)
-        r = r + [ref['item'].item()]
+        r = r + [ref['cost'].item()]
     data['optimal cost'] = numpy.array(r, dtype='float')
     return data
 
