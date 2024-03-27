@@ -47,7 +47,7 @@ steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) const {
     }
 
     assert(_labels.contains(node.edge));
-    return _labels.node_info(node.edge, node.steiner_index - 1);
+    return _labels.at(node.edge, node.steiner_index - 1);
 }
 
 template<RoutableGraph G, typename N>
@@ -61,7 +61,7 @@ steiner_labels<G, N>::at(steiner_labels<G, N>::node_id_type node) {
     }
 
     assert (_labels.contains(node.edge));
-    return _labels.node_info(node.edge, node.steiner_index - 1);
+    return _labels.at(node.edge, node.steiner_index - 1);
 }
 
 
@@ -80,5 +80,5 @@ Label &steiner_labels<G, Label>::operator[](const node_id_type &node) {
     }
 
     assert (_labels.contains(node.edge));
-    return _labels.node_info(node.edge, node.steiner_index - 1);
+    return _labels.at(node.edge, node.steiner_index - 1);
 }

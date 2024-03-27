@@ -113,7 +113,7 @@ void frontier_labels<NodeCostPair, Label>::set_frontier_distance(frontier_labels
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 Label frontier_labels<NodeCostPair, Label>::get_preliminary(frontier_labels::node_id_type node) const {
-    return _expanded_node_aggregates.node_info(node.edge, node.steiner_index);
+    return _expanded_node_aggregates.at(node.edge, node.steiner_index);
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
@@ -124,7 +124,7 @@ Label frontier_labels<NodeCostPair, Label>::get(frontier_labels::node_id_type no
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 bool frontier_labels<NodeCostPair, Label>::reached(frontier_labels::node_id_type node) const {
     return _expanded_node_aggregates.node_count(node.edge) > 0 &&
-           !is_infinity(_expanded_node_aggregates.node_info(node.edge, node.steiner_index).distance());
+           !is_infinity(_expanded_node_aggregates.at(node.edge, node.steiner_index).distance());
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>

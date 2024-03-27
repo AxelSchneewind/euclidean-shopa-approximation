@@ -31,9 +31,15 @@ public:
 
     void append(aggregate_id_type id, intra_aggregate_id_type count);
 
-    info_type& node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id);
+    info_type& at(edge_id_type edge_id, intra_edge_id_type intra_edge_id);
 
-    info_type const& node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id) const;
+    info_type const& at(edge_id_type edge_id, intra_edge_id_type intra_edge_id) const;
+
+    template<typename Pair> requires requires(Pair t) {t.edge; t.steiner_index; }
+    info_type& operator[](Pair&& index);
+
+    template<typename Pair> requires requires(Pair t) {t.edge; t.steiner_index; }
+    info_type const& operator[](Pair&& index) const;
 
     void reset();
 

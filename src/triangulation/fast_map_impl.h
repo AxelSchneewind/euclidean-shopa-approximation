@@ -13,7 +13,7 @@ void fast_map<AggregateId, IntraAggregateId, Info>::reset() { clear(); }
 
 template<typename AggregateId, typename IntraAggregateId, typename Info>
 Info const &
-fast_map<AggregateId, IntraAggregateId, Info>::node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id) const {
+fast_map<AggregateId, IntraAggregateId, Info>::at(edge_id_type edge_id, intra_edge_id_type intra_edge_id) const {
     if (contains(edge_id)) {
         [[likely]]
         return _entries[_edge_index[edge_id] + intra_edge_id];
@@ -23,8 +23,22 @@ fast_map<AggregateId, IntraAggregateId, Info>::node_info(edge_id_type edge_id, i
 }
 
 template<typename AggregateId, typename IntraAggregateId, typename Info>
+template<typename Pair> requires requires (Pair t) { t.edge; t.steiner_index; }
+typename fast_map<AggregateId, IntraAggregateId, Info>::info_type& fast_map<AggregateId, IntraAggregateId, Info>::
+operator[](Pair&& index) {
+    return _entries[_edge_index[index.edge] + index.steiner_index];
+}
+
+template<typename AggregateId, typename IntraAggregateId, typename Info>
+template<typename Pair> requires requires (Pair t) { t.edge; t.steiner_index; }
+typename fast_map<AggregateId, IntraAggregateId, Info>::info_type const& fast_map<AggregateId, IntraAggregateId, Info>::
+operator[](Pair&& index) const {
+    return _entries[_edge_index[index.edge] + index.steiner_index];
+}
+
+template<typename AggregateId, typename IntraAggregateId, typename Info>
 Info &
-fast_map<AggregateId, IntraAggregateId, Info>::node_info(edge_id_type edge_id, intra_edge_id_type intra_edge_id) {
+fast_map<AggregateId, IntraAggregateId, Info>::at(edge_id_type edge_id, intra_edge_id_type intra_edge_id) {
     assert(contains(edge_id));
     return _entries[_edge_index[edge_id] + intra_edge_id];
 }
