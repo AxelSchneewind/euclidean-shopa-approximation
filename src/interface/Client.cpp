@@ -53,7 +53,7 @@ Client::Client(GraphT &&graph, RoutingT &&router)
 
 template<>
 void Client::read_graph_file(std::string path) {
-    std::cout << "reading graph from " << path << "..." << std::flush;
+    std::cout << "reading graph from " << path << "...";
 
     std::ifstream input(path);
 
@@ -88,7 +88,7 @@ void Client::read_graph_file(std::string path) {
 
 template<>
 void Client::read_graph_file(std::string path, double epsilon) {
-    std::cout << "reading graph from " << path << "..." << std::flush;
+    std::cout << "reading graph from " << path << "...";
     std::ifstream input(path);
 
     double vm, res;
@@ -135,7 +135,7 @@ void Client::write_info(std::ostream& output) const {
            << "\n    steiner point neighbors:              " << statistics.get(NEIGHBORS_STEINER_POINT_NEIGHBORS_COUNT)
            << "\n    steiner point search iterations:      " << statistics.get(NEIGHBORS_STEINER_POINT_ANGLE_CHECK_COUNT);
 
-    output <<"\n\n" << std::flush;
+    output <<"\n\n";
 }
 
 void Client::write_tree_file(std::string path) const {
