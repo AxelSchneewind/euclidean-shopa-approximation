@@ -401,14 +401,14 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
         return outgoing_edges(base_node_id(node_id));
 
     // make list of edges (i.e. destination/cost pairs)
-    coordinate_type source_coordinate = node(node_id).coordinates;
+    coordinate_type source_coordinate = node_coordinates(node_id);
     auto &&info = steiner_info(node_id.edge);
     auto &&triangles = _polyhedron.edge_faces(node_id.edge);
 
     // for neighboring node on own edge
     if (node_id.steiner_index < info.node_count - 1) [[likely]] {
         node_id_type const destination(node_id.edge, node_id.steiner_index + 1);
-        coordinate_type destination_coordinate = node(destination).coordinates;
+        coordinate_type destination_coordinate = node_coordinates(destination);
         edges.emplace_back(destination);
         destination_coordinates.push_back(destination_coordinate);
     }
@@ -416,31 +416,22 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
     // for other neighboring node on own edge
     if (node_id.steiner_index > 0) [[likely]] {
         node_id_type const destination(node_id.edge, node_id.steiner_index - 1);
-        coordinate_type destination_coordinate = node(destination).coordinates;
+        coordinate_type destination_coordinate = node_coordinates(destination);
         edges.emplace_back(destination);
         destination_coordinates.push_back(destination_coordinate);
     }
 
     // face-crossing edges
-    for (int triangle_index = 0; triangle_index < 2; triangle_index++) [[unlikely]] {
-        if (optional::is_none(triangles[triangle_index])) continue;
+    for (auto &&edge_id: _polyhedron.edges(node_id.edge)) [[likely]] {
+        auto &&destination_steiner_info = steiner_info(edge_id);
 
-        auto&& triangle_edges = base_polyhedron().face_edges(triangles[triangle_index]);
+        for (node_id_type::intra_edge_id_type i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
+            node_id_type destination = {edge_id, i};
+            coordinate_type destination_coordinate = node_coordinates(destination);
+            assert(has_edge(destination, node_id));
 
-        for (auto&& base_edge_id: triangle_edges) [[likely]] {
-            if (base_edge_id == node_id.edge) [[unlikely]]
-                continue;
-
-            auto &&destination_steiner_info = steiner_info(base_edge_id);
-
-            for (node_id_type::intra_edge_id_type i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
-                node_id_type destination = {base_edge_id, i};
-                coordinate_type destination_coordinate = node(destination).coordinates;
-                assert(has_edge(destination, node_id));
-
-                edges.emplace_back(destination);
-                destination_coordinates.push_back(destination_coordinate);
-            }
+            edges.emplace_back(destination);
+            destination_coordinates.push_back(destination_coordinate);
         }
     }
 
