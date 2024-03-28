@@ -11,6 +11,7 @@ public:
     virtual ~RouterInterface() = default;
 
     virtual void compute_route(long from, long to) = 0;
+    virtual void compute_route(long from, long to, std::ostream& out) = 0;
     virtual void perform_query(Query const& query) = 0;
 
     virtual Query query() = 0;
@@ -39,6 +40,7 @@ private:
         RouterImplementation(std::shared_ptr<GraphT> graph, RouterT&&router, RoutingConfiguration const& config) : _graph(graph), _router(std::move(router)), _config(config) { };
 
         void compute_route(long from, long to) override;
+        void compute_route(long from, long to, std::ostream& out) override;
         void perform_query(Query const& query) override;
 
         Query query() override { return Query(_query_ptr); };
@@ -53,6 +55,7 @@ public:
     Router(Graph const&graph, RoutingConfiguration const&);
 
     void compute_route(long from, long to) { impl->compute_route(from, to); };
+    void compute_route(long from, long to, std::ostream& out) { impl->compute_route(from, to, out); };
     void perform_query(Query const& query) { impl->perform_query(query); };
 
     Query query() { return impl->query(); }

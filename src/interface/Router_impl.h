@@ -209,6 +209,24 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
 }
 
 template<typename GraphT, typename RouterT>
+void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, long to, std::ostream& out) {
+    QueryImplementation<GraphT> query_impl(*_graph, from, to, _config);
+    Query query(std::make_shared<QueryImplementation<GraphT>>(query_impl));
+
+    out << "node," << from << '\n';
+    while (!_router.done()) {
+        if constexpr (requires (GraphT g, typename GraphT::node_id_type n) { g.is_base_node(n); g.base_node(n); }) {
+            if (_graph->is_base_node(_router.forward_current().node()))
+                out << _graph->base_node(_router.forward_current().node()) << ',' << _router.forward_current().distance() << '\n';
+        } else {
+            out << _router.forward_current().node() << ',' << _router.forward_current().distance() << '\n';
+        }
+
+        _router.step_forward();
+    }
+}
+
+template<typename GraphT, typename RouterT>
 void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &query) {
     _query_ptr = std::make_shared<QueryImplementation<GraphT>>(query.get_implementation<QueryImplementation<GraphT>>());
     _router.init(_query_ptr->from_internal(), _query_ptr->to_internal());

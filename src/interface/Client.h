@@ -64,8 +64,8 @@ public:
         _result.write(statistics);
     }
 
-    void compute_one_to_all(long from, std::ostream& /*out*/) {
-        _router.compute_route(from, -1);
+    void compute_one_to_all(long from, std::ostream& out) {
+        _router.compute_route(from, -1, out);
         _query = _router.query();
         _result = _router.result();
         _query.write(statistics);
