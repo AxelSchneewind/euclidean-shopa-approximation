@@ -23,7 +23,7 @@ compute_single() {
     
     # run computations
     echo "$ROUTER --epsilon ${EPSILON} ${PARAMS} -p wgs84 -a $ASTAR -t$TREE_SIZE -l --graph-file ${GRAPH_FILE} --output-directory ${OUTPUT_DIR} --query ${QUERIES}"
-    $ROUTER --epsilon "${EPSILON}" ${PARAMS} -p wgs84 -a "$ASTAR" -t$TREE_SIZE -l --graph-file "${GRAPH_FILE}" --output-directory "${OUTPUT_DIR}" --query "${QUERIES}" > "${OUTPUT_DIR}/out.log"
+    $ROUTER --epsilon "${EPSILON}" ${PARAMS} -p wgs84 -a "$ASTAR" -t$TREE_SIZE -l --graph-file "${GRAPH_FILE}" --output-directory "${OUTPUT_DIR}" --query "${QUERIES}" > "${OUTPUT_DIR}/out.log" 2>&1
 }
 
 make_queries(){
