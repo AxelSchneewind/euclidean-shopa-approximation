@@ -32,7 +32,7 @@ fi
 ############################ refined graph using triangle (Shewchuk) ############################
 # refined graph with steiner points
 if [ ! -d "$OUTPUT_DIR/approximate-ref" ]; then
-	EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
+	EPSILONS=("1.0" "0.5" "0.25") # "0.125" "0.0625" "0.03125" "0.015625")
 	for eps in "${EPSILONS[@]}"; do
 	    compute_single "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/approximate-ref" "$QUERY_FILE" "$eps" ""
 	done
