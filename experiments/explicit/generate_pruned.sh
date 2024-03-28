@@ -15,7 +15,7 @@ FILE_UNREF=pruned.graph
 FILE_REF_GL=pruned-ref.gl
 FILE_REF=pruned-ref.graph
 
-# 
+# bounding box for milos island
 MINY=36.50861358642578125000
 MAXY=36.88759994506835937500
 MINX=24.09291076660156250000
