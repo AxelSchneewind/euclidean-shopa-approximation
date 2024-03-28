@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
         face_count = 0;
         for (size_t i = 0; i < triangles.size(); ++i) {
             auto& triangle = triangles[i];
-            if (is_in_rectangle(nodes[triangle[0]].coordinates, bottom_left, top_right) &&
-                is_in_rectangle(nodes[triangle[1]].coordinates, bottom_left, top_right) &&
+            if (is_in_rectangle(nodes[triangle[0]].coordinates, bottom_left, top_right) ||
+                is_in_rectangle(nodes[triangle[1]].coordinates, bottom_left, top_right) ||
                 is_in_rectangle(nodes[triangle[2]].coordinates, bottom_left, top_right)) {
 
                 contained[triangle[0]] = true;
