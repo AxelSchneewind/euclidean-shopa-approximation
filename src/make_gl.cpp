@@ -95,6 +95,28 @@ main(int argc, char const *argv[]) {
             file_io::write_nodes<node_t>(output, {nodes.begin(), nodes.end()});
             file_io::write_edges(output, edges);
         }
+    } else if (input_file_ending == ".fmi") {
+        std::vector<node_t> nodes;
+        std::vector<adjacency_list_edge<node_id_t, edge_t>> edges;
+
+        long node_count, edge_count;
+        input >> node_count >> edge_count;
+
+        nodes.resize(node_count);
+        edges.resize(edge_count);
+
+        file_io::read_nodes<node_t, stream_encoders::encode_text>(input, nodes);
+        file_io::read_edges<adjacency_list_edge<node_id_t, edge_t>, stream_encoders::encode_text>(input, edges);
+
+        unidirectional_adjacency_list<node_id_t, gl_edge_t>::adjacency_list_builder builder;
+        for (auto&& edge : edges) {
+            builder.add_edge(edge.source, edge.destination, gl_edge_t{color, linewidth});
+        }
+
+        output << node_count << '\n';
+        output << edges.size() << '\n';
+        file_io::write_nodes<node_t>(output, {nodes.begin(), nodes.end()});
+        file_io::write_edges(output, builder.edges());
     }
 
     output.close();
