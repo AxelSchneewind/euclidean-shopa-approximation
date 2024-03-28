@@ -12,7 +12,7 @@
 
 class subdivision {
 public:
-    using steiner_index_type = short;
+    using steiner_index_type = int;
 
     struct subdivision_edge_info {
         // (1+ epsilon * sin(alpha)) for both sides of this edge
