@@ -47,17 +47,19 @@ router<Graph, Dijkstra>::step_forward() {
 }
 
 template<typename Graph, typename Dijkstra>
+bool
+router<Graph, Dijkstra>::done() {
+    return _forward_search.queue_empty() || (!optional::is_none(_target_node) && _forward_search.reached(_target_node));
+}
+
+template<typename Graph, typename Dijkstra>
 void
 router<Graph, Dijkstra>::compute() {
     assert(!optional::is_none(_start_node));
     assert(optional::is_none(_target_node) || !_forward_search.reached(_target_node));
 
-    bool done = _forward_search.queue_empty();
-    while (!done) {
+    while (!done()) {
         step_forward();
-
-        done = _forward_search.queue_empty();
-        done |= !optional::is_none(_target_node) && _forward_search.reached(_target_node);
     }
 }
 
