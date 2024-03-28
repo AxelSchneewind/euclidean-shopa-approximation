@@ -47,7 +47,7 @@ fmi_file_io::write(std::ostream &output, const Graph &graph) {
     f::write(output, '\n');
 
     for (int n = 0; n < node_count; ++n) {
-        f::write(output, graph.node(n));
+        f::write(output, graph.node_coordinates(n));
         f::write(output, '\n');
     }
 
@@ -62,6 +62,7 @@ fmi_file_io::write(std::ostream &output, const Graph &graph) {
 
     return output;
 }
+
 template<>
 std::ostream &
 fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &output, const steiner_graph &graph) {
@@ -75,24 +76,25 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
     f::write(output, edge_count);
     f::write(output, '\n');
 
+    // write base node coordinates
     size_t index = 0;
-    std::unordered_map<steiner_graph::base_topology_type::node_id_type, size_t> base_indices;
-    for (auto node: graph.base_graph().node_ids()) {
+    std::unordered_map<steiner_graph::triangle_node_id_type, size_t> base_indices;
+    for (auto&& node: graph.base_graph().node_ids()) {
+        assert(node == index);
         base_indices[node] = index++;
-        auto n = graph.node(node);
+        auto n = graph.node_coordinates(node);
         f::write(output, n);
         f::write(output, '\n');
     }
 
+    // make ids for all nodes (including steiner points)
     std::unordered_map<steiner_graph::node_id_type, size_t> indices;
     for (auto node: graph.node_ids()) {
-        if (node.steiner_index == 0) {
-            indices[node] = base_indices[graph.base_graph().source(node.edge)];
-        } else if (node.steiner_index == graph.steiner_info(node.edge).node_count - 1) {
-            indices[node] = base_indices[graph.base_graph().destination(node.edge)];
-        } else {
+        if (graph.is_base_node(node)) { // for base vertices, index is node id
+            indices[node] = base_indices[graph.base_node_id(node)];
+        } else {                        // for steiner points, index is incremented
             indices[node] = index++;
-            auto n = graph.node(node);
+            auto n = graph.node_coordinates(node);
             f::write(output, n);
             f::write(output, '\n');
         }
@@ -100,32 +102,19 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
 
     // write all outgoing edges of base nodes
     for (auto node: graph.base_graph().node_ids()) {
-        {
-            auto &&edges = graph.outgoing_edges(node);
-            for (auto edge: edges) {
-                auto dest = edge.destination;
-                assert(!graph.is_base_node(edge.destination));
+        auto &&edges = graph.outgoing_edges(node);
+        for (auto&& edge: edges) {
+            auto dest = edge.destination;
+            assert(!graph.is_base_node(edge.destination));
 
-                f::write(output, base_indices[node]) << ' ';
-                f::write(output, indices[dest]) << ' ';
-                f::write(output, distance(graph.node(node).coordinates, graph.node(dest).coordinates));
-                f::write(output, '\n');
-            }
-        }
-        {
-            auto &&edges = graph.incoming_edges(node);
-            for (auto edge: edges) {
-                auto dest = edge.destination;
-                assert(!graph.is_base_node(edge.destination));
-
-                f::write(output, base_indices[node]) << ' ';
-                f::write(output, indices[dest]) << ' ';
-                f::write(output, distance(graph.node(node).coordinates, graph.node(dest).coordinates));
-                f::write(output, '\n');
-            }
+            f::write(output, base_indices[node]) << ' ';
+            f::write(output, indices[dest]) << ' ';
+            f::write(output, distance(graph.node_coordinates(node), graph.node_coordinates(dest)));
+            f::write(output, '\n');
         }
     }
 
+    // insert outgoing edges from steiner points
     for (auto node: graph.node_ids()) {
         auto&& edges = graph.outgoing_edges(node);
         for (auto edge: edges) {
@@ -139,7 +128,7 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
 
             f::write(output, indices[node]) << ' ';
             f::write(output, indices[dest]) << ' ';
-            f::write(output, distance(graph.node(node).coordinates, graph.node(dest).coordinates));
+            f::write(output, distance(graph.node_coordinates(node), graph.node_coordinates(dest)));
             f::write(output, "\n");
         }
     }
