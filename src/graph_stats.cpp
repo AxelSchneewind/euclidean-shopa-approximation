@@ -12,7 +12,7 @@
 
 // just to have the sizes somewhere and see when they change
 static_assert(steiner_graph::SIZE_PER_NODE == 24);
-static_assert(steiner_graph::SIZE_PER_EDGE == 56);
+static_assert(steiner_graph::SIZE_PER_EDGE == 64);
 
 static_assert(std_graph_t::SIZE_PER_NODE == 24);
 static_assert(std_graph_t::SIZE_PER_EDGE == 40);
@@ -214,13 +214,13 @@ void show_info<mode_arg_bounding_box>(gengetopt_args_info const &args) {
 
     // get bounding box
     auto [min_latitude, max_latitude] = std::ranges::minmax(coordinates, std::ranges::less{},
-                                                            &coordinate_t::latitude);
+                                                            &coordinate_t::y);
     auto [min_longitude, max_longitude] = std::ranges::minmax(coordinates, std::ranges::less{},
-                                                              &coordinate_t::longitude);
+                                                              &coordinate_t::x);
 
-    std::cout   << std::setprecision(20)
-                << "latitude:  (" << min_latitude.latitude << ", " << max_latitude.latitude << "),\n"
-                << "longitude: (" << min_longitude.longitude << ", " << max_longitude.longitude << ")\n";
+    std::cout << std::setprecision(20)
+              << "latitude:  (" << min_latitude.y << ", " << max_latitude.y << "),\n"
+              << "longitude: (" << min_longitude.x << ", " << max_longitude.x << ")\n";
 }
 
 
