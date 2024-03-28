@@ -6,8 +6,10 @@
 #include <string>
 
 int main(int argc, const char *argv[]) {
-    if (argc < 5)
+    if (argc < 5) {
+        std::cout << "usage ota path/to/graph path/to/output epsilon\n";
         return 1;
+    }
 
     std::string graph_file(argv[1]);
     std::string output_file(argv[2]);
