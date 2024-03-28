@@ -109,23 +109,21 @@ void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text>(s
 
             // only insert once (if e is the edge with the smallest id)
             if (e <= edges[0] && e <= edges[1] && e <= edges[2]) {
-                auto n0 = graph.base_graph().destination(edges[0]);
-                auto n1 = graph.base_graph().destination(edges[1]);
-                auto n2 = graph.base_graph().destination(edges[2]);
+                std::array<steiner_graph::triangle_edge_id_type, 6> nodes {
+                        graph.base_graph().destination(edges[0]),
+                        graph.base_graph().destination(edges[1]),
+                        graph.base_graph().destination(edges[2]),
+                        graph.base_graph().source(edges[0]),
+                        graph.base_graph().source(edges[1]),
+                        graph.base_graph().source(edges[2]),
+                };
+                std::ranges::sort(nodes);
 
-                // make sure the lowest node id appears first
-                if (n0 > n1)
-                    std::swap(n0, n1);
-                if (n0 > n2)
-                    std::swap(n0, n2);
-                if (n1 > n2)
-                    std::swap(n1, n2);
-
-                f.write(output, n0);
+                f.write(output, nodes[0]);
                 f.write(output, ' ');
-                f.write(output, n1);
+                f.write(output, nodes[2]);
                 f.write(output, ' ');
-                f.write(output, n2);
+                f.write(output, nodes[4]);
                 f.write(output, '\n');
             }
         }
