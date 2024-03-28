@@ -46,14 +46,14 @@ namespace stream_encoders {
     coordinate_t
     encode_text::read(std::istream &input) {
         coordinate_t result;
-        input >> result.latitude >> result.longitude;
+        input >> result.y >> result.x;
         return result;
     }
 
     template<>
     std::ostream &
     encode_text::write(std::ostream &output, const coordinate_t &c) {
-        output << std::setprecision(20) << c.latitude << ' ' << std::setprecision(20) << c.longitude << ' ';
+        output << std::setprecision(20) << c.y << ' ' << std::setprecision(20) << c.x << ' ';
         return output;
     }
 
@@ -62,7 +62,7 @@ namespace stream_encoders {
     node_t
     encode_text::read(std::istream &input) {
         node_t result;
-        input >> result.coordinates.latitude >> result.coordinates.longitude;
+        input >> result.coordinates.y >> result.coordinates.x;
         return result;
     }
 
@@ -151,7 +151,7 @@ namespace stream_encoders {
     encode_text::read<std::array<int, 3>>(std::istream &input) {
         std::array<int, 3> result;
         input >> result[0] >> result[1] >> result[2];
-	input.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+	    input.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         return result;
     }
 
@@ -168,7 +168,7 @@ namespace stream_encoders {
     encode_text::read(std::istream &input) {
         std::array<unsigned long, 3> result;
         input >> result[0] >> result[1] >> result[2];
-	input.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+	    input.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         return result;
     }
 
@@ -200,7 +200,7 @@ namespace stream_encoders {
     ch_node_t
     encode_text::read(std::istream &input) {
         ch_node_t result;
-        input >> ignore >> ignore >> result.coordinates.latitude >> result.coordinates.longitude >> ignore
+        input >> ignore >> ignore >> result.coordinates.y >> result.coordinates.x >> ignore
               >> result.level;
         return result;
     }

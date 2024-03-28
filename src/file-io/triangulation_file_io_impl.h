@@ -95,8 +95,8 @@ void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text>(s
 
     std::ranges::for_each(graph.base_nodes(), [ &f, &output](auto&& node) {
         f.write(output, std::setprecision(20));
-        f.write(output, node.coordinates.latitude) << ' ';
-        f.write(output, node.coordinates.longitude);
+        f.write(output, node.coordinates.y) << ' ';
+        f.write(output, node.coordinates.x);
         f.write(output, '\n');
     });
 

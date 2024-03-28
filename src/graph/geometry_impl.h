@@ -22,8 +22,8 @@ inline constexpr N atan_scalar_approximation(N x) {
 void atan2_approximation(size_t num_points, const coordinate_t* coordinates, coordinate_t::component_type* out) {
     for (size_t i = 0; i < num_points; ++i) {
         // Ensure input is in [-1, +1]
-        auto y = coordinates[i].latitude;
-        auto x = coordinates[i].longitude;
+        auto y = coordinates[i].y;
+        auto x = coordinates[i].x;
         bool swap = std::fabs(x) < std::fabs(y);
         double atan_input = (swap ? x : y) / (swap ? y : x);
 
@@ -48,14 +48,14 @@ void atan2_approximation(size_t num_points, const coordinate_t* coordinates, coo
 }
 
 coordinate_t::component_type std::atan2(coordinate_t const direction) {
-    return std::atan2(direction.longitude, direction.latitude);
+    return std::atan2(direction.x, direction.y);
 }
 
 // Euclidean distance
 coordinate_t::component_type
 distance_euclidean(coordinate_t const c1, coordinate_t c2) {
     c2 -= c1;
-    return std::sqrt(std::pow(c2.latitude, 2) + std::pow(c2.longitude, 2));
+    return std::sqrt(std::pow(c2.y, 2) + std::pow(c2.x, 2));
 }
 
 inline double
@@ -89,8 +89,8 @@ angle(coordinate_t dir0, coordinate_t dir1) {
     // return std::acos(AB / (dir0.length() * dir1.length()));
 
     // using atan on both vectors
-    auto angle0 = std::atan2(dir0.longitude, dir0.latitude);
-    auto angle1 = std::atan2(dir1.longitude, dir1.latitude);
+    auto angle0 = std::atan2(dir0.x, dir0.y);
+    auto angle1 = std::atan2(dir1.x, dir1.y);
     return angle1 - angle0;
 }
 
@@ -201,16 +201,16 @@ void project_coordinate(coordinate_t &src, Projection projection) {
         case Projection::NONE:
             return;
         case Projection::WGS84_TO_GB:
-            WGS84toGoogleBing(src.latitude, src.longitude, src.latitude, src.longitude);
+            WGS84toGoogleBing(src.y, src.x, src.y, src.x);
             return;
         case Projection::GB_TO_WGS84:
-            GoogleBingtoWGS84Mercator(src.latitude, src.longitude, src.latitude, src.longitude);
+            GoogleBingtoWGS84Mercator(src.y, src.x, src.y, src.x);
             return;
     }
 }
 
 
 bool is_in_rectangle(coordinate_t point, coordinate_t bottom_left, coordinate_t top_right) {
-    return bottom_left.latitude <= point.latitude && point.latitude <= top_right.latitude
-           && bottom_left.longitude <= point.longitude && point.longitude <= top_right.longitude;
+    return bottom_left.y <= point.y && point.y <= top_right.y
+           && bottom_left.x <= point.x && point.x <= top_right.x;
 }

@@ -104,13 +104,13 @@ void QueryImplementation<GraphT>::write(table &out) const {
     // coordinates (with lower precision to remove differences due to different input precisions)
     int precision = 8;
     std::stringstream src_lat;
-    src_lat << std::setprecision(precision) << static_cast<float>(_from_coordinates.latitude);
+    src_lat << std::setprecision(precision) << static_cast<float>(_from_coordinates.y);
     std::stringstream src_lon;
-    src_lon << std::setprecision(precision) << static_cast<float>(_from_coordinates.longitude);
+    src_lon << std::setprecision(precision) << static_cast<float>(_from_coordinates.x);
     std::stringstream tgt_lat;
-    tgt_lat << std::setprecision(precision) << static_cast<float>(_to_coordinates.latitude);
+    tgt_lat << std::setprecision(precision) << static_cast<float>(_to_coordinates.y);
     std::stringstream tgt_lon;
-    tgt_lon << std::setprecision(precision) << _to_coordinates.longitude;
+    tgt_lon << std::setprecision(precision) << _to_coordinates.x;
 
     out.put(Statistics::FROM_LAT, src_lat.str());
     out.put(Statistics::FROM_LON, src_lon.str());

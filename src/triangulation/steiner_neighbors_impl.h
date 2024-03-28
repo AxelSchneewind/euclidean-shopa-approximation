@@ -212,9 +212,9 @@ Configuration::PARAM == Config) {
     //
     coordinate_t const right_side = point_target - _source_coordinate;
     coordinate_t::component_type const result =
-            (right_side.longitude * direction_source.latitude) - (right_side.latitude * direction_source.longitude);
-    double const factor = (direction_source.longitude * direction_target.latitude) -
-                          (direction_target.longitude * direction_source.latitude);
+            (right_side.x * direction_source.y) - (right_side.y * direction_source.x);
+    double const factor = (direction_source.x * direction_target.y) -
+                          (direction_target.x * direction_source.y);
     return result / factor;
 }
 
@@ -384,7 +384,7 @@ steiner_neighbors<Graph, Labels, Config>::node_id_type
 steiner_neighbors<Graph, Labels, Config>::min_angle_neighbor_binary_search(const base_edge_id_type &edge_id,
                                                                            const coordinate_t &direction)
                                                                            requires (Configuration::BINSEARCH == Config) {
-    assert(direction.longitude != 0 || direction.latitude != 0);
+    assert(direction.x != 0 || direction.y != 0);
     auto &&destination_steiner_info = _graph->steiner_info(edge_id);
     _steiner_point_angle_test_count++;
 
