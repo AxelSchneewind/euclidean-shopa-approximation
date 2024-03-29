@@ -403,16 +403,14 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
         return outgoing_edges(base_node_id(node_id));
 
     // make list of edges (i.e. destination/cost pairs)
-    coordinate_type source_coordinate = node_coordinates(node_id);
-    auto &&info = steiner_info(node_id.edge);
-    auto &&triangles = _polyhedron.edge_faces(node_id.edge);
+    auto&& info = steiner_info(node_id.edge);
 
     // for neighboring node on own edge
     if (node_id.steiner_index < info.node_count - 1) [[likely]] {
         node_id_type const destination(node_id.edge, node_id.steiner_index + 1);
         coordinate_type destination_coordinate = node_coordinates(destination);
         edges.emplace_back(destination);
-        destination_coordinates.push_back(destination_coordinate);
+        destination_coordinates.emplace_back(destination_coordinate);
     }
 
     // for other neighboring node on own edge
@@ -420,24 +418,54 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
         node_id_type const destination(node_id.edge, node_id.steiner_index - 1);
         coordinate_type destination_coordinate = node_coordinates(destination);
         edges.emplace_back(destination);
-        destination_coordinates.push_back(destination_coordinate);
+        destination_coordinates.emplace_back(destination_coordinate);
     }
 
+    static std::vector<triangle_node_id_type> base_nodes;
+    std::array<triangle_node_id_type, 2> const edge_nodes { _base_topology.source(node_id.edge), _base_topology.destination(node_id.edge) };
+    assert(base_nodes.empty());
+
     // face-crossing edges
-    for (auto &&edge_id: _polyhedron.edges(node_id.edge)) [[likely]] {
+    for (auto const& edge_id: _polyhedron.edges(node_id.edge)) [[likely]] {
         auto &&destination_steiner_info = steiner_info(edge_id);
 
+        {   //
+            auto const left = _base_topology.source(edge_id);
+            if (left != edge_nodes[0] && left != edge_nodes[1])
+                base_nodes.emplace_back(_base_topology.source(edge_id));
+            auto const right = _base_topology.source(edge_id);
+            if (right != edge_nodes[0] && right != edge_nodes[1])
+                base_nodes.emplace_back(right);
+        }
+
         for (node_id_type::intra_edge_id_type i = 1; i < destination_steiner_info.node_count - 1; ++i) [[likely]] {
-            node_id_type destination = {edge_id, i};
-            coordinate_type destination_coordinate = node_coordinates(destination);
+            node_id_type destination {edge_id, i};
+            coordinate_type destination_coordinate { node_coordinates(destination) };
             assert(has_edge(destination, node_id));
 
             edges.emplace_back(destination);
-            destination_coordinates.push_back(destination_coordinate);
+            destination_coordinates.emplace_back(destination_coordinate);
         }
     }
 
+    // add base nodes that are reachable
+    {
+        std::ranges::sort(base_nodes);
+        auto [res, _] = std::ranges::unique(base_nodes);
+        base_nodes.resize(res - std::ranges::begin(base_nodes));
+        for (auto const& node : base_nodes) {
+            node_id_type destination { from_base_node_id(node) };
+            coordinate_type destination_coordinate { node_coordinates(node) };
+            assert(has_edge(destination, node_id));
+
+            edges.emplace_back(destination);
+            destination_coordinates.emplace_back(destination_coordinate);
+        }
+    }
+    base_nodes.clear();
+
     // compute distances (can be vectorized)
+    coordinate_type const source_coordinate = node_coordinates(node_id);
     for (size_t e = 0; e < edges.size(); ++e) [[likely]] {
         edges[e].info.cost = distance(source_coordinate, destination_coordinates[e]);
     }
