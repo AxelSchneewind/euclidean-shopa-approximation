@@ -212,8 +212,12 @@ template<typename GraphT, typename RouterT>
 void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, long to, std::ostream& out) {
     QueryImplementation<GraphT> query_impl(*_graph, from, to, _config);
     Query query(std::make_shared<QueryImplementation<GraphT>>(query_impl));
+    _query_ptr = std::make_shared<QueryImplementation<GraphT>>(query.get_implementation<QueryImplementation<GraphT>>());
+
+    auto const before = std::chrono::high_resolution_clock::now();
 
     out << "node," << from << '\n';
+    _router.init(_query_ptr->from_internal(), _query_ptr->to_internal());
     while (!_router.done()) {
         if constexpr (requires (GraphT g, typename GraphT::node_id_type n) { g.is_base_node(n); g.base_node(n); }) {
             if (_graph->is_base_node(_router.forward_current().node()))
@@ -224,6 +228,11 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
 
         _router.step_forward();
     }
+
+    auto const after = std::chrono::high_resolution_clock::now();
+    auto const duration = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
+
+    _result_ptr = std::make_shared<ResultImplementation<GraphT>>(*_graph, *_query_ptr, _router, duration);
 }
 
 template<typename GraphT, typename RouterT>
