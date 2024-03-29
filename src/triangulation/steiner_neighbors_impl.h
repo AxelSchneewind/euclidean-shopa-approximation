@@ -583,7 +583,7 @@ void steiner_neighbors<Graph, Labels, Config>::from_base_node(const NodeCostPair
     //     // face-crossing edges
     //     auto &&triangle_edges = _graph->base_polyhedron().node_edges(base_node_id);
     //     for (auto base_edge_id: triangle_edges) [[likely]] {
-    //         epsilon_spanner(node, base_edge_id, _max_angle_cos, _source_coordinate, out, coordinates_out);
+    //         epsilon_spanner(node, base_edge_id, out, coordinates_out);
     //     }
     // }
 
@@ -606,7 +606,7 @@ void steiner_neighbors<Graph, Labels, Config>::from_start_node(const NodeCostPai
     // face-crossing edges: make epsilon spanner in all directions
     if constexpr (steiner_graph::face_crossing_from_base_nodes) {
         for (auto &&base_edge_id: _graph->base_polyhedron().node_edges(base_node_id)) [[likely]] {
-            epsilon_spanner(node, base_edge_id, -1.0, out, coordinates_out);
+            epsilon_spanner(node, base_edge_id, out, coordinates_out);
         }
     }
 
@@ -642,7 +642,7 @@ steiner_neighbors<Graph, Labels, Config>::from_boundary_node(const NodeCostPair 
         if constexpr (steiner_graph::face_crossing_from_base_nodes) {
             // face-crossing edges: make epsilon spanner in all directions
             for (auto &&base_edge_id: _graph->base_polyhedron().node_edges(base_node_id)) [[likely]] {
-                epsilon_spanner(node, base_edge_id, -1.0, out, coordinates_out);
+                epsilon_spanner(node, base_edge_id, out, coordinates_out);
             }
         }
 
@@ -679,6 +679,16 @@ steiner_neighbors<Graph, Labels, Config>::from_steiner_node(const NodeCostPair &
         add_min_angle_neighbor(node, _direction, out, out_coordinates);
     }
 
+    // if no face crossing segments from base nodes, have to take epsilon spanner here
+    if constexpr (!steiner_graph::face_crossing_from_base_nodes) {
+        if (node.steiner_index == 1 || node.steiner_index == _graph.steiner_info(node.edge).node_count - 1) {
+            // make epsilon spanner in all directions
+            for (auto &&base_edge_id: _graph->base_polyhedron().edges(node.edge)) [[likely]] {
+                epsilon_spanner(node, base_edge_id, out, out_coordinates);
+            }
+        }
+    }
+
     // always add the two neighbors on this edge
     on_edge_neighbors(node, out, out_coordinates);
 
@@ -689,7 +699,7 @@ template<typename Graph, typename Labels, Configuration Config>
 template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPair &node,
                                                                const base_edge_id_type &edge_id,
-                                                               const coordinate_t::component_type &max_angle_cos,
+                                                               // const coordinate_t::component_type &max_angle_cos,
                                                                std::vector<NodeCostPair> &out,
                                                                std::vector<coordinate_t> &coordinates_out) {
     auto &&destination_steiner_info = _graph->steiner_info(edge_id);
@@ -705,10 +715,10 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
             [[likely]]
             continue;
         }
-        if (angle_cos(_direction, new_direction) < max_angle_cos) {
-            [[unlikely]]
-            break;
-        }
+        // if (angle_cos(_direction, new_direction) < max_angle_cos) {
+        //     [[unlikely]]
+        //     break;
+        // }
 
         assert(_graph->has_edge(node.node(), destination));
         insert(destination, destination_coordinate, node, out, coordinates_out);
@@ -726,10 +736,10 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
             [[likely]]
             continue;
         }
-        if (angle_cos(_direction, new_direction) < max_angle_cos) {
-            [[unlikely]]
-            break;
-        }
+        // if (angle_cos(_direction, new_direction) < max_angle_cos) {
+        //     [[unlikely]]
+        //     break;
+        // }
 
         assert(_graph->has_edge(node.node(), destination));
         insert(destination, destination_coordinate, node, out, coordinates_out);

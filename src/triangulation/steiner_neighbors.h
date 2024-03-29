@@ -112,9 +112,18 @@ private:
     add_min_angle_neighbor(NodeCostPair const &node, coordinate_t const& direction,
             std::vector<NodeCostPair> &out, std::vector<coordinate_t> &out_coordinates);
 
+    // TODO document, add overload for epsilon spanner with angle given
+    /**
+     *
+     * @tparam NodeCostPair
+     * @param node
+     * @param edge_id
+     * @param out
+     * @param out_coordinates
+     */
     template<typename NodeCostPair>
     void epsilon_spanner(NodeCostPair const &node,
-                         base_edge_id_type const &edge_id, coordinate_t::component_type const &max_angle_cos,
+                         base_edge_id_type const &edge_id,
                          std::vector<NodeCostPair> &out, std::vector<coordinate_t> &out_coordinates);
 
     template<typename NodeCostPair>
