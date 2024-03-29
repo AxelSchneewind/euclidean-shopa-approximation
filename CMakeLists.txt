@@ -107,11 +107,12 @@ add_executable(make_bin src/make_bin.cpp)
 
 add_executable(route src/route.cpp src/cli/cmdline_route.c)
 
-add_executable(distance_one_to_all src/distance_one_to_all.cpp)
+add_executable(distance_one_to_all src/distance_one_to_all.cpp src/cli/cmdline_route.c)
 add_executable(graph_stats src/graph_stats.cpp src/cli/cmdline_graph_stats.c)
 
 if (GENGETOPT)
     add_dependencies(route cmdline_route)
+    add_dependencies(distance_one_to_all cmdline_route)
     add_dependencies(prune_graph cmdline_prune_graph)
     add_dependencies(find_nodes cmdline_find_nodes)
     add_dependencies(graph_stats cmdline_graph_stats)
