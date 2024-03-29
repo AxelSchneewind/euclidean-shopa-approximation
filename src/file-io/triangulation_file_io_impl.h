@@ -55,7 +55,7 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     std::vector<steiner_graph::adjacency_list_type::builder::edge_type> edges;
     std::vector<std::array<steiner_graph::triangle_node_id_type, 3>> faces;
 
-    if (node_count >= (std::size_t)std::numeric_limits<int>::max || triangle_count >= (std::size_t) std::numeric_limits<int>::max)
+    if (node_count >= static_cast<std::size_t>(std::numeric_limits<int>::max()) || triangle_count >= static_cast<std::size_t>(std::numeric_limits<int>::max()))
         throw std::runtime_error("node or face count to high");
 
     nodes.resize(node_count);
