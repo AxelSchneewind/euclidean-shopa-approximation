@@ -11,9 +11,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::string graph_file = argv[1];
-    std::string graph_file_out = argv[2];
-    double epsilon = std::stod(argv[3]);
+    std::string const graph_file { argv[1] };
+    std::string const graph_file_out { argv[2] };
+    double const epsilon { std::stod(argv[3]) };
+
+    std::cout << "making explicit graph " << graph_file_out << " by placing steiner points on triangulation " << graph_file << " with epsilon=" << epsilon << "\n";
 
     Client client;
     client.read_graph_file(graph_file, epsilon);
