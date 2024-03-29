@@ -99,12 +99,14 @@ main(int argc, char *argv[]) {
 
         // setup writers for graphs to show
         std::stringstream target_dir_builder;
-        target_dir_builder <<  output_directory.string() << "/" << src_node << "_" << dest_node << "_";
+        target_dir_builder <<  output_directory.string() << "/";
         if (epsilon == 0.0)
             target_dir_builder << "exact";
         else if (std::isinf(epsilon))
             target_dir_builder << "raw";
-        else target_dir_builder << ((int) (epsilon * 10000));
+        else target_dir_builder << static_cast<int>(epsilon * 10000);
+        target_dir_builder <<  "/" << src_node << "_" << dest_node;
+
         std::string target_directory = target_dir_builder.str();
         std::string beeline_file = target_directory + "/beeline.gl";
         std::string route_file = target_directory + "/path.gl";
@@ -115,7 +117,6 @@ main(int argc, char *argv[]) {
         std::ofstream output_route(route_file);
         std::ofstream output_tree(tree_file);
         std::ofstream output_info(info_file);
-        output_info << std::flush;
 
         if (arguments.query_given >= 2)
             std::cout << "computing route " << (query_index / 2) << " of " << (arguments.query_given/2) << ": " << src_node << ',' << dest_node << "\n";
