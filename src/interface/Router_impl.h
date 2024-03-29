@@ -219,9 +219,9 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
     out << "node," << from << '\n';
     _router.init(_query_ptr->from_internal(), _query_ptr->to_internal());
     while (!_router.done()) {
-        if constexpr (requires (GraphT g, typename GraphT::node_id_type n) { g.is_base_node(n); g.base_node(n); }) {
+        if constexpr (requires (GraphT g, typename GraphT::node_id_type n) { g.is_base_node(n); g.base_node_id(n); }) {
             if (_graph->is_base_node(_router.forward_current().node()))
-                out << _graph->base_node(_router.forward_current().node()) << ',' << _router.forward_current().distance() << '\n';
+                out << _graph->base_node_id(_router.forward_current().node()) << ',' << _router.forward_current().distance() << '\n';
         } else {
             out << _router.forward_current().node() << ',' << _router.forward_current().distance() << '\n';
         }
