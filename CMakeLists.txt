@@ -9,8 +9,8 @@ include_directories(include)
 include(CPack)
 
 set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall -Wextra -Wpedantic -fopenmp") # -Wextra
-set(CMAKE_CXX_FLAGS_DEBUG "-g") # -D_GLIBCXX_DEBUG -fsanitize=address
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Ofast")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -D_GLIBCXX_DEBUG") # -fsanitize=address
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 
 
 # make file containing a version name
@@ -93,11 +93,12 @@ add_executable(find_nodes src/find_nodes.cpp src/cli/cmdline_find_nodes.c)
 
 # compile implementation into one library file
 add_library(routing src/interface/Client.cpp)
-target_compile_options(routing PUBLIC "-ffast-math")
+# target_compile_options(routing PUBLIC "-ffast-math")
 link_libraries(routing)
 
 # executables that will be linked against routing library
 add_executable(project_graph src/project.cpp)
+add_executable(make_explicit src/make_explicit.cpp)
 
 add_executable(convert src/convert.cpp)
 add_executable(make_gl src/make_gl.cpp)
@@ -119,7 +120,7 @@ endif(GENGETOPT)
 ################################# INSTALLATION #################################
 # if access to this directory is missing, add a different one and append it to your PATH
 set(CMAKE_INSTALL_PREFIX /opt/routing)
-install(TARGETS route graph_stats make_gl prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
+install(TARGETS route graph_stats make_gl make_explicit prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
 
 # make sure this library is in your PYTHONPATH for experiments to work
 install(DIRECTORY model DESTINATION lib)
