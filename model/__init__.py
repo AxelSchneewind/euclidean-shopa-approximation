@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 dtypes = {
     'epsilon': float,
@@ -51,8 +52,11 @@ def add_optimal_cost(data):
     r = []
     for i, row in data.iterrows():
         ref = reference(data, row)
-        r = r + [ref['cost'].item()]
-    data['optimal cost'] = numpy.array(r, dtype='float')
+        if len(ref['cost']) > 0:
+            r = r + [ref['cost'].iloc[0].item() ]
+        else:
+            r = r + [ 0.0 ]
+    data['optimal cost'] = np.array(r, dtype='float')
     return data
 
 
