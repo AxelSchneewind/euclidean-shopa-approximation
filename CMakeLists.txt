@@ -121,7 +121,7 @@ endif(GENGETOPT)
 ################################# INSTALLATION #################################
 # if access to this directory is missing, add a different one and append it to your PATH
 set(CMAKE_INSTALL_PREFIX /opt/routing)
-install(TARGETS route graph_stats make_gl make_explicit prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
+install(TARGETS distance_one_to_all route graph_stats make_gl make_explicit prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
 
 # make sure this library is in your PYTHONPATH for experiments to work
 install(DIRECTORY model DESTINATION lib)
