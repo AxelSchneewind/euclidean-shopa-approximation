@@ -28,6 +28,12 @@ private:
     int path_color = 5;
     int beeline_color = 1;
 
+    void ensure_router() {
+        if (!_router) {
+            _router = {_graph, _routing_config};
+        }
+    }
+
 public:
     Client() : statistics(COLUMNS) { statistics.new_line(); }
 
@@ -45,6 +51,8 @@ public:
     void configure(RoutingConfiguration const& config) { _routing_config = config; }
 
     void compute_route(long from, long to) {
+        ensure_router();
+
         _router.compute_route(from, to);
         _query = _router.query();
         _result = _router.result();
@@ -57,6 +65,8 @@ public:
     Query& query() { return _query; }
 
     void compute_one_to_all(long from) {
+        ensure_router();
+
         _router.compute_route(from, -1);
         _query = _router.query();
         _result = _router.result();
@@ -65,6 +75,8 @@ public:
     }
 
     void compute_one_to_all(long from, std::ostream& out) {
+        ensure_router();
+
         _router.compute_route(from, -1, out);
         _query = _router.query();
         _result = _router.result();

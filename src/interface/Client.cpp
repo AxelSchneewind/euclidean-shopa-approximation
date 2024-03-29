@@ -14,7 +14,7 @@
 
 template<typename GraphT>
 Client::Client(GraphT &&__graph)
-        : _graph{std::forward<GraphT>(__graph)}, _router{_graph.get_implementation<GraphT const&>()}, statistics{COLUMNS} {
+        : _graph{std::forward<GraphT>(__graph)}, statistics{COLUMNS} {
     statistics.new_line();
 
     if constexpr (requires(GraphT graph) { graph.epsilon(); graph.base_graph(); }) {
@@ -80,8 +80,6 @@ void Client::read_graph_file(std::string path) {
 
     std::cout << "\b\b\b, done\n";
 
-    _router = {_graph, _routing_config};
-
     _graph.write_graph_stats(statistics);
     statistics.put(Statistics::MEMORY_USAGE_GRAPH, (vm_graph - vm) / 1024);
 };
@@ -104,8 +102,6 @@ void Client::read_graph_file(std::string path, double epsilon) {
     input.close();
 
     std::cout << "\b\b\b, done\n";
-
-    _router = {_graph, _routing_config};
 
     _graph.write_graph_stats(statistics);
     statistics.put(Statistics::MEMORY_USAGE_GRAPH, (vm_graph - vm) / 1024);
