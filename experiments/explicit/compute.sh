@@ -12,9 +12,9 @@ TREE_SIZE=0
 ASTAR=on
 
 # graph files
-TRIANGULATION_REF_GRAPH=pruned-ref.graph
-TRIANGULATION_UNREF_GRAPH=pruned.graph
-EXPLICIT_REF_GRAPH=pruned-ref.fmi
+TRIANGULATION_REF_GRAPH=milos-ref.graph
+TRIANGULATION_UNREF_GRAPH=milos.graph
+EXPLICIT_REF_GRAPH=milos-ref.fmi
 # EXPLICIT_GRAPH=pruned.fmi
 
 # output paths
