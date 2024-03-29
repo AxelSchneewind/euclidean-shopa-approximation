@@ -2,7 +2,32 @@
 
 # if not installed, add paths to executable here
 ROUTER=route
+ROUTER_OTA=distance_one_to_all
 FIND_NODES=find_nodes
+
+
+
+compute_ota() {
+    if [[ -z "$4" ]]; then
+	    echo "usage: compute_ota path/to/graph_file.graph path/to/results/ path/to/queries.txt epsilon"
+	    exit
+    fi
+
+    local GRAPH_FILE=$1
+    local OUTPUT_DIR=$2
+    local QUERY_FILE=$3
+    local EPSILON=$4
+    local PARAMS="$5"
+
+    mkdir -p "$OUTPUT_DIR"
+
+    # read queries
+    local QUERIES="$(cat ${QUERY_FILE})"
+
+    # run computations
+    echo "$ROUTER_OTA --epsilon ${EPSILON} ${PARAMS} -p wgs84 -a $ASTAR -t$TREE_SIZE -l --graph-file ${GRAPH_FILE} --output-directory ${OUTPUT_DIR} --query ${QUERIES}"
+    $ROUTER_OTA --epsilon "${EPSILON}" ${PARAMS} -p wgs84 -a "$ASTAR" -t$TREE_SIZE -l --graph-file "${GRAPH_FILE}" --output-directory "${OUTPUT_DIR}" --query "${QUERIES}" > "${OUTPUT_DIR}/out.log" 2>&1
+}
 
 compute_single() {
     if [[ -z "$4" ]]; then
@@ -64,7 +89,7 @@ process_results() {
 
     local NAME="${3:$GRAPH_NAME}"
     
-    cat "$OUTPUT_DIR"/*/info.csv > "$CSV_RESULTS"
+    cat "$OUTPUT_DIR"/*/*/info.csv > "$CSV_RESULTS"
 
     # remove headers
     sed -e '1p;/,node.*/d' -i "$CSV_RESULTS"
