@@ -14,7 +14,8 @@ ASTAR=on
 # graph files
 TRIANGULATION_REF_GRAPH=milos-ref.graph
 TRIANGULATION_UNREF_GRAPH=milos.graph
-EXPLICIT_REF_GRAPH=milos-ref.fmi
+EXPLICIT_REF_GRAPH=milos-ref-10.fmi
+EXPLICIT_REF_05_GRAPH=milos-ref-05.fmi
 # EXPLICIT_GRAPH=pruned.fmi
 
 # output paths
@@ -54,10 +55,12 @@ process_results "$OUTPUT_DIR/approximate-unref" "$OUTPUT_DIR/results-approximate
 
 ######################################### explicit graph ########################################
 # exact solutions
-if [ ! -d "$OUTPUT_DIR/explicit-ref" ]; then
-	compute_single "$EXPLICIT_GRAPH" "$OUTPUT_DIR/explicit-ref" "$QUERY_FILE" 0.0 ""
+if [ ! -d "$OUTPUT_DIR/explicit-ref-05" ]; then
+	compute_single "$EXPLICIT_REF_GRAPH" "$OUTPUT_DIR/explicit-ref-10" "$QUERY_FILE" 1.0 ""
+	compute_single "$EXPLICIT_REF_05_GRAPH" "$OUTPUT_DIR/explicit-ref-05" "$QUERY_FILE" 0.5 ""
 fi
-process_results "$OUTPUT_DIR/explicit-ref" "$OUTPUT_DIR/results-explicit-ref.csv" aegaeis-explicit-ref
+process_results "$OUTPUT_DIR/explicit-ref-10" "$OUTPUT_DIR/results-explicit-ref-1.csv" aegaeis-explicit-ref
+process_results "$OUTPUT_DIR/explicit-ref-05" "$OUTPUT_DIR/results-explicit-ref-05.csv" aegaeis-explicit-ref
 
 
 
