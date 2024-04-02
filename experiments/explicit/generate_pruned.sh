@@ -89,4 +89,4 @@ fi
 
 # make explicit
 generate_explicit ${FILE_REF} ${FILE_REF_EXPLICIT_10} ${FILE_REF_EXPLICIT_GL_10} 1.0
-generate_explicit ${FILE_REF} ${FILE_REF_EXPLICIT_05} ${FILE_REF_EXPLICIT_GL_05} 0.5
+# generate_explicit ${FILE_REF} ${FILE_REF_EXPLICIT_05} ${FILE_REF_EXPLICIT_GL_05} 0.5

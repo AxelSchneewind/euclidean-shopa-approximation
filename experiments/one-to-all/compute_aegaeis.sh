@@ -70,7 +70,7 @@ process_results "$OUTPUT_DIR/approximate-ref" "$OUTPUT_DIR/results-approximate-r
 ######################################## unrefined graph ########################################
 # unrefined graph raw
 if [ ! -d "$OUTPUT_DIR/raw-unref" ]; then
-	compute_ota "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/raw-unref" "$QUERY_FILE" inf ""
+	compute_ota "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/raw-unref/$eps" "$QUERY_FILE" inf ""
 fi
 process_results "$OUTPUT_DIR/raw-unref" "$OUTPUT_DIR/results-raw-unref.csv" aegaeis-raw-unref
 
@@ -79,7 +79,7 @@ process_results "$OUTPUT_DIR/raw-unref" "$OUTPUT_DIR/results-raw-unref.csv" aega
 if [ ! -d "$OUTPUT_DIR/approximate-unref" ]; then
 	EPSILONS=("1.0" "0.5" "0.25")
 	for eps in "${EPSILONS[@]}"; do
-	    compute_ota "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate-unref" "$QUERY_FILE" "$eps" ""
+	    compute_ota "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate-unref/$eps" "$QUERY_FILE" "$eps" ""
 	done
 fi
 process_results "$OUTPUT_DIR/approximate-unref" "$OUTPUT_DIR/results-approximate-unref.csv" aegaeis-approximate-unref

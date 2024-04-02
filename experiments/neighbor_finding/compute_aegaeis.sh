@@ -33,9 +33,9 @@ fi
 if [ ! -d "$OUTPUT_DIR/ref-binary" ]; then
 	EPSILONS=("1.0" "0.5" "0.2") # "0.1" "0.05" "0.02")
 	for eps in "${EPSILONS[@]}"; do
-	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-linear" "$QUERY_FILE" "$eps" --neighbor-finding=linear
-	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-trigon" "$QUERY_FILE" "$eps" --neighbor-finding=trigonometry
-	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-binary" "$QUERY_FILE" "$eps" --neighbor-finding=binary
+	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-linear/$eps" "$QUERY_FILE" "$eps" --neighbor-finding=linear
+	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-trigon/$eps" "$QUERY_FILE" "$eps" --neighbor-finding=trigonometry
+	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-binary/$eps" "$QUERY_FILE" "$eps" --neighbor-finding=binary
 	done
 fi
 process_results "$OUTPUT_DIR/ref-linear" "$OUTPUT_DIR/results-ref-linear.csv" linear
