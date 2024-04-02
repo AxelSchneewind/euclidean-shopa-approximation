@@ -12,7 +12,7 @@ for epsilon in 4.0 2.0 1.0 '1/2' '1/4' '1/8' '1/16' '1/32' '1/64' '1/128' '1/256
 do
   echo computing for ε = $epsilon ...
   # compute graph sizes
-  subdivision_stats graph $1 $epsilon | tee -a graph_sizes.csv
+  graph_stats graph $1 $epsilon | tee -a graph_sizes.csv
 done
 }
 
