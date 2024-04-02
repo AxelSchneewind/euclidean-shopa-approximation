@@ -102,8 +102,7 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
 
     // write all outgoing edges of base nodes
     for (auto node: graph.base_graph().node_ids()) {
-        auto &&edges = graph.outgoing_edges(node);
-        for (auto&& edge: edges) {
+        for (auto&& edge: graph.outgoing_edges(node)) {
             auto dest = edge.destination;
             assert(!graph.is_base_node(edge.destination));
 
@@ -116,11 +115,10 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
 
     // insert outgoing edges from steiner points
     for (auto node: graph.node_ids()) {
-        auto&& edges = graph.outgoing_edges(node);
-        for (auto edge: edges) {
-            auto dest = edge.destination;
+        if (graph.is_base_node(node)) continue;
 
-            if (graph.is_base_node(node)) continue;
+        for (auto edge: graph.outgoing_edges(node)) {
+            auto dest = edge.destination;
 
             // // avoid inserting an edge twice
             //if (indices[node] >= indices[dest] || !graph.has_edge(dest, node))
