@@ -89,13 +89,7 @@ main(int argc, char *argv[]) {
 
         // setup writers for graphs to show
         std::stringstream target_dir_builder;
-        target_dir_builder <<  output_directory.string() << "/";
-        if (epsilon == 0.0)
-            target_dir_builder << "exact";
-        else if (std::isinf(epsilon))
-            target_dir_builder << "raw";
-        else target_dir_builder << static_cast<int>(epsilon * 10000);
-        target_dir_builder << "/" << src_node;
+        target_dir_builder <<  output_directory.string() << "/" << src_node;
         std::string target_directory = target_dir_builder.str();
 
         std::string tree_file = target_directory + "/tree.gl";
