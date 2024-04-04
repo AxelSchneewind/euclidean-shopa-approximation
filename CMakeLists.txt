@@ -90,6 +90,7 @@ endif (GENGETOPT)
 #
 add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
 add_executable(find_nodes src/find_nodes.cpp src/cli/cmdline_find_nodes.c)
+add_executable(extract_boundary src/extract_boundary.cpp)
 
 # compile implementation into one library file
 add_library(routing src/interface/Client.cpp)
@@ -120,7 +121,7 @@ endif(GENGETOPT)
 ################################# INSTALLATION #################################
 # if access to this directory is missing, add a different one and append it to your PATH
 set(CMAKE_INSTALL_PREFIX /opt/routing)
-install(TARGETS distance_one_to_all route graph_stats make_gl make_explicit prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
+install(TARGETS distance_one_to_all route graph_stats make_gl extract_boundary make_explicit prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
 
 # make sure this library is in your PYTHONPATH for experiments to work
 install(DIRECTORY model DESTINATION lib)
