@@ -3,7 +3,7 @@
 source ../utils.sh
 
 # number of queries
-NUM_QUERIES=100
+NUM_QUERIES=106
 
 # maximum tree size to write to files (0 to disable tree output)
 TREE_SIZE=0
@@ -28,6 +28,12 @@ if [ ! -f "$QUERY_FILE" ]; then
 	make_queries "$UNREF_TRIANGULATION_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
 fi
 
+# blacklist queries
+QUERY_BLACKLIST=('140693,97656' '142694,10431' '97597,15167' '108011,97989' '88260,208670' '90928,97858')
+for q in "${QUERY_BLACKLIST[@]}"; do
+	sed -e "s/$q//g" -i "$QUERY_FILE"
+done
+sed -e 's/,,*/,/g' -i "$QUERY_FILE"
 
 
 # ######################################### refined graph ########################################
