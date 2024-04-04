@@ -37,57 +37,47 @@ sed -e 's/,,*/,/g' -i "$QUERY_FILE"
 
 
 # ######################################### refined graph ########################################
-# # refined graph without points
-# if [ ! -d "$OUTPUT_DIR/raw" ]; then
-# 	compute_single "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/raw" "$QUERY_FILE" inf
-# fi
-#
-# # refined graph with steiner points
-# if [ ! -d "$OUTPUT_DIR/approximate" ]; then
-# 	EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02")
-# 	for eps in "${EPSILONS[@]}"; do
-# 	    compute_single "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate/$eps" "$QUERY_FILE" "$eps" ""
-# 	done
-# fi
-# process_results "$OUTPUT_DIR" "$OUTPUT_DIR/results.csv" aegaeis-ref
+# refined graph without points
+if [ ! -d "$OUTPUT_DIR/ref" ]; then
+	compute_single "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref" "$QUERY_FILE" inf
+
+  # refined graph with steiner points
+	local EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02")
+	for eps in "${EPSILONS[@]}"; do
+	    compute_single "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/$eps" "$QUERY_FILE" "$eps" ""
+	done
+fi
+process_results "$OUTPUT_DIR/ref" "$OUTPUT_DIR/results-ref.csv" aegaeis-ref
 
 
 
 ############################ refined graph using triangle (Shewchuk) ############################
 # refined graph without points
-if [ ! -d "$OUTPUT_DIR/raw-ref" ]; then
-	compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/raw-ref" "$QUERY_FILE" inf ""
-fi
-process_results "$OUTPUT_DIR/raw-ref" "$OUTPUT_DIR/results-raw-ref.csv" aegaeis-raw-ref
+if [ ! -d "$OUTPUT_DIR/triangle" ]; then
+	compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle" "$QUERY_FILE" inf ""
 
-
-# refined graph with steiner points
-if [ ! -d "$OUTPUT_DIR/approximate-ref" ]; then
-	EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
+  # refined graph with steiner points
+	local EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
 	for eps in "${EPSILONS[@]}"; do
-	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate-ref/$eps" "$QUERY_FILE" "$eps" ""
+	    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle/$eps" "$QUERY_FILE" "$eps" ""
 	done
 fi
-process_results "$OUTPUT_DIR/approximate-ref" "$OUTPUT_DIR/results-approximate-ref.csv" aegaeis-approximate-ref
+process_results "$OUTPUT_DIR/triangle" "$OUTPUT_DIR/results-triangle.csv" aegaeis-triangle
 
 
 
 ######################################## unrefined graph ########################################
 # unrefined graph raw
-if [ ! -d "$OUTPUT_DIR/raw-unref" ]; then
-	compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/raw-unref" "$QUERY_FILE" inf ""
-fi
-process_results "$OUTPUT_DIR/raw-unref" "$OUTPUT_DIR/results-raw-unref.csv" aegaeis-raw-unref
+if [ ! -d "$OUTPUT_DIR/unref" ]; then
+	compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref" "$QUERY_FILE" inf ""
 
-
-# unrefined graph with steiner points
-if [ ! -d "$OUTPUT_DIR/approximate-unref" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
+  # unrefined graph with steiner points
+	local EPSILONS=("1.0" "0.5" "0.25")
 	for eps in "${EPSILONS[@]}"; do
-	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate-unref/$eps" "$QUERY_FILE" "$eps" ""
+	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref/$eps" "$QUERY_FILE" "$eps" ""
 	done
 fi
-process_results "$OUTPUT_DIR/approximate-unref" "$OUTPUT_DIR/results-approximate-unref.csv" aegaeis-approximate-unref
+process_results "$OUTPUT_DIR/unref" "$OUTPUT_DIR/results-unref.csv" aegaeis-unref
 
 
 
