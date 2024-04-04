@@ -102,7 +102,6 @@ add_executable(make_explicit src/make_explicit.cpp)
 
 add_executable(convert src/convert.cpp)
 add_executable(make_gl src/make_gl.cpp)
-add_executable(make_pruned_gl src/make_pruned_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)
 
 add_executable(route src/route.cpp src/cli/cmdline_route.c)
