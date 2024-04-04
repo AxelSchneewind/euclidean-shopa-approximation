@@ -24,8 +24,12 @@ int main(int argc, char** argv) {
 
     std::string graph_file(args.graph_file_arg);
     std::ifstream input(graph_file);
+    if (input.bad()) {
+        std::cerr << "file cannot be read from\n";
+        return 1;
+    }
 
-
+    // set file to write to
     std::streambuf * buf;
     std::ofstream of;
     if(args.output_file_given) {
@@ -34,16 +38,21 @@ int main(int argc, char** argv) {
     } else {
         buf = std::cout.rdbuf();
     }
-
     std::ostream output(buf);
+    if (output.bad()) {
+        std::cerr << "file cannot be written to\n";
+        return 1;
+    }
 
+    // bounding box
     coordinate_t bottom_left{
         args.minY_given ? args.minY_arg : -std::numeric_limits<double>::infinity(),
         args.minX_given ? args.minX_arg : -std::numeric_limits<double>::infinity()
     };
     coordinate_t top_right{
             args.maxY_given ? args.maxY_arg : std::numeric_limits<double>::infinity(),
-            args.maxX_given ? args.maxX_arg : std::numeric_limits<double>::infinity()};
+            args.maxX_given ? args.maxX_arg : std::numeric_limits<double>::infinity()
+    };
 
     if (graph_file.ends_with(".graph")) {
         std::size_t node_count, face_count;
@@ -51,10 +60,10 @@ int main(int argc, char** argv) {
         input >> face_count;
 
         std::vector<node_t> nodes(node_count);
-        file_io::read_nodes<node_t>(input, { nodes.begin(), nodes.end() });
+        file_io::read_nodes<node_t>(input, nodes);
 
         std::vector<std::array<node_id_t, 3>> triangles(face_count);
-        file_io::read_triangles<node_id_t>(input, {triangles.begin(), triangles.end()});
+        file_io::read_triangles<node_id_t>(input, triangles);
 
         // find nodes matching filter
         std::vector<triangle_node_properties> properties(node_count,  {false, false, false, 0, 0});
@@ -63,6 +72,7 @@ int main(int argc, char** argv) {
         compute_boundary_node(nodes, triangles, properties);
 
         if (args.pick_random_given) {
+            // output some random node ids matching the criteria
             std::srand(args.seed_arg);
             for (int i = 0; i < args.pick_random_arg; i++) {
                 int id = std::rand() % node_count;
@@ -73,8 +83,9 @@ int main(int argc, char** argv) {
             }
             output << std::flush;
         } else {
+            // output all node ids matching the criteria
             for (int i = 0; i < args.pick_random_arg; i++) {
-                if ((!args.boundary_nodes_flag || properties[i].is_boundary_node))
+                if ((!args.boundary_nodes_flag || properties[i].is_boundary_node) && properties[i].is_in_box)
                     output << i << '\n';
             }
         }
