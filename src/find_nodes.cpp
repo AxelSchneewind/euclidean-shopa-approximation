@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
         file_io::read_triangles<node_id_t>(input, {triangles.begin(), triangles.end()});
 
         // find nodes matching filter
-        std::vector<triangle_node_properties> properties(node_count);
+        std::vector<triangle_node_properties> properties(node_count,  {false, false, false, 0, 0});
         compute_is_in_box(nodes, properties, bottom_left, top_right);
         compute_degrees(nodes, triangles, properties);
         compute_boundary_node(nodes, triangles, properties);

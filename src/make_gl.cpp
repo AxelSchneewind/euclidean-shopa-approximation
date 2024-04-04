@@ -69,12 +69,12 @@ main(int argc, char const *argv[]) {
         file_io::read_nodes<node_t, stream_encoders::encode_text>(input, nodes);
         file_io::read_triangles<node_id_t, stream_encoders::encode_text>(input, faces);
 
-        std::vector<node_properties> properties;
+        std::vector<node_properties> properties(node_count, {false});
         compute_boundary_node(nodes, faces, properties);
 
         unidirectional_adjacency_list<node_id_t, gl_edge_t>::adjacency_list_builder builder;
         builder.add_edges_from_triangulation(faces);
-        builder.sort_edges();
+        builder.finalize();
         auto edges = builder.edges();
 
         // set color and line width
@@ -83,22 +83,7 @@ main(int argc, char const *argv[]) {
             edge.info.line_width = linewidth;
         }
 
-        if (output_file_ending == ".steiner_gl") {
-            double epsilon;
-            if (argc > 5)
-                epsilon = std::stof(argv[5]);
-            else {
-                std::cout << "epsilon: ";
-                std::cin >> epsilon;
-            }
-
-            unidirectional_adjacency_list<node_id_t>::adjacency_list_builder builder;
-            builder.add_edges_from_triangulation(faces);
-            auto steiner_edges = adjacency_list<node_id_t>::make_bidirectional(builder.get());
-            auto g = steiner_graph::make_graph(std::move(nodes), std::move(steiner_edges), std::move(faces), epsilon);
-
-            gl_file_io::write(output, g, linewidth, color);
-        } else if (output_file_ending == ".gl") {
+    if (output_file_ending == ".gl") {
             output << node_count << '\n';
             output << edges.size() << '\n';
             file_io::write_nodes<node_t>(output, {nodes.begin(), nodes.end()});
