@@ -30,5 +30,5 @@ static void process_mem_usage(double& vm_usage, double& resident_set)
 double memory_usage_kilo_bytes () {
     double vm, res;
     process_mem_usage(vm, res);
-    return vm;
+    return res;
 }
