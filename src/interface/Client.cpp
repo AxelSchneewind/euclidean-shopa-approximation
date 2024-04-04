@@ -143,3 +143,63 @@ void Client::write_tree_file(std::string path) const {
     std::string fwd{prefix + name + suffix};
     _result.tree_forward().write_graph_file(fwd, tree_color, 1);
 }
+
+void Client::compute_route(long from, long to) {
+    ensure_router();
+    _query = {};
+    _result = {};
+
+    _router.compute_route(from, to);
+
+    // store memory usage
+    double vm, res;
+    process_mem_usage(vm, res);
+    statistics.put(Statistics::MEMORY_USAGE_FINAL, vm / 1024);
+
+    _query = _router.query();
+    _result = _router.result();
+    _query.write(statistics);
+    _result.write(statistics);
+}
+
+void Client::compute_one_to_all(long from) {
+    ensure_router();
+    _query = {};
+    _result = {};
+
+    _router.compute_route(from, -1);
+
+    // store memory usage
+    double vm, res;
+    process_mem_usage(vm, res);
+    statistics.put(Statistics::MEMORY_USAGE_FINAL, vm / 1024);
+
+    _query = _router.query();
+    _result = _router.result();
+    _query.write(statistics);
+    _result.write(statistics);
+}
+
+void Client::compute_one_to_all(long from, std::ostream &out) {
+    ensure_router();
+    _query = {};
+    _result = {};
+
+    _router.compute_route(from, -1, out);
+
+    // store memory usage
+    double vm, res;
+    process_mem_usage(vm, res);
+    statistics.put(Statistics::MEMORY_USAGE_FINAL, vm / 1024);
+
+    _query = _router.query();
+    _result = _router.result();
+    _query.write(statistics);
+    _result.write(statistics);
+}
+
+void Client::ensure_router() {
+    if (!_router) {
+        _router = {_graph, _routing_config};
+    }
+}

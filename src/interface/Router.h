@@ -17,6 +17,8 @@ public:
     virtual Query query() = 0;
 
     virtual Result result() = 0;
+
+    virtual void reset() = 0;
 };
 
 
@@ -45,6 +47,8 @@ private:
 
         Query query() override { return Query(_query_ptr); };
         Result result() override { return Result(_result_ptr); };
+
+        void reset() override { _query_ptr = nullptr; _result_ptr = nullptr; };
     };
 
     RoutingConfiguration _config;
@@ -60,4 +64,5 @@ public:
 
     Query query() { return impl->query(); }
     Result result() { return impl->result(); }
+    void reset() { return impl->reset(); };
 };
