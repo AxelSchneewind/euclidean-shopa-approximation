@@ -3,6 +3,8 @@
 #include "file-io/file_io_impl.h"
 #include "graph/geometry_impl.h"
 
+#include "triangulation/node_properties.h"
+#include "graph/node_properties.h"
 
 struct triangle_node_properties {
     bool connected:1;
@@ -56,48 +58,9 @@ int main(int argc, char** argv) {
 
         // find nodes matching filter
         std::vector<triangle_node_properties> properties(node_count);
-        for (size_t i = 0; i < node_count; ++i) {
-            properties[i].is_in_box = is_in_rectangle(nodes[i].coordinates, bottom_left, top_right);
-        }
-
-        // mark nodes as connected and increment out and in degree
-        for (size_t t = 0; t < face_count; ++t) {
-            auto&& triangle = triangles[t];
-            properties[triangle[0]].connected = true;
-            properties[triangle[1]].connected = true;
-            properties[triangle[2]].connected = true;
-
-            properties[triangle[0]].out_degree++;
-            properties[triangle[1]].out_degree++;
-            properties[triangle[2]].out_degree++;
-            properties[triangle[0]].in_degree++;
-            properties[triangle[1]].in_degree++;
-            properties[triangle[2]].in_degree++;
-        }
-
-        // count faces for each edge
-        std::unordered_map<long, char> adjacent_face_count;
-        for (size_t t = 0; t < face_count; ++t) {
-            auto&& triangle = triangles[t];
-
-            adjacent_face_count[((long)triangle[0] << 32) + triangle[1]]++;
-            adjacent_face_count[((long)triangle[1] << 32) + triangle[2]]++;
-            adjacent_face_count[((long)triangle[2] << 32) + triangle[0]]++;
-            adjacent_face_count[((long)triangle[0] << 32) + triangle[2]]++;
-            adjacent_face_count[((long)triangle[1] << 32) + triangle[0]]++;
-            adjacent_face_count[((long)triangle[2] << 32) + triangle[1]]++;
-        }
-
-        // if only one face adjacent to an edge, mark nodes as boundary nodes
-        for (auto&& entry : adjacent_face_count) {
-            assert(entry.second == 1 || entry.second == 2);
-            if (entry.second == 1) {
-                unsigned int node1 = entry.first >> 32;
-                unsigned int node2 = ((entry.first << 32) >> 32);
-                properties[node1].is_boundary_node = true;
-                properties[node2].is_boundary_node = true;
-            }
-        }
+        compute_is_in_box(nodes, properties, bottom_left, top_right);
+        compute_degrees(nodes, triangles, properties);
+        compute_boundary_node(nodes, triangles, properties);
 
         if (args.pick_random_given) {
             std::srand(args.seed_arg);

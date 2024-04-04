@@ -8,6 +8,11 @@
 #include "file-io/triangulation_file_io.h"
 #include "file-io/triangulation_file_io_impl.h"
 #include "routing_impl.h"
+#include "triangulation/node_properties.h"
+
+struct node_properties {
+    bool is_boundary_node;
+};
 
 int
 main(int argc, char const *argv[]) {
@@ -27,7 +32,7 @@ main(int argc, char const *argv[]) {
         std::cin >> filename_out;
     }
 
-    int color, linewidth;
+    int color, boundary_color, linewidth;
     if (argc > 3)
         linewidth = std::stoi(argv[3]);
     else {
@@ -41,6 +46,7 @@ main(int argc, char const *argv[]) {
         std::cout << "output color: " << std::flush;
         std::cin >> color;
     }
+    boundary_color = color + 1;
 
 
     // read graph
@@ -63,6 +69,9 @@ main(int argc, char const *argv[]) {
         file_io::read_nodes<node_t, stream_encoders::encode_text>(input, nodes);
         file_io::read_triangles<node_id_t, stream_encoders::encode_text>(input, faces);
 
+        std::vector<node_properties> properties;
+        compute_boundary_node(nodes, faces, properties);
+
         unidirectional_adjacency_list<node_id_t, gl_edge_t>::adjacency_list_builder builder;
         builder.add_edges_from_triangulation(faces);
         builder.sort_edges();
@@ -70,7 +79,7 @@ main(int argc, char const *argv[]) {
 
         // set color and line width
         for(auto& edge : edges) {
-            edge.info.color = color;
+            edge.info.color = (properties[edge.source].is_boundary_node && properties[edge.destination].is_boundary_node) ? boundary_color : color;
             edge.info.line_width = linewidth;
         }
 
