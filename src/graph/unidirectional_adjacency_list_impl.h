@@ -261,7 +261,7 @@ void unidirectional_adjacency_list<NodeId, E>::adjacency_list_builder::filter_no
         }
     }
 
-    reorder_nodes({new_node_ids.begin(), new_node_ids.end()});
+    permute_nodes({new_node_ids.begin(), new_node_ids.end()});
 }
 
 

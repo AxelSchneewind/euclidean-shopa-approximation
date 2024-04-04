@@ -105,6 +105,12 @@ public:
         [[gnu::cold]]
         void make_offsets();
 
+        [[gnu::cold]]
+        void sort_edges();
+
+        [[gnu::cold]]
+        void remove_duplicates();
+
     public:
         using edge_type = adjacency_list_edge<NodeId, E>;
 
@@ -128,14 +134,12 @@ public:
             return _edges[index];
         }
 
-        void sort_edges();
-
-        void remove_duplicates();
-
         /**
          * removes nodes that have no incident edges
          */
         void remove_unconnected_nodes();
+
+        void finalize() { sort_edges(); remove_duplicates(); _edges.shrink_to_fit(); };
 
         template<std::predicate<node_id_type> NodePredicate>
         void filter_nodes(NodePredicate &&node_predicate);
@@ -149,7 +153,10 @@ public:
          */
         void permute_nodes(std::span<node_id_type> new_node_ids);
 
-        std::span<edge_type> edges() { return {_edges.begin(), _edges.end()}; }
+        std::span<edge_type> edges() {
+            finalize();
+            return {_edges.begin(), _edges.end()};
+        }
 
         /**
          * makes edges from the given faces, such that each edge (v,w) has v < w
