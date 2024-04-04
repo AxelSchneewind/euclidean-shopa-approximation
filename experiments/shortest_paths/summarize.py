@@ -1,5 +1,7 @@
 #!/bin/python
 
+import model as bench
+
 import pandas as pd
 import numpy as np
 
@@ -34,11 +36,11 @@ def exclude_epsilon(data, eps):
 
 def filter(data):
     # check that cost value is finite
-    invalid_cost = data.loc[(data['cost'] == math.inf) | (data['cost'] == math.nan)]
+    invalid_cost = data.loc[(data['cost'] == math.inf) | (data['cost'] == math.nan) | (data['cost'] == -math.inf)]
     if len(invalid_cost) != 0:
         print('ignored by cost value: ', file=sys.stderr)
         print(invalid_cost, file=sys.stderr)
-    data = data.loc[(data['cost'] != math.inf) & (data['cost'] != math.nan)]
+    data = data.loc[(data['cost'] != math.inf) & (data['cost'] != -math.inf) & (data['cost'] != math.nan)]
 
     # check that exact value exists
     # has_reference = np.array([reference(data, row).shape[0] != 0 for i, row in data.iterrows()], dtype='bool')
@@ -49,10 +51,10 @@ def filter(data):
 
     # check that coordinates of source and target coordinates match
     coords_match = np.array([
-        (reference(data, row)['source latitude'] == row['source latitude'])
-        & (reference(data, row)['source longitude'] == row['source longitude'])
-        & (reference(data, row)['target latitude'] == row['target latitude'])
-        & (reference(data, row)['target longitude'] == row['target longitude']).all() for i,row in data.iterrows() ], dtype='bool')
+        (bench.reference(data, row)['source latitude'] == row['source latitude'])
+        & (bench.reference(data, row)['source longitude'] == row['source longitude'])
+        & (bench.reference(data, row)['target latitude'] == row['target latitude'])
+        & (bench.reference(data, row)['target longitude'] == row['target longitude']).all() for i,row in data.iterrows() ], dtype='bool')
     if len(coords_match[(coords_match == False)]) != 0:
         print('mismatch in source/target coordinates', file=sys.stderr)
         print(data.loc[coords_match == False], file=sys.stderr)
@@ -66,12 +68,18 @@ def main():
     parser.add_argument('--file', '-f', required=True, action='append', help='path to the input file')
     parser.add_argument('--output-epsilon', '-e', default='stdout', help='path to the output file for statistics per epsilon')
     parser.add_argument('--output-queries', '-q', default='stdout', help='path to the output file for statistics per query')
+    parser.add_argument('--output-worst-quality-queries', '-s', default='stdout', help='path to the output file for a list of the queries with worst quality')
     parser.add_argument('--column', '-c', default='time', help='the column to summarize')
     args = parser.parse_args()
 
     # load data and filter out unusable results
     data = bench.load(args.file)
     data = filter(data)
+
+    # list suspicious queries
+    sus = data.loc[data['ratio'] > 1.05][['source', 'target', 'epsilon', 'cost', 'ratio']]
+    sus.sort_values(by='ratio', inplace=True, ascending=False)
+    print(sus)
 
     # by epsilon
     eps_file = args.output_epsilon if args.output_epsilon != 'stdout' else sys.stdout
