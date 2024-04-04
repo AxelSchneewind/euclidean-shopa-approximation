@@ -1,8 +1,8 @@
 #include "subdivision_table.h"
+#include "subdivision_info.h"
 
 #include "../graph/base_types.h"
 #include "../util/is_in_range.h"
-#include "subdivision_info.h"
 
 
 #include <algorithm>
@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <vector>
 #include <cmath>
+#include <iostream>
 
 
 std::vector<subdivision::subdivision_edge_info>

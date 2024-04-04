@@ -1,13 +1,12 @@
-// taken from
-// https://gist.github.com/thirdwing/da4621eb163a886a03c5
-
 #pragma once
 
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
 
-void process_mem_usage(double& vm_usage, double& resident_set)
+// taken from
+// https://gist.github.com/thirdwing/da4621eb163a886a03c5
+static void process_mem_usage(double& vm_usage, double& resident_set)
 {
     vm_usage     = 0.0;
     resident_set = 0.0;

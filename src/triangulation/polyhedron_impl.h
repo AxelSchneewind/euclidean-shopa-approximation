@@ -132,8 +132,8 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(BaseGraph const &triangu
     std::vector<edge_id_type> node_edges;
     std::vector<int> node_edge_offsets;
     {
-        std::vector<steiner_graph::triangle_edge_id_type> adjacent_edge_ids;
-        std::vector<steiner_graph::triangle_edge_id_type> triangle_edge_ids;
+        std::vector<typename BaseGraph::edge_id_type> adjacent_edge_ids;
+        std::vector<typename BaseGraph::edge_id_type> triangle_edge_ids;
         for (std::size_t node = 0; node < triangulation_edges.node_count(); ++node) {
             // get edges and triangles adjacent to node
             for (auto &&edge: triangulation_edges.outgoing_edges(node)) {

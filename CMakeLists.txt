@@ -87,10 +87,13 @@ endif (GENGETOPT)
 
 
 ################################### BINARIES ###################################
-#
+# executables that may not be linked against librouting
 add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
 add_executable(find_nodes src/find_nodes.cpp src/cli/cmdline_find_nodes.c)
 add_executable(extract_boundary src/extract_boundary.cpp)
+
+add_executable(graph_stats src/graph_stats.cpp src/cli/cmdline_graph_stats.c)
+
 
 # compile implementation into one library file
 add_library(routing src/interface/Client.cpp)
@@ -106,9 +109,7 @@ add_executable(make_gl src/make_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)
 
 add_executable(compute_shopa src/route.cpp src/cli/cmdline_route.c)
-
 add_executable(compute_ota src/distance_one_to_all.cpp src/cli/cmdline_route.c)
-add_executable(graph_stats src/graph_stats.cpp src/cli/cmdline_graph_stats.c)
 
 if (GENGETOPT)
     add_dependencies(compute_shopa cmdline_route)

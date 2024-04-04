@@ -7,7 +7,7 @@ template<typename NodeInfo, typename formatter>
 void
 file_io::read_nodes(std::istream &input, std::span<NodeInfo> nodes) {
     for (auto& n : nodes) {
-        n = formatter::template read<NodeInfo>(input) ;
+        n = formatter::template read<NodeInfo>(input);
     }
 }
 

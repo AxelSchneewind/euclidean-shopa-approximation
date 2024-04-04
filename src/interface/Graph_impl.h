@@ -3,7 +3,7 @@
 #include "Graph.h"
 #include "Query.h"
 
-#include "../util/memory_usage.h"
+#include "../util/memory_usage_impl.h"
 #include "../routing_impl.h"
 #include "Statistics.h"
 

@@ -1,13 +1,10 @@
-
 #include "interface/Client.h"
+
 #include <string>
-
-
-
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
-        std::cout << "usage: " << argv[0] << " path/to/graph path/to/output epsilon\n";
+        std::cerr << "usage: " << argv[0] << " path/to/graph path/to/output epsilon\n";
         return 1;
     }
 

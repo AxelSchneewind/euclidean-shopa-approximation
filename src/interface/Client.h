@@ -3,11 +3,12 @@
 #include "Query.h"
 #include "Graph.h"
 #include "Router.h"
+#include "RoutingConfig.h"
 
 #include "../triangulation/steiner_graph.h"
 #include "../file-io/triangulation_file_io.h"
+
 #include "../util/csv.h"
-#include "RoutingConfig.h"
 #include "../util/memory_usage.h"
 
 #include <fstream>
@@ -75,7 +76,7 @@ public:
 
     void write_query(std::ostream&output) const { _query.write(output); }
 
-    int node_count() const { return _graph.node_count(); }
+    long node_count() const { return _graph.node_count(); }
 
-    int edge_count() const { return _graph.edge_count(); }
+    long edge_count() const { return _graph.edge_count(); }
 };

@@ -2,14 +2,16 @@
 
 #include "../graph/adjacency_list.h"
 #include "../graph/subgraph.h"
+#include "../graph/geometry_impl.h"
+
 #include "polyhedron.h"
 #include "steiner_graph.h"
 
 #include "subdivision_table_impl.h"
 #include "subdivision_info_impl.h"
 
-
 #include "../util/set_minus.h"
+
 #include <functional>
 #include <span>
 #include <unordered_map>

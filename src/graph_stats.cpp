@@ -1,21 +1,22 @@
-#include "interface/Client.h"
-#include "routing_impl.h"
 #include "triangulation/subdivision_table.h"
+
+#include "graph/adjacency_list_impl.h"
+#include "graph/unidirectional_adjacency_list_impl.h"
+#include "triangulation/polyhedron_impl.h"
+#include "triangulation/steiner_graph_impl.h"
+
+#include "file-io/file_io_impl.h"
+#include "file-io/triangulation_file_io_impl.h"
+
+#include "util/memory_usage_impl.h"
+
+#include "cli/cmdline_graph_stats.h"
 
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include "cli/cmdline_graph_stats.h"
-#include "util/memory_usage.h"
-
-
-// just to have the sizes somewhere and see when they change
-static_assert(steiner_graph::SIZE_PER_NODE == 24);
-static_assert(steiner_graph::SIZE_PER_EDGE == 64);
-
-static_assert(std_graph_t::SIZE_PER_NODE == 24);
-static_assert(std_graph_t::SIZE_PER_EDGE == 40);
+#include <algorithm>
 
 
 double parse_float_or_fraction(std::string const &epsilon_string) {

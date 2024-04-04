@@ -5,8 +5,7 @@
 #include "Query_impl.h"
 
 #include "../routing_impl.h"
-
-#include "../util/memory_usage.h"
+#include "../util/memory_usage_impl.h"
 #include "../util/csv_impl.h"
 
 #include <thread>
