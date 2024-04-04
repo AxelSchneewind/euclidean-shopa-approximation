@@ -105,14 +105,14 @@ add_executable(convert src/convert.cpp)
 add_executable(make_gl src/make_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)
 
-add_executable(route src/route.cpp src/cli/cmdline_route.c)
+add_executable(compute_shopa src/route.cpp src/cli/cmdline_route.c)
 
-add_executable(distance_one_to_all src/distance_one_to_all.cpp src/cli/cmdline_route.c)
+add_executable(compute_ota src/distance_one_to_all.cpp src/cli/cmdline_route.c)
 add_executable(graph_stats src/graph_stats.cpp src/cli/cmdline_graph_stats.c)
 
 if (GENGETOPT)
-    add_dependencies(route cmdline_route)
-    add_dependencies(distance_one_to_all cmdline_route)
+    add_dependencies(compute_shopa cmdline_route)
+    add_dependencies(compute_ota cmdline_route)
     add_dependencies(prune_graph cmdline_prune_graph)
     add_dependencies(find_nodes cmdline_find_nodes)
     add_dependencies(graph_stats cmdline_graph_stats)
@@ -121,7 +121,7 @@ endif(GENGETOPT)
 ################################# INSTALLATION #################################
 # if access to this directory is missing, add a different one and append it to your PATH
 set(CMAKE_INSTALL_PREFIX /opt/routing)
-install(TARGETS distance_one_to_all route graph_stats make_gl extract_boundary make_explicit prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
+install(TARGETS compute_ota compute_shopa graph_stats make_gl extract_boundary make_explicit prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
 
 # make sure this library is in your PYTHONPATH for experiments to work
 install(DIRECTORY model DESTINATION lib)

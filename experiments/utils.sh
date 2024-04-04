@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # if not installed, add paths to executable here
-ROUTER=route
-ROUTER_OTA=distance_one_to_all
+ROUTER=$(which compute_shopa)
+ROUTER_OTA=$(which compute_ota)
 FIND_NODES=find_nodes
 
 
