@@ -1,5 +1,8 @@
 #pragma once
+
 #include <concepts>
+#include <ranges>
+#include <cassert>
 
 template <sized_random_access_range NodeRange, sized_random_access_range PropertyRange, typename Coords>
 requires requires (typename PropertyRange::value_type t) {
