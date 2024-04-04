@@ -12,10 +12,11 @@ TREE_SIZE=0
 ASTAR=on
 
 # graph files
-VISIBILITY_GRAPH=/opt/routing/graphs/aegaeis/aegaeis-vis.fmi
-TRIANGULATION_GRAPH=/opt/routing/graphs/aegaeis/aegaeis-ref.graph
-TRIANGLE_TRIANGULATION_GRAPH=/opt/routing/graphs/aegaeis/aegaeis-ref-new.graph
-UNREF_TRIANGULATION_GRAPH=/opt/routing/graphs/aegaeis/aegaeis-unref.graph
+GRAPH_DIR=/opt/routing/graphs
+VISIBILITY_GRAPH=$GRAPH_DIR/aegaeis/aegaeis-vis.fmi
+TRIANGULATION_GRAPH=$GRAPH_DIR/aegaeis/aegaeis-ref.graph
+TRIANGLE_TRIANGULATION_GRAPH=$GRAPH_DIR/aegaeis/aegaeis-ref-new.graph
+UNREF_TRIANGULATION_GRAPH=$GRAPH_DIR/aegaeis/aegaeis-unref.graph
 
 # output paths
 OUTPUT_DIR=results/aegaeis
@@ -25,75 +26,54 @@ mkdir -p "$OUTPUT_DIR"
 
 # make queries
 if [ ! -f "$QUERY_FILE" ]; then
-	make_queries "$UNREF_TRIANGULATION_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
+  make_queries "$UNREF_TRIANGULATION_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
 fi
 
-
-
 # ######################################### refined graph ########################################
-# # refined graph without points
-# if [ ! -d "$OUTPUT_DIR/raw" ]; then
-# 	compute_ota "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/raw" "$QUERY_FILE" inf
-# fi
-# process_results "$OUTPUT_DIR/raw" "$OUTPUT_DIR/results-raw.csv" aegaeis-ref-raw
-# 
-# # refined graph with steiner points
-# if [ ! -d "$OUTPUT_DIR/approximate" ]; then
-# 	EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02")
-# 	for eps in "${EPSILONS[@]}"; do
-# 	    compute_ota "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate" "$QUERY_FILE" "$eps" ""
-# 	done
-# fi
-# process_results "$OUTPUT_DIR/approximate" "$OUTPUT_DIR/results-approximate.csv" aegaeis-approximate-ref
+# refined graph without points
+if [ ! -d "$OUTPUT_DIR/ref" ]; then
+  compute_ota "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref" "$QUERY_FILE" inf
 
-
+  # refined graph with steiner points
+  EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02")
+  for eps in "${EPSILONS[@]}"; do
+    compute_ota "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/$eps" "$QUERY_FILE" "$eps"
+  done
+fi
+process_results "$OUTPUT_DIR/ref" "$OUTPUT_DIR/results-ref.csv" aegaeis-ref
 
 ############################ refined graph using triangle (Shewchuk) ############################
 # refined graph without points
-if [ ! -d "$OUTPUT_DIR/raw-ref" ]; then
-	compute_ota "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/raw-ref" "$QUERY_FILE" inf ""
+if [ ! -d "$OUTPUT_DIR/triangle" ]; then
+  compute_ota "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle" "$QUERY_FILE" inf ""
+
+  # refined graph with steiner points
+  EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
+  for eps in "${EPSILONS[@]}"; do
+    compute_ota "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle" "$QUERY_FILE" "$eps" ""
+  done
 fi
-process_results "$OUTPUT_DIR/raw-ref" "$OUTPUT_DIR/results-raw-ref.csv" aegaeis-raw-ref
-
-
-# refined graph with steiner points
-if [ ! -d "$OUTPUT_DIR/approximate-ref" ]; then
-	EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate-ref" "$QUERY_FILE" "$eps" ""
-	done
-fi
-process_results "$OUTPUT_DIR/approximate-ref" "$OUTPUT_DIR/results-approximate-ref.csv" aegaeis-approximate-ref
-
-
+process_results "$OUTPUT_DIR/triangle" "$OUTPUT_DIR/results-triangle.csv" aegaeis-triangle
 
 ######################################## unrefined graph ########################################
 # unrefined graph raw
-if [ ! -d "$OUTPUT_DIR/raw-unref" ]; then
-	compute_ota "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/raw-unref/$eps" "$QUERY_FILE" inf ""
+if [ ! -d "$OUTPUT_DIR/unref" ]; then
+  compute_ota "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref/$eps" "$QUERY_FILE" inf ""
+
+  # unrefined graph with steiner points
+  EPSILONS=("1.0" "0.5" "0.25")
+  for eps in "${EPSILONS[@]}"; do
+    compute_ota "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref/$eps" "$QUERY_FILE" "$eps" ""
+  done
 fi
-process_results "$OUTPUT_DIR/raw-unref" "$OUTPUT_DIR/results-raw-unref.csv" aegaeis-raw-unref
-
-
-# unrefined graph with steiner points
-if [ ! -d "$OUTPUT_DIR/approximate-unref" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate-unref/$eps" "$QUERY_FILE" "$eps" ""
-	done
-fi
-process_results "$OUTPUT_DIR/approximate-unref" "$OUTPUT_DIR/results-approximate-unref.csv" aegaeis-approximate-unref
-
-
+process_results "$OUTPUT_DIR/unref" "$OUTPUT_DIR/results-unref.csv" aegaeis-unref
 
 ######################################## visibility graph #######################################
 # exact solutions
 if [ ! -d "$OUTPUT_DIR/exact" ]; then
-	compute_ota "$VISIBILITY_GRAPH" "$OUTPUT_DIR/exact" "$QUERY_FILE" 0.0 ""
+  compute_ota "$VISIBILITY_GRAPH" "$OUTPUT_DIR/exact" "$QUERY_FILE" 0.0
 fi
 process_results "$OUTPUT_DIR/exact" "$OUTPUT_DIR/results-exact.csv" aegaeis-exact
-
-
 
 ######################################### postprocessing ########################################
 # aggregate results into one file
