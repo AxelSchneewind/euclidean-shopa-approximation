@@ -86,6 +86,7 @@ process_results() {
     
     local GRAPH_NAME=$(basename "$GRAPH_FILE")
     local GRAPH_NAME=${GRAPH_NAME%.graph}
+    local GRAPH_NAME=${GRAPH_NAME%.fmi}
 
     local NAME="${3:$GRAPH_NAME}"
     
