@@ -32,9 +32,9 @@ fi
 if [ ! -d "$OUTPUT_DIR/ref-binary" ]; then
   EPSILONS=("1.0" "0.5" "0.2") # "0.1" "0.05" "0.02")
   for eps in "${EPSILONS[@]}"; do
-    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-linear/$eps" "$QUERY_FILE" "$eps" --neighbor-finding=linear
-    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-trigon/$eps" "$QUERY_FILE" "$eps" --neighbor-finding=trigonometry
-    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-binary/$eps" "$QUERY_FILE" "$eps" --neighbor-finding=binary
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-linear/$eps/" "$QUERY_FILE" "$eps" --neighbor-finding=linear
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-trigon/$eps/" "$QUERY_FILE" "$eps" --neighbor-finding=trigonometry
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-binary/$eps/" "$QUERY_FILE" "$eps" --neighbor-finding=binary
   done
 fi
 process_results "$OUTPUT_DIR/ref-linear" "$OUTPUT_DIR/results-ref-linear.csv" linear
@@ -47,9 +47,9 @@ process_results "$OUTPUT_DIR/ref-binary" "$OUTPUT_DIR/results-ref-binary.csv" bi
 # 	# EPSILONS=("1.0" "0.5" "0.2" "0.1")
 # 	EPSILONS=("1.0" "0.5")
 # 	for eps in "${EPSILONS[@]}"; do
-# 	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-linear" "$QUERY_FILE" "$eps" --neighbor-finding=linear
-# 	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-trigon" "$QUERY_FILE" "$eps" --neighbor-finding=trigonometry
-# 	    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-binary" "$QUERY_FILE" "$eps" --neighbor-finding=binary
+# 	    compute_shopa_queries "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-linear" "$QUERY_FILE" "$eps" --neighbor-finding=linear
+# 	    compute_shopa_queries "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-trigon" "$QUERY_FILE" "$eps" --neighbor-finding=trigonometry
+# 	    compute_shopa_queries "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref-binary" "$QUERY_FILE" "$eps" --neighbor-finding=binary
 # 	done
 # fi
 # process_results "$OUTPUT_DIR/unref-linear" "$OUTPUT_DIR/results-unref-linear.csv" linear

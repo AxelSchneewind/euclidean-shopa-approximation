@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # if not installed, add paths to executable here
-ROUTER=$(which compute_shopa)
-ROUTER_OTA=$(which compute_ota)
+ROUTER=compute_shopa
+ROUTER_OTA=compute_ota
 FIND_NODES=find_nodes
 
 
 
-compute_ota() {
+compute_ota_queries() {
     if [[ -z "$4" ]]; then
-	    echo "usage: compute_ota path/to/graph_file.graph path/to/results/ path/to/queries.txt epsilon"
+	    echo "usage: compute_ota_queries path/to/graph_file.graph path/to/results/ path/to/queries.txt epsilon"
 	    exit
     fi
 
@@ -29,9 +29,9 @@ compute_ota() {
     $ROUTER_OTA --epsilon "${EPSILON}" ${PARAMS} -p wgs84 -a "$ASTAR" -t$TREE_SIZE -l --graph-file "${GRAPH_FILE}" --output-directory "${OUTPUT_DIR}" --query "${QUERIES}" > "${OUTPUT_DIR}/out.log" 2>&1
 }
 
-compute_single() {
+compute_shopa_queries() {
     if [[ -z "$4" ]]; then
-	    echo "usage: compute_single path/to/graph_file.graph path/to/results/ path/to/queries.txt epsilon"
+	    echo "usage: compute_shopa_queries path/to/graph_file.graph path/to/results/ path/to/queries.txt epsilon"
 	    exit
     fi
 
@@ -89,7 +89,7 @@ process_results() {
 
     local NAME="${3:$GRAPH_NAME}"
     
-    cat "$OUTPUT_DIR"/**/info.csv > "$CSV_RESULTS"
+    cat "$OUTPUT_DIR/**/info.csv" > "$CSV_RESULTS"
 
     # remove headers
     sed -e '1p;/,node.*/d' -i "$CSV_RESULTS"

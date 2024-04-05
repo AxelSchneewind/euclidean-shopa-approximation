@@ -39,12 +39,12 @@ sed -e 's/,,*/,/g' -i "$QUERY_FILE"
 # ######################################### refined graph ########################################
 # refined graph without points
 if [ ! -d "$OUTPUT_DIR/ref" ]; then
-  compute_single "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref" "$QUERY_FILE" inf
+  compute_shopa_queries "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/inf/" "$QUERY_FILE" inf
 
   # refined graph with steiner points
   EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02")
   for eps in "${EPSILONS[@]}"; do
-    compute_single "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/$eps" "$QUERY_FILE" "$eps"
+    compute_shopa_queries "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/$eps/" "$QUERY_FILE" "$eps"
   done
 fi
 process_results "$OUTPUT_DIR/ref" "$OUTPUT_DIR/results-ref.csv" aegaeis-ref
@@ -52,12 +52,12 @@ process_results "$OUTPUT_DIR/ref" "$OUTPUT_DIR/results-ref.csv" aegaeis-ref
 ############################ refined graph using triangle (Shewchuk) ############################
 # refined graph without points
 if [ ! -d "$OUTPUT_DIR/triangle" ]; then
-  compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle" "$QUERY_FILE" inf
+  compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle/inf/" "$QUERY_FILE" inf
 
   # refined graph with steiner points
   EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
   for eps in "${EPSILONS[@]}"; do
-    compute_single "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle/$eps" "$QUERY_FILE" "$eps"
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle/$eps/" "$QUERY_FILE" "$eps"
   done
 fi
 process_results "$OUTPUT_DIR/triangle" "$OUTPUT_DIR/results-triangle.csv" aegaeis-triangle
@@ -65,22 +65,22 @@ process_results "$OUTPUT_DIR/triangle" "$OUTPUT_DIR/results-triangle.csv" aegaei
 ######################################## unrefined graph ########################################
 # unrefined graph raw
 if [ ! -d "$OUTPUT_DIR/unref" ]; then
-  compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref" "$QUERY_FILE" inf
+  compute_shopa_queries "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref/inf/" "$QUERY_FILE" inf
 
   # unrefined graph with steiner points
   EPSILONS=("1.0" "0.5" "0.25")
   for eps in "${EPSILONS[@]}"; do
-    compute_single "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref/$eps" "$QUERY_FILE" "$eps"
+    compute_shopa_queries "$UNREF_TRIANGULATION_GRAPH" "$OUTPUT_DIR/unref/$eps/" "$QUERY_FILE" "$eps"
   done
 fi
 process_results "$OUTPUT_DIR/unref" "$OUTPUT_DIR/results-unref.csv" aegaeis-unref
 
 ######################################## visibility graph #######################################
 # exact solutions
-if [ ! -d "$OUTPUT_DIR/exact" ]; then
-  compute_single "$VISIBILITY_GRAPH" "$OUTPUT_DIR/exact" "$QUERY_FILE" 0.0
+if [ ! -d "$OUTPUT_DIR/vis" ]; then
+  compute_shopa_queries "$VISIBILITY_GRAPH" "$OUTPUT_DIR/vis/0.0/" "$QUERY_FILE" 0.0
 fi
-process_results "$OUTPUT_DIR/exact" "$OUTPUT_DIR/results-exact.csv" aegaeis-exact
+process_results "$OUTPUT_DIR/vis" "$OUTPUT_DIR/results-exact.csv" aegaeis-exact
 
 ######################################### postprocessing ########################################
 # aggregate results into one file
