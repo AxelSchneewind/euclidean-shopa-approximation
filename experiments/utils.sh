@@ -90,7 +90,8 @@ process_results() {
 
     local NAME="${3:$GRAPH_NAME}"
     
-    cat "$OUTPUT_DIR/**/info.csv" > "$CSV_RESULTS"
+    # cat all result files into one
+    cat $(find $OUTPUT_DIR/ -name info.csv) > "$CSV_RESULTS"
 
     # remove headers
     sed -e '1p;/,node.*/d' -i "$CSV_RESULTS"
