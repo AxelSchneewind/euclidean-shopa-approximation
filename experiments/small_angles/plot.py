@@ -15,7 +15,7 @@ def read(file):
 
 
 def plot(data, x_column, y_column):
-    label = '$|V_{{{}}}|$'.format(data['epsilon'].iloc[0])
+    label = '$|V_{{\\varepsilon={}}}|$'.format(data['epsilon'].iloc[0])
 
     x_values = data[x_column]
     y_values = data[y_column]
