@@ -48,7 +48,7 @@ def filter(data):
     #     print(invalid_ratio, file=sys.stderr)
     # data = data.loc[(data['ratio'] <= 1.5)]
 
-    print(len(data), 'usable values')
+    print(len(data), 'usable rows')
     return data
 
 
@@ -60,14 +60,19 @@ def main():
     parser.add_argument('--column', '-c', default='time', help='the column to show box plots of')
     parser.add_argument('--fliers', action='store_true', help='whether to show fliers on boxplots')
     parser.add_argument('--means', action='store_true', help='whether to show means on boxplots')
+    parser.add_argument('--graph-type', '-t', default='triangle')
+    parser.add_argument('--output-file', '-o', default='out.png')
     args = parser.parse_args()
+
+    column_unit = bench.column_units[args.column]
 
     # load data and filter out unusable results
     data = bench.load(args.file)
 
-    # 
-    data = data.loc[(data['benchmark'].str.contains('-triangle') == False)]
-    print(data['benchmark'].unique())
+    # compare given graph type to exact values
+    graph_type = '-' + args.graph_type
+    data = data.loc[(data['benchmark'].str.contains(graph_type)) | (data['benchmark'].str.contains('-exact'))]
+    print('using benchmarks: ', data['benchmark'].unique())
 
     data = filter(data)
 
@@ -76,7 +81,6 @@ def main():
     data.sort_values(by='epsilon', inplace=True)
 
     print('usable data contains ', len(np.unique(data[['source','target']], axis=0)), ' entries')
-    print(data)
 
     # by epsilon
     column_by_epsilon = [ data.loc[data['epsilon'] == eps, args.column].to_numpy(dtype='float') for eps in data['epsilon'].unique() ]
@@ -85,9 +89,9 @@ def main():
     fig, ax = plt.subplots()
     ax.boxplot(column_by_epsilon, labels=data['epsilon'].unique(), showfliers=args.fliers, showmeans=args.means)
     ax.set_xlabel('$\\varepsilon$')
-    ax.set_ylabel(args.column)
+    ax.set_ylabel(args.column + ' [' + column_unit ']')
 
-    plt.show()
+    plt.savefig(args.output_file)
 
  
 if __name__ == "__main__":

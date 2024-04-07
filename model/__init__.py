@@ -36,6 +36,41 @@ dtypes = {
     'benchmark': str
 }
 
+column_units = {
+    'epsilon': '',
+    'source': '',
+    'target': '',
+    'cost': '',
+    'time': 'ms',
+    'tree size': 'nodes',
+    'astar': '',
+    'neighbor finding algorithm': '',
+    'source latitude': 'º',
+    'source longitude': 'º',
+    'target latitude': 'º',
+    'target longitude': 'º',
+    'node count': '',
+    'edge count': '',
+    'stored node count': '',
+    'stored edge count': '',
+    'memory usage graph': 'MiB',
+    'memory usage final': 'MiB',
+    'beeline distance': '',
+    'queue pull count': '',
+    'queue push count': '',
+    'queue max size': '',
+    'edges checked': '',
+    'neighbors base node count': '',
+    'neighbors base node neighbors count': '',
+    'neighbors boundary node count': '',
+    'neighbors boundary node neighbors count': '',
+    'neighbors steiner point count': '',
+    'neighbors steiner point neighbors count': '',
+    'neighbors steiner point search iteration count': '',
+    'graph': '',
+    'benchmark': ''
+}
+
 converters = {
 
 }
