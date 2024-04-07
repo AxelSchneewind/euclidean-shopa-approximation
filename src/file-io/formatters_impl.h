@@ -106,7 +106,7 @@ namespace stream_encoders {
     template<>
     std::ostream &
     encode_text::write(std::ostream &output, gl_edge_t const &edge) {
-        output << edge.color << ' ' << edge.line_width;
+        output << edge.line_width << ' ' << edge.color;
         return output;
     }
 
@@ -132,7 +132,7 @@ namespace stream_encoders {
     adjacency_list_edge<node_id_t, gl_edge_t>
     encode_text::read(std::istream &input) {
         adjacency_list_edge<node_id_t, gl_edge_t> result{};
-        input >> result.source >> result.destination >> result.info.color >> result.info.line_width;
+        input >> result.source >> result.destination >> result.info.line_width >> result.info.color;
 	input.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         return result;
     }
