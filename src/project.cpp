@@ -1,5 +1,7 @@
-#include "interface/Graph.h"
+#include "file-io/file_io_impl.h"
+#include "graph/geometry_impl.h"
 
+#include <string>
 #include <fstream>
 
 
@@ -10,24 +12,37 @@ int main(int argc, const char* argv[]) {
         return 1;
     }
 
-    std::cout << "Reading graph from " << argv[1] << "...";
-    Graph graph;
-    graph.read_graph_file(argv[1]);
-    std::cout << "\b\b\b, done" << std::endl;
+    std::string graph_file(argv[1]);
+    std::string output_file(argv[2]);
 
+    std::ifstream input(graph_file);
+    std::ofstream output(output_file);
+
+    // select projection
     Projection projection = Projection::NONE;
     std::string projection_name(argv[3]);
     if (projection_name == "xy_to_latlon")
         projection = Projection::GB_TO_WGS84;
     if (projection_name == "latlon_to_xy")
         projection = Projection::WGS84_TO_GB;
-
     std::cout << "projecting with " << (int)projection << "...";
-    graph.project(projection);
 
-    std::cout << "\b\b\b, done" << std::endl;
+    // read nodes
+    std::size_t node_count, other_count;
+    input >> node_count;
+    input >> other_count;
 
-    std::cout << "writing to " << argv[2] << "...";
-    graph.write_graph_file(argv[2]);
-    std::cout << "\b\b\b, done" << std::endl;
+    std::vector<node_t> nodes(node_count);
+    file_io::read_nodes<node_t>(input, nodes);
+    std::string rest(std::istreambuf_iterator<char>(input), {});
+
+    for (auto& node : nodes) {
+        project_coordinate(node.coordinates, projection);
+    }
+
+    // write projected graph file
+    output << node_count << '\n' << other_count <<'\n';
+    file_io::write_nodes<node_t>(output, nodes);
+
+    output << rest;
 }
