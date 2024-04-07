@@ -24,10 +24,9 @@ int main(int argc, const char* argv[]) {
         projection = Projection::WGS84_TO_GB;
     std::cout << "projecting with " << (int)projection << "...";
 
-    // read nodes
+    // read file
     std::size_t node_count, other_count;
-
-    std::vector<node_t> nodes(node_count);
+    std::vector<node_t> nodes;
     std::string rem;
     {
         std::ifstream input(graph_file);
@@ -35,6 +34,7 @@ int main(int argc, const char* argv[]) {
         input >> node_count;
         input >> other_count;
 
+        nodes.resize(node_count);
         file_io::read_nodes<node_t>(input, nodes);
         rem = std::string(std::istreambuf_iterator<char>(input), {});
     }
