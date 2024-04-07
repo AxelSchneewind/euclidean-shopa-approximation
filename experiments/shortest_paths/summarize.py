@@ -91,7 +91,7 @@ def main():
     print('some results are suspiciously bad: ', sus)
 
     # by epsilon
-    eps_file = args.output_epsilon if args.output_epsilon != 'stdout' else sys.stdout
+    eps_file = open(args.output_epsilon, mode='a') if args.output_epsilon != 'stdout' else sys.stdout
     print('column,epsilon,count,mean,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=eps_file)
     for column in columns:
         for epsilon in data['epsilon'].unique():
@@ -103,7 +103,7 @@ def main():
                   sep=',', file=eps_file)
 
     # info on each query
-    q_file = args.output_queries if args.output_queries != 'stdout' else sys.stdout
+    q_file = open(args.output_queries, mode='a') if args.output_queries != 'stdout' else sys.stdout
     print('column,source,target,count,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=q_file)
     for column in columns:
         for s in data['source'].unique():
