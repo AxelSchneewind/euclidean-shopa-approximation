@@ -1,7 +1,7 @@
 #!python
 
 # needs to be in PYTHONPATH
-import model.model as bench
+import model as bench
 
 import numpy as np
 import pandas as pd
