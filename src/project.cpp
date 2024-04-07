@@ -15,9 +15,6 @@ int main(int argc, const char* argv[]) {
     std::string graph_file(argv[1]);
     std::string output_file(argv[2]);
 
-    std::ifstream input(graph_file);
-    std::ofstream output(output_file);
-
     // select projection
     Projection projection = Projection::NONE;
     std::string projection_name(argv[3]);
@@ -29,20 +26,28 @@ int main(int argc, const char* argv[]) {
 
     // read nodes
     std::size_t node_count, other_count;
-    input >> node_count;
-    input >> other_count;
 
     std::vector<node_t> nodes(node_count);
-    file_io::read_nodes<node_t>(input, nodes);
-    std::string rest(std::istreambuf_iterator<char>(input), {});
+    std::string rem;
+    {
+        std::ifstream input(graph_file);
+
+        input >> node_count;
+        input >> other_count;
+
+        file_io::read_nodes<node_t>(input, nodes);
+        rem = std::string(std::istreambuf_iterator<char>(input), {});
+    }
 
     for (auto& node : nodes) {
         project_coordinate(node.coordinates, projection);
     }
 
     // write projected graph file
-    output << node_count << '\n' << other_count <<'\n';
-    file_io::write_nodes<node_t>(output, nodes);
-
-    output << rest;
+    {
+        std::ofstream output(output_file);
+        output << node_count << '\n' << other_count << '\n';
+        file_io::write_nodes<node_t>(output, nodes);
+        output << rem;
+    }
 }
