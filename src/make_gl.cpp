@@ -10,8 +10,8 @@
 #include "routing_impl.h"
 #include "triangulation/node_properties.h"
 
-struct node_properties {
-    bool is_boundary_node;
+struct edge_properties {
+    bool is_boundary_edge;
 };
 
 int
@@ -69,8 +69,8 @@ main(int argc, char const *argv[]) {
         file_io::read_nodes<node_t, stream_encoders::encode_text>(input, nodes);
         file_io::read_triangles<node_id_t, stream_encoders::encode_text>(input, faces);
 
-        std::vector<node_properties> properties(node_count, {false});
-        compute_boundary_node(nodes, faces, properties);
+        std::unordered_map<std::pair<long,long>, edge_properties> properties;
+        compute_boundary_edge(nodes, faces, properties);
 
         unidirectional_adjacency_list<node_id_t, gl_edge_t>::adjacency_list_builder builder;
         builder.add_edges_from_triangulation(faces);
@@ -79,11 +79,11 @@ main(int argc, char const *argv[]) {
 
         // set color and line width
         for(auto& edge : edges) {
-            edge.info.color = (properties[edge.source].is_boundary_node && properties[edge.destination].is_boundary_node) ? boundary_color : color;
+            edge.info.color = (properties.contains(std::minmax({edge.source, edge.destination})) && properties[std::minmax({edge.source, edge.destination})].is_boundary_edge) ? boundary_color : color;
             edge.info.line_width = linewidth;
         }
 
-    if (output_file_ending == ".gl") {
+        if (output_file_ending == ".gl") {
             output << node_count << '\n';
             output << edges.size() << '\n';
             file_io::write_nodes<node_t>(output, {nodes.begin(), nodes.end()});
