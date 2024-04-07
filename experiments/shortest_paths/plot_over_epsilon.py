@@ -89,7 +89,7 @@ def main():
     fig, ax = plt.subplots()
     ax.boxplot(column_by_epsilon, labels=data['epsilon'].unique(), showfliers=args.fliers, showmeans=args.means)
     ax.set_xlabel('$\\varepsilon$')
-    ax.set_ylabel(args.column + ' [' + column_unit ']')
+    ax.set_ylabel(args.column + ' [' + column_unit + ']')
 
     plt.savefig(args.output_file)
 
