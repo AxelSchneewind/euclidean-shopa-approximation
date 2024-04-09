@@ -1,10 +1,13 @@
 #!/bin/bash
 #
 
-GRAPH=/opt/routing/graphs/aegaeis/aegaeis-ref-new.graph
+GRAPH_REF=/opt/routing/graphs/aegaeis/aegaeis-ref.graph
+GRAPH_TRIANGLE=/opt/routing/graphs/aegaeis/aegaeis-ref-new.graph
 GRAPH_UNREF=/opt/routing/graphs/aegaeis/aegaeis-unref.graph
-GRAPH_PATA=/opt/routing/graphs/pata/pata-ref.graph
-GRAPH_MEDI=/opt/routing/graphs/medi/medi-ref.graph
+
+#
+# GRAPH_PATA=/opt/routing/graphs/pata/pata-ref.graph
+# GRAPH_MEDI=/opt/routing/graphs/medi/medi-ref.graph
 
 
 compute () {
@@ -14,7 +17,8 @@ compute () {
 }
 
 
-compute $GRAPH aegaeis-ref.csv
+compute $GRAPH_REF aegaeis-ref.csv
+compute $GRAPH_TRIANGLE aegaeis-triangle.csv
 compute $GRAPH_UNREF aegaeis-unref.csv
-# compute $GRAPH_PATA
-# compute $GRAPH_MEDI
+compute $GRAPH_PATA pata-ref.csv
+compute $GRAPH_MEDI medi-ref.csv
