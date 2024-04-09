@@ -86,7 +86,7 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         long double const base_second = std::clamp(1.0l + epsilon * std::sin(angle2), min_base_second, 10.0l);
         if (base_first == min_base_first || base_second == min_base_second) {
             edges_capped++;
-            std::cerr << "number of points on edge " << i << " is bounded by index datatype\n";
+            std::cerr << "number of points on edge " << i << " is bounded by index datatype (" << typeid(steiner_index_type).name() << ")\n";
         }
 
 
