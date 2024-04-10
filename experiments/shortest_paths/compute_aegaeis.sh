@@ -3,7 +3,7 @@
 source ../utils.sh
 
 # number of queries
-NUM_QUERIES=107
+NUM_QUERIES=108
 
 # maximum tree size to write to files (0 to disable tree output)
 TREE_SIZE=0
@@ -30,7 +30,7 @@ if [ ! -f "$QUERY_FILE" ]; then
 fi
 
 # blacklist queries
-QUERY_BLACKLIST=('140693,97656' '142694,10431' '97597,15167' '108011,97989' '88260,208670' '90928,97858' '18617,60831')
+QUERY_BLACKLIST=('140693,97656' '142694,10431' '97597,15167' '108011,97989' '88260,208670' '90928,97858' '18617,60831' '187782,118306')
 for q in "${QUERY_BLACKLIST[@]}"; do
   sed -e "s/$q//g" -i "$QUERY_FILE"
 done
