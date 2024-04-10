@@ -23,7 +23,7 @@ python summarize.py -f results/aegaeis/results-triangle.csv --output-queries=sum
 python summarize.py -f results/aegaeis/results-triangle.csv --output-queries=summaries/triangle-queries.csv --column=time
 
 # ref graph
-python plot_over_epsilon.py -f results/aegaeis/results.csv -t=ref -c ratio --fliers -o boxplots_ratio_ref$PLOT_FILE_TYPE
+python plot_over_epsilon.py -f results/aegaeis/results.csv -t=ref -c ratio --fliers -o plots/boxplots_ratio_ref$PLOT_FILE_TYPE
 python plot_over_epsilon.py -f results/aegaeis/results.csv -t=ref -c time --fliers -o plots/boxplots_time_ref$PLOT_FILE_TYPE
 python summarize.py -f results/aegaeis/results-ref.csv --output-epsilon=summaries/ref-epsilon.csv --column=ratio
 python summarize.py -f results/aegaeis/results-ref.csv --output-epsilon=summaries/ref-epsilon.csv --column=time
