@@ -13,6 +13,8 @@ import sys
 
 
 def filter(data):
+    data.sort_values(by=['source', 'target'], inplace=True)
+
     # check that exact value exists
     has_reference = np.array([bench.reference(data, row).shape[0] != 0 and bench.reference(data,row).iloc[0]['cost'] != math.inf for i, row in data.iterrows()], dtype='bool')
     if len(has_reference[(has_reference == False)]) != 0:
@@ -89,7 +91,10 @@ def main():
     fig, ax = plt.subplots()
     ax.boxplot(column_by_epsilon, labels=data['epsilon'].unique(), showfliers=args.fliers, showmeans=args.means)
     ax.set_xlabel('$\\varepsilon$')
-    ax.set_ylabel(args.column + ' [' + column_unit + ']')
+    if column_unit is not None and column_unit != '':
+        ax.set_ylabel(args.column + ' [' + column_unit + ']')
+    else:
+        ax.set_ylabel(args.column)
 
     plt.savefig(args.output_file)
 
