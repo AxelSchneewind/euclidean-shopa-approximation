@@ -68,7 +68,9 @@ column_units = {
     'neighbors steiner point neighbors count': '',
     'neighbors steiner point search iteration count': '',
     'graph': '',
-    'benchmark': ''
+    'benchmark': '',
+    'ratio': '',
+    'optimal cost': ''
 }
 
 converters = {
