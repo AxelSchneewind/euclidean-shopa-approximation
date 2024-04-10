@@ -31,8 +31,8 @@ python summarize.py -f results/aegaeis/results.csv -t=ref --output-queries=summa
 python summarize.py -f results/aegaeis/results.csv -t=ref --output-queries=summaries/ref-queries.csv --column=time
 
 # unref graph
-python plot_over_epsilon.py -f results/aegaeis/results.csv -t=unref -c=ratio --fliers -o plots/boxplots_ratio_ref$PLOT_FILE_TYPE
-python plot_over_epsilon.py -f results/aegaeis/results.csv -t=unref -c=time --fliers -o plots/boxplots_time_ref$PLOT_FILE_TYPE
+python plot_over_epsilon.py -f results/aegaeis/results.csv -t=unref -c=ratio --fliers -o plots/boxplots_ratio_unref$PLOT_FILE_TYPE
+python plot_over_epsilon.py -f results/aegaeis/results.csv -t=unref -c=time --fliers -o plots/boxplots_time_unref$PLOT_FILE_TYPE
 
 python summarize.py -f results/aegaeis/results.csv -t=unref --output-epsilon=summaries/unref-epsilon.csv --column=ratio
 python summarize.py -f results/aegaeis/results.csv -t=unref --output-epsilon=summaries/unref-epsilon.csv --column=time
