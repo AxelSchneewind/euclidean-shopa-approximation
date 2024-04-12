@@ -1,9 +1,9 @@
 #!/bin/bash
 
+source ../utils.sh
 
 # TRIANGLE_EXE=/opt/routing/graphs/aegaeis/triangle/triangle
 
-GRAPH_DIR=/opt/routing/graphs/
 FILE_IN_UNREF=$GRAPH_DIR/aegaeis/aegaeis-unref.graph
 FILE_IN_REF=$GRAPH_DIR/aegaeis/aegaeis-ref-new.graph
 
@@ -33,10 +33,10 @@ FILE_UNREF_EXPLICIT=milos-unref.fmi
 
 # filenames for gl files of explicit graph represenations (disabled for epsilon below 1)
 FILE_REF_EXPLICIT_GL_10=milos-ref-explicit-10.gl
-# FILE_REF_EXPLICIT_GL_05=milos-ref-explicit-05.gl
-# FILE_REF_EXPLICIT_GL_025=milos-ref-explicit-025.gl
 FILE_REF_EXPLICIT_GL_05=""
 FILE_REF_EXPLICIT_GL_025=""
+# FILE_REF_EXPLICIT_GL_05=milos-ref-explicit-05.gl
+# FILE_REF_EXPLICIT_GL_025=milos-ref-explicit-025.gl
 
 
 generate_explicit() {
@@ -99,5 +99,5 @@ fi
 
 # make explicit
 generate_explicit ${FILE_REF} ${FILE_REF_EXPLICIT_10} ${FILE_REF_EXPLICIT_GL_10} 1.0
-# generate_explicit ${FILE_REF} ${FILE_REF_EXPLICIT_05} ${FILE_REF_EXPLICIT_GL_05} 0.5
-# generate_explicit ${FILE_REF} ${FILE_REF_EXPLICIT_025} ${FILE_REF_EXPLICIT_GL_025} 0.25
+generate_explicit ${FILE_REF} ${FILE_REF_EXPLICIT_05} ${FILE_REF_EXPLICIT_GL_05} 0.5
+generate_explicit ${FILE_REF} ${FILE_REF_EXPLICIT_025} ${FILE_REF_EXPLICIT_GL_025} 0.25
