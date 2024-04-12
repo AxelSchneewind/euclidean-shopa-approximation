@@ -9,7 +9,7 @@ FIND_NODES=find_nodes
 
 compute_ota_queries() {
     if [[ -z "$4" ]]; then
-	    echo "usage: compute_ota_queries path/to/graph_file.graph path/to/results/ path/to/queries.txt epsilon"
+	    echo "usage: compute_ota_queries path/to/graph_file.graph path/to/results/ path/to/queries.txt epsilon [other params]"
 	    exit
     fi
 
@@ -18,6 +18,18 @@ compute_ota_queries() {
     local QUERY_FILE=$3
     local EPSILON=$4
     local PARAMS="$5"
+
+    # check query file validity
+    if [! -f "$QUERY_FILE"]; then
+	    echo "invalid query file"
+	    exit
+    fi
+
+    # check graph file validity
+    if [! -f "$GRAPH_FILE"]; then
+	    echo "invalid graph file"
+	    exit
+    fi
 
     mkdir -p "$OUTPUT_DIR"
 
@@ -40,6 +52,18 @@ compute_shopa_queries() {
     local QUERY_FILE=$3
     local EPSILON=$4
     local PARAMS="$5"
+
+    # check query file validity
+    if [! -f "$QUERY_FILE"]; then
+	    echo "invalid query file"
+	    exit
+    fi
+
+    # check graph file validity
+    if [! -f "$GRAPH_FILE"]; then
+	    echo "invalid graph file"
+	    exit
+    fi
     
     mkdir -p "$OUTPUT_DIR"
     
@@ -60,6 +84,12 @@ make_queries(){
     local GRAPH_FILE=$1
     local QUERY_FILE=$2
     local NUM_QUERIES=${3:-100}
+
+    # check graph file validity
+    if [! -f "$GRAPH_FILE"]; then
+	    echo "invalid graph file"
+	    exit
+    fi
 
     touch "$QUERY_FILE"
     
