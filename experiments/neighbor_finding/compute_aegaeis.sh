@@ -29,16 +29,24 @@ fi
 
 ############################ refined graph using triangle (Shewchuk) ############################
 # refined graph (triangle) with steiner points
+EPSILONS=("1.0" "0.5" "0.2") # "0.1" "0.05" "0.02")
 if [ ! -d "$OUTPUT_DIR/ref-param" ]; then
-  EPSILONS=("1.0" "0.5" "0.2") # "0.1" "0.05" "0.02")
   for eps in "${EPSILONS[@]}"; do
-    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-param/$eps/" "$QUERY_FILE" "$eps" --neighbor-finding=linear
-    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-trigon/$eps/" "$QUERY_FILE" "$eps" --neighbor-finding=trigon
-    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-binary/$eps/" "$QUERY_FILE" "$eps" --neighbor-finding=binary
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-param/$eps/" "$QUERY_FILE" "$eps" "--neighbor-finding=param"
+  done
+fi
+if [ ! -d "$OUTPUT_DIR/ref-trigon" ]; then
+  for eps in "${EPSILONS[@]}"; do
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-trigon/$eps/" "$QUERY_FILE" "$eps" "--neighbor-finding=trig"
+  done
+fi
+if [ ! -d "$OUTPUT_DIR/ref-binary" ]; then
+  for eps in "${EPSILONS[@]}"; do
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref-binary/$eps/" "$QUERY_FILE" "$eps" "--neighbor-finding=binary"
   done
 fi
 process_results "$OUTPUT_DIR/ref-param" "$OUTPUT_DIR/results-ref-param.csv" param
-process_results "$OUTPUT_DIR/ref-trigon" "$OUTPUT_DIR/results-ref-trigon.csv" trigon
+process_results "$OUTPUT_DIR/ref-trigon" "$OUTPUT_DIR/results-ref-trigon.csv" trig
 process_results "$OUTPUT_DIR/ref-binary" "$OUTPUT_DIR/results-ref-binary.csv" binary
 
 # ######################################## unrefined graph ########################################
