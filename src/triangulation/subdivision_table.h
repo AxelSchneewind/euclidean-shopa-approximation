@@ -11,6 +11,9 @@
 #include <cstdint>
 
 
+/**
+ * uses precomputed relative positions for classes of edges, depending on the minimal angles
+ */
 class subdivision_table {
 private:
     using steiner_index_type = int;
