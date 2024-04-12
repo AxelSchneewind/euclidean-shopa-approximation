@@ -13,45 +13,8 @@ import sys
 
 
 def filter_data(data):
-    # check that exact value exists
-    has_reference = np.array([bench.reference(data, row).shape[0] != 0 and bench.reference(data,row).iloc[0]['cost'] != math.inf for i, row in data.iterrows()], dtype='bool')
-    if len(has_reference[(has_reference == False)]) != 0:
-        print('exact value missing for some queries', file=sys.stderr)
-        print(data.loc[has_reference == False], file=sys.stderr)
-    data = data.loc[has_reference]
-
     # check that coordinates of source and target coordinates match
-    coords_match = np.array([
-        (bench.reference(data, row)['source latitude'] == row['source latitude'])
-        & (bench.reference(data, row)['source longitude'] == row['source longitude'])
-        & (bench.reference(data, row)['target latitude'] == row['target latitude'])
-        & (bench.reference(data, row)['target longitude'] == row['target longitude']).all() for i,row in data.iterrows() ], dtype='bool')
-    if len(coords_match[(coords_match == False)]) != 0:
-        print('mismatch in source/target coordinates', file=sys.stderr)
-        print(data.loc[coords_match == False], file=sys.stderr)
-    data = data.loc[coords_match]
-
-    # check that cost value is finite
-    invalid_cost = data.loc[(data['cost'] == -math.inf) | (data['cost'] == math.inf) | (data['cost'] == math.nan)]
-    if len(invalid_cost) != 0:
-        print('ignored by cost value: ', file=sys.stderr)
-        print(invalid_cost, file=sys.stderr)
-    data = data.loc[(data['cost'] != math.inf) & (data['cost'] != -math.inf) & (data['cost'] != math.nan)]
-
-    # filter out results with invalid ratio
-    # print(data.dtypes)
-    # invalid_ratio = (data['ratio'] > 1.1)
-    # print(invalid_ratio)
-    # invalid_ratio = data.loc[invalid_ratio]
-    # if len(invalid_ratio) != 0:
-    #     print('ignored by ratio value: ', file=sys.stderr)
-    #     print(invalid_ratio, file=sys.stderr)
-    # data = data.loc[(data['ratio'] <= 1.5)]
-
-    print(len(data), 'usable values')
     return data
-
-
 
 
 def main():
@@ -71,24 +34,28 @@ def main():
 
     data = filter_data(data)
 
-    data.sort_values(by='epsilon', inplace=True)
+    data.sort_values(by=['benchmark', 'epsilon'], inplace=True)
     data.sort_index(inplace=True, ignore_index=True)
-    data.sort_values(by='epsilon', inplace=True)
+    data.sort_values(by=['benchmark', 'epsilon'], inplace=True)
 
     print('usable data contains ', len(np.unique(data[['source','target']], axis=0)), ' entries')
     print(data)
 
+
     # by benchmark
-    plots = [(b,eps) for b in data['benchmark'].unique() for eps in data['epsilon'].unique()]
+    plots = [(b,eps) for eps in data['epsilon'].unique() for b in data['benchmark'].unique() ]
     plots = [p for p in filter(lambda x: len(data.loc[(data['benchmark'] == x[0]) & (data['epsilon'] == x[1])]) > 0, plots)]
 
     column_by_epsilon = [ data.loc[(data['benchmark'] == b) & (data['epsilon'] == eps), args.column] for (b,eps) in plots ]
-
+    print(len(column_by_epsilon), len(plots))
     # generate box plots
     fig, ax = plt.subplots()
-    ax.boxplot(column_by_epsilon, labels=[ str(p) for p in plots ], showfliers=args.fliers, showmeans=args.means)
+    ax.boxplot(column_by_epsilon, labels=[ str(p[0]) + ', $\\varepsilon = ' + str(p[1]) + '$' for p in plots ], showfliers=args.fliers, showmeans=args.means)
     ax.set_xlabel('benchmark')
-    ax.set_ylabel(args.column)
+    if args.column in bench.column_units and bench.column_units[args.column] != "":
+        ax.set_ylabel(args.column + '[' + bench.column_units[args.column] + ']')
+    else:
+        ax.set_ylabel(args.column)
 
     plt.show()
 
