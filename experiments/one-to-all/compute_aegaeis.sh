@@ -3,7 +3,7 @@
 source ../utils.sh
 
 # number of queries
-NUM_QUERIES=50
+NUM_QUERIES=20
 
 # maximum tree size to write to files (0 to disable tree output)
 TREE_SIZE=0
@@ -35,7 +35,7 @@ if [ ! -d "$OUTPUT_DIR/ref" ]; then
   compute_ota_queries "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/inf/" "$QUERY_FILE" inf
 
   # refined graph with steiner points
-  EPSILONS=("1.0" "0.5" "0.25" "0.125")
+  EPSILONS=("1.0" "0.5" "0.25")
   for eps in "${EPSILONS[@]}"; do
     compute_ota_queries "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/$eps/" "$QUERY_FILE" "$eps"
   done
