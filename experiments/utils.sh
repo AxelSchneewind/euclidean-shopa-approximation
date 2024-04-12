@@ -92,7 +92,7 @@ make_queries(){
     local NUM_QUERIES=${3:-100}
 
     # check graph file validity
-    if [! -f "$GRAPH_FILE"]; then
+    if [[ ! -f "$GRAPH_FILE" ]]; then
 	    echo "invalid graph file"
 	    exit
     fi
