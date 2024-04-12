@@ -20,13 +20,13 @@ compute_ota_queries() {
     local PARAMS="$5"
 
     # check query file validity
-    if [! -f "$QUERY_FILE"]; then
+    if [[ ! -f "$QUERY_FILE" ]]; then
 	    echo "invalid query file"
 	    exit
     fi
 
     # check graph file validity
-    if [! -f "$GRAPH_FILE"]; then
+    if [[ ! -f "$GRAPH_FILE" ]]; then
 	    echo "invalid graph file"
 	    exit
     fi
@@ -54,13 +54,13 @@ compute_shopa_queries() {
     local PARAMS="$5"
 
     # check query file validity
-    if [! -f "$QUERY_FILE"]; then
+    if [[ ! -f "$QUERY_FILE" ]]; then
 	    echo "invalid query file"
 	    exit
     fi
 
     # check graph file validity
-    if [! -f "$GRAPH_FILE"]; then
+    if [[ ! -f "$GRAPH_FILE" ]]; then
 	    echo "invalid graph file"
 	    exit
     fi

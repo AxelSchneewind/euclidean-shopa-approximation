@@ -15,13 +15,13 @@ compute () {
   local DIR=$2
 
   # check graph file
-  if [! -f "$GRAPH" ]; then
+  if [[ ! -f "$GRAPH" ]]; then
     echo "invalid graph file"
     exit
   fi
 
   # check dir argument
-  if [ -z "$DIR" ]; then
+  if [[ -z "$DIR" ]]; then
     echo "invalid output directory"
     exit
   fi
