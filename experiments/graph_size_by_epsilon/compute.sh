@@ -1,11 +1,13 @@
 #!/bin/bash
 
+source ../utils.sh
+
 # specify paths to graph files here
-GRAPH_AEGS_REF=/opt/routing/graphs/aegaeis/aegaeis-ref-new.graph
-GRAPH_AEGS_TRIANGLE=/opt/routing/graphs/aegaeis/aegaeis-ref.graph
-GRAPH_AEGS_UNREF=/opt/routing/graphs/aegaeis/aegaeis-unref.graph
-GRAPH_PATA=/opt/routing/graphs/pata/pata-ref.graph
-GRAPH_MEDI=/opt/routing/graphs/medi/medi-ref.graph
+GRAPH_AEGS_REF=$GRAPH_DIR/aegaeis/aegaeis-ref-new.graph
+GRAPH_AEGS_TRIANGLE=$GRAPH_DIR/aegaeis/aegaeis-ref.graph
+GRAPH_AEGS_UNREF=$GRAPH_DIR/aegaeis/aegaeis-unref.graph
+GRAPH_PATA=$GRAPH_DIR/pata/pata-ref.graph
+GRAPH_MEDI=$GRAPH_DIR/medi/medi-ref.graph
 
 # make empty results directory
 mkdir -p results

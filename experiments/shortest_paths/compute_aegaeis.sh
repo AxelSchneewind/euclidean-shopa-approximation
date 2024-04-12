@@ -12,7 +12,6 @@ TREE_SIZE=0
 ASTAR=on
 
 # graph files
-GRAPH_DIR=/opt/routing/graphs
 VISIBILITY_GRAPH=$GRAPH_DIR/aegaeis/aegaeis-vis.fmi
 TRIANGULATION_GRAPH=$GRAPH_DIR/aegaeis/aegaeis-ref.graph
 TRIANGLE_TRIANGULATION_GRAPH=$GRAPH_DIR/aegaeis/aegaeis-ref-new.graph

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-GRAPH_DIR=/opt/routing/graphs
+source ../utils.sh
+
 GRAPH_REF=$GRAPH_DIR/aegaeis/aegaeis-ref.graph
 GRAPH_TRIANGLE=$GRAPH_DIR/aegaeis/aegaeis-ref-new.graph
 GRAPH_UNREF=$GRAPH_DIR/aegaeis/aegaeis-unref.graph
@@ -29,8 +30,12 @@ compute () {
   mkdir -p "$DIR"
 
   graph_stats -g $GRAPH -m inangle_distribution > $DIR/inangles.csv
-  graph_stats -g $GRAPH -m points_per_edge > $DIR/points_per_edge.csv
   graph_stats -g $GRAPH -m node_radii > $DIR/radii.csv
+
+  graph_stats -g $GRAPH -m points_per_edge -e 1.0   -b 50 > $DIR/points_per_edge-10.csv
+  graph_stats -g $GRAPH -m points_per_edge -e 0.5   -b 50 > $DIR/points_per_edge-05.csv
+  graph_stats -g $GRAPH -m points_per_edge -e 0.25  -b 50 > $DIR/points_per_edge-025.csv
+  graph_stats -g $GRAPH -m points_per_edge -e 0.125 -b 50 > $DIR/points_per_edge-0125.csv
 }
 
 

@@ -2,7 +2,6 @@
 
 # requires bc to be installed for floating point operations
 
-
 EPSILON=("1.0" "0.5" "0.2" "0.1")
 
 make_graph() {

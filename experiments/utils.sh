@@ -5,7 +5,13 @@ ROUTER=compute_shopa
 ROUTER_OTA=compute_ota
 FIND_NODES=find_nodes
 
+# set graph directory here
+GRAPH_DIR=/opt/routing/graphs
 
+if [[ ! -d "$GRAPH_DIR" ]]; then
+	echo "configure the graph directory first (in experiments/utils.sh)"
+	exit
+fi
 
 compute_ota_queries() {
     if [[ -z "$4" ]]; then

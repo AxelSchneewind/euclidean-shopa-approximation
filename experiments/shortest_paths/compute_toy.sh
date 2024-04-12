@@ -12,8 +12,8 @@ TREE_SIZE=10000
 ASTAR=on
 
 # graph files
-VISIBILITY_GRAPH=/opt/routing/graphs/toy/toy.fmi
-TRIANGULATION_GRAPH=/opt/routing/graphs/toy/toy.graph
+VISIBILITY_GRAPH=$GRAPH_DIR/toy/toy.fmi
+TRIANGULATION_GRAPH=$GRAPH_DIR/toy/toy.graph
 
 # output paths
 OUTPUT_DIR=results/toy

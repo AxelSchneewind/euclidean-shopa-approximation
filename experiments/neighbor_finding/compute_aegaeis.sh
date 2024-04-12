@@ -12,7 +12,6 @@ TREE_SIZE=0
 ASTAR=on
 
 # graph files
-GRAPH_DIR=/opt/routing/graphs
 TRIANGLE_TRIANGULATION_GRAPH=$GRAPH_DIR/aegaeis/aegaeis-ref-new.graph
 UNREF_TRIANGULATION_GRAPH=$GRAPH_DIR/aegaeis/aegaeis-unref.graph
 

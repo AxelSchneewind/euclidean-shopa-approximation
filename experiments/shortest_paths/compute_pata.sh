@@ -12,7 +12,6 @@ TREE_SIZE=0
 ASTAR=on
 
 # graph files
-GRAPH_DIR=/opt/routing/graphs
 VISIBILITY_GRAPH=$GRAPH_DIR/pata/pata-vis.fmi
 TRIANGULATION_GRAPH=$GRAPH_DIR/pata/pata-ref.graph
 
