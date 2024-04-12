@@ -3,8 +3,9 @@
 
 # TRIANGLE_EXE=/opt/routing/graphs/aegaeis/triangle/triangle
 
-FILE_IN_UNREF=/opt/routing/graphs/aegaeis/aegaeis-unref.graph
-FILE_IN_REF=/opt/routing/graphs/aegaeis/aegaeis-ref-new.graph
+GRAPH_DIR=/opt/routing/graphs/
+FILE_IN_UNREF=$GRAPH_DIR/aegaeis/aegaeis-unref.graph
+FILE_IN_REF=$GRAPH_DIR/aegaeis/aegaeis-ref-new.graph
 
 FILE_IN_UNREF_PROJ=aegaeis-unref-latlon.graph
 FILE_IN_REF_PROJ=aegaeis-ref-latlon.graph
@@ -16,20 +17,26 @@ MAXY=36.88759994506835937500
 MINX=24.09291076660156250000
 MAXX=24.71498107910156250000
 
+# graph names for extracted triangulations
 FILE_UNREF=milos.graph
 FILE_REF=milos-ref.graph
 
+# graph names for gl files for triangulations
 FILE_UNREF_GL=milos.gl
 FILE_REF_GL=milos-ref.gl
 
+# filenames for explicit graph represenations
 FILE_REF_EXPLICIT_10=milos-ref-10.fmi
 FILE_REF_EXPLICIT_05=milos-ref-05.fmi
 FILE_REF_EXPLICIT_025=milos-ref-025.fmi
 FILE_UNREF_EXPLICIT=milos-unref.fmi
 
+# filenames for gl files of explicit graph represenations (disabled for epsilon below 1)
 FILE_REF_EXPLICIT_GL_10=milos-ref-explicit-10.gl
-FILE_REF_EXPLICIT_GL_05=milos-ref-explicit-05.gl
-FILE_REF_EXPLICIT_GL_025=milos-ref-explicit-025.gl
+# FILE_REF_EXPLICIT_GL_05=milos-ref-explicit-05.gl
+# FILE_REF_EXPLICIT_GL_025=milos-ref-explicit-025.gl
+FILE_REF_EXPLICIT_GL_05=""
+FILE_REF_EXPLICIT_GL_025=""
 
 
 generate_explicit() {
@@ -38,8 +45,11 @@ generate_explicit() {
 	local OUTPUT_GRAPH_GL="$3"
 	local EPSILON="$4"
 	make_explicit ${INPUT_GRAPH} ${OUTPUT_GRAPH} ${EPSILON}
-	make_gl ${OUTPUT_GRAPH} ${OUTPUT_GRAPH_GL} 1 1
-	project_graph ${OUTPUT_GRAPH_GL} ${OUTPUT_GRAPH_GL} xy_to_latlon
+
+	if [ -n "$OUTPUT_GRAPH_GL" ]; then
+		make_gl ${OUTPUT_GRAPH} ${OUTPUT_GRAPH_GL} 1 1
+		project_graph ${OUTPUT_GRAPH_GL} ${OUTPUT_GRAPH_GL} xy_to_latlon
+	fi
 
 	echo "explicit graph has size (node count, edge count, lines): "
 	head -n2 $OUTPUT_GRAPH
