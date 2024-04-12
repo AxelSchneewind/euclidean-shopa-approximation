@@ -29,15 +29,15 @@ def main():
     data['count cumulative'] = hist_cumulative
 
     # plot histogram
-    hist(data['angle'], data['count'])
-    plt.xlabel('angle')
+    hist(data.iloc[:, 0], data['count'])
+    plt.xlabel(data.columns[0])
     plt.ylabel('count')
     plt.title('distribution of inner angles')
     plt.show()
 
     # plot cumulative histogram 
-    hist(data['angle'], data['count cumulative'])
-    plt.xlabel('angle')
+    hist(data.iloc[:, 0], data['count cumulative'])
+    plt.xlabel(data.columns[0])
     plt.ylabel('count')
     plt.title('cumulative distribution of inner angles')
     plt.show()
