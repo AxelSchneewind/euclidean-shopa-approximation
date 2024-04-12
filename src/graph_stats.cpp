@@ -97,14 +97,17 @@ void show_info<mode_arg_points_per_edge>(gengetopt_args_info const &args) {
     static constexpr size_t max_size  = subdivision::max_steiner_count_per_edge;
     std::vector<std::size_t> count(args.bins_arg, 0);
 
+    static constexpr float base = 1.1;
+    static constexpr float base_log = std::log2(base);
     for (size_t e = 0; e < graph.base_graph().edge_count(); ++e) {
         auto &&steiner_info = graph.steiner_info(e);
-        size_t bin = std::floor((std::log2(steiner_info.node_count) * args.bins_arg) / max_size);
-        count[bin]++;
+        size_t bin = std::floor(std::log2(steiner_info.node_count) / base_log);
+	if (bin < args.bins_arg)
+        	count[bin]++;
     }
 
     if (!args.no_header_flag)
-        std::cout << "log(number of points),number of edges\n";
+        std::cout << "log(number of points),count\n";
 
     for (int b = 0; b < args.bins_arg; ++b) {
         std::cout << b << ',' << count[b] << '\n';
@@ -117,12 +120,23 @@ void show_info<mode_arg_node_radii>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
     auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
 
-    if (!args.no_header_flag)
-        std::cout << "edge,r1,r2\n";
+    // set up bins
+    std::vector<std::size_t> count(args.bins_arg, 0);
 
     for (size_t e = 0; e < graph.base_graph().edge_count(); ++e) {
         auto &&steiner_info = graph.steiner_info(e);
-        std::cout << e << ',' << steiner_info.r_first << ',' << steiner_info.r_second << '\n';
+        size_t bin_left = std::floor(steiner_info.r_first * args.bins_arg);
+        size_t bin_right = std::floor(steiner_info.r_second * args.bins_arg);
+        count[bin_left]++;
+        count[bin_right]++;
+    }
+
+    if (!args.no_header_flag)
+        std::cout << "radius,count\n";
+
+
+    for (int b = 0; b < args.bins_arg; ++b) {
+        std::cout << ((float)b / args.bins_arg) << ',' << count[b] << '\n';
     }
     std::cout << std::flush;
 }
