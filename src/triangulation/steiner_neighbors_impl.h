@@ -79,6 +79,52 @@ steiner_neighbors<Graph, Labels, Config>::find_face_crossing_predecessor(const N
 
 template<typename Graph, typename Labels, Configuration Config>
 template<typename NodeCostPair>
+void
+steiner_neighbors<Graph, Labels, Config>::vertex_neighbors(const NodeCostPair &node, std::vector<NodeCostPair> &out,
+                                                           std::vector<coordinate_t> &coordinates_out) {
+    auto &&base_node_id { _graph->base_node_id(node.node()) };
+
+    for (auto &&edge: _graph->base_graph().outgoing_edges(base_node_id)) [[likely]] {
+        auto e_id { _graph->base_graph().edge_id(base_node_id, edge.destination) };
+        steiner_graph::node_id_type const destination { e_id, static_cast<steiner_graph::intra_edge_id_type>(1) };
+        // assert(_graph->has_edge(base_node_id, destination));
+        insert(destination, node, out, coordinates_out);
+    }
+
+    for (auto &&edge: _graph->base_graph().incoming_edges(base_node_id)) [[likely]] {
+        auto e_id { _graph->base_graph().edge_id(edge.destination, base_node_id) };
+        steiner_graph::node_id_type const destination { e_id, _graph->steiner_info(e_id).node_count - static_cast<steiner_graph::intra_edge_id_type>(2) };
+        // assert(_graph->has_edge(base_node_id, destination));
+        insert(destination, node, out, coordinates_out);
+    }
+}
+
+template<typename Graph, typename Labels, Configuration Config>
+template<typename NodeCostPair>
+void
+steiner_neighbors<Graph, Labels, Config>::on_edge_neighbors(const NodeCostPair &node, std::vector<NodeCostPair> &out,
+                                                            std::vector<coordinate_t> &coordinates_out) {
+    auto const &node_id { node.node() };
+    auto &&steiner_info = _graph->steiner_info(node_id.edge);
+
+    // for neighboring node on own edge
+    if (node_id.steiner_index < steiner_info.node_count - 1) [[likely]] {
+        steiner_graph::node_id_type const destination { node_id.edge, node_id.steiner_index + static_cast<steiner_graph::intra_edge_id_type>(1) };
+        assert(_graph->has_edge(node_id, destination));
+        insert(destination, node, out, coordinates_out);
+    }
+
+    // for other neighboring node on own edge
+    if (node_id.steiner_index > 0) [[likely]] {
+        steiner_graph::node_id_type const destination { node_id.edge, node_id.steiner_index - static_cast<steiner_graph::intra_edge_id_type>(1) };
+        assert(_graph->has_edge(node_id, destination));
+        insert(destination, node, out, coordinates_out);
+    }
+}
+
+
+template<typename Graph, typename Labels, Configuration Config>
+template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels, Config>::operator()(const NodeCostPair &node, std::vector<NodeCostPair> &out,
                                                           std::vector<coordinate_t> &coordinates_out) {
     auto const &node_id = node.node();
@@ -564,19 +610,7 @@ void steiner_neighbors<Graph, Labels, Config>::from_base_node(const NodeCostPair
     auto const &node_id = node.node();
     auto &&base_node_id = _graph->base_node_id(node_id);
 
-    for (auto &&edge: _graph->base_graph().outgoing_edges(base_node_id)) [[likely]] {
-        auto e_id = _graph->base_graph().edge_id(base_node_id, edge.destination);
-        steiner_graph::node_id_type destination{e_id, 1};
-        assert(_graph->has_edge(node_id, destination));
-        insert(destination, node, out, coordinates_out);
-    }
-
-    for (auto &&edge: _graph->base_graph().incoming_edges(base_node_id)) [[likely]] {
-        auto e_id = _graph->base_graph().edge_id(edge.destination, base_node_id);
-        steiner_graph::node_id_type destination(e_id, _graph->steiner_info(e_id).node_count - 2);
-        assert(_graph->has_edge(node_id, destination));
-        insert(destination, node, out, coordinates_out);
-    }
+    vertex_neighbors(node, out, coordinates_out);
 
     // should not be necessary, but can be enabled if tree starts to stay on base edges
     // if constexpr (steiner_graph::face_crossing_from_base_nodes) {
@@ -610,19 +644,7 @@ void steiner_neighbors<Graph, Labels, Config>::from_start_node(const NodeCostPai
         }
     }
 
-    for (auto &&edge: _graph->base_graph().outgoing_edges(base_node_id)) [[likely]] {
-        auto e_id = _graph->base_graph().edge_id(base_node_id, edge.destination);
-        steiner_graph::node_id_type destination{e_id, 1};
-        assert(_graph->has_edge(node_id, destination));
-        insert(destination, node, out, coordinates_out);
-    }
-
-    for (auto &&edge: _graph->base_graph().incoming_edges(base_node_id)) [[likely]] {
-        auto e_id = _graph->base_graph().edge_id(edge.destination, base_node_id);
-        steiner_graph::node_id_type destination(e_id, _graph->steiner_info(e_id).node_count - 2);
-        assert(_graph->has_edge(node_id, destination));
-        insert(destination, node, out, coordinates_out);
-    }
+    vertex_neighbors(node, out, coordinates_out);
 
     _base_node_neighbor_count += out.size();
 }
@@ -650,19 +672,7 @@ steiner_neighbors<Graph, Labels, Config>::from_boundary_node(const NodeCostPair 
         add_min_angle_neighbor(node, _direction, out, coordinates_out);
     }
 
-    for (auto &&edge: _graph->base_graph().outgoing_edges(base_node_id)) [[likely]] {
-        auto e_id = _graph->base_graph().edge_id(base_node_id, edge.destination);
-        steiner_graph::node_id_type destination{e_id, 1};
-        assert(_graph->has_edge(node_id, destination));
-        insert(destination, node, out, coordinates_out);
-    }
-
-    for (auto &&edge: _graph->base_graph().incoming_edges(base_node_id)) [[likely]] {
-        auto e_id = _graph->base_graph().edge_id(edge.destination, base_node_id);
-        steiner_graph::node_id_type destination(e_id, _graph->steiner_info(e_id).node_count - 2);
-        assert(_graph->has_edge(node_id, destination));
-        insert(destination, node, out, coordinates_out);
-    }
+    vertex_neighbors(node, out, coordinates_out);
 
     _boundary_node_neighbor_count += out.size();
 }
@@ -679,7 +689,7 @@ steiner_neighbors<Graph, Labels, Config>::from_steiner_node(const NodeCostPair &
         add_min_angle_neighbor(node, _direction, out, out_coordinates);
     }
 
-    // if no face crossing segments from base nodes, have to take epsilon spanner here
+    // if no face crossing segments from base nodes, have to generate epsilon spanner here for vertex neighboring steiner point
     if constexpr (!steiner_graph::face_crossing_from_base_nodes) {
         if (node.steiner_index == 1 || node.steiner_index == _graph.steiner_info(node.edge).node_count - 1) {
             // make epsilon spanner in all directions
@@ -699,7 +709,6 @@ template<typename Graph, typename Labels, Configuration Config>
 template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPair &node,
                                                                const base_edge_id_type &edge_id,
-                                                               // const coordinate_t::component_type &max_angle_cos,
                                                                std::vector<NodeCostPair> &out,
                                                                std::vector<coordinate_t> &coordinates_out) {
     auto &&destination_steiner_info = _graph->steiner_info(edge_id);
@@ -708,17 +717,13 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
     coordinate_t last_direction = _source_coordinate - _graph->node_coordinates(destination);
     assert(!_direction.zero());
     for (; destination.steiner_index >= 1; --destination.steiner_index) [[likely]] {
-        coordinate_t const destination_coordinate{_graph->node_coordinates(destination)};
-        coordinate_t const new_direction{destination_coordinate - _source_coordinate};
+        coordinate_t const destination_coordinate { _graph->node_coordinates(destination) };
+        coordinate_t const new_direction { destination_coordinate - _source_coordinate };
 
         if (std::abs(angle_sin(new_direction, last_direction)) < _spanner_angle_sin) {
             [[likely]]
             continue;
         }
-        // if (angle_cos(_direction, new_direction) < max_angle_cos) {
-        //     [[unlikely]]
-        //     break;
-        // }
 
         assert(_graph->has_edge(node.node(), destination));
         insert(destination, destination_coordinate, node, out, coordinates_out);
@@ -729,44 +734,17 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
     last_direction = _source_coordinate - _graph->node_coordinates(destination);
     for (; destination.steiner_index <
            destination_steiner_info.node_count - 1; ++destination.steiner_index) [[likely]] {
-        coordinate_t const destination_coordinate{_graph->node_coordinates(destination)};
-        coordinate_t const new_direction{destination_coordinate - _source_coordinate};
+        coordinate_t const destination_coordinate { _graph->node_coordinates(destination) } ;
+        coordinate_t const new_direction { destination_coordinate - _source_coordinate } ;
 
         if (std::abs(angle_sin(new_direction, last_direction)) < _spanner_angle_sin) {
             [[likely]]
             continue;
         }
-        // if (angle_cos(_direction, new_direction) < max_angle_cos) {
-        //     [[unlikely]]
-        //     break;
-        // }
 
         assert(_graph->has_edge(node.node(), destination));
         insert(destination, destination_coordinate, node, out, coordinates_out);
         last_direction = new_direction;
-    }
-}
-
-template<typename Graph, typename Labels, Configuration Config>
-template<typename NodeCostPair>
-void
-steiner_neighbors<Graph, Labels, Config>::on_edge_neighbors(const NodeCostPair &node, std::vector<NodeCostPair> &out,
-                                                            std::vector<coordinate_t> &coordinates_out) {
-    auto const &node_id = node.node();
-    auto &&steiner_info = _graph->steiner_info(node_id.edge);
-
-    // for neighboring node on own edge
-    if (node_id.steiner_index < steiner_info.node_count - 1) [[likely]] {
-        steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index + 1);
-        assert(_graph->has_edge(node_id, destination));
-        insert(destination, node, out, coordinates_out);
-    }
-
-    // for other neighboring node on own edge
-    if (node_id.steiner_index > 0) [[likely]] {
-        steiner_graph::node_id_type const destination(node_id.edge, node_id.steiner_index - 1);
-        assert(_graph->has_edge(node_id, destination));
-        insert(destination, node, out, coordinates_out);
     }
 }
 

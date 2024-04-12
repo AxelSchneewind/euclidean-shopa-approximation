@@ -80,6 +80,10 @@ private:
     [[gnu::hot]]
     void on_edge_neighbors(NodeCostPair const &node, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out);
 
+    template<typename NodeCostPair>
+    [[gnu::hot]]
+    void vertex_neighbors(NodeCostPair const &node, std::vector<NodeCostPair> &out, std::vector<coordinate_t> &coordinates_out);
+
     [[gnu::hot]]
     coordinate_t::component_type min_angle_relative_value_matmul(base_edge_id_type edge_id, coordinate_t direction) const requires (Configuration::PARAM == Config);
 
