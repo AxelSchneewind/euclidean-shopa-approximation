@@ -43,7 +43,7 @@ compute_ota_queries() {
 
 compute_shopa_queries() {
     if [[ -z "$4" ]]; then
-	    echo "usage: compute_shopa_queries path/to/graph_file.graph path/to/results/ path/to/queries.txt epsilon"
+	    echo "usage: compute_shopa_queries path/to/graph_file.graph path/to/results/ path/to/queries.txt epsilon [other params]"
 	    exit
     fi
 
