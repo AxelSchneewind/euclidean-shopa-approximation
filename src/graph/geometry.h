@@ -5,7 +5,7 @@
 #include <cstddef>
 
 
-[[gnu::hot]]
+// currently not used, but could potentially be used for atan-based neighbor selection
 void atan2_approximation(std::size_t num_points, const coordinate_t* coordinates, coordinate_t::component_type out);
 
 
@@ -16,9 +16,7 @@ namespace std {
 
 
 // Euclidean distance
-[[gnu::hot]]
-[[gnu::const]]
-[[gnu::always_inline]]
+[[using gnu : hot, const, always_inline]]
 inline coordinate_t::component_type
 distance_euclidean(coordinate_t c1, coordinate_t c2);
 
@@ -49,15 +47,9 @@ angle(coordinate_t dir0, coordinate_t dir1);
 inline coordinate_t::component_type
 inner_angle(coordinate_t dir0, coordinate_t dir1);
 
-[[gnu::hot]]
-[[gnu::const]]
-[[gnu::always_inline]]
 inline coordinate_t::component_type
 angle_cos(coordinate_t const& dir0, coordinate_t const& dir1);
 
-[[gnu::hot]]
-[[gnu::const]]
-[[gnu::always_inline]]
 inline coordinate_t::component_type
 angle_cos_sqr(coordinate_t const& dir0, coordinate_t const& dir1);
 
@@ -72,9 +64,7 @@ line_distance(coordinate_t source, coordinate_t destination, coordinate_t point)
  * @param relative
  * @return
  */
-[[gnu::hot]]
-[[gnu::always_inline]]
-[[gnu::const]]
+[[using gnu : hot, const, always_inline]]
 inline coordinate_t
 interpolate_linear(coordinate_t source, coordinate_t destination, coordinate_t::component_type  relative);
 
