@@ -35,7 +35,7 @@ fi
 if [ ! -d "$OUTPUT_DIR/implicit-ref" ]; then
 	EPSILONS=("1.0" "0.5" "0.25") # "0.125" "0.0625" "0.03125" "0.015625")
 	for eps in "${EPSILONS[@]}"; do
-	    compute_single "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref/$eps" "$QUERY_FILE" "$eps" ""
+	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref/$eps" "$QUERY_FILE" "$eps" ""
 	done
 fi
 process_results "$OUTPUT_DIR/implicit-ref" "$OUTPUT_DIR/results-implicit-ref.csv" milos-implicit-ref
@@ -47,7 +47,7 @@ process_results "$OUTPUT_DIR/implicit-ref" "$OUTPUT_DIR/results-implicit-ref.csv
 if [ ! -d "$OUTPUT_DIR/implicit-unref" ]; then
 	EPSILONS=("1.0" "0.5" "0.25")
 	for eps in "${EPSILONS[@]}"; do
-	    compute_single "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref/$eps" "$QUERY_FILE" "$eps" ""
+	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref/$eps" "$QUERY_FILE" "$eps" ""
 	done
 fi
 process_results "$OUTPUT_DIR/implicit-unref" "$OUTPUT_DIR/results-implicit-unref.csv" milos-implicit-unref
@@ -56,8 +56,8 @@ process_results "$OUTPUT_DIR/implicit-unref" "$OUTPUT_DIR/results-implicit-unref
 ######################################### explicit graph ########################################
 # exact solutions
 if [ ! -d "$OUTPUT_DIR/explicit-ref-05" ]; then
-	compute_single "$EXPLICIT_REF_GRAPH" "$OUTPUT_DIR/explicit-ref/1.0" "$QUERY_FILE" 1.0 ""
-	compute_single "$EXPLICIT_REF_05_GRAPH" "$OUTPUT_DIR/explicit-ref/0.5" "$QUERY_FILE" 0.5 ""
+	compute_ota_queries "$EXPLICIT_REF_GRAPH" "$OUTPUT_DIR/explicit-ref/1.0" "$QUERY_FILE" 1.0 ""
+	compute_ota_queries "$EXPLICIT_REF_05_GRAPH" "$OUTPUT_DIR/explicit-ref/0.5" "$QUERY_FILE" 0.5 ""
 fi
 process_results "$OUTPUT_DIR/explicit-ref/1.0" "$OUTPUT_DIR/results-explicit-ref-10.csv" milos-explicit-ref-10
 process_results "$OUTPUT_DIR/explicit-ref/0.5" "$OUTPUT_DIR/results-explicit-ref-05.csv" milos-explicit-ref-05
