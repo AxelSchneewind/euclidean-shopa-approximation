@@ -33,8 +33,6 @@ def filter(data):
     return data
 
 
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', '-f', required=True, action='append', help='path to the input file')
