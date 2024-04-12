@@ -14,8 +14,7 @@ void fast_map<AggregateId, IntraAggregateId, Info>::reset() { clear(); }
 template<typename AggregateId, typename IntraAggregateId, typename Info>
 Info const &
 fast_map<AggregateId, IntraAggregateId, Info>::at(edge_id_type edge_id, intra_edge_id_type intra_edge_id) const {
-    if (contains(edge_id)) {
-        [[likely]]
+    if (contains(edge_id)) { [[likely]]
         return _entries[_edge_index[edge_id] + intra_edge_id];
     } else {
         return _default_value;
@@ -69,6 +68,7 @@ template<typename AggregateId, typename IntraAggregateId, typename Info>
 void fast_map<AggregateId, IntraAggregateId, Info>::clear() {
     std::fill(_edge_index.begin(), _edge_index.end(), -1);
     _entries.clear();
+    _entries.shrink_to_fit();
 }
 
 template<typename AggregateId, typename IntraAggregateId, typename Info>

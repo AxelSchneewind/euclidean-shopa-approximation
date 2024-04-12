@@ -141,5 +141,6 @@ public:
 
     void clear() {
         base_queue_type::c.clear();
+        base_queue_type::c.shrink_to_fit();
     }
 };

@@ -61,6 +61,7 @@ router<Graph, Dijkstra>::compute() {
     while (!done()) {
         step_forward();
     }
+    _forward_search.queue().clear();
 }
 
 template<typename Graph, typename Dijkstra>
