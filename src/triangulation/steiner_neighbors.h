@@ -40,11 +40,8 @@ private:
 
     // angle of a subcone of an epsilon-spanner
     coordinate_t::component_type _spanner_angle;
-    coordinate_t::component_type _spanner_angle_cos;
     coordinate_t::component_type _spanner_angle_sin;
 
-    // maximal angle between two adjacent steiner points, seen from a reachable edge
-    coordinate_t::component_type _max_angle;
 
     // for storing information on the current neighbor query
     node_id_type _source;
@@ -64,6 +61,7 @@ private:
 
     std::size_t _steiner_point_angle_test_count{0};     // for linear/binary search: number of iterations/tests
 
+    [[gnu::cold]]
     void init(node_id_type /*source*/, node_id_type /*target*/) {
         _first_call = true;
     }
@@ -126,6 +124,7 @@ private:
      * @param out_coordinates
      */
     template<typename NodeCostPair>
+    [[gnu::hot]]
     void epsilon_spanner(NodeCostPair const &node,
                          base_edge_id_type const &edge_id,
                          std::vector<NodeCostPair> &out, std::vector<coordinate_t> &out_coordinates);
@@ -156,13 +155,11 @@ public:
             : _graph(std::move(graph))
             , _labels(std::move(labels))
             , _spanner_angle{std::clamp(std::numbers::pi * _graph->epsilon() / 2, 0.0, std::numbers::pi_v<coordinate_t::component_type> / 2)}
-            , _spanner_angle_cos{std::cos(_spanner_angle)}
             , _spanner_angle_sin{std::sin(_spanner_angle)}
-            , _max_angle{std::clamp(std::numbers::pi / 2 * _graph->epsilon(), std::numeric_limits<coordinate_t::component_type>::min(), std::numbers::pi / 4)}
             {}
 
     template<typename... Args>
-    steiner_neighbors(std::shared_ptr<Graph> graph, Labels &labels, Args const &...) : steiner_neighbors(graph, labels) { }
+    steiner_neighbors(std::shared_ptr<Graph> graph, Labels &labels, Args const &...) : steiner_neighbors{graph, labels} { }
 
     steiner_neighbors(steiner_neighbors const&) noexcept = default;
     steiner_neighbors &operator=(steiner_neighbors const&) noexcept = default;
@@ -174,8 +171,8 @@ public:
     void operator()(NodeCostPair const &node, std::vector<NodeCostPair> &out);
 
     template<typename NodeCostPair>
-    [[gnu::hot]]
     void operator()(NodeCostPair const &node, std::vector<NodeCostPair> &out, std::vector<coordinate_t>& coordinates_out);
+
 
     std::size_t base_node_count() const { return _base_node_count; };
     std::size_t boundary_node_count() const { return _boundary_node_count; };
@@ -184,5 +181,6 @@ public:
     std::size_t base_node_neighbor_count() const { return _base_node_neighbor_count; };
     std::size_t boundary_node_neighbor_count() const { return _boundary_node_neighbor_count; };
     std::size_t steiner_point_neighbor_count() const { return _steiner_point_neighbor_count; };
+
     std::size_t steiner_point_angle_test_count() const { return _steiner_point_angle_test_count; };
 };

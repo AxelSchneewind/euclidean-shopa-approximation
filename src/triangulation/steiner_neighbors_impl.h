@@ -16,13 +16,7 @@ steiner_neighbors<Graph, Labels, Config>::insert(node_id_type const &neighbor, c
                                                  NodeCostPair const &current,
                                                  std::vector<NodeCostPair> &out,
                                                  std::vector<coordinate_t> &out_coordinates) const {
-    out.emplace_back();
-    NodeCostPair &new_ncp = out.back();
-    new_ncp.node() = neighbor;
-    new_ncp.distance() = current.distance();
-    if constexpr (HasHeuristic<NodeCostPair>)
-        new_ncp.heuristic() = current.distance();
-    assert(new_ncp.node().steiner_index < _graph->steiner_info(new_ncp.node().edge).node_count);
+    out.emplace_back(neighbor, current.node(), current.distance());
     out_coordinates.emplace_back(neighbor_coordinate);
 }
 
@@ -565,9 +559,8 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
     auto const &node_id = node.node();
 
     // face-crossing edges
-    for (auto &&edge_id: _graph->base_polyhedron().edges(node.node().edge)) [[likely]] {
-        if (edge_id == node.node().edge) [[unlikely]]
-            continue;
+    for (auto &&edge_id: _graph->base_polyhedron().edges(node_id.edge)) [[likely]] {
+        assert(edge_id != node_id.edge);
 
         // get neighbor
         node_id_type other;
@@ -607,8 +600,7 @@ void steiner_neighbors<Graph, Labels, Config>::from_base_node(const NodeCostPair
                                                               std::vector<NodeCostPair> &out,
                                                               std::vector<coordinate_t> &coordinates_out) {
     _base_node_count++;
-    auto const &node_id = node.node();
-    auto &&base_node_id = _graph->base_node_id(node_id);
+    auto &&base_node_id = _graph->base_node_id(node.node());
 
     vertex_neighbors(node, out, coordinates_out);
 
@@ -634,8 +626,7 @@ template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels, Config>::from_start_node(const NodeCostPair &node, std::vector<NodeCostPair> &out,
                                                                std::vector<coordinate_t> &coordinates_out) {
     _base_node_count++;
-    auto const &node_id = node.node();
-    auto &&base_node_id = _graph->base_node_id(node_id);
+    auto &&base_node_id = _graph->base_node_id(node.node());
 
     // face-crossing edges: make epsilon spanner in all directions
     if constexpr (steiner_graph::face_crossing_from_base_nodes) {
@@ -656,8 +647,7 @@ steiner_neighbors<Graph, Labels, Config>::from_boundary_node(const NodeCostPair 
                                                              std::vector<NodeCostPair> &out,
                                                              std::vector<coordinate_t> &coordinates_out) {
     _boundary_node_count++;
-    auto const &node_id = node.node();
-    auto &&base_node_id = _graph->base_node_id(node_id);
+    auto &&base_node_id = _graph->base_node_id(node.node());
 
     //
     if (!_direction.zero()) {

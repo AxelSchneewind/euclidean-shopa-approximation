@@ -17,9 +17,8 @@ requires requires (typename PropertyRange::value_type t) {
     { t.in_degree } -> std::convertible_to<bool>;
 }
 void compute_degrees(NodeRange const& nodes, FaceRange const& faces, PropertyRange& properties) {
-    size_t node_count = std::ranges::size(nodes);
     size_t face_count = std::ranges::size(faces);
-    assert(std::ranges::size(properties) == node_count);
+    assert(std::ranges::size(properties) == std::ranges::size(nodes));
 
     // mark nodes as connected and increment out and in degree
     for (size_t t = 0; t < face_count; ++t) {

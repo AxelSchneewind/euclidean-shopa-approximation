@@ -13,7 +13,7 @@
 #include <iostream>
 
 
-std::vector<subdivision::subdivision_edge_info>
+subdivision
 subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
                                         const std::vector<node_t> &nodes,
                                         const polyhedron<adjacency_list<int>, 3> &polyhedron,
@@ -192,14 +192,14 @@ subdivision::make_subdivision_info(const adjacency_list<int> &triangulation,
         entry.base_second = std::log(base_second);
     }
 
-    return result;
+    return {std::move(result)};
 }
 
 inline coordinate_t
 subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_t const &c1,
                                     coordinate_t const &c2) const {
-    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
-    auto &&info = edges[edge];
+    assert(edge >= 0 && static_cast<size_t>(edge) < _edges.size());
+    auto &&info = _edges[edge];
 
     assert(steiner_index >= 0);
     assert(steiner_index < info.node_count);
@@ -235,13 +235,13 @@ subdivision::node_coordinates(edge_id_t edge, steiner_index_type steiner_index, 
 }
 
 inline double subdivision::relative_position_mid(edge_id_t const edge) const {
-    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
-    return edges[edge].mid_position;
+    assert(edge >= 0 && static_cast<size_t>(edge) < _edges.size());
+    return _edges[edge].mid_position;
 }
 
 inline double subdivision::relative_position_steiner(edge_id_t const edge, steiner_index_type const steiner_index) const {
-    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
-    auto &&info = edges[edge];
+    assert(edge >= 0 && static_cast<size_t>(edge) < _edges.size());
+    auto &&info = _edges[edge];
 
     assert(steiner_index > 0);
     assert(steiner_index < info.node_count - 1);
@@ -254,6 +254,7 @@ inline double subdivision::relative_position_steiner(edge_id_t const edge, stein
         assert(index != 0 || relative == info.r_first);
         assert(relative >= info.r_first - 0.002F);
         assert(relative <= info.mid_position + 0.002F);
+        [[assume(std::isnormal(relative) && relative >= 0.0)]]
         return std::clamp(relative, 0.0, 1.0);
     }
 
@@ -265,13 +266,15 @@ inline double subdivision::relative_position_steiner(edge_id_t const edge, stein
     assert(index != 0 || relative == info.r_second);
     assert(relative >= info.r_second - 0.002F);
     assert(relative <= 1.0F - info.mid_position + 0.002F);
-    return std::clamp(1.0 - relative, 0.0, 1.0);
+    relative = 1.0 - relative;
+    [[assume(std::isnormal(relative) && relative >= 0.0)]]
+    return std::clamp(relative, 0.0, 1.0);
 }
 
 
 inline double subdivision::relative_position(edge_id_t const edge, steiner_index_type const steiner_index) const {
-    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
-    auto &&info = edges[edge];
+    assert(edge >= 0 && static_cast<size_t>(edge) < _edges.size());
+    auto &&info = _edges[edge];
 
     assert(steiner_index >= 0);
     assert(steiner_index < info.node_count);
@@ -307,8 +310,8 @@ inline double subdivision::relative_position(edge_id_t const edge, steiner_index
 }
 
 inline subdivision::steiner_index_type subdivision::index(const edge_id_t edge, double relative) const {
-    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
-    auto &&info = edges[edge];
+    assert(edge >= 0 && static_cast<size_t>(edge) < _edges.size());
+    auto &&info = _edges[edge];
 
     assert(relative >= 0 && relative <= 1);
 
@@ -332,25 +335,25 @@ inline subdivision::steiner_index_type subdivision::index(const edge_id_t edge, 
 }
 
 inline subdivision::subdivision_edge_info &subdivision::edge(edge_id_t const edge) {
-    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
-    return edges[edge];
+    assert(edge >= 0 && static_cast<size_t>(edge) < _edges.size());
+    return _edges[edge];
 }
 
 inline const subdivision::subdivision_edge_info &subdivision::edge(edge_id_t const edge) const {
-    assert(edge >= 0 && static_cast<size_t>(edge) < edges.size());
-    return edges[edge];
+    assert(edge >= 0 && static_cast<size_t>(edge) < _edges.size());
+    return _edges[edge];
 }
 
 std::vector<size_t> subdivision::offsets() const {
     std::vector<size_t> results;
 
     std::size_t index = 0;
-    for (auto&& edge_info: edges) {
+    for (auto&& edge_info: _edges) {
         results.push_back(index);
         assert(index + edge_info.node_count >= index);
         index += edge_info.node_count;
     }
-    while(results.size() < edges.size() + 1)
+    while(results.size() < _edges.size() + 1)
         results.push_back(index);
 
     return results;

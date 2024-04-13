@@ -11,15 +11,16 @@ node_labels<G, N>::all_visited() const {
 
 
 template<RoutableGraph G, typename N>
-node_labels<G, N>::node_labels(std::shared_ptr<G> d)
+node_labels<G, N>::node_labels(std::shared_ptr<G> d, value_type default_value)
         : _graph(std::move(d)),
-          _labels(_graph->node_count(), optional::none_value<N>),
+          _labels(_graph->node_count(), default_value),
           _node_labelled(_graph->node_count()) {
 }
 
 template<RoutableGraph G, typename N>
 void
-node_labels<G, N>::init(node_labels<G, N>::node_id_type /*start_node*/, node_labels<G, N>::node_id_type /*target_node*/) {
+node_labels<G, N>::init(node_labels<G, N>::node_id_type /*start_node*/,
+                        node_labels<G, N>::node_id_type /*target_node*/) {
     for (size_t index = 0; index < /*_touched*/_labels.size(); ++index) {
         node_id_type node = index;//_touched[index];
         _labels[node] = optional::none_value<N>;
@@ -47,6 +48,10 @@ Label &node_labels<G, Label>::at(node_id_type node) {
 }
 
 template<RoutableGraph G, typename Label>
-Label const&node_labels<G, Label>::at(node_id_type node) const {
+Label const &node_labels<G, Label>::at(node_id_type node) const {
     return _labels[node];
+}
+
+template<RoutableGraph G, typename Label>
+void node_labels<G, Label>::clear() {
 }

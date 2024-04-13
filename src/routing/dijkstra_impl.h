@@ -12,7 +12,7 @@ template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id
 typename L::value_type dijkstra<G, Q, L, N, Heuristic>::get_label(node_id_type node) const { return _labels->at(node); }
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, typename Heuristic>
-L &dijkstra<G, Q, L, N, Heuristic>::labels() { return _labels; }
+L &dijkstra<G, Q, L, N, Heuristic>::labels() { return *_labels; }
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 const N &dijkstra<G, Q, L, N, Heuristic>::neighbors() const { return _neighbors; }
@@ -45,7 +45,7 @@ dijkstra<G, Q, L, N, Heuristic>::dijkstra(std::shared_ptr<G> graph, Q &&queue, L
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 dijkstra<G, Q, L, N, Heuristic>::dijkstra(std::shared_ptr<G> graph)
         : _graph(std::move(graph))
-        , _labels{std::make_shared<L>(_graph)}
+        , _labels{std::make_shared<L>(_graph, optional::none_value<typename L::value_type>)}
         , _start_node{optional::none_value<node_id_type>}
         , _target_node{optional::none_value<node_id_type>}
         , _queue{_graph, _labels}

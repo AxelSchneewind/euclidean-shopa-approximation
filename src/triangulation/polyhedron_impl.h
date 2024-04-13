@@ -84,7 +84,7 @@ namespace {
         }
     }
 
-    template<typename BaseTopology, typename FaceId, size_t FaceCountPerEdge>
+    template<Topology BaseTopology, typename FaceId, size_t FaceCountPerEdge>
     void make_boundary_nodes(const BaseTopology &triangulation,
                              std::vector<std::array<FaceId, FaceCountPerEdge>> const &edge_faces,
                              std::vector<bool> &out) {
@@ -100,7 +100,7 @@ namespace {
         }
     }
 
-    template<typename BaseTopology, typename FaceId, size_t FaceCountPerEdge>
+    template<Topology BaseTopology, typename FaceId, size_t FaceCountPerEdge>
     void make_boundary_edges(const BaseTopology &triangulation,
                              std::vector<std::array<FaceId, FaceCountPerEdge>> const &edge_faces,
                              std::vector<bool> &out) {
@@ -112,13 +112,46 @@ namespace {
             out[i] = one_adjacent_face;
         }
     }
+
+    template<Topology Coords, Topology BaseTopology, typename FaceId, size_t FaceCountPerEdge>
+    void make_convex_boundary_nodes(Coords&& coordinates,
+                                    BaseTopology&& triangulation,
+                                    std::vector<std::array<FaceId, FaceCountPerEdge>> const &edge_faces,
+                                    std::vector<bool> &is_boundary_node,
+                                    std::vector<bool> &is_boundary_edge,
+                                    std::vector<bool> &out) {
+        out.resize(triangulation.node_count(), false);
+
+        // a vertex is a boundary vertex if there exists an edge that only has one adjacent face
+        for (size_t n = 0; n < triangulation.node_count(); n++) {
+            if (!is_boundary_node[n]) continue;
+
+            // get surrounding nodes
+            std::vector<long> nodes;
+            for (auto const &edge: triangulation.outgoing_edges(n)) {
+                nodes.emplace_back(edge.destination);
+            }
+            for (auto const &edge: triangulation.incoming_edges(n)) {
+                nodes.emplace_back(edge.destination);
+            }
+
+            // order nodes clockwise
+            std::ranges::sort(nodes, std::less<long>{}, [&coordinates,n](auto node) { std::atan2(coordinates[node] - coordinates[n]); });
+
+            // mark with false if there is an angle > 180º
+            for (size_t index = 0; index < nodes.size(); index++) {
+                if (angle(coordinates[index] - coordinates[n], coordinates[(index + 1 % nodes.size())] - coordinates[n]) >= std::numbers::pi / 2)
+                    is_boundary_node[n] = false;
+            }
+        }
+    }
 }
 
 // can be generalized to any type of polyhedron (using variable instead of statically sized arrays)
 template<Topology BaseGraph, size_t MaxNodesPerFace>
 polyhedron<BaseGraph, MaxNodesPerFace>
-polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(BaseGraph const &triangulation_edges,
-                                                        std::vector<std::array<typename polyhedron<BaseGraph, MaxNodesPerFace>::node_id_type, MaxNodesPerFace>> &&faces) {
+polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(BaseGraph const& triangulation_edges,
+                                                        std::vector<std::array<typename polyhedron<BaseGraph, MaxNodesPerFace>::node_id_type, MaxNodesPerFace>> const&faces) {
     constexpr std::size_t face_count_per_edge = polyhedron<BaseGraph, MaxNodesPerFace>::FACE_COUNT_PER_EDGE;
     constexpr std::size_t edge_count_per_face = polyhedron<BaseGraph, MaxNodesPerFace>::EDGE_COUNT_PER_FACE;
 
@@ -185,8 +218,6 @@ polyhedron<BaseGraph, MaxNodesPerFace>::make_polyhedron(BaseGraph const &triangu
     std::vector<bool> is_boundary_node;
     make_boundary_nodes(triangulation_edges, edge_faces, is_boundary_node);
 
-    faces.clear();
-
     return polyhedron<BaseGraph, MaxNodesPerFace>(std::move(face_edges),
                                                   std::move(edge_faces),
                                                   std::move(is_boundary_node),
@@ -201,16 +232,10 @@ polyhedron<BaseGraph, MaxNodesPerFace>::polyhedron(
         std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&adjacent_faces,
         std::vector<bool> &&is_boundary_node, std::vector<bool> &&is_boundary_edge,
         std::vector<edge_id_type> &&node_edges, std::vector<int> &&node_edge_offsets)
-        : _boundary_node_count{0}
-        , _boundary_edge_count{0}
-        , _is_boundary_node{std::move(is_boundary_node)}
-        , _is_boundary_edge{std::move(is_boundary_edge)}
-        , _face_info{std::move(adjacent_edges)}
-        , _edge_info{std::move(adjacent_faces)}
-        , _edge_links{}
-        , _node_edges_offsets{std::move(node_edge_offsets)}
-        , _node_edges{std::move(node_edges)}
-{
+        : _boundary_node_count{0}, _boundary_edge_count{0}, _is_boundary_node{std::move(is_boundary_node)},
+          _is_boundary_edge{std::move(is_boundary_edge)}, _face_info{std::move(adjacent_edges)},
+          _edge_info{std::move(adjacent_faces)}, _edge_links{}, _node_edges_offsets{std::move(node_edge_offsets)},
+          _node_edges{std::move(node_edges)} {
 
     for (auto &&boundary: _is_boundary_edge) {
         _boundary_edge_count += boundary;

@@ -40,7 +40,7 @@ router<Graph, Dijkstra>::step_forward() {
     _forward_search.step();
 
     // update current node
-    if (!forward_search().queue_empty())
+    if (!_forward_search.queue_empty())
         _forward_current = _forward_search.current();
     else
         _forward_current = optional::none_value<node_cost_pair_type>;
@@ -61,7 +61,9 @@ router<Graph, Dijkstra>::compute() {
     while (!done()) {
         step_forward();
     }
+
     _forward_search.queue().clear();
+    _forward_search.labels().clear();
 }
 
 template<typename Graph, typename Dijkstra>
