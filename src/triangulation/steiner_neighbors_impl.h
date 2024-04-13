@@ -132,7 +132,6 @@ void steiner_neighbors<Graph, Labels, Config>::operator()(const NodeCostPair &no
 
     _source = node_id;
     _source_coordinate = _graph->node_coordinates(node_id);
-    _direction = {0.0, 0.0};
 
     // compute direction from face crossing predecessor
     if constexpr (HasFaceCrossingPredecessor<NodeCostPair, Graph>) {
@@ -145,6 +144,8 @@ void steiner_neighbors<Graph, Labels, Config>::operator()(const NodeCostPair &no
         auto &&face_crossing_predecessor = (*_labels)[node.node()].face_crossing_predecessor();
         if (!optional::is_none(face_crossing_predecessor) && face_crossing_predecessor != node.node())
             _direction = _source_coordinate - _graph->node_coordinates(face_crossing_predecessor);
+    } else {
+        _direction = {0.0, 0.0};
     }
 
 
@@ -649,20 +650,20 @@ steiner_neighbors<Graph, Labels, Config>::from_boundary_node(const NodeCostPair 
     _boundary_node_count++;
     auto &&base_node_id = _graph->base_node_id(node.node());
 
-    //
-    if (!_direction.zero()) {
-        if constexpr (steiner_graph::face_crossing_from_base_nodes) {
-            // face-crossing edges: make epsilon spanner in all directions
-            for (auto &&base_edge_id: _graph->base_polyhedron().node_edges(base_node_id)) [[likely]] {
-                epsilon_spanner(node, base_edge_id, out, coordinates_out);
-            }
-        }
+    vertex_neighbors(node, out, coordinates_out);
 
+    //
+    if constexpr (steiner_graph::face_crossing_from_base_nodes) {
+        // face-crossing edges: make epsilon spanner in all directions
+        for (auto &&base_edge_id: _graph->base_polyhedron().node_edges(base_node_id)) [[likely]] {
+            epsilon_spanner(node, base_edge_id, out, coordinates_out);
+        }
+    }
+
+    if (!_direction.zero()) {
         // add neighbors that make up steiner interval crossed by ray source-coordinate->direction
         add_min_angle_neighbor(node, _direction, out, coordinates_out);
     }
-
-    vertex_neighbors(node, out, coordinates_out);
 
     _boundary_node_neighbor_count += out.size();
 }
@@ -705,7 +706,6 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
 
     node_id_type destination{edge_id, destination_steiner_info.mid_index};
     coordinate_t last_direction = _source_coordinate - _graph->node_coordinates(destination);
-    assert(!_direction.zero());
     for (; destination.steiner_index >= 1; --destination.steiner_index) [[likely]] {
         coordinate_t const destination_coordinate { _graph->node_coordinates(destination) };
         coordinate_t const new_direction { destination_coordinate - _source_coordinate };
