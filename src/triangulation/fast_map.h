@@ -24,7 +24,7 @@ private:
 public:
     using info_type = Info;
 
-    fast_map (size_t aggregate_count, Info default_value);
+    fast_map (size_t aggregate_count);
 
     bool contains(aggregate_id_type id) const;
 

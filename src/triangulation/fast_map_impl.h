@@ -68,7 +68,7 @@ bool fast_map<AggregateId, IntraAggregateId, Info>::contains(aggregate_id_type i
 }
 
 template<typename AggregateId, typename IntraAggregateId, typename Info>
-fast_map<AggregateId, IntraAggregateId, Info>::fast_map(std::size_t aggregate_count, Info default_value)
+fast_map<AggregateId, IntraAggregateId, Info>::fast_map(std::size_t aggregate_count)
         : _aggregate_index(aggregate_count, -1)
 {}
 
