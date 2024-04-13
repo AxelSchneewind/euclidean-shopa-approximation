@@ -5,11 +5,6 @@
 
 
 template<RoutableGraph G, typename Label>
-steiner_labels<G, Label>::steiner_labels(steiner_labels &&other) noexcept
-        : _graph(other._graph), _edge_touched(std::move(other._edge_touched)),
-          _base_labels(std::move(other._base_labels)), _labels(std::move(other._labels)) {}
-
-template<RoutableGraph G, typename Label>
 steiner_labels<G, Label>::label_iterator_type
 steiner_labels<G, Label>::all_visited() const {
     return label_iterator_type(_edge_touched.begin(), _edge_touched.end(),
@@ -20,12 +15,19 @@ steiner_labels<G, Label>::all_visited() const {
 }
 
 template<RoutableGraph G, typename Label>
+steiner_labels<G, Label>::steiner_labels(steiner_labels &&other) noexcept
+        : _graph{other._graph}, _edge_touched{std::move(other._edge_touched)},
+          _base_labels{std::move(other._base_labels)}, _labels{std::move(other._labels)},
+          _default_value{other._default_value} {
+
+}
+
+
+template<RoutableGraph G, typename Label>
 steiner_labels<G, Label>::steiner_labels(std::shared_ptr<G> graph, value_type default_value)
-        : _graph(std::move(graph))
+        : _graph{std::move(graph)}, _edge_touched{_graph->base_graph().edge_count(), false},
+          _base_labels{_graph->base_graph().node_count(), _default_value}, _labels{_graph->base_graph().edge_count()}
         , _default_value{default_value}
-        , _edge_touched(_graph->base_graph().edge_count(), false)
-        , _base_labels(_graph->base_graph().node_count(), _default_value)
-        , _labels(_graph->base_graph().edge_count())
 {
 }
 

@@ -101,7 +101,7 @@ public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::unique_ptr<std::vector<Label>>);
 
-    steiner_labels(std::shared_ptr<G> graph, value_type deafault);
+    steiner_labels(std::shared_ptr<G> graph, value_type default_value);
 
     ~steiner_labels() = default;
 
