@@ -49,8 +49,7 @@ public:
     // constructs a dijkstra object for the given graph
     explicit dijkstra(std::shared_ptr<G> graph);
 
-    [[deprecated]]
-    explicit dijkstra(std::shared_ptr<G> graph, Q &&queue, L &&labels, N &&neighbors);
+    dijkstra(std::shared_ptr<G> graph, Q &&queue, L &&labels, N &&neighbors);
 
     ~dijkstra() = default;
 
@@ -114,7 +113,7 @@ public:
     G::subgraph_type shortest_path_tree(std::size_t max_node_count = std::numeric_limits<size_t>::max()) const;
 
     /**
-     * returns the path from source to target node (if found, otherwise throws exception)
+     * returns the path from source to target node (if found, otherwise an empty path)
      * @param target
      * @return
      */
