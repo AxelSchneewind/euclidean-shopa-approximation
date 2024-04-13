@@ -63,7 +63,6 @@ router<Graph, Dijkstra>::compute() {
     }
 
     _forward_search.queue().clear();
-    _forward_search.labels().clear();
 }
 
 template<typename Graph, typename Dijkstra>
