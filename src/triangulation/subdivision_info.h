@@ -42,9 +42,12 @@ private:
     // here, some lower bounds can be imposed to prevent numerical issues
     static constexpr long double min_r_value = 0x1p-10;
 
-    std::vector<subdivision_edge_info> edges;
+    std::vector<subdivision_edge_info> _edges;
 
     size_t edges_capped{0};
+
+    subdivision(std::vector<subdivision_edge_info> &&edges) : _edges{std::move(edges)} {};
+
 
 public:
     static constexpr std::size_t SIZE_PER_NODE = 0;
@@ -54,26 +57,37 @@ public:
 
     subdivision(subdivision &&other) noexcept = default;
 
-    subdivision(std::vector<subdivision_edge_info> &&edges) : edges{std::move(edges)} {};
+    [[using gnu : hot, pure, always_inline]]
+    coordinate_t node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_t const &c1,
+                                  coordinate_t const &c2) const;
 
     [[using gnu : hot, pure, always_inline]]
-    coordinate_t node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_t const& c1, coordinate_t const& c2) const;
-
     double relative_position(edge_id_t edge, steiner_index_type steiner_index) const;
+
+    [[using gnu : hot, pure, always_inline]]
     double relative_position_mid(edge_id_t edge) const;
+
+    [[using gnu : hot, pure, always_inline]]
     double relative_position_steiner(edge_id_t edge, steiner_index_type steiner_index) const;
+
+    [[using gnu : hot, pure, always_inline]]
     steiner_index_type index(edge_id_t edge, double relative) const;
 
-    subdivision_edge_info& edge(edge_id_t edge);
-    subdivision_edge_info const& edge(edge_id_t edge) const;
+    [[using gnu : hot, pure, always_inline]]
+    subdivision_edge_info &edge(edge_id_t edge);
+
+    [[using gnu : hot, pure, always_inline]]
+    subdivision_edge_info const &edge(edge_id_t edge) const;
 
     // TODO move somewhere else
+    [[gnu::cold]]
     std::vector<std::size_t> offsets() const;
 
-    static std::vector<subdivision_edge_info> make_subdivision_info(
-            const adjacency_list<int> &triangulation,
-            const std::vector<node_t> &nodes,
-            const polyhedron<adjacency_list<int>, 3> &polyhedron,
-            const std::vector<double> &r_values,
+    [[gnu::cold]]
+    static subdivision make_subdivision_info(
+            adjacency_list<int> const&triangulation,
+            std::vector<node_t> const&nodes,
+            polyhedron<adjacency_list<int>, 3> const&polyhedron,
+            std::vector<double> const&r_values,
             double epsilon);
 };

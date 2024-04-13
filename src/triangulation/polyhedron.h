@@ -76,8 +76,8 @@ public:
      * @return
      */
     [[gnu::cold]]
-    static polyhedron make_polyhedron(BaseGraph const&triangulation_edges,
-                                    std::vector<std::array<node_id_type, MaxNodesPerFace>> &&faces);
+    static polyhedron make_polyhedron(BaseGraph const& triangulation_edges,
+                                      std::vector<std::array<node_id_type, MaxNodesPerFace>> const& faces);
 
     [[gnu::hot]]
     std::span<const face_id_type, FACE_COUNT_PER_EDGE> edge_faces(edge_id_type edge) const;

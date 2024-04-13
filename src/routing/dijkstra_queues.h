@@ -115,6 +115,7 @@ public:
     template <typename NodeId>
     void init(NodeId /*start_node*/, NodeId /*target_node*/) {
         base_queue_type::c.clear();
+        base_queue_type::c.reserve(8192);
     }
 
     template<typename... Args>
@@ -126,7 +127,6 @@ public:
         assert(ncp.distance() != infinity<decltype(ncp.distance())>);
         base_queue_type::emplace(std::move(ncp));
     }
-
 
     template <typename R>
     void push_range(R&& nodes) {

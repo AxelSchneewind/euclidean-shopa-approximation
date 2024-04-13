@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../routing/dijkstra_concepts.h"
-#include "compact_node_info_container.h"
 #include "fast_map.h"
 
 #include <functional>
@@ -96,11 +95,13 @@ private:
     std::vector<value_type> _base_labels;
     labels_type _labels;
 
+    value_type _default_value;
+
 public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::unique_ptr<std::vector<Label>>);
 
-    steiner_labels(std::shared_ptr<G> graph);
+    steiner_labels(std::shared_ptr<G> graph, value_type deafault);
 
     ~steiner_labels() = default;
 
@@ -126,5 +127,8 @@ public:
     label_iterator_type all_visited() const;
 
     [[gnu::hot]]
-    Label& operator[](node_id_type const& node);
+    Label& operator[](node_id_type node);
+
+    void clear();
 };
+

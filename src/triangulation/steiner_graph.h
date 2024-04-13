@@ -293,8 +293,10 @@ public:
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     incoming_edges(triangle_node_id_type base_node_id) const { return outgoing_edges(base_node_id); };
 
+    [[gnu::cold]]
     distance_type path_length(const path_type &route) const;
 
+    [[gnu::cold]]
     subgraph_type make_subgraph(const path_type &route) const;
 
     [[gnu::cold]]

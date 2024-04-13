@@ -4,21 +4,16 @@
 
 #include <cstddef>
 
-
-// currently not used, but could potentially be used for atan-based neighbor selection
-void atan2_approximation(std::size_t num_points, const coordinate_t* coordinates, coordinate_t::component_type out);
-
-
 namespace std {
-    [[using gnu : hot, const]]
-    coordinate_t::component_type atan2(coordinate_t const direction);
+    [[using gnu : hot, const, always_inline]]
+    coordinate_t::component_type atan2(coordinate_t const& direction);
 }
 
 
 // Euclidean distance
 [[using gnu : hot, const, always_inline]]
 inline coordinate_t::component_type
-distance_euclidean(coordinate_t c1, coordinate_t c2);
+distance_euclidean(coordinate_t const& c1, coordinate_t c2);
 
 template <typename T>
 inline T
@@ -26,7 +21,7 @@ to_radians(T degrees);
 
 // exact distance on earths surface
 inline coordinate_t::component_type
-distance(coordinate_t c1, coordinate_t c2);
+distance(coordinate_t const& c1, coordinate_t const& c2);
 
 /**
  * angle in radians

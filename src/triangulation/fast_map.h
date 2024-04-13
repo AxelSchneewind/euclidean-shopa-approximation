@@ -15,8 +15,6 @@ private:
     std::vector<index> _edge_index;
     std::vector<entry_type> _entries;
 
-    entry_type _default_value;
-
 
     void clear();
 
@@ -46,4 +44,6 @@ public:
     std::size_t edge_count() const;
 
     std::size_t size() const;
+
+    void clear();
 };

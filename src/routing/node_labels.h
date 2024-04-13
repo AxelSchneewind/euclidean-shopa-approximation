@@ -23,7 +23,7 @@ public:
     static constexpr size_t SIZE_PER_NODE = sizeof(Label) + 1;
     static constexpr size_t SIZE_PER_EDGE = 0;
 
-    explicit node_labels(std::shared_ptr<G> d);
+    explicit node_labels(std::shared_ptr<G> d, value_type _default_value);
 
     ~node_labels() = default;
 
@@ -45,4 +45,6 @@ public:
     Label const& at(node_id_type node) const;
 
     std::span<const node_id_type> all_visited() const;
+
+    void clear();
 };
