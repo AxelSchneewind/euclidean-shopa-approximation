@@ -66,10 +66,10 @@ public:
      * @param from the node from where destination is reached (can be filtered out)
      * @return
      */
-    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    std::span<const internal_adjacency_list_edge<NodeId, E>>
     outgoing_edges(NodeId source, NodeId from) const;
 
-    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent> outgoing_edges(NodeId source) const;
+    std::span<const internal_adjacency_list_edge<NodeId, E>> outgoing_edges(NodeId source) const;
 
 
     /**
@@ -78,10 +78,10 @@ public:
      * @param from the node from where destination is reached (can be filtered out)
      * @return
      */
-    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    std::span<const internal_adjacency_list_edge<NodeId, E>>
     incoming_edges(NodeId destination, NodeId from) const;
 
-    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    std::span<const internal_adjacency_list_edge<NodeId, E>>
     incoming_edges(NodeId destination) const;
 
     /**
