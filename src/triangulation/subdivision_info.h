@@ -87,7 +87,7 @@ public:
     static subdivision make_subdivision_info(
             adjacency_list<int> const&triangulation,
             std::vector<node_t> const&nodes,
-            polyhedron<adjacency_list<int>, 3> const&polyhedron,
+            polyhedron<int, 3> const&polyhedron,
             std::vector<double> const&r_values,
             double epsilon);
 };

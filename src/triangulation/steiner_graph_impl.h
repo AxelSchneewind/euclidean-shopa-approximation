@@ -48,9 +48,8 @@ std::ostream &operator<<(std::ostream &output, steiner_edge_id<N> id) {
 void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
                      const steiner_graph::base_topology_type &triangulation,
                      const steiner_graph::polyhedron_type &polyhedron, std::vector<double> &out) {
-    assert(nodes.size() == triangulation.node_count());
-
-    out.resize(triangulation.node_count());
+    assert(std::ranges::size(nodes) == triangulation.node_count());
+    assert(std::ranges::size(out) == triangulation.node_count());
 
     std::vector<steiner_graph::triangle_edge_id_type> adjacent_edge_ids;
     std::vector<steiner_graph::triangle_edge_id_type> triangle_edge_ids;
@@ -118,9 +117,9 @@ steiner_graph::make_graph(std::vector<node_info_type> &&triangulation_nodes,
 
     base_topology_type triangulation(std::move(triangulation_edges));
 
-    auto poly = polyhedron<base_topology_type, 3>::make_polyhedron(triangulation, std::move(faces));
+    auto poly = polyhedron<triangle_edge_id_type, 3>::make_polyhedron(triangulation, std::move(faces));
 
-    std::vector<double> r_values;
+    std::vector<double> r_values(triangulation_nodes.size());
     make_node_radii(triangulation_nodes, triangulation, poly, r_values);
 
     // needed when using a table based implementation
@@ -142,19 +141,18 @@ steiner_graph::make_graph(std::vector<node_info_type> &&triangulation_nodes,
     //     }
     // }
     // assert(min_r_value <= 0.5);
-
     // auto table = subdivision_info_type::precompute(epsilon, min_r_value);
+    // auto subdivision_info = subdivision_info_type::make_subdivision_info(triangulation, triangulation_nodes, poly, table, r_values, epsilon);
+    // subdivision_info_type s_table{std::move(table), std::move(subdivision_info)};
+
     auto subdivision_info = subdivision_info_type::make_subdivision_info(triangulation, triangulation_nodes, poly,
-            // table,
                                                                          r_values, epsilon);
     r_values.clear();
-
-    subdivision_info_type s_table{/*std::move(table),*/ std::move(subdivision_info)};
 
     return {std::move(triangulation_nodes),
             std::move(triangulation),
             std::move(poly),
-            std::move(s_table),
+            std::move(subdivision_info),
             epsilon};
 }
 
@@ -250,7 +248,7 @@ steiner_graph::steiner_graph(steiner_graph &&other) noexcept
 
 steiner_graph::steiner_graph(std::vector<node_info_type> &&triangulation_nodes,
                              adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&triangulation_edges,
-                             polyhedron<base_topology_type, 3> &&triangles,
+                             polyhedron<triangle_edge_id_type, 3> &&triangles,
                              subdivision_info_type &&table,
                              double epsilon)
         :

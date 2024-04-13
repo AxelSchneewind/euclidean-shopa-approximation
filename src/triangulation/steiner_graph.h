@@ -105,7 +105,7 @@ public:
     using base_topology_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
     using adjacency_list_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
 
-    using polyhedron_type = polyhedron<base_topology_type, 3>;
+    using polyhedron_type = polyhedron<int, 3>;
     using topology_type = steiner_graph;
 
     using subdivision_info_type = subdivision;
@@ -178,7 +178,7 @@ public:
 
     steiner_graph(std::vector<node_info_type> &&triangulation_nodes,
                   adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&triangulation_edges,
-                  polyhedron<base_topology_type, 3> &&triangles,
+                  polyhedron<triangle_edge_id_type, 3> &&triangles,
                   subdivision_info_type &&table,
                   double epsilon);
 

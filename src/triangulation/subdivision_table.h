@@ -107,7 +107,7 @@ public:
     static std::vector<subdivision_edge_info> make_subdivision_info(
             const adjacency_list<int> &triangulation,
             const std::vector<node_t> &nodes,
-            const polyhedron<adjacency_list<int>, 3> &polyhedron,
+            const polyhedron<int, 3> &polyhedron,
             const std::vector<edge_class> &table,
             const std::vector<double> &r_values,
             double epsilon);
