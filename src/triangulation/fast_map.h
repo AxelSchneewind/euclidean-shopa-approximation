@@ -17,9 +17,6 @@ private:
 
     entry_type _default_value;
 
-
-    void clear();
-
 public:
     using edge_id_type = AggregateId;
     using intra_edge_id_type = IntraAggregateId;
