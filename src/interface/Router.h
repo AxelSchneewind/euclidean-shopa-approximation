@@ -2,6 +2,7 @@
 
 #include "Graph.h"
 #include "Query.h"
+#include "../triangulation/steiner_neighbors.h"
 
 #include <memory>
 
@@ -23,8 +24,6 @@ public:
 
 
 class Router : public Base<RouterInterface> {
-private:
-
     template<typename GraphT, typename RouterT>
     class RouterImplementation : public RouterInterface {
     private:
@@ -52,6 +51,9 @@ private:
     };
 
     RoutingConfiguration _config;
+
+    template<typename GraphImpl, bool use_a_star, bool only_distance, Configuration n>
+    static std::unique_ptr<RouterInterface> make_router(Graph const &graph, RoutingConfiguration const& config);
 
 public:
     Router() = default;
