@@ -53,7 +53,8 @@ const char *gengetopt_args_info_help[] = {
   "  -l, --live-status            show live status on route computation\n                                 (default=on)",
   "\nrouting algorithms:",
   "  -a, --astar                  use A* heuristic to speed up routing\n                                 (default=off)",
-  "  -n, --neighbor-finding=ENUM  the type of algorithm to find neighbors with\n                                 minimal bending angle  (possible\n                                 values=\"param\", \"trig\", \"binary\",\n                                 \"linear\" default=`param')",
+  "      --neighbor-finding=ENUM  the type of algorithm to find neighbors with\n                                 minimal bending angle  (possible\n                                 values=\"param\", \"trig\", \"binary\",\n                                 \"linear\" default=`param')",
+  "      --no-tree                if enabled, only computes distances without\n                                 keeping tree information",
     0
 };
 
@@ -100,6 +101,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->live_status_given = 0 ;
   args_info->astar_given = 0 ;
   args_info->neighbor_finding_given = 0 ;
+  args_info->no_tree_given = 0 ;
 }
 
 static
@@ -149,6 +151,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->live_status_help = gengetopt_args_info_help[16] ;
   args_info->astar_help = gengetopt_args_info_help[18] ;
   args_info->neighbor_finding_help = gengetopt_args_info_help[19] ;
+  args_info->no_tree_help = gengetopt_args_info_help[20] ;
   
 }
 
@@ -399,6 +402,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "astar", 0, 0 );
   if (args_info->neighbor_finding_given)
     write_into_file(outfile, "neighbor-finding", args_info->neighbor_finding_orig, cmdline_parser_neighbor_finding_values);
+  if (args_info->no_tree_given)
+    write_into_file(outfile, "no-tree", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -670,6 +675,12 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   
   if (check_multiple_option_occurrences(prog_name, args_info->query_given, args_info->query_min, args_info->query_max, "'--query' ('-q')"))
      error_occurred = 1;
+  
+  if (! args_info->no_tree_given)
+    {
+      fprintf (stderr, "%s: '--no-tree' option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error_occurred = 1;
+    }
   
   
   /* checks for dependences among options */
@@ -1014,11 +1025,12 @@ cmdline_parser_internal (
         { "tree",	2, NULL, 't' },
         { "live-status",	0, NULL, 'l' },
         { "astar",	0, NULL, 'a' },
-        { "neighbor-finding",	1, NULL, 'n' },
+        { "neighbor-finding",	1, NULL, 0 },
+        { "no-tree",	0, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:o:e:q:icp:t::lan:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:o:e:q:icp:t::la", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1143,18 +1155,6 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'n':	/* the type of algorithm to find neighbors with minimal bending angle.  */
-        
-        
-          if (update_arg( (void *)&(args_info->neighbor_finding_arg), 
-               &(args_info->neighbor_finding_orig), &(args_info->neighbor_finding_given),
-              &(local_args_info.neighbor_finding_given), optarg, cmdline_parser_neighbor_finding_values, "param", ARG_ENUM,
-              check_ambiguity, override, 0, 0,
-              "neighbor-finding", 'n',
-              additional_error))
-            goto failure;
-        
-          break;
 
         case 0:	/* Long option with no short option */
           /* interpret the pair(s) of source and destination nodes as their coordinates.  */
@@ -1165,6 +1165,34 @@ cmdline_parser_internal (
             if (update_arg((void *)&(args_info->coordinates_flag), 0, &(args_info->coordinates_given),
                 &(local_args_info.coordinates_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "coordinates", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* the type of algorithm to find neighbors with minimal bending angle.  */
+          else if (strcmp (long_options[option_index].name, "neighbor-finding") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->neighbor_finding_arg), 
+                 &(args_info->neighbor_finding_orig), &(args_info->neighbor_finding_given),
+                &(local_args_info.neighbor_finding_given), optarg, cmdline_parser_neighbor_finding_values, "param", ARG_ENUM,
+                check_ambiguity, override, 0, 0,
+                "neighbor-finding", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* if enabled, only computes distances without keeping tree information.  */
+          else if (strcmp (long_options[option_index].name, "no-tree") == 0)
+          {
+          
+          
+            if (update_arg( 0 , 
+                 0 , &(args_info->no_tree_given),
+                &(local_args_info.no_tree_given), optarg, 0, 0, ARG_NO,
+                check_ambiguity, override, 0, 0,
+                "no-tree", '-',
                 additional_error))
               goto failure;
           

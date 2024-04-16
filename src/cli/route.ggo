@@ -26,7 +26,9 @@ option "live-status" l "show live status on route computation" flag on
 
 section "routing algorithms"
 option "astar" a "use A* heuristic to speed up routing" flag off
-option "neighbor-finding" n "the type of algorithm to find neighbors with minimal bending angle" values="param","trig","binary","linear" enum default="param" optional
+option "neighbor-finding" - "the type of algorithm to find neighbors with minimal bending angle" values="param","trig","binary","linear" enum default="param" optional
+
+option "no-tree" - "if enabled, only computes distances without keeping tree information (does not produce paths)" flag off
 
 # option <long> <short> "<desc>"
 # 	{details="<detailed description>"}

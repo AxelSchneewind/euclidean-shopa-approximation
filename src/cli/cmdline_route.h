@@ -75,6 +75,7 @@ struct gengetopt_args_info
   enum enum_neighbor_finding neighbor_finding_arg;	/**< @brief the type of algorithm to find neighbors with minimal bending angle (default='param').  */
   char * neighbor_finding_orig;	/**< @brief the type of algorithm to find neighbors with minimal bending angle original value given at command line.  */
   const char *neighbor_finding_help; /**< @brief the type of algorithm to find neighbors with minimal bending angle help description.  */
+  const char *no_tree_help; /**< @brief if enabled, only computes distances without keeping tree information help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -90,6 +91,7 @@ struct gengetopt_args_info
   unsigned int live_status_given ;	/**< @brief Whether live-status was given.  */
   unsigned int astar_given ;	/**< @brief Whether astar was given.  */
   unsigned int neighbor_finding_given ;	/**< @brief Whether neighbor-finding was given.  */
+  unsigned int no_tree_given ;	/**< @brief Whether no-tree was given.  */
 
 } ;
 
