@@ -424,7 +424,7 @@ template<typename Graph, typename Labels, Configuration Config>
 steiner_neighbors<Graph, Labels, Config>::node_id_type
 steiner_neighbors<Graph, Labels, Config>::min_angle_neighbor_binary_search(const base_edge_id_type &edge_id,
                                                                            const coordinate_t &direction)
-                                                                           requires (Configuration::BINSEARCH == Config) {
+                                                                           requires (Configuration::BINSEARCH == Config || Configuration::LINEAR == Config) {
     assert(direction.x != 0 || direction.y != 0);
     auto &&destination_steiner_info = _graph->steiner_info(edge_id);
     _steiner_point_angle_test_count++;
