@@ -261,26 +261,27 @@ template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id
 G::path_type dijkstra<G, Q, L, N, Heuristic>::path(node_id_type target) const {
     typename G::node_id_type fwd_node = target;
 
-    auto result = std::vector<typename G::node_id_type>();
+    std::vector<typename G::node_id_type> result;
     result.push_back(fwd_node);
 
     if (!reached(target))
         return {std::move(result)};
 
+    if constexpr (HasPredecessor<typename L::value_type>) {
+        while (!optional::is_none(fwd_node) && fwd_node != _start_node) {
+            fwd_node = get_label(fwd_node).predecessor();
 
-    while (!optional::is_none(fwd_node) && fwd_node != _start_node) {
-        fwd_node = get_label(fwd_node).predecessor();
+            if (optional::is_none(fwd_node)) break;
 
-        if (optional::is_none(fwd_node)) break;
+            result.push_back(fwd_node);
+        }
 
-        result.push_back(fwd_node);
+        for (size_t i = 0; i < result.size() / 2; ++i) {
+            std::swap(result[i], result[result.size() - 1 - i]);
+        }
+
+        remove_duplicates_sorted(result);
     }
-
-    for (size_t i = 0; i < result.size() / 2; ++i) {
-        std::swap(result[i], result[result.size() - 1 - i]);
-    }
-
-    remove_duplicates_sorted(result);
 
     return {std::move(result)};
 }
@@ -294,30 +295,32 @@ G::subgraph_type dijkstra<G, Q, L, N, Heuristic>::shortest_path_tree(std::size_t
         return {std::move(nodes), std::move(edges)};
 
     // add nodes and edges that have been visited
-    auto &&visited = _labels->all_visited();
-    for (auto const &node_id: visited) {
-        if (nodes.size() >= max_node_count || edges.size() >= max_node_count)
-            break;
+    if constexpr (HasPredecessor<typename L::value_type>) {
+        auto &&visited = _labels->all_visited();
+        for (auto const &node_id: visited) {
+            if (nodes.size() >= max_node_count || edges.size() >= max_node_count)
+                break;
 
-        if (!reached(node_id))
-            continue;
+            if (!reached(node_id))
+                continue;
 
-        nodes.emplace_back(node_id);
+            nodes.emplace_back(node_id);
 
-        auto predecessor = _labels->at(node_id).predecessor();
-        if (optional::is_none(predecessor) || predecessor == node_id)
-            continue;
+            auto predecessor = _labels->at(node_id).predecessor();
+            if (optional::is_none(predecessor) || predecessor == node_id)
+                continue;
 
-        auto&& edge = _graph->topology().edge_id(predecessor, node_id);
-        edges.emplace_back(edge);
+            auto &&edge = _graph->topology().edge_id(predecessor, node_id);
+            edges.emplace_back(edge);
+        }
+
+        remove_duplicates(nodes);
+        remove_duplicates(edges);
+
     }
-
-    remove_duplicates(nodes);
-    remove_duplicates(edges);
 
     typename G::subgraph_type subgraph{std::move(nodes), std::move(edges)};
     filter_nodes(subgraph, [&](auto const &node) -> bool { return get_label(node).value() < current().value(); });
-
     return subgraph;
 }
 
