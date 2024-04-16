@@ -12,7 +12,7 @@ TREE_SIZE=0
 ASTAR=on
 
 # graph files
-TRIANGULATION_GRAPH=$GRAPH_DIR/aegaeis/coastlines.graph
+TRIANGULATION_GRAPH=$GRAPH_DIR/coastlines/coastlines.graph
 
 # output paths
 OUTPUT_DIR=results/coastlines
