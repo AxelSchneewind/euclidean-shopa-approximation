@@ -33,7 +33,7 @@ if [ ! -d "$OUTPUT_DIR/ref" ]; then
   # refined graph with steiner points
   EPSILONS=("1.0" "0.5" "0.25")
   for eps in "${EPSILONS[@]}"; do
-    compute_ota_queries "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/$eps/" "$QUERY_FILE" "$eps"
+    compute_ota_queries "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/$eps/" "$QUERY_FILE" "$eps" "--no-tree"
   done
 fi
 process_results "$OUTPUT_DIR/ref/" "$OUTPUT_DIR/results-ref.csv" aegaeis-ref
