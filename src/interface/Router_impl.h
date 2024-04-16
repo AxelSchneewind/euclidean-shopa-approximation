@@ -69,7 +69,7 @@ struct Implementation<steiner_graph, only_distance, use_a_star, n> {
     using labels_t = steiner_labels<steiner_graph, label_t>;
     using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
     using neighbors_t = steiner_neighbors<steiner_graph, labels_t, n>;
-    using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, a_star_heuristic<steiner_graph>>;
+    using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<steiner_graph>, no_heuristic>::type>;
     using routing_t = router<steiner_graph, dijkstra_t>;
 };
 
@@ -88,25 +88,16 @@ struct Implementation<steiner_graph, true, use_a_star, n> {
 
     struct label_impl {
         distance_t _distance{infinity<distance_t>};
-        // distance_t _heuristic{infinity<distance_t>};
-        // node_id_t _predecessor{optional::none_value<node_id_t>};
         node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
     };
 
     using node_cost_pair_t = node_label<ncp_impl>;
     using label_t = node_label<label_impl>;
 
-    // check that no space is wasted due to node_label<>
-    static_assert(sizeof(label_impl) == sizeof(label_t));
-    static_assert(alignof(label_impl) == alignof(label_t));
-    static_assert(sizeof(ncp_impl) == sizeof(node_cost_pair_t));
-    static_assert(alignof(ncp_impl) == alignof(node_cost_pair_t));
-
-    // using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
     using labels_t = frontier_labels<node_cost_pair_t, label_t>;
-    using queue_t = dijkstra_queue<node_cost_pair_t, compare_heuristic>;
+    using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
     using neighbors_t = steiner_neighbors<steiner_graph, labels_t, n>;
-    using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, a_star_heuristic<steiner_graph>>;
+    using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<steiner_graph>, no_heuristic>::type>;
     using routing_t = router<steiner_graph, dijkstra_t>;
 };
 
@@ -136,16 +127,14 @@ struct Implementation<std_graph_t, only_distance, use_a_star, n> {
     using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
     using labels_t = node_labels<std_graph_t, label_t>;
     using neighbors_t = default_neighbors<graph_t>;
-    using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t, a_star_heuristic<std_graph_t>>;
+    using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<std_graph_t>, no_heuristic>::type>;
     using routing_t = router<graph_t, dijkstra_t>;
 };
 
 template<typename GraphImpl, bool use_a_star, bool only_distance, Configuration n>
 std::unique_ptr<RouterInterface> Router::make_router(Graph const &graph, RoutingConfiguration const& config) {
     using routing_t = typename Implementation<GraphImpl, only_distance, use_a_star, n>::routing_t;
-    return std::make_unique<RouterImplementation<GraphImpl, routing_t>>(graph.get_implementation<GraphImpl>()
-            , routing_t(graph.get_implementation<GraphImpl>())
-                   , config);
+    return std::make_unique<RouterImplementation<GraphImpl, routing_t>>(graph.get_implementation<GraphImpl>(), routing_t(graph.get_implementation<GraphImpl>()), config);
 }
 
 // TODO clean up this mess
