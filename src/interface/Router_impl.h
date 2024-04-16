@@ -9,7 +9,7 @@
 #include "../routing/node_label.h"
 
 
-template<typename GraphImplementation, bool use_a_star, bool bidirectional, Configuration n>
+template<typename GraphImplementation, bool only_distance, bool use_a_star, Configuration config>
 struct Implementation {
     using graph_t = void;
     using routing_t = void;
@@ -19,8 +19,9 @@ struct Implementation {
     using dijkstra_t = void;
 };
 
-template<bool use_a_star, bool bidirectional, Configuration n>
-struct Implementation<steiner_graph, use_a_star, bidirectional, n> {
+
+template<bool only_distance, bool use_a_star, Configuration n>
+struct Implementation<steiner_graph, only_distance, use_a_star, n> {
     using graph_t = steiner_graph;
     using node_id_t = typename graph_t::node_id_type;
     using base_node_id_t = typename graph_t::triangle_node_id_type;
@@ -29,7 +30,7 @@ struct Implementation<steiner_graph, use_a_star, bidirectional, n> {
     struct ncp_impl {
         distance_t _distance;
         distance_t _heuristic;
-        node_id_t  _node{optional::none_value<node_id_t>};
+        node_id_t _node{optional::none_value<node_id_t>};
     };
 
     struct label_impl {
@@ -46,7 +47,7 @@ struct Implementation<steiner_graph, use_a_star, bidirectional, n> {
     static_assert(sizeof(label_impl) == sizeof(label_t));
     static_assert(alignof(label_impl) == alignof(label_t));
     static_assert(sizeof(ncp_impl) == sizeof(node_cost_pair_t));
-    static_assert(alignof(ncp_impl) == alignof(node_cost_pair_t ));
+    static_assert(alignof(ncp_impl) == alignof(node_cost_pair_t));
 
     // using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
     using labels_t = steiner_labels<steiner_graph, label_t>;
@@ -56,8 +57,46 @@ struct Implementation<steiner_graph, use_a_star, bidirectional, n> {
     using routing_t = router<steiner_graph, dijkstra_t>;
 };
 
-template<bool bidirectional, Configuration n>
-struct Implementation<steiner_graph, false, bidirectional, n> {
+template<bool use_a_star, bool bidirectional, Configuration n>
+struct Implementation<steiner_graph, true, use_a_star, bidirectional, n> {
+    using graph_t = steiner_graph;
+    using node_id_t = typename graph_t::node_id_type;
+    using base_node_id_t = typename graph_t::triangle_node_id_type;
+    using distance_t = typename graph_t::distance_type;
+
+    struct ncp_impl {
+        distance_t _distance;
+        distance_t _heuristic;
+        node_id_t _node{optional::none_value<node_id_t>};
+    };
+
+    struct label_impl {
+        distance_t _distance{infinity<distance_t>};
+        // distance_t _heuristic{infinity<distance_t>};
+        // node_id_t _predecessor{optional::none_value<node_id_t>};
+        node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
+    };
+
+    using node_cost_pair_t = node_label<ncp_impl>;
+    using label_t = node_label<label_impl>;
+
+    // check that no space is wasted due to node_label<>
+    static_assert(sizeof(label_impl) == sizeof(label_t));
+    static_assert(alignof(label_impl) == alignof(label_t));
+    static_assert(sizeof(ncp_impl) == sizeof(node_cost_pair_t));
+    static_assert(alignof(ncp_impl) == alignof(node_cost_pair_t));
+
+    // using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
+    using labels_t = frontier_labels<node_cost_pair_t, label_t>;
+    using queue_t = dijkstra_queue<node_cost_pair_t, compare_heuristic>;
+    using neighbors_t = steiner_neighbors<steiner_graph, labels_t, n>;
+    using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, a_star_heuristic<steiner_graph>>;
+    using routing_t = router<steiner_graph, dijkstra_t>;
+};
+
+
+template<bool only_distances, Configuration n>
+struct Implementation<steiner_graph, only_distances, false, n> {
     using graph_t = steiner_graph;
     using node_id_t = typename graph_t::node_id_type;
     using base_node_id_t = typename graph_t::triangle_node_id_type;
@@ -66,7 +105,7 @@ struct Implementation<steiner_graph, false, bidirectional, n> {
 
     struct ncp_impl {
         distance_t _distance;
-        node_id_t  _node{optional::none_value<node_id_t>};
+        node_id_t _node{optional::none_value<node_id_t>};
     };
 
     struct label_impl {
@@ -86,14 +125,14 @@ struct Implementation<steiner_graph, false, bidirectional, n> {
 };
 
 
-template<bool use_a_star, bool bidirectional, Configuration n>
-struct Implementation<std_graph_t, use_a_star, bidirectional, n> {
+template<bool only_distance, bool use_a_star, Configuration n>
+struct Implementation<std_graph_t, only_distance, use_a_star, n> {
     using graph_t = std_graph_t;
     using node_id_t = typename graph_t::node_id_type;
     using distance_t = typename graph_t::distance_type;
 
     struct ncp_impl {
-        node_id_t  _node{optional::none_value<node_id_t>};
+        node_id_t _node{optional::none_value<node_id_t>};
         node_id_t _predecessor{optional::none_value<node_id_t>};
         distance_t _distance;
         distance_t _heuristic;
@@ -115,81 +154,72 @@ struct Implementation<std_graph_t, use_a_star, bidirectional, n> {
     using routing_t = router<graph_t, dijkstra_t>;
 };
 
+template<typename GraphImpl, bool use_a_star, bool only_distance, Configuration n>
+std::unique_ptr<RouterInterface> make_router(Graph const &graph) {
+    using steiner_routing_t = typename Implementation<GraphImpl, only_distance, use_a_star, n>::routing_t;
+    return std::make_unique<RouterImplementation < steiner_graph, steiner_routing_t> >
+           (graph.get_implementation<steiner_graph>(), steiner_routing_t(
+                   graph.get_implementation<steiner_graph>()), _config);
+}
+
 // TODO clean up this mess
 Router::Router(const Graph &graph, RoutingConfiguration const &config)
         : _config(config) {
     switch (graph.type()) {
         case GraphType::STEINER_GRAPH:
-            if (_config.use_a_star) {
-                switch (_config.min_angle_neighbor_method) {
-                    case RoutingConfiguration::PARAM: {
-                        if (!_config.bidirectional) { // unidirectional routing
-                            using steiner_routing_t = Implementation<steiner_graph, true, false, Configuration::PARAM>::routing_t;
-                            impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
-                            (graph.get_implementation<steiner_graph>(), steiner_routing_t(
-                                    graph.get_implementation<steiner_graph>()), _config);
-                        } else { // bidirectional routing
-                            using steiner_routing_t = Implementation<steiner_graph, true, true, Configuration::PARAM>::routing_t;
-                            impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
-                            (graph.get_implementation<steiner_graph>(), steiner_routing_t(
-                                    graph.get_implementation<steiner_graph>()), _config);
+            if (_config.only_distance) {
+                if (_config.use_a_star) {
+                    switch (_config.min_angle_neighbor_method) {
+                        case RoutingConfiguration::PARAM: {
+                            impl = make_router<steiner_graph, true, true, Configuration::PARAM>(graph);
+                            break;
                         }
-                        break;
-                    }
-                    case RoutingConfiguration::BINSEARCH: {
-                        if (!_config.bidirectional) { // unidirectional routing
-                            using steiner_routing_t = typename Implementation<steiner_graph, true, false, Configuration::BINSEARCH>::routing_t;
-                            impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
-                            (graph.get_implementation<steiner_graph>(), steiner_routing_t(
-                                    graph.get_implementation<steiner_graph>()), _config);
-                        } else { // bidirectional routing
-                            using steiner_routing_t = typename Implementation<steiner_graph, true, true, Configuration::BINSEARCH>::routing_t;
-                            impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
-                            (graph.get_implementation<steiner_graph>(), steiner_routing_t(
-                                    graph.get_implementation<steiner_graph>()), _config);
+                        case RoutingConfiguration::BINSEARCH: {
+                            impl = make_router<steiner_graph, true, true, Configuration::BINSEARCH>(graph);
+                            break;
                         }
-                        break;
-                    }
-                    case RoutingConfiguration::ATAN2: {
-                        if (!_config.bidirectional) { // unidirectional routing
-                            using steiner_routing_t = typename Implementation<steiner_graph, true, false, Configuration::ATAN2>::routing_t;
-                            impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
-                            (graph.get_implementation<steiner_graph>(), steiner_routing_t(
-                                    graph.get_implementation<steiner_graph>()), _config);
-                        } else { // bidirectional routing
-                            using steiner_routing_t = typename Implementation<steiner_graph, true, true, Configuration::ATAN2>::routing_t;
-                            impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
-                            (graph.get_implementation<steiner_graph>(), steiner_routing_t(
-                                    graph.get_implementation<steiner_graph>()), _config);
+                        case RoutingConfiguration::ATAN2: {
+                            impl = make_router<steiner_graph, true, true, Configuration::ATAN2>(graph);
+                            break;
                         }
-                        break;
+                        case RoutingConfiguration::LINEAR: {
+                            impl = make_router<steiner_graph, true, true, Configuration::LINEAR>(graph);
+                            break;
+                        }
                     }
+                } else { // A* disabled
+                    impl = make_router<steiner_graph, false, true, Configuration::PARAM>(graph);
                 }
-            } else { // A* disabled
-                if (!_config.bidirectional) { // unidirectional routing
-                    using steiner_routing_t = typename Implementation<steiner_graph, false, false, Configuration::PARAM>::routing_t;
-                    impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
-                    (graph.get_implementation<steiner_graph>(), steiner_routing_t(
-                            graph.get_implementation<steiner_graph>()), _config);
-                } else { // bidirectional routing
-                    using steiner_routing_t = typename Implementation<steiner_graph, false, true, Configuration::PARAM>::routing_t;
-                    impl = std::make_shared<RouterImplementation < steiner_graph, steiner_routing_t>>
-                    (graph.get_implementation<steiner_graph>(), steiner_routing_t(
-                            graph.get_implementation<steiner_graph>()), _config);
+            } else { // build tree
+                if (_config.use_a_star) {
+                    switch (_config.min_angle_neighbor_method) {
+                        case RoutingConfiguration::PARAM: {
+                            impl = make_router<steiner_graph, true, false, Configuration::PARAM>(graph);
+                            break;
+                        }
+                        case RoutingConfiguration::BINSEARCH: {
+                            impl = make_router<steiner_graph, true, false, Configuration::BINSEARCH>(graph);
+                            break;
+                        }
+                        case RoutingConfiguration::ATAN2: {
+                            impl = make_router<steiner_graph, true, false, Configuration::ATAN2>(graph);
+                            break;
+                        }
+                        case RoutingConfiguration::LINEAR: {
+                            impl = make_router<steiner_graph, true, false, Configuration::LINEAR>(graph);
+                            break;
+                        }
+                    }
+                } else { // A* disabled
+                    impl = make_router<steiner_graph, false, false, Configuration::PARAM>(graph);
                 }
             }
             break;
         case GraphType::STD_GRAPH:
             if (_config.use_a_star) {
-                using routing_t = typename Implementation<std_graph_t, true, false, Configuration::PARAM>::routing_t;
-                impl = std::make_shared<RouterImplementation < std_graph_t, routing_t>>
-                (graph.get_implementation<std_graph_t>(), routing_t(
-                        graph.get_implementation<std_graph_t>()), _config);
+                impl = make_router<std_graph_t, true, false, Configuration::PARAM>(graph);
             } else { // don't use A*
-                using routing_t = typename Implementation<std_graph_t, false, false, Configuration::PARAM>::routing_t;
-                impl = std::make_shared<RouterImplementation < std_graph_t, routing_t>>
-                (graph.get_implementation<std_graph_t>(), routing_t(
-                        graph.get_implementation<std_graph_t>()), _config);
+                impl = make_router<std_graph_t, false, false, Configuration::PARAM>(graph);
             }
             break;
         default:
@@ -209,7 +239,7 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
 }
 
 template<typename GraphT, typename RouterT>
-void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, long to, std::ostream& out) {
+void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, long to, std::ostream &out) {
     QueryImplementation<GraphT> query_impl(*_graph, from, to, _config);
     Query query(std::make_shared<QueryImplementation<GraphT>>(query_impl));
     _query_ptr = std::make_shared<QueryImplementation<GraphT>>(query.get_implementation<QueryImplementation<GraphT>>());
@@ -219,9 +249,10 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
     out << "node," << from << '\n';
     _router.init(_query_ptr->from_internal(), _query_ptr->to_internal());
     while (!_router.done()) {
-        if constexpr (requires (GraphT g, typename GraphT::node_id_type n) { g.is_base_node(n); g.base_node_id(n); }) {
+        if constexpr (requires(GraphT g, typename GraphT::node_id_type n) { g.is_base_node(n); g.base_node_id(n); }) {
             if (_graph->is_base_node(_router.forward_current().node()))
-                out << _graph->base_node_id(_router.forward_current().node()) << ',' << _router.forward_current().distance() << '\n';
+                out << _graph->base_node_id(_router.forward_current().node()) << ','
+                    << _router.forward_current().distance() << '\n';
         } else {
             out << _router.forward_current().node() << ',' << _router.forward_current().distance() << '\n';
         }
@@ -244,7 +275,7 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
     std::thread status;
     bool volatile done = false;
     if (_config.live_status) {
-        status = std::thread([&done,this]() -> void {
+        status = std::thread([&done, this]() -> void {
             while (!done) {
                 double vm, res;
                 process_mem_usage(vm, res);
