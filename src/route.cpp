@@ -31,6 +31,7 @@ main(int argc, char *argv[]) {
 
     RoutingConfiguration config;
     config.bidirectional = false;
+    config.only_distance = arguments.no_tree_flag;
     config.use_a_star = arguments.astar_flag;
     config.live_status = arguments.live_status_flag;
     switch (arguments.neighbor_finding_arg) {
