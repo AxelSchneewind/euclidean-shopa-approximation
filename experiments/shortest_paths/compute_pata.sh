@@ -39,7 +39,7 @@ if [ ! -d "$OUTPUT_DIR/ref" ]; then
   compute_shopa_queries "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/inf/" "$QUERY_FILE" inf
 
   # refined graph with steiner points
-  EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02")
+  EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125")
   for eps in "${EPSILONS[@]}"; do
     compute_shopa_queries "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/$eps/" "$QUERY_FILE" "$eps"
   done
