@@ -6,6 +6,8 @@
 
 #include <queue>
 #include <vector>
+#include <memory>
+#include <map>
 
 
 template<typename T>
@@ -25,6 +27,7 @@ public:
     using node_cost_pair_type = NodeCostPair;
 
     using label_type = Label;
+    using value_type = Label;
 
 private:
     struct aggregate_info {
@@ -54,8 +57,8 @@ private:
     // nodes with value < min_value - frontier_width can be discarded, this value has to be lower than the maximum edge length
     distance_type _frontier_width;
 
-    // std::unordered_map<base_node_id_type, std::shared_ptr<aggregate_info>> _expanded_node_aggregates;
-    compact_node_info_container<base_edge_id_type, short unsigned int, std::nullptr_t, label_type> _expanded_node_aggregates;
+    std::unordered_map<base_node_id_type, std::shared_ptr<aggregate_info>> _expanded_node_aggregates;
+    // compact_node_info_container<base_edge_id_type, short unsigned int, std::nullptr_t, label_type> _expanded_node_aggregates;
 
     label_type _default_value;
 
@@ -80,11 +83,13 @@ public:
     // init for given query
     void init(node_id_type start_node, node_id_type target_node);
 
-    bool reached(node_id_type node) const;
+    bool contains(node_id_type node) const;
 
-    label_type get(node_id_type node) const;
+    label_type const& at(node_id_type node) const;
+    label_type & at(node_id_type node);
 
-    label_type get_preliminary(node_id_type node) const;
+    label_type const& operator[](node_id_type node) const;
+    label_type & operator[](node_id_type node);
 
     /**
      * informs the data structure that node information with distance less than the given one can be discarded
@@ -112,25 +117,41 @@ void frontier_labels<NodeCostPair, Label>::set_frontier_distance(frontier_labels
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
-Label frontier_labels<NodeCostPair, Label>::get_preliminary(frontier_labels::node_id_type node) const {
-    return _expanded_node_aggregates.at(node.edge, node.steiner_index);
+Label const& frontier_labels<NodeCostPair, Label>::operator[](frontier_labels::node_id_type node) const {
+    if (!_expanded_node_aggregates.contains(node.edge))
+        _expanded_node_aggregates[node.edge] = std::vector(_graph->steiner_info(node.edge).node_count, _default_value);
+    return _expanded_node_aggregates.at(node.edge)[node.steiner_index];
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
-Label frontier_labels<NodeCostPair, Label>::get(frontier_labels::node_id_type node) const {
-    return get_preliminary(node);
+Label& frontier_labels<NodeCostPair, Label>::operator[](frontier_labels::node_id_type node) {
+    return _expanded_node_aggregates.at(node.edge)[node.steiner_index];
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
-bool frontier_labels<NodeCostPair, Label>::reached(frontier_labels::node_id_type node) const {
-    return _expanded_node_aggregates.node_count(node.edge) > 0 &&
-           !is_infinity(_expanded_node_aggregates.at(node.edge, node.steiner_index).distance());
+Label const& frontier_labels<NodeCostPair, Label>::at(frontier_labels::node_id_type node) const {
+    return _expanded_node_aggregates.at(node.edge)[node.steiner_index];
+}
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+Label& frontier_labels<NodeCostPair, Label>::at(frontier_labels::node_id_type node) {
+    return _expanded_node_aggregates.at(node.edge)[node.steiner_index];
+}
+
+
+template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
+bool frontier_labels<NodeCostPair, Label>::contains(frontier_labels::node_id_type node) const {
+    // return _expanded_node_aggregates.node_count(node.edge) > 0 &&
+    //        !is_infinity(_expanded_node_aggregates.at(node.edge, node.steiner_index).distance());
+    return _expanded_node_aggregates.contains(node.edge) &&
+           !is_infinity(_expanded_node_aggregates.at(node.edge)[node.steiner_index].distance());
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 void frontier_labels<NodeCostPair, Label>::init(frontier_labels::node_id_type start_node,
                                                 frontier_labels::node_id_type target_node) {
-    _expanded_node_aggregates.reset();
+    // _expanded_node_aggregates.reset();
+    _expanded_node_aggregates.clear();
 
     while (!_active_aggregates.empty())
         _active_aggregates.pop();
@@ -138,7 +159,8 @@ void frontier_labels<NodeCostPair, Label>::init(frontier_labels::node_id_type st
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 size_t frontier_labels<NodeCostPair, Label>::aggregate_count() const {
-    return _expanded_node_aggregates.edge_count();
+    // return _expanded_node_aggregates.edge_count();
+    return _expanded_node_aggregates.size();
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
@@ -146,7 +168,8 @@ frontier_labels<NodeCostPair, Label>::frontier_labels(std::shared_ptr<steiner_gr
                                                       frontier_labels::distance_type frontier_width,
                                                       label_type default_value)
         : _graph(graph),
-          _expanded_node_aggregates{graph->subdivision_info().offsets(), nullptr, default_value},
+          // _expanded_node_aggregates{graph->subdivision_info().offsets(), nullptr, default_value},
+          _expanded_node_aggregates{},
           _min_value{0.0},
           _max_distance{0.0},
           _default_value(default_value),
