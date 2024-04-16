@@ -28,7 +28,7 @@ fmi_file_io::read(std::istream &input_size, std::istream &input_nodes, std::istr
     typename Graph::adjacency_list_type::builder builder;
     builder.add_edges(std::move(edges));
 
-    auto list = Graph::adjacency_list_type::make_bidirectional(std::move(builder.get()));
+    auto list = Graph::adjacency_list_type::make_unidirectional(std::move(builder.get()));
     auto adj_list = typename Graph::adjacency_list_type(std::move(list));
     return Graph::make_graph(std::move(nodes), std::move(adj_list));
 }
@@ -89,7 +89,7 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
 
     // make ids for all nodes (including steiner points)
     std::unordered_map<steiner_graph::node_id_type, size_t> indices;
-    for (auto node: graph.node_ids()) {
+    for (auto&& node: graph.node_ids()) {
         if (graph.is_base_node(node)) { // for base vertices, index is node id
             indices[node] = base_indices[graph.base_node_id(node)];
         } else {                        // for steiner points, index is incremented
@@ -101,7 +101,7 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
     }
 
     // write all outgoing edges of base nodes
-    for (auto node: graph.base_graph().node_ids()) {
+    for (auto&& node: graph.base_graph().node_ids()) {
         for (auto&& edge: graph.outgoing_edges(node)) {
             auto dest = edge.destination;
             assert(!graph.is_base_node(edge.destination));
@@ -113,8 +113,9 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
         }
     }
 
+
     // insert outgoing edges from steiner points
-    for (auto node: graph.node_ids()) {
+    for (auto&& node: graph.node_ids()) {
         if (graph.is_base_node(node)) continue;
 
         for (auto edge: graph.outgoing_edges(node)) {
