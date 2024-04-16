@@ -57,7 +57,7 @@ private:
     // nodes with value < min_value - frontier_width can be discarded, this value has to be lower than the maximum edge length
     distance_type _frontier_width;
 
-    std::unordered_map<base_node_id_type, std::shared_ptr<aggregate_info>> _expanded_node_aggregates;
+    std::unordered_map<base_node_id_type, aggregate_info> _expanded_node_aggregates;
     // compact_node_info_container<base_edge_id_type, short unsigned int, std::nullptr_t, label_type> _expanded_node_aggregates;
 
     label_type _default_value;
@@ -69,8 +69,7 @@ public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<aggregate_info>);
 
-    frontier_labels(std::shared_ptr<steiner_graph> graph, distance_type frontier_width = 0.2,
-                    label_type default_value = optional::none_value<label_type>);
+    frontier_labels(std::shared_ptr<steiner_graph> graph, label_type default_value = optional::none_value<label_type>, distance_type frontier_width = 0.2);
 
     frontier_labels(frontier_labels &&) noexcept = default;
 
@@ -119,23 +118,23 @@ void frontier_labels<NodeCostPair, Label>::set_frontier_distance(frontier_labels
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 Label const& frontier_labels<NodeCostPair, Label>::operator[](frontier_labels::node_id_type node) const {
     if (!_expanded_node_aggregates.contains(node.edge))
-        _expanded_node_aggregates[node.edge] = std::vector(_graph->steiner_info(node.edge).node_count, _default_value);
-    return _expanded_node_aggregates.at(node.edge)[node.steiner_index];
+        _expanded_node_aggregates[node.edge] = {std::vector<Label>(_graph->steiner_info(node.edge).node_count, _default_value)};
+    return _expanded_node_aggregates.at(node.edge).labels[node.steiner_index];
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 Label& frontier_labels<NodeCostPair, Label>::operator[](frontier_labels::node_id_type node) {
-    return _expanded_node_aggregates.at(node.edge)[node.steiner_index];
+    return _expanded_node_aggregates.at(node.edge).labels[node.steiner_index];
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 Label const& frontier_labels<NodeCostPair, Label>::at(frontier_labels::node_id_type node) const {
-    return _expanded_node_aggregates.at(node.edge)[node.steiner_index];
+    return _expanded_node_aggregates.at(node.edge).labels[node.steiner_index];
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 Label& frontier_labels<NodeCostPair, Label>::at(frontier_labels::node_id_type node) {
-    return _expanded_node_aggregates.at(node.edge)[node.steiner_index];
+    return _expanded_node_aggregates.at(node.edge).labels[node.steiner_index];
 }
 
 
@@ -144,7 +143,7 @@ bool frontier_labels<NodeCostPair, Label>::contains(frontier_labels::node_id_typ
     // return _expanded_node_aggregates.node_count(node.edge) > 0 &&
     //        !is_infinity(_expanded_node_aggregates.at(node.edge, node.steiner_index).distance());
     return _expanded_node_aggregates.contains(node.edge) &&
-           !is_infinity(_expanded_node_aggregates.at(node.edge)[node.steiner_index].distance());
+           !is_infinity(_expanded_node_aggregates.at(node.edge).labels[node.steiner_index].distance());
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
@@ -165,8 +164,8 @@ size_t frontier_labels<NodeCostPair, Label>::aggregate_count() const {
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 frontier_labels<NodeCostPair, Label>::frontier_labels(std::shared_ptr<steiner_graph> graph,
-                                                      frontier_labels::distance_type frontier_width,
-                                                      label_type default_value)
+                                                      label_type default_value,
+                                                      distance_type frontier_width)
         : _graph(graph),
           // _expanded_node_aggregates{graph->subdivision_info().offsets(), nullptr, default_value},
           _expanded_node_aggregates{},
