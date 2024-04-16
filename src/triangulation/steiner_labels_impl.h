@@ -21,7 +21,8 @@ steiner_labels<G, Label>::steiner_labels(steiner_labels &&other) noexcept
         , _base_labels{std::move(other._base_labels)}
         , _labels{std::move(other._labels)}
         , _default_value{other._default_value} {
-
+    assert(_edge_touched.size() == _graph->base_graph().edge_count());
+    assert(_base_labels.size() == _graph->base_graph().node_count());
 }
 
 
@@ -33,6 +34,8 @@ steiner_labels<G, Label>::steiner_labels(std::shared_ptr<G> graph, value_type de
         , _labels{_graph->base_graph().edge_count()}
         , _default_value{default_value}
 {
+    assert(_edge_touched.size() == _graph->base_graph().edge_count());
+    assert(_base_labels.size() == _graph->base_graph().node_count());
 }
 
 template<RoutableGraph G, typename Label>
