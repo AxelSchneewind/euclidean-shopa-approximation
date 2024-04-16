@@ -88,7 +88,7 @@ namespace {
                              EdgeFaces const &edge_faces,
                              Out &out) {
         assert(std::ranges::size(out) == triangulation.node_count());
-        std::ranges::fill(out, false);
+        std::fill(out.begin(), out.end(), false);
 
         // a vertex is a boundary vertex if there exists an edge that only has one adjacent face
 #pragma omp parallel for
@@ -106,7 +106,7 @@ namespace {
                              EdgeFaces const &edge_faces,
                              Out &out) {
         assert(std::ranges::size(out) == triangulation.edge_count());
-        std::ranges::fill(out, false);
+        std::fill(out.begin(), out.end(), false);
 
         // a vertex is a boundary vertex if there exists an edge that only has one adjacent face
 #pragma omp parallel for
