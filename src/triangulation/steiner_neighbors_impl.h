@@ -583,14 +583,62 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
         assert(other.steiner_index >= 0);
         assert(other.steiner_index < destination_steiner_info.node_count);
 
-        // add point and next steiner point if found
-        insert(other, node, out, out_coordinates);
-
-        ++other.steiner_index;
-
-        // add if still valid index
-        if (other.steiner_index < destination_steiner_info.node_count) [[likely]] {
+        if constexpr (simplify_epsilon_spanner) {
+            // add point and next steiner point if found
             insert(other, node, out, out_coordinates);
+
+            ++other.steiner_index;
+
+            // add if still valid index
+            if (other.steiner_index < destination_steiner_info.node_count) [[likely]] {
+                insert(other, node, out, out_coordinates);
+            }
+        } else {
+            // select closest neighbor from left sub-cone
+            node_id_type destination { other };
+            coordinate_t::component_type last_distance { std::numeric_limits<coordinate_t::component_type>::max() };
+            coordinate_t destination_coordinate;
+            bool past { false };
+            for (; destination.steiner_index >= 1 && !past; --destination.steiner_index) [[likely]] {
+                destination_coordinate = _graph->node_coordinates(destination);
+                coordinate_t const new_direction { destination_coordinate - _source_coordinate };
+
+                // past if angle too large
+                past |= std::abs(angle_sin(new_direction, _direction)) >= _spanner_angle_sin;
+
+                // past if distance gets larger
+                coordinate_t::component_type dist { distance(destination_coordinate, _source_coordinate) };
+                past |= (dist > last_distance);
+
+                last_distance = dist;
+            }
+
+            _steiner_point_angle_test_count += other.steiner_index - destination.steiner_index;
+            destination.steiner_index++;
+            insert(destination, destination_coordinate, node, out, out_coordinates);
+
+            // select closest neighbor from right sub-cone
+            destination = other; destination.steiner_index++;
+            last_distance = std::numeric_limits<coordinate_t::component_type>::max();
+            past = false;
+            for (; destination.steiner_index < destination_steiner_info.node_count - 1; ++destination.steiner_index) [[likely]] {
+                destination_coordinate = _graph->node_coordinates(destination);
+                coordinate_t const new_direction { destination_coordinate - _source_coordinate };
+
+                // past if angle too large
+                past |= std::abs(angle_sin(new_direction, _direction)) >= _spanner_angle_sin;
+
+                // past if distance gets larger
+                coordinate_t::component_type dist { distance(destination_coordinate, _source_coordinate) };
+                past |= (dist > last_distance);
+
+                last_distance = dist;
+                _steiner_point_angle_test_count++;
+            }
+
+            _steiner_point_angle_test_count += destination.steiner_index - other.steiner_index;
+            destination.steiner_index--;
+            insert(destination, destination_coordinate, node, out, out_coordinates);
         }
     }
 }
@@ -601,11 +649,11 @@ void steiner_neighbors<Graph, Labels, Config>::from_base_node(const NodeCostPair
                                                               std::vector<NodeCostPair> &out,
                                                               std::vector<coordinate_t> &coordinates_out) {
     _base_node_count++;
-    auto &&base_node_id = _graph->base_node_id(node.node());
 
     vertex_neighbors(node, out, coordinates_out);
 
-    // should not be necessary, but can be enabled if tree starts to stay on base edges
+    // should not be necessary
+    // auto &&base_node_id = _graph->base_node_id(node.node());
     // if constexpr (steiner_graph::face_crossing_from_base_nodes) {
     //     // face-crossing edges
     //     auto &&triangle_edges = _graph->base_polyhedron().node_edges(base_node_id);
@@ -650,6 +698,11 @@ steiner_neighbors<Graph, Labels, Config>::from_boundary_node(const NodeCostPair 
     _boundary_node_count++;
     auto &&base_node_id = _graph->base_node_id(node.node());
 
+    if (!_direction.zero()) {
+        // add neighbors that make up steiner interval crossed by ray source-coordinate->direction
+        add_min_angle_neighbor(node, _direction, out, coordinates_out);
+    }
+
     vertex_neighbors(node, out, coordinates_out);
 
     //
@@ -658,11 +711,6 @@ steiner_neighbors<Graph, Labels, Config>::from_boundary_node(const NodeCostPair 
         for (auto &&base_edge_id: _graph->base_polyhedron().node_edges(base_node_id)) [[likely]] {
             epsilon_spanner(node, base_edge_id, out, coordinates_out);
         }
-    }
-
-    if (!_direction.zero()) {
-        // add neighbors that make up steiner interval crossed by ray source-coordinate->direction
-        add_min_angle_neighbor(node, _direction, out, coordinates_out);
     }
 
     _boundary_node_neighbor_count += out.size();
@@ -704,37 +752,92 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
                                                                std::vector<coordinate_t> &coordinates_out) {
     auto &&destination_steiner_info = _graph->steiner_info(edge_id);
 
-    node_id_type destination{edge_id, destination_steiner_info.mid_index};
-    coordinate_t last_direction = _source_coordinate - _graph->node_coordinates(destination);
-    for (; destination.steiner_index >= 1; --destination.steiner_index) [[likely]] {
-        coordinate_t const destination_coordinate { _graph->node_coordinates(destination) };
-        coordinate_t const new_direction { destination_coordinate - _source_coordinate };
+    if constexpr (simplify_epsilon_spanner) {
+        node_id_type destination{edge_id, destination_steiner_info.mid_index};
+        coordinate_t last_direction = _source_coordinate - _graph->node_coordinates(destination);
+        for (; destination.steiner_index >= 1; --destination.steiner_index) [[likely]] {
+            coordinate_t const destination_coordinate { _graph->node_coordinates(destination) };
+            coordinate_t const new_direction { destination_coordinate - _source_coordinate };
 
-        if (std::abs(angle_sin(new_direction, last_direction)) < _spanner_angle_sin) {
-            [[likely]]
-            continue;
+            if (std::abs(angle_sin(new_direction, last_direction)) < _spanner_angle_sin) {
+                [[likely]]
+                continue;
+            }
+
+            assert(_graph->has_edge(node.node(), destination));
+            insert(destination, destination_coordinate, node, out, coordinates_out);
+            last_direction = new_direction;
         }
 
-        assert(_graph->has_edge(node.node(), destination));
-        insert(destination, destination_coordinate, node, out, coordinates_out);
-        last_direction = new_direction;
-    }
+        destination.steiner_index = destination_steiner_info.mid_index + 1;
+        last_direction = _source_coordinate - _graph->node_coordinates(destination);
+        for (; destination.steiner_index <
+               destination_steiner_info.node_count - 1; ++destination.steiner_index) [[likely]] {
+            coordinate_t const destination_coordinate { _graph->node_coordinates(destination) } ;
+            coordinate_t const new_direction { destination_coordinate - _source_coordinate } ;
 
-    destination.steiner_index = destination_steiner_info.mid_index + 1;
-    last_direction = _source_coordinate - _graph->node_coordinates(destination);
-    for (; destination.steiner_index <
-           destination_steiner_info.node_count - 1; ++destination.steiner_index) [[likely]] {
-        coordinate_t const destination_coordinate { _graph->node_coordinates(destination) } ;
-        coordinate_t const new_direction { destination_coordinate - _source_coordinate } ;
+            if (std::abs(angle_sin(new_direction, last_direction)) < _spanner_angle_sin) {
+                [[likely]]
+                continue;
+            }
 
-        if (std::abs(angle_sin(new_direction, last_direction)) < _spanner_angle_sin) {
-            [[likely]]
-            continue;
+            assert(_graph->has_edge(node.node(), destination));
+            insert(destination, destination_coordinate, node, out, coordinates_out);
+            last_direction = new_direction;
+        }
+    } else {
+        node_id_type destination{edge_id, destination_steiner_info.mid_index};
+        coordinate_t last_direction = _source_coordinate - _graph->node_coordinates(destination);
+        coordinate_t::component_type last_distance{std::numeric_limits<coordinate_t::component_type>::max()};
+        bool past{false};
+        for (; destination.steiner_index >= 1; --destination.steiner_index) [[likely]] {
+            coordinate_t const destination_coordinate{_graph->node_coordinates(destination)};
+            coordinate_t const new_direction{destination_coordinate - _source_coordinate};
+
+            // past if angle too large
+            past |= std::abs(angle_sin(new_direction, last_direction)) >= _spanner_angle_sin;
+
+            // past if distance gets larger
+            coordinate_t::component_type dist{distance(destination_coordinate, _source_coordinate)};
+            past |= (dist > last_distance);
+            last_distance = dist;
+
+            if (past) {
+                assert(_graph->has_edge(node.node(), destination));
+                destination.steiner_index++;
+                insert(destination, destination_coordinate, node, out, coordinates_out);
+                destination.steiner_index--;
+                last_direction = new_direction;
+                past = false;
+            }
         }
 
-        assert(_graph->has_edge(node.node(), destination));
-        insert(destination, destination_coordinate, node, out, coordinates_out);
-        last_direction = new_direction;
+        destination.steiner_index = destination_steiner_info.mid_index + 1;
+        last_direction = _source_coordinate - _graph->node_coordinates(destination);
+        for (; destination.steiner_index <
+               destination_steiner_info.node_count - 1; ++destination.steiner_index) [[likely]] {
+            coordinate_t const destination_coordinate{_graph->node_coordinates(destination)};
+            coordinate_t const new_direction{destination_coordinate - _source_coordinate};
+
+            // past if angle too large
+            past |= std::abs(angle_sin(new_direction, last_direction)) >= _spanner_angle_sin;
+
+            // past if distance gets larger
+            coordinate_t::component_type dist{distance(destination_coordinate, _source_coordinate)};
+            past |= (dist > last_distance);
+            last_distance = dist;
+
+            if (past) {
+                assert(_graph->has_edge(node.node(), destination));
+
+                destination.steiner_index--;
+                insert(destination, destination_coordinate, node, out, coordinates_out);
+
+                destination.steiner_index++;
+                last_direction = new_direction;
+                past = false;
+            }
+        }
     }
 }
 

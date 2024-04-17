@@ -34,10 +34,14 @@ private:
     using base_node_id_type = typename Graph::base_topology_type::node_id_type;
     using base_edge_id_type = typename Graph::base_topology_type::edge_id_type;
 
+    // if set to true, the implementation does not search for the closest neighbor in a sub-cone but selects the one with lowest bending angle
+    static constexpr bool simplify_epsilon_spanner { true };
+
+    //
     std::shared_ptr<Graph> _graph;
     std::shared_ptr<Labels> _labels;
 
-    // angle of a subcone of an epsilon-spanner
+    // angle of a sub-cone of an epsilon-spanner
     coordinate_t::component_type _spanner_angle;
     coordinate_t::component_type _spanner_angle_sin;
 
@@ -58,12 +62,7 @@ private:
     std::size_t _boundary_node_neighbor_count{0};
     std::size_t _steiner_point_neighbor_count{0};
 
-    std::size_t _steiner_point_angle_test_count{0};     // for linear/binary search: number of iterations/tests
-
-    [[gnu::cold]]
-    void init(node_id_type /*source*/, node_id_type /*target*/) {
-        _first_call = true;
-    }
+    std::size_t _steiner_point_angle_test_count{0};     // number of segments checked
 
     template<typename NodeCostPair>
     [[using gnu : hot]]
@@ -173,10 +172,12 @@ private:
 
 public:
     steiner_neighbors(std::shared_ptr<Graph> graph, std::shared_ptr<Labels> labels)
-            : _graph(std::move(graph)), _labels(std::move(labels)), _spanner_angle{
-            std::clamp(std::numbers::pi * _graph->epsilon() / 2, 0.0,
-                       std::numbers::pi_v<coordinate_t::component_type> / 2)},
-              _spanner_angle_sin{std::sin(_spanner_angle)} {}
+            : _graph(std::move(graph))
+            , _labels(std::move(labels))
+            , _spanner_angle {
+                std::clamp(std::numbers::pi * _graph->epsilon() / 16, 0.0, std::numbers::pi_v<coordinate_t::component_type> / 4)
+            }
+            , _spanner_angle_sin{std::sin(_spanner_angle)} {}
 
     template<typename... Args>
     steiner_neighbors(std::shared_ptr<Graph> graph, Labels &labels, Args const &...) : steiner_neighbors{graph,
@@ -189,6 +190,11 @@ public:
     steiner_neighbors(steiner_neighbors &&) noexcept = default;
 
     steiner_neighbors &operator=(steiner_neighbors &&) noexcept = default;
+
+    [[gnu::cold]]
+    void init(node_id_type /*source*/, node_id_type /*target*/) {
+        _first_call = true;
+    }
 
     template<typename NodeCostPair>
     void operator()(NodeCostPair const &node, std::vector<NodeCostPair> &out);
