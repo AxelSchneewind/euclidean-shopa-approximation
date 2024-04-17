@@ -35,7 +35,7 @@ private:
     using base_edge_id_type = typename Graph::base_topology_type::edge_id_type;
 
     // if set to true, the implementation does not search for the closest neighbor in a sub-cone but selects the one with lowest bending angle
-    static constexpr bool simplify_epsilon_spanner { false };
+    static constexpr bool simplify_epsilon_spanner = true;
 
     //
     std::shared_ptr<Graph> _graph;
@@ -86,37 +86,36 @@ private:
 
     [[gnu::hot]]
     coordinate_t::component_type
-    min_angle_relative_value_matmul(base_edge_id_type edge_id, coordinate_t direction) const
-    requires (Configuration::PARAM == Config);
+    min_angle_relative_value_matmul(base_edge_id_type edge_id, coordinate_t direction) const requires (
+    Configuration::PARAM == Config);
 
     [[gnu::hot]]
     coordinate_t::component_type
-    min_angle_relative_value_atan2(base_edge_id_type edge_id, coordinate_t const &direction) const
-    requires (Configuration::ATAN2 == Config);
+    min_angle_relative_value_atan2(base_edge_id_type edge_id, coordinate_t const &direction) const requires (
+    Configuration::ATAN2 == Config);
 
     [[gnu::hot]]
     coordinate_t::component_type min_angle_relative_value_atan2(coordinate_t left,
                                                                 coordinate_t right,
                                                                 coordinate_t::component_type direction_left,
-                                                                coordinate_t::component_type direction_dir) const
-                                                                requires (Configuration::ATAN2 == Config);
+                                                                coordinate_t::component_type direction_dir) const requires (
+    Configuration::ATAN2 == Config);
 
     [[gnu::hot]]
     node_id_type
     min_angle_neighbor_matmul(base_edge_id_type const &edge_id,
-                              coordinate_t const &direction)
-                              requires (Configuration::PARAM == Config);
+                              coordinate_t const &direction)requires (Configuration::PARAM == Config);
 
     [[gnu::hot]]
-    node_id_type min_angle_neighbor_atan2(base_edge_id_type edge_id, const coordinate_t &direction) const
-    requires (Configuration::ATAN2 == Config);
+    node_id_type min_angle_neighbor_atan2(base_edge_id_type edge_id, const coordinate_t &direction) const requires (
+    Configuration::ATAN2 == Config);
 
 
     [[gnu::hot]]
     node_id_type
     min_angle_neighbor_binary_search(base_edge_id_type const &edge_id,
-                                     const coordinate_t &direction)
-                                     requires (Configuration::BINSEARCH == Config || Configuration::LINEAR == Config);
+                                     const coordinate_t &direction)requires (Configuration::BINSEARCH == Config ||
+                                                                             Configuration::LINEAR == Config);
 
     template<typename NodeCostPair>
     [[gnu::hot]]
@@ -172,12 +171,10 @@ private:
 
 public:
     steiner_neighbors(std::shared_ptr<Graph> graph, std::shared_ptr<Labels> labels)
-            : _graph(std::move(graph))
-            , _labels(std::move(labels))
-            , _spanner_angle {
-                std::clamp(std::numbers::pi * _graph->epsilon() / 16, 0.0, std::numbers::pi_v<coordinate_t::component_type> / 4)
-            }
-            , _spanner_angle_sin{std::sin(_spanner_angle)} {}
+            : _graph(std::move(graph)), _labels(std::move(labels)), _spanner_angle{
+            std::clamp(std::numbers::pi * _graph->epsilon() / 16, 0.0,
+                       std::numbers::pi_v<coordinate_t::component_type> / 4)
+    }, _spanner_angle_sin{std::sin(_spanner_angle)} {}
 
     template<typename... Args>
     steiner_neighbors(std::shared_ptr<Graph> graph, Labels &labels, Args const &...) : steiner_neighbors{graph,
