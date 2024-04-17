@@ -132,6 +132,7 @@ void steiner_neighbors<Graph, Labels, Config>::operator()(const NodeCostPair &no
 
     _source = node_id;
     _source_coordinate = _graph->node_coordinates(node_id);
+    _direction = {0.0, 0.0};
 
     // compute direction from face crossing predecessor
     if constexpr (HasFaceCrossingPredecessor<NodeCostPair, Graph>) {
@@ -144,8 +145,6 @@ void steiner_neighbors<Graph, Labels, Config>::operator()(const NodeCostPair &no
         auto &&face_crossing_predecessor = (*_labels)[node.node()].face_crossing_predecessor();
         if (!optional::is_none(face_crossing_predecessor) && face_crossing_predecessor != node.node())
             _direction = _source_coordinate - _graph->node_coordinates(face_crossing_predecessor);
-    } else {
-        _direction = {0.0, 0.0};
     }
 
 
@@ -366,6 +365,7 @@ static double angle_sin(coordinate_t const &direction, coordinate_t forward) {
     forward.rotate_right();
     double product = direction * forward;
     product /= (direction.length() * forward.length());
+    assert(std::isnormal(product));
     assert(product >= -1.01 && product <= 1.01);
     return product;
 }
