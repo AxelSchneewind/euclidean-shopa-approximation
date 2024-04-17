@@ -8,7 +8,7 @@
 
 int main(int argc, const char* argv[]) {
     if (argc < 3) {
-        std::cout << "usage " << argv[0] << " path/to/graph-file path/to/result [xy_to_latlon|latlon_to_xy]\n";
+        std::cout << "usage: " << argv[0] << " path/to/graph-file path/to/result [xy_to_latlon|latlon_to_xy]\n";
         return 1;
     }
 
