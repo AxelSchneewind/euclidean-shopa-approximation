@@ -365,7 +365,7 @@ static double angle_sin(coordinate_t const &direction, coordinate_t forward) {
     forward.rotate_right();
     double product = direction * forward;
     product /= (direction.length() * forward.length());
-    assert(std::isnormal(product));
+    assert(product == 0 || std::isnormal(product));
     assert(product >= -1.01 && product <= 1.01);
     return product;
 }
@@ -547,7 +547,7 @@ Configuration::PARAM == Config) {
     if (!is_in_range(rel, 0.0, 1.0 + std::numeric_limits<double>::epsilon()))
         return optional::none_value<node_id_type>;
 
-    return {edge_id, _graph->subdivision_info().index(edge_id, rel)};
+    return { edge_id, _graph->subdivision_info().index(edge_id, rel) };
 }
 
 template<typename Graph, typename Labels, Configuration Config>
@@ -599,7 +599,7 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
             coordinate_t::component_type last_distance { std::numeric_limits<coordinate_t::component_type>::max() };
             coordinate_t destination_coordinate;
             bool past { false };
-            for (; destination.steiner_index >= 0 && !past; --destination.steiner_index) [[likely]] {
+            for (; destination.steiner_index >= 1 && !past; --destination.steiner_index) [[likely]] {
                 destination_coordinate = _graph->node_coordinates(destination);
                 coordinate_t const new_direction { destination_coordinate - _source_coordinate };
 
@@ -621,7 +621,7 @@ steiner_neighbors<Graph, Labels, Config>::add_min_angle_neighbor(const NodeCostP
             destination = other; destination.steiner_index++;
             last_distance = std::numeric_limits<coordinate_t::component_type>::max();
             past = false;
-            for (; destination.steiner_index < destination_steiner_info.node_count; ++destination.steiner_index) [[likely]] {
+            for (; destination.steiner_index < destination_steiner_info.node_count - 1; ++destination.steiner_index) [[likely]] {
                 destination_coordinate = _graph->node_coordinates(destination);
                 coordinate_t const new_direction { destination_coordinate - _source_coordinate };
 
@@ -790,7 +790,7 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
         coordinate_t last_direction = _source_coordinate - _graph->node_coordinates(destination);
         coordinate_t::component_type last_distance{std::numeric_limits<coordinate_t::component_type>::max()};
         bool past{false};
-        for (; destination.steiner_index >= 0; --destination.steiner_index) [[likely]] {
+        for (; destination.steiner_index >= 1; --destination.steiner_index) [[likely]] {
             coordinate_t const destination_coordinate{_graph->node_coordinates(destination)};
             coordinate_t const new_direction{destination_coordinate - _source_coordinate};
 
@@ -814,7 +814,7 @@ void steiner_neighbors<Graph, Labels, Config>::epsilon_spanner(const NodeCostPai
 
         destination.steiner_index = destination_steiner_info.mid_index + 1;
         last_direction = _source_coordinate - _graph->node_coordinates(destination);
-        for (; destination.steiner_index < destination_steiner_info.node_count; ++destination.steiner_index) [[likely]] {
+        for (; destination.steiner_index < destination_steiner_info.node_count - 1; ++destination.steiner_index) [[likely]] {
             coordinate_t const destination_coordinate { _graph->node_coordinates(destination) };
             coordinate_t const new_direction { destination_coordinate - _source_coordinate };
 

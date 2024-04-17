@@ -35,7 +35,7 @@ private:
     using base_edge_id_type = typename Graph::base_topology_type::edge_id_type;
 
     // if set to true, the implementation does not search for the closest neighbor in a sub-cone but selects the one with lowest bending angle
-    static constexpr bool simplify_epsilon_spanner { true };
+    static constexpr bool simplify_epsilon_spanner { false };
 
     //
     std::shared_ptr<Graph> _graph;
