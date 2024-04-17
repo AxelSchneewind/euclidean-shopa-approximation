@@ -30,7 +30,6 @@ main(int argc, char *argv[]) {
     output_directory = arguments.output_directory_arg;
 
     RoutingConfiguration config;
-    config.bidirectional = false;
     config.only_distance = arguments.no_tree_flag;
     config.use_a_star = arguments.astar_flag;
     config.live_status = arguments.live_status_flag;
@@ -66,7 +65,7 @@ main(int argc, char *argv[]) {
         client.write_csv_header(std::cout);
     } else {
         client.write_graph_stats(std::cout);
-        std::cout << "configuration: A* = "  << config.use_a_star << ", neighbor finding = " << config.min_angle_neighbor_method << ", bidirectional = " << config.bidirectional << ", epsilon = " << epsilon << '\n';
+        std::cout << "configuration: A* = "  << config.use_a_star << ", neighbor finding = " << config.min_angle_neighbor_method << ", epsilon = " << epsilon << '\n';
     }
 
     bool from_stdin = (arguments.query_given < 1) || (arguments.stdin_flag != 0);
