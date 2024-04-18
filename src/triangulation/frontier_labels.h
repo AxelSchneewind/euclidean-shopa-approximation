@@ -144,8 +144,10 @@ template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 bool frontier_labels<NodeCostPair, Label>::contains(frontier_labels::node_id_type node) const {
     // return _expanded_node_aggregates.node_count(node.edge) > 0 &&
     //        !is_infinity(_expanded_node_aggregates.at(node.edge, node.steiner_index).distance());
-    return _expanded_node_aggregates.contains(node.edge) &&
-           !is_infinity(_expanded_node_aggregates.at(node.edge).labels[node.steiner_index].distance());
+    return _expanded_node_aggregates.contains(node.edge)
+        && node.steiner_index >= 0
+        && _expanded_node_aggregates.at(node.edge).labels.size() > static_cast<size_t>(node.steiner_index)
+        && (_expanded_node_aggregates.at(node.edge).labels[node.steiner_index].value() != _default_value.value());
 }
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
