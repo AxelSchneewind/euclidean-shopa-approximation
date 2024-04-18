@@ -33,14 +33,22 @@ fi
 
 ############################ refined graph using triangle (Shewchuk) ############################
 # refined graph with steiner points
-if [ ! -d "$OUTPUT_DIR/implicit-ref" ]; then
+if [ ! -d "$OUTPUT_DIR/implicit-ref-unpruned" ]; then
 	EPSILONS=("1.0" "0.5" "0.25")
 	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref/$eps" "$QUERY_FILE" "$eps" ""
+	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-unpruned/$eps" "$QUERY_FILE" "$eps" "--pruning=none"
 	done
 fi
-process_results "$OUTPUT_DIR/implicit-ref" "$OUTPUT_DIR/results-implicit-ref.csv" milos-implicit-ref
+process_results "$OUTPUT_DIR/implicit-ref-unpruned" "$OUTPUT_DIR/results-implicit-ref-unpruned.csv" milos-implicit-ref-unpruned
 
+# refined graph with steiner points
+if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned" ]; then
+	EPSILONS=("1.0" "0.5" "0.25")
+	for eps in "${EPSILONS[@]}"; do
+	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref/$eps" "$QUERY_FILE" "$eps" "--pruning=prune"
+	done
+fi
+process_results "$OUTPUT_DIR/implicit-ref-pruned" "$OUTPUT_DIR/results-implicit-ref-pruned.csv" milos-implicit-ref-pruned
 
 
 ######################################## unrefined graph ########################################
