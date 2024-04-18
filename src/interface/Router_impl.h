@@ -133,8 +133,13 @@ struct Implementation<std_graph_t, only_distance, use_a_star, n, simplifications
 
 template<typename GraphImpl, bool use_a_star, bool only_distance, Pruning simplifications, NeighborFindingAlgorithm algorithm>
 std::unique_ptr<RouterInterface> make_router(Graph const &graph, RoutingConfiguration const& config) {
-    using routing_t = typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::routing_t;
-    return std::make_unique<Router::RouterImplementation<GraphImpl, routing_t>>(graph.get_implementation<GraphImpl>(), routing_t(graph.get_implementation<GraphImpl>()), config);
+    if constexpr(std::same_as<typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::graph_t, void>) {
+        return {};
+    } else {
+        using routing_t = typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::routing_t;
+        return std::make_unique<Router::RouterImplementation<GraphImpl, routing_t>>(
+                graph.get_implementation<GraphImpl>(), routing_t(graph.get_implementation<GraphImpl>()), config);
+    }
 }
 
 template<typename GraphImpl, bool use_a_star, bool only_distance, Pruning simplifications>
@@ -194,6 +199,7 @@ std::unique_ptr<RouterInterface> by_graph_impl(Graph const& graph, RoutingConfig
         case GraphType::NONE:
             return {};
     }
+    return {};
 }
 
 

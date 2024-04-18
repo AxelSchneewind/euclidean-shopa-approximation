@@ -173,7 +173,7 @@ frontier_labels<NodeCostPair, Label>::frontier_labels(std::shared_ptr<steiner_gr
         : _graph(graph),
           // _expanded_node_aggregates{graph->subdivision_info().offsets(), nullptr, default_value},
           _expanded_node_aggregates{},
+          _default_value{default_value},
           _min_value{0.0},
           _max_distance{0.0},
-          _default_value(default_value),
           _frontier_width(frontier_width) {}
