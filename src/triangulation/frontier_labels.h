@@ -49,6 +49,13 @@ private:
 
     std::shared_ptr<steiner_graph> _graph;
 
+    std::unordered_map<base_node_id_type, aggregate_info> _expanded_node_aggregates;
+    // compact_node_info_container<base_edge_id_type, short unsigned int, std::nullptr_t, label_type> _expanded_node_aggregates;
+
+    std::priority_queue<aggregate_throwaway_info, std::vector<aggregate_throwaway_info>, compare_aggregate_throwaway> _active_aggregates;
+
+    label_type _default_value;
+
     // nodes with lower value (minimal path length) will not be labelled again, assuming nodes are labelled with ascending value()
     distance_type _min_value;
     // nodes with higher distance are preliminarily labelled
@@ -56,13 +63,6 @@ private:
 
     // nodes with value < min_value - frontier_width can be discarded, this value has to be lower than the maximum edge length
     distance_type _frontier_width;
-
-    std::unordered_map<base_node_id_type, aggregate_info> _expanded_node_aggregates;
-    // compact_node_info_container<base_edge_id_type, short unsigned int, std::nullptr_t, label_type> _expanded_node_aggregates;
-
-    label_type _default_value;
-
-    std::priority_queue<aggregate_throwaway_info, std::vector<aggregate_throwaway_info>, compare_aggregate_throwaway> _active_aggregates;
 
 public:
 
@@ -172,7 +172,8 @@ frontier_labels<NodeCostPair, Label>::frontier_labels(std::shared_ptr<steiner_gr
                                                       distance_type frontier_width)
         : _graph(graph),
           // _expanded_node_aggregates{graph->subdivision_info().offsets(), nullptr, default_value},
-          _expanded_node_aggregates{},
+          _expanded_node_aggregates{ },
+          _active_aggregates{ },
           _default_value{default_value},
           _min_value{0.0},
           _max_distance{0.0},
