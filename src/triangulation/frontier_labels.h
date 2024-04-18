@@ -124,6 +124,8 @@ Label const& frontier_labels<NodeCostPair, Label>::operator[](frontier_labels::n
 
 template<DistanceNodeCostPair NodeCostPair, HasDistance Label>
 Label& frontier_labels<NodeCostPair, Label>::operator[](frontier_labels::node_id_type node) {
+    if (!_expanded_node_aggregates.contains(node.edge))
+        _expanded_node_aggregates[node.edge] = {std::vector<Label>(_graph->steiner_info(node.edge).node_count, _default_value)};
     return _expanded_node_aggregates.at(node.edge).labels[node.steiner_index];
 }
 
