@@ -13,6 +13,8 @@ mkdir summaries
 rm -rf plots
 mkdir plots
 
+# TODO output distributions of solution qualities per vertex
+
 
 # triangle graph
 python plot_over_epsilon.py -f results/aegaeis/results.csv -t=triangle -c=time --fliers -o plots/boxplots_time_triangle$PLOT_FILE_TYPE
