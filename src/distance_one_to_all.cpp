@@ -20,34 +20,12 @@ main(int argc, char *argv[]) {
     std::filesystem::path output_directory;
     double epsilon = arguments.epsilon_arg;
 
-    bool nodes_by_coordinates = arguments.coordinates_flag;
-
-    bool output_csv = arguments.csv_format_flag != 0;
-
     graph_file = arguments.graph_file_arg;
     output_directory = arguments.output_directory_arg;
 
     RoutingConfiguration config;
-    config.bidirectional = false;
     config.use_a_star = arguments.astar_flag;
     config.live_status = arguments.live_status_flag;
-    switch (arguments.neighbor_finding_arg) {
-        case neighbor_finding_arg_param:
-            config.min_angle_neighbor_method = RoutingConfiguration::PARAM;
-            break;
-        case neighbor_finding_arg_trig:
-            config.min_angle_neighbor_method = RoutingConfiguration::ATAN2;
-            break;
-        case neighbor_finding_arg_binary:
-            config.min_angle_neighbor_method = RoutingConfiguration::BINSEARCH;
-            break;
-        case neighbor_finding_arg_linear:
-            config.min_angle_neighbor_method = RoutingConfiguration::LINEAR;
-            break;
-        case neighbor_finding__NULL:
-            config.min_angle_neighbor_method = RoutingConfiguration::PARAM;
-            break;
-    }
 
     config.tree_size = (arguments.tree_given) ? arguments.tree_arg : 0;
 
@@ -59,26 +37,18 @@ main(int argc, char *argv[]) {
     else
         client.read_graph_file(graph_file);
 
-    if (output_csv) {
-        client.write_csv_header(std::cout);
-    } else {
-        client.write_graph_stats(std::cout);
-        std::cout << "configuration: A* = "  << config.use_a_star << ", neighbor finding = " << config.min_angle_neighbor_method << ", bidirectional = " << config.bidirectional << ", epsilon = " << epsilon << '\n';
-    }
+    client.write_graph_stats(std::cout);
 
-    bool from_stdin = (arguments.query_given < 1) || (arguments.stdin_flag != 0);
+    bool from_stdin = (arguments.query_given < 1);
     std::size_t query_index = 0;
+    std::cout << "configuration: epsilon = " << epsilon << ", A* = " << config.use_a_star << ", neighbor finding = " << (int)config.neighbor_selection_algorithm << ", pruning = " << (int)config.pruning << '\n';
 
     while (true) {
         // get query
         long src_node{0};
 
         if (query_index < arguments.query_given) {
-            if (nodes_by_coordinates) {
-                throw std::runtime_error("passing start and target nodes by coordinates is not yet implemented, sorry");
-            } else {
-                src_node = std::stoi(arguments.query_arg[query_index++]);
-            }
+            src_node = std::stoi(arguments.query_arg[query_index++]);
         } else if (from_stdin) {
             std::cout << "src node: " << std::flush;
             std::cin >> src_node;

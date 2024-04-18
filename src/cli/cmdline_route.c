@@ -43,17 +43,16 @@ const char *gengetopt_args_info_help[] = {
   "  -e, --epsilon=DOUBLE         ε value to use for discretizing the\n                                 triangulation (if a .graph file is given)\n                                 (default=`0.0')",
   "\nquery:",
   "  -q, --query=STRING           pair(s) of source and destination node ids\n                                 (either their ids, or their coordinates if\n                                 --coordinates is passed)",
-  "      --coordinates            interpret the pair(s) of source and destination\n                                 nodes as their coordinates  (default=off)",
-  "  -i, --stdin                  indicates that queries should be read from stdin\n                                 (default=off)",
   "\noutput:",
   "  options for the command line output",
-  "  -c, --csv-format             indicates that routing information should be\n                                 printed in the csv format  (default=off)",
   "  -p, --projection=ENUM        which projection to apply to coordinates when\n                                 writing to files  (possible values=\"none\",\n                                 \"google_bing\", \"wgs84\" default=`none')",
-  "  -t, --tree[=INT]             maximum tree size to export to graph file\n                                 (default=`1234567')",
-  "  -l, --live-status            show live status on route computation\n                                 (default=on)",
+  "  -t, --tree[=INT]             maximum tree size to export to graph file\n                                 (default=`1000000')",
+  "  -l, --live-status            print live status about computation to stdout\n                                 (default=on)",
   "\nrouting algorithms:",
-  "  -a, --astar                  use A* heuristic to speed up routing\n                                 (default=off)",
+  "  some advanced options on dijkstra search",
+  "  -a, --astar                  use A* heuristic to speed up one-to-one queries\n                                 (default=off)",
   "      --neighbor-finding=ENUM  the type of algorithm to find neighbors with\n                                 minimal bending angle  (possible\n                                 values=\"param\", \"trig\", \"binary\",\n                                 \"linear\" default=`param')",
+  "      --pruning=ENUM           which type of pruning to use for steiner graphs\n                                 (possible values=\"none\", \"prune\",\n                                 \"prune-min-angle\" default=`prune')",
   "      --no-tree                if enabled, only computes distances without\n                                 keeping tree information (does not produce\n                                 paths)  (default=off)",
     0
 };
@@ -80,6 +79,7 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
 
 const char *cmdline_parser_projection_values[] = {"none", "google_bing", "wgs84", 0}; /*< Possible values for projection. */
 const char *cmdline_parser_neighbor_finding_values[] = {"param", "trig", "binary", "linear", 0}; /*< Possible values for neighbor-finding. */
+const char *cmdline_parser_pruning_values[] = {"none", "prune", "prune-min-angle", 0}; /*< Possible values for pruning. */
 
 static char *
 gengetopt_strdup (const char *s);
@@ -93,14 +93,12 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->output_directory_given = 0 ;
   args_info->epsilon_given = 0 ;
   args_info->query_given = 0 ;
-  args_info->coordinates_given = 0 ;
-  args_info->stdin_given = 0 ;
-  args_info->csv_format_given = 0 ;
   args_info->projection_given = 0 ;
   args_info->tree_given = 0 ;
   args_info->live_status_given = 0 ;
   args_info->astar_given = 0 ;
   args_info->neighbor_finding_given = 0 ;
+  args_info->pruning_given = 0 ;
   args_info->no_tree_given = 0 ;
 }
 
@@ -116,17 +114,16 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->epsilon_orig = NULL;
   args_info->query_arg = NULL;
   args_info->query_orig = NULL;
-  args_info->coordinates_flag = 0;
-  args_info->stdin_flag = 0;
-  args_info->csv_format_flag = 0;
   args_info->projection_arg = projection_arg_none;
   args_info->projection_orig = NULL;
-  args_info->tree_arg = 1234567;
+  args_info->tree_arg = 1000000;
   args_info->tree_orig = NULL;
   args_info->live_status_flag = 1;
   args_info->astar_flag = 0;
   args_info->neighbor_finding_arg = neighbor_finding_arg_param;
   args_info->neighbor_finding_orig = NULL;
+  args_info->pruning_arg = pruning_arg_prune;
+  args_info->pruning_orig = NULL;
   args_info->no_tree_flag = 0;
   
 }
@@ -144,15 +141,13 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->query_help = gengetopt_args_info_help[8] ;
   args_info->query_min = 0;
   args_info->query_max = 0;
-  args_info->coordinates_help = gengetopt_args_info_help[9] ;
-  args_info->stdin_help = gengetopt_args_info_help[10] ;
-  args_info->csv_format_help = gengetopt_args_info_help[13] ;
-  args_info->projection_help = gengetopt_args_info_help[14] ;
-  args_info->tree_help = gengetopt_args_info_help[15] ;
-  args_info->live_status_help = gengetopt_args_info_help[16] ;
-  args_info->astar_help = gengetopt_args_info_help[18] ;
-  args_info->neighbor_finding_help = gengetopt_args_info_help[19] ;
-  args_info->no_tree_help = gengetopt_args_info_help[20] ;
+  args_info->projection_help = gengetopt_args_info_help[11] ;
+  args_info->tree_help = gengetopt_args_info_help[12] ;
+  args_info->live_status_help = gengetopt_args_info_help[13] ;
+  args_info->astar_help = gengetopt_args_info_help[16] ;
+  args_info->neighbor_finding_help = gengetopt_args_info_help[17] ;
+  args_info->pruning_help = gengetopt_args_info_help[18] ;
+  args_info->no_tree_help = gengetopt_args_info_help[19] ;
   
 }
 
@@ -297,6 +292,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->projection_orig));
   free_string_field (&(args_info->tree_orig));
   free_string_field (&(args_info->neighbor_finding_orig));
+  free_string_field (&(args_info->pruning_orig));
   
   
 
@@ -387,12 +383,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
   if (args_info->epsilon_given)
     write_into_file(outfile, "epsilon", args_info->epsilon_orig, 0);
   write_multiple_into_file(outfile, args_info->query_given, "query", args_info->query_orig, 0);
-  if (args_info->coordinates_given)
-    write_into_file(outfile, "coordinates", 0, 0 );
-  if (args_info->stdin_given)
-    write_into_file(outfile, "stdin", 0, 0 );
-  if (args_info->csv_format_given)
-    write_into_file(outfile, "csv-format", 0, 0 );
   if (args_info->projection_given)
     write_into_file(outfile, "projection", args_info->projection_orig, cmdline_parser_projection_values);
   if (args_info->tree_given)
@@ -403,6 +393,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "astar", 0, 0 );
   if (args_info->neighbor_finding_given)
     write_into_file(outfile, "neighbor-finding", args_info->neighbor_finding_orig, cmdline_parser_neighbor_finding_values);
+  if (args_info->pruning_given)
+    write_into_file(outfile, "pruning", args_info->pruning_orig, cmdline_parser_pruning_values);
   if (args_info->no_tree_given)
     write_into_file(outfile, "no-tree", 0, 0 );
   
@@ -1013,19 +1005,17 @@ cmdline_parser_internal (
         { "output-directory",	1, NULL, 'o' },
         { "epsilon",	1, NULL, 'e' },
         { "query",	1, NULL, 'q' },
-        { "coordinates",	0, NULL, 0 },
-        { "stdin",	0, NULL, 'i' },
-        { "csv-format",	0, NULL, 'c' },
         { "projection",	1, NULL, 'p' },
         { "tree",	2, NULL, 't' },
         { "live-status",	0, NULL, 'l' },
         { "astar",	0, NULL, 'a' },
         { "neighbor-finding",	1, NULL, 0 },
+        { "pruning",	1, NULL, 0 },
         { "no-tree",	0, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:o:e:q:icp:t::la", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:o:e:q:p:t::la", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1086,26 +1076,6 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'i':	/* indicates that queries should be read from stdin.  */
-        
-        
-          if (update_arg((void *)&(args_info->stdin_flag), 0, &(args_info->stdin_given),
-              &(local_args_info.stdin_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "stdin", 'i',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'c':	/* indicates that routing information should be printed in the csv format.  */
-        
-        
-          if (update_arg((void *)&(args_info->csv_format_flag), 0, &(args_info->csv_format_given),
-              &(local_args_info.csv_format_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "csv-format", 'c',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'p':	/* which projection to apply to coordinates when writing to files.  */
         
         
@@ -1123,14 +1093,14 @@ cmdline_parser_internal (
         
           if (update_arg( (void *)&(args_info->tree_arg), 
                &(args_info->tree_orig), &(args_info->tree_given),
-              &(local_args_info.tree_given), optarg, 0, "1234567", ARG_INT,
+              &(local_args_info.tree_given), optarg, 0, "1000000", ARG_INT,
               check_ambiguity, override, 0, 0,
               "tree", 't',
               additional_error))
             goto failure;
         
           break;
-        case 'l':	/* show live status on route computation.  */
+        case 'l':	/* print live status about computation to stdout.  */
         
         
           if (update_arg((void *)&(args_info->live_status_flag), 0, &(args_info->live_status_given),
@@ -1140,7 +1110,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'a':	/* use A* heuristic to speed up routing.  */
+        case 'a':	/* use A* heuristic to speed up one-to-one queries.  */
         
         
           if (update_arg((void *)&(args_info->astar_flag), 0, &(args_info->astar_given),
@@ -1152,20 +1122,8 @@ cmdline_parser_internal (
           break;
 
         case 0:	/* Long option with no short option */
-          /* interpret the pair(s) of source and destination nodes as their coordinates.  */
-          if (strcmp (long_options[option_index].name, "coordinates") == 0)
-          {
-          
-          
-            if (update_arg((void *)&(args_info->coordinates_flag), 0, &(args_info->coordinates_given),
-                &(local_args_info.coordinates_given), optarg, 0, 0, ARG_FLAG,
-                check_ambiguity, override, 1, 0, "coordinates", '-',
-                additional_error))
-              goto failure;
-          
-          }
           /* the type of algorithm to find neighbors with minimal bending angle.  */
-          else if (strcmp (long_options[option_index].name, "neighbor-finding") == 0)
+          if (strcmp (long_options[option_index].name, "neighbor-finding") == 0)
           {
           
           
@@ -1174,6 +1132,20 @@ cmdline_parser_internal (
                 &(local_args_info.neighbor_finding_given), optarg, cmdline_parser_neighbor_finding_values, "param", ARG_ENUM,
                 check_ambiguity, override, 0, 0,
                 "neighbor-finding", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* which type of pruning to use for steiner graphs.  */
+          else if (strcmp (long_options[option_index].name, "pruning") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->pruning_arg), 
+                 &(args_info->pruning_orig), &(args_info->pruning_given),
+                &(local_args_info.pruning_given), optarg, cmdline_parser_pruning_values, "prune", ARG_ENUM,
+                check_ambiguity, override, 0, 0,
+                "pruning", '-',
                 additional_error))
               goto failure;
           
