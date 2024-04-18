@@ -24,6 +24,7 @@ public:
 
 
 class Router : public Base<RouterInterface> {
+public:
     template<typename GraphT, typename RouterT>
     class RouterImplementation : public RouterInterface {
     private:
@@ -50,10 +51,8 @@ class Router : public Base<RouterInterface> {
         void reset() override { _query_ptr = nullptr; _result_ptr = nullptr; };
     };
 
+private:
     RoutingConfiguration _config;
-
-    template<typename GraphImpl, bool use_a_star, bool only_distance, Configuration n>
-    static std::unique_ptr<RouterInterface> make_router(Graph const &graph, RoutingConfiguration const& config);
 
 public:
     Router() = default;

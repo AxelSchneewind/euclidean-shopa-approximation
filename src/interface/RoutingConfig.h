@@ -2,14 +2,18 @@
 
 struct RoutingConfiguration {
     bool use_a_star{true};
-    bool bidirectional{false};
     bool live_status {true};
     bool only_distance{false};
-    enum {
+    enum class Pruning {
+        UNPRUNED,
+        PRUNE_DEFAULT,
+        MinBendingAngleESpanner
+    } pruning;
+    enum class NeighborFindingAlgorithm {
         PARAM,
         ATAN2,
         BINSEARCH,
         LINEAR
-    } min_angle_neighbor_method;
+    } neighbor_selection_algorithm;
     std::size_t tree_size{0};
 };

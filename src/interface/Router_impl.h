@@ -25,7 +25,7 @@ struct if_or_else<false, True, False> {
 };
 
 
-template<typename GraphImplementation, bool only_distance, bool use_a_star, Configuration config>
+template<typename GraphImplementation, bool only_distance, bool use_a_star, NeighborFindingAlgorithm config, Pruning simplifications>
 struct Implementation {
     using graph_t = void;
     using routing_t = void;
@@ -36,8 +36,8 @@ struct Implementation {
 };
 
 
-template<bool only_distance, bool use_a_star, Configuration n>
-struct Implementation<steiner_graph, only_distance, use_a_star, n> {
+template<bool only_distance, bool use_a_star, NeighborFindingAlgorithm n, Pruning simplifications>
+struct Implementation<steiner_graph, only_distance, use_a_star, n, simplifications> {
     using graph_t = steiner_graph;
     using node_id_t = typename graph_t::node_id_type;
     using base_node_id_t = typename graph_t::triangle_node_id_type;
@@ -68,13 +68,13 @@ struct Implementation<steiner_graph, only_distance, use_a_star, n> {
     // using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
     using labels_t = steiner_labels<steiner_graph, label_t>;
     using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
-    using neighbors_t = steiner_neighbors<steiner_graph, labels_t, n>;
+    using neighbors_t = steiner_neighbors<steiner_graph, labels_t, simplifications, n>;
     using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<steiner_graph>, no_heuristic>::type>;
     using routing_t = router<steiner_graph, dijkstra_t>;
 };
 
-template<bool use_a_star, Configuration n>
-struct Implementation<steiner_graph, true, use_a_star, n> {
+template<bool use_a_star, NeighborFindingAlgorithm n, Pruning simplifications>
+struct Implementation<steiner_graph, true, use_a_star, n, simplifications> {
     using graph_t = steiner_graph;
     using node_id_t = typename graph_t::node_id_type;
     using base_node_id_t = typename graph_t::triangle_node_id_type;
@@ -96,14 +96,14 @@ struct Implementation<steiner_graph, true, use_a_star, n> {
 
     using labels_t = frontier_labels<node_cost_pair_t, label_t>;
     using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
-    using neighbors_t = steiner_neighbors<steiner_graph, labels_t, n>;
+    using neighbors_t = steiner_neighbors<steiner_graph, labels_t, simplifications, n>;
     using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<steiner_graph>, no_heuristic>::type>;
     using routing_t = router<steiner_graph, dijkstra_t>;
 };
 
 
-template<bool only_distance, bool use_a_star, Configuration n>
-struct Implementation<std_graph_t, only_distance, use_a_star, n> {
+template<bool only_distance, bool use_a_star, NeighborFindingAlgorithm n, Pruning simplifications>
+struct Implementation<std_graph_t, only_distance, use_a_star, n, simplifications> {
     using graph_t = std_graph_t;
     using node_id_t = typename graph_t::node_id_type;
     using distance_t = typename graph_t::distance_type;
@@ -131,75 +131,76 @@ struct Implementation<std_graph_t, only_distance, use_a_star, n> {
     using routing_t = router<graph_t, dijkstra_t>;
 };
 
-template<typename GraphImpl, bool use_a_star, bool only_distance, Configuration n>
-std::unique_ptr<RouterInterface> Router::make_router(Graph const &graph, RoutingConfiguration const& config) {
-    using routing_t = typename Implementation<GraphImpl, only_distance, use_a_star, n>::routing_t;
-    return std::make_unique<RouterImplementation<GraphImpl, routing_t>>(graph.get_implementation<GraphImpl>(), routing_t(graph.get_implementation<GraphImpl>()), config);
+template<typename GraphImpl, bool use_a_star, bool only_distance, Pruning simplifications, NeighborFindingAlgorithm algorithm>
+std::unique_ptr<RouterInterface> make_router(Graph const &graph, RoutingConfiguration const& config) {
+    using routing_t = typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::routing_t;
+    return std::make_unique<Router::RouterImplementation<GraphImpl, routing_t>>(graph.get_implementation<GraphImpl>(), routing_t(graph.get_implementation<GraphImpl>()), config);
 }
 
-// TODO clean up this mess
-Router::Router(const Graph &graph, RoutingConfiguration const &config)
-        : _config(config) {
+template<typename GraphImpl, bool use_a_star, bool only_distance, Pruning simplifications>
+std::unique_ptr<RouterInterface> by_algorithm(Graph const& graph, RoutingConfiguration const& config) {
+    switch (config.neighbor_selection_algorithm) {
+        case RoutingConfiguration::NeighborFindingAlgorithm::LINEAR:
+            return make_router<GraphImpl, use_a_star, only_distance, simplifications, NeighborFindingAlgorithm::LINEAR>(graph, config);
+        case RoutingConfiguration::NeighborFindingAlgorithm::BINSEARCH:
+            return make_router<GraphImpl, use_a_star, only_distance, simplifications, NeighborFindingAlgorithm::BINSEARCH>(graph, config);
+        case RoutingConfiguration::NeighborFindingAlgorithm::ATAN2:
+            return make_router<GraphImpl, use_a_star, only_distance, simplifications, NeighborFindingAlgorithm::ATAN2>(graph, config);
+        case RoutingConfiguration::NeighborFindingAlgorithm::PARAM:
+            return make_router<GraphImpl, use_a_star, only_distance, simplifications, NeighborFindingAlgorithm::PARAM>(graph, config);
+    }
+}
+
+template<typename GraphImpl, bool use_a_star, bool only_distance>
+std::unique_ptr<RouterInterface> by_pruning(Graph const& graph, RoutingConfiguration const& config) {
+    switch (config.pruning) {
+        case RoutingConfiguration::Pruning::UNPRUNED:
+            return by_algorithm<GraphImpl, use_a_star, only_distance, Pruning::UNPRUNED>(graph, config);
+        case RoutingConfiguration::Pruning::PRUNE_DEFAULT:
+            return by_algorithm<GraphImpl, use_a_star, only_distance, Pruning::PRUNE_DEFAULT>(graph, config);
+        case RoutingConfiguration::Pruning::MinBendingAngleESpanner:
+            return by_algorithm<GraphImpl, use_a_star, only_distance, Pruning::MinBendingAngleESpanner>(graph, config);
+    }
+}
+
+template<typename GraphImpl, bool use_a_star>
+std::unique_ptr<RouterInterface> by_only_distance(Graph const& graph, RoutingConfiguration const& config) {
+    if (config.only_distance) {
+        return by_pruning<GraphImpl, use_a_star, true>(graph, config);
+    } else {
+        return by_pruning<GraphImpl, use_a_star, true>(graph, config);
+    }
+}
+
+template<typename GraphImpl>
+std::unique_ptr<RouterInterface> by_a_star(Graph const& graph, RoutingConfiguration const& config) {
+    if (config.use_a_star) {
+        return by_only_distance<GraphImpl, true>(graph, config);
+    } else {
+        return by_only_distance<GraphImpl, false>(graph, config);
+    }
+}
+
+std::unique_ptr<RouterInterface> by_graph_impl(Graph const& graph, RoutingConfiguration const& config) {
     switch (graph.type()) {
         case GraphType::STEINER_GRAPH:
-            if (_config.only_distance) {
-                if (_config.use_a_star) {
-                    switch (_config.min_angle_neighbor_method) {
-                        case RoutingConfiguration::PARAM: {
-                            impl = make_router<steiner_graph, true, true, Configuration::PARAM>(graph, _config);
-                            break;
-                        }
-                        case RoutingConfiguration::BINSEARCH: {
-                            impl = make_router<steiner_graph, true, true, Configuration::BINSEARCH>(graph, _config);
-                            break;
-                        }
-                        case RoutingConfiguration::ATAN2: {
-                            impl = make_router<steiner_graph, true, true, Configuration::ATAN2>(graph, _config);
-                            break;
-                        }
-                        case RoutingConfiguration::LINEAR: {
-                            impl = make_router<steiner_graph, true, true, Configuration::LINEAR>(graph, _config);
-                            break;
-                        }
-                    }
-                } else { // A* disabled
-                    impl = make_router<steiner_graph, false, true, Configuration::PARAM>(graph, _config);
-                }
-            } else { // build tree
-                if (_config.use_a_star) {
-                    switch (_config.min_angle_neighbor_method) {
-                        case RoutingConfiguration::PARAM: {
-                            impl = make_router<steiner_graph, true, false, Configuration::PARAM>(graph, _config);
-                            break;
-                        }
-                        case RoutingConfiguration::BINSEARCH: {
-                            impl = make_router<steiner_graph, true, false, Configuration::BINSEARCH>(graph, _config);
-                            break;
-                        }
-                        case RoutingConfiguration::ATAN2: {
-                            impl = make_router<steiner_graph, true, false, Configuration::ATAN2>(graph, _config);
-                            break;
-                        }
-                        case RoutingConfiguration::LINEAR: {
-                            impl = make_router<steiner_graph, true, false, Configuration::LINEAR>(graph, _config);
-                            break;
-                        }
-                    }
-                } else { // A* disabled
-                    impl = make_router<steiner_graph, false, false, Configuration::PARAM>(graph, _config);
-                }
-            }
-            break;
+            return by_a_star<steiner_graph>(graph, config);
         case GraphType::STD_GRAPH:
-            if (_config.use_a_star) {
-                impl = make_router<std_graph_t, true, false, Configuration::PARAM>(graph, _config);
-            } else { // don't use A*
-                impl = make_router<std_graph_t, false, false, Configuration::PARAM>(graph, _config);
-            }
-            break;
-        default:
-            throw std::runtime_error("can't create router for this graph type");
+            return by_a_star<std_graph_t>(graph, config);
+        case GraphType::NONE:
+            return {};
     }
+}
+
+
+std::unique_ptr<RouterInterface> select_routing_impl(Graph const& graph, RoutingConfiguration const& config) {
+    return by_graph_impl(graph, config);
+}
+
+
+Router::Router(const Graph &graph, RoutingConfiguration const &config)
+        : _config(config) {
+    impl = select_routing_impl(graph, config);
 
     if (!impl) {
         throw std::invalid_argument("No implementation available for the given config");
