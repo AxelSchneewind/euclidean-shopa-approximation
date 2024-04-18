@@ -149,6 +149,7 @@ std::unique_ptr<RouterInterface> by_algorithm(Graph const& graph, RoutingConfigu
         case RoutingConfiguration::NeighborFindingAlgorithm::PARAM:
             return make_router<GraphImpl, use_a_star, only_distance, simplifications, NeighborFindingAlgorithm::PARAM>(graph, config);
     }
+    return {};
 }
 
 template<typename GraphImpl, bool use_a_star, bool only_distance>
@@ -161,6 +162,7 @@ std::unique_ptr<RouterInterface> by_pruning(Graph const& graph, RoutingConfigura
         case RoutingConfiguration::Pruning::MinBendingAngleESpanner:
             return by_algorithm<GraphImpl, use_a_star, only_distance, Pruning::MinBendingAngleESpanner>(graph, config);
     }
+    return {};
 }
 
 template<typename GraphImpl, bool use_a_star>
@@ -170,6 +172,7 @@ std::unique_ptr<RouterInterface> by_only_distance(Graph const& graph, RoutingCon
     } else {
         return by_pruning<GraphImpl, use_a_star, true>(graph, config);
     }
+    return {};
 }
 
 template<typename GraphImpl>
@@ -179,6 +182,7 @@ std::unique_ptr<RouterInterface> by_a_star(Graph const& graph, RoutingConfigurat
     } else {
         return by_only_distance<GraphImpl, false>(graph, config);
     }
+    return {};
 }
 
 std::unique_ptr<RouterInterface> by_graph_impl(Graph const& graph, RoutingConfiguration const& config) {
