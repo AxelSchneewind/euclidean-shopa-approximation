@@ -36,8 +36,8 @@ done
 sed -e 's/,,*/,/g' -i "$QUERY_FILE"
 
 # ######################################### refined graph ########################################
-# refined graph without points
 if [ ! -d "$OUTPUT_DIR/ref" ]; then
+  # refined graph without points
   compute_shopa_queries "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/ref/inf/" "$QUERY_FILE" inf
 
   # refined graph with steiner points
@@ -49,17 +49,46 @@ fi
 process_results "$OUTPUT_DIR/ref" "$OUTPUT_DIR/results-ref.csv" aegaeis-ref
 
 ############################ refined graph using triangle (Shewchuk) ############################
-# refined graph without points
-if [ ! -d "$OUTPUT_DIR/triangle" ]; then
-  compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle/inf/" "$QUERY_FILE" inf
+## unpruned
+if [ ! -d "$OUTPUT_DIR/triangle-unpruned" ]; then
+  # refined graph without points
+  compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle-unpruned/inf/" "$QUERY_FILE" inf "--pruning=none"
 
   # refined graph with steiner points
   EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
   for eps in "${EPSILONS[@]}"; do
-    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle/$eps/" "$QUERY_FILE" "$eps"
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle-unpruned/$eps/" "$QUERY_FILE" "$eps" "--pruning=none"
   done
 fi
-process_results "$OUTPUT_DIR/triangle" "$OUTPUT_DIR/results-triangle.csv" aegaeis-triangle
+process_results "$OUTPUT_DIR/triangle-unpruned" "$OUTPUT_DIR/results-triangle-unpruned.csv" aegaeis-triangle-unpruned
+
+## pruned
+if [ ! -d "$OUTPUT_DIR/triangle-pruned" ]; then
+  # refined graph without points
+  compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle-pruned/inf/" "$QUERY_FILE" inf "--pruning=prune"
+
+  # refined graph with steiner points
+  EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
+  for eps in "${EPSILONS[@]}"; do
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle-pruned/$eps/" "$QUERY_FILE" "$eps" "--pruning=prune"
+  done
+fi
+process_results "$OUTPUT_DIR/triangle-pruned" "$OUTPUT_DIR/results-triangle-pruned.csv" aegaeis-triangle-pruned
+
+## pruned by minimal bending angles
+if [ ! -d "$OUTPUT_DIR/triangle-pruned-min-angle" ]; then
+  # refined graph without points
+  compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle-pruned-min-angle/inf/" "$QUERY_FILE" inf "--pruning=prune-min-angle"
+
+  # refined graph with steiner points
+  EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
+  for eps in "${EPSILONS[@]}"; do
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle-pruned-min-angle/$eps/" "$QUERY_FILE" "$eps " "--pruning=prune-min-angle"
+  done
+fi
+process_results "$OUTPUT_DIR/triangle-pruned-min-angle" "$OUTPUT_DIR/results-triangle-pruned-min-angle.csv" aegaeis-triangle-pruned-min-angle
+
+
 
 ######################################## unrefined graph ########################################
 # unrefined graph raw
