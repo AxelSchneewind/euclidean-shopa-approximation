@@ -19,15 +19,20 @@ concept HasFaceCrossingPredecessor = requires {
     { n.face_crossing_predecessor() };
 };
 
+enum class Pruning {
+    UNPRUNED,           // search full graph, currently not implemented
+    PRUNE_DEFAULT,      // prune like stated in my thesis
+    MinBendingAngleESpanner // alternative pruning, minimizing bending angles per epsilon spanner
+};
 
-enum class Configuration {
+enum class NeighborFindingAlgorithm {
     PARAM,
     ATAN2,
     BINSEARCH,
     LINEAR      // linear search, currently not implemented
 };
 
-template<typename Graph, typename Labels, Configuration Config = Configuration::PARAM>
+template<typename Graph, typename Labels, Pruning Simplifications = Pruning::PRUNE_DEFAULT, NeighborFindingAlgorithm Config = NeighborFindingAlgorithm::PARAM>
 struct steiner_neighbors {
 private:
     using node_id_type = typename Graph::node_id_type;
@@ -35,7 +40,7 @@ private:
     using base_edge_id_type = typename Graph::base_topology_type::edge_id_type;
 
     // if set to true, the implementation does not search for the closest neighbor in a sub-cone but selects the one with lowest bending angle
-    static constexpr bool simplify_epsilon_spanner = false;
+    static constexpr bool simplify_epsilon_spanner = Simplifications == Pruning::MinBendingAngleESpanner;
 
     //
     std::shared_ptr<Graph> _graph;
@@ -87,35 +92,35 @@ private:
     [[gnu::hot]]
     coordinate_t::component_type
     min_angle_relative_value_matmul(base_edge_id_type edge_id, coordinate_t direction) const requires (
-    Configuration::PARAM == Config);
+    NeighborFindingAlgorithm::PARAM == Config);
 
     [[gnu::hot]]
     coordinate_t::component_type
     min_angle_relative_value_atan2(base_edge_id_type edge_id, coordinate_t const &direction) const requires (
-    Configuration::ATAN2 == Config);
+    NeighborFindingAlgorithm::ATAN2 == Config);
 
     [[gnu::hot]]
     coordinate_t::component_type min_angle_relative_value_atan2(coordinate_t left,
                                                                 coordinate_t right,
                                                                 coordinate_t::component_type direction_left,
                                                                 coordinate_t::component_type direction_dir) const requires (
-    Configuration::ATAN2 == Config);
+    NeighborFindingAlgorithm::ATAN2 == Config);
 
     [[gnu::hot]]
     node_id_type
     min_angle_neighbor_matmul(base_edge_id_type const &edge_id,
-                              coordinate_t const &direction)requires (Configuration::PARAM == Config);
+                              coordinate_t const &direction)requires (NeighborFindingAlgorithm::PARAM == Config);
 
     [[gnu::hot]]
     node_id_type min_angle_neighbor_atan2(base_edge_id_type edge_id, const coordinate_t &direction) const requires (
-    Configuration::ATAN2 == Config);
+    NeighborFindingAlgorithm::ATAN2 == Config);
 
 
     [[gnu::hot]]
     node_id_type
     min_angle_neighbor_binary_search(base_edge_id_type const &edge_id,
-                                     const coordinate_t &direction)requires (Configuration::BINSEARCH == Config ||
-                                                                             Configuration::LINEAR == Config);
+                                     const coordinate_t &direction)requires (NeighborFindingAlgorithm::BINSEARCH == Config ||
+                                                                             NeighborFindingAlgorithm::LINEAR == Config);
 
     template<typename NodeCostPair>
     [[gnu::hot]]
