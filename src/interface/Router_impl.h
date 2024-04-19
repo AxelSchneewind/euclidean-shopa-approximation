@@ -26,6 +26,7 @@ struct if_or_else<false, True, False> {
 };
 
 
+// TODO: check if compilation can be sped up
 // template for structs that define the types for an implementation depending on some parameters
 template<typename GraphImplementation, bool only_distance, bool use_a_star, NeighborFindingAlgorithm config, Pruning simplifications>
 struct Implementation {
