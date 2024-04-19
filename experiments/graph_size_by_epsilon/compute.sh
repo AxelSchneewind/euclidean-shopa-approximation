@@ -6,6 +6,8 @@ source ../utils.sh
 GRAPH_AEGS_REF=$GRAPH_DIR/aegaeis/aegaeis-ref-new.graph
 GRAPH_AEGS_TRIANGLE=$GRAPH_DIR/aegaeis/aegaeis-ref.graph
 GRAPH_AEGS_UNREF=$GRAPH_DIR/aegaeis/aegaeis-unref.graph
+GRAPH_MILOS_REF=../explicit/milos-ref.graph
+GRAPH_MILOS_UNREF=../explicit/milos.graph
 GRAPH_PATA=$GRAPH_DIR/pata/pata-ref.graph
 GRAPH_MEDI=$GRAPH_DIR/medi/medi-ref.graph
 
@@ -15,6 +17,10 @@ rm -rf results/*.csv
 
 # usage: compute path/to/graph-file.graph
 compute () {
+	if [[ ! -e "$1" ]]; then
+		exit
+	fi
+
 	graph_name=$(basename "$1")
 	graph_name=${graph_name%.graph}
 	
@@ -37,6 +43,8 @@ compute () {
 compute $GRAPH_AEGS_REF
 compute $GRAPH_AEGS_TRIANGLE
 compute $GRAPH_AEGS_UNREF
+compute $GRAPH_MILOS_REF
+compute $GRAPH_MILOS_UNREF
 # compute $GRAPH_PATA
 # compute $GRAPH_MEDI
 
