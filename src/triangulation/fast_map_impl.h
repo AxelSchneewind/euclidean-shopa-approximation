@@ -1,3 +1,5 @@
+#pragma once
+
 #include "fast_map.h"
 #include "../util/contract.h"
 

@@ -91,10 +91,10 @@ void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
 template<>
 void show_info<mode_arg_points_per_edge>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
-    auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
+    auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input, parse_float_or_fraction(args.epsilon_arg));
 
     // set up bins
-    static constexpr size_t max_size  = subdivision::max_steiner_count_per_edge;
+    static constexpr size_t max_size  = steiner_graph<false>::subdivision_info_type::max_steiner_count_per_edge;
     std::vector<std::size_t> count(args.bins_arg, 0);
 
     static constexpr float base = 1.1;
@@ -118,7 +118,7 @@ void show_info<mode_arg_points_per_edge>(gengetopt_args_info const &args) {
 template<>
 void show_info<mode_arg_node_radii>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
-    auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
+    auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input, parse_float_or_fraction(args.epsilon_arg));
 
     // set up bins
     std::vector<std::size_t> count(args.bins_arg, 0);

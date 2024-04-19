@@ -4,6 +4,8 @@
 #include "../graph/base_types.h"
 #include "../util/is_in_range.h"
 
+#include "fast_map_impl.h"
+
 
 #include <algorithm>
 #include <limits>
