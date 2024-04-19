@@ -8,8 +8,8 @@ template<RoutableGraph G, typename Label>
 steiner_labels<G, Label>::label_iterator_type
 steiner_labels<G, Label>::all_visited() const {
     return label_iterator_type(_edge_touched.begin(), _edge_touched.end(),
-                               std::function<steiner_graph::node_id_iterator_type(std::size_t)>(
-                                       [this](std::size_t edge) -> steiner_graph::node_id_iterator_type {
+                               std::function<typename G::node_id_iterator_type(std::size_t)>(
+                                       [this](std::size_t edge) -> typename G::node_id_iterator_type {
                                            return _graph->node_ids(edge);
                                        }));
 }

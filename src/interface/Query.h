@@ -47,7 +47,8 @@ private:
 
 public:
     QueryImplementation();
-    QueryImplementation(GraphT const& graph, long from, long to, RoutingConfiguration const& config);
+    QueryImplementation(GraphT const& graph, long from, long to, RoutingConfiguration const& config) requires (!SteinerGraph<GraphT>);
+    QueryImplementation(GraphT const& graph, long from, long to, RoutingConfiguration const& config) requires SteinerGraph<GraphT>;
 
     long from() const override { return _from; }
     long to() const override { return _to; }

@@ -72,7 +72,7 @@ void show_info<mode_arg_steiner_points_by_angle>(gengetopt_args_info const &args
 template<>
 void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
-    auto graph = triangulation_file_io::read_steiner(input, parse_float_or_fraction(args.epsilon_arg));
+    auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input, parse_float_or_fraction(args.epsilon_arg));
     input.close();
     if (!args.no_header_flag)
         std::cout

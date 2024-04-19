@@ -45,16 +45,17 @@ std::ostream &operator<<(std::ostream &output, steiner_edge_id<N> id) {
 }
 
 
-void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
-                     const steiner_graph::base_topology_type &triangulation,
-                     const steiner_graph::polyhedron_type &polyhedron, std::vector<double> &out) {
+template <bool StoreNodes>
+void make_node_radii(const std::vector<typename steiner_graph<StoreNodes>::node_info_type> &nodes,
+                     const typename steiner_graph<StoreNodes>::base_topology_type &triangulation,
+                     const typename steiner_graph<StoreNodes>::polyhedron_type &polyhedron, std::vector<double> &out) {
     assert(std::ranges::size(nodes) == triangulation.node_count());
     assert(std::ranges::size(out) == triangulation.node_count());
 
-    std::vector<steiner_graph::triangle_edge_id_type> adjacent_edge_ids;
-    std::vector<steiner_graph::triangle_edge_id_type> triangle_edge_ids;
+    std::vector<typename steiner_graph<StoreNodes>::triangle_edge_id_type> adjacent_edge_ids;
+    std::vector<typename steiner_graph<StoreNodes>::triangle_edge_id_type> triangle_edge_ids;
     for (auto &&node: triangulation.node_ids()) {
-        adjacent_edge_ids.emplace_back(optional::none_value<steiner_graph::triangle_edge_id_type>);
+        adjacent_edge_ids.emplace_back(optional::none_value<typename steiner_graph<StoreNodes>::triangle_edge_id_type>);
         // get edges and triangles adjacent to node
         for (auto &&edge: triangulation.outgoing_edges(node)) {
             auto edge_id = triangulation.edge_id(node, edge.destination);
@@ -109,8 +110,9 @@ void make_node_radii(const std::vector<steiner_graph::node_info_type> &nodes,
 }
 
 
-steiner_graph
-steiner_graph::make_graph(std::vector<node_info_type> &&triangulation_nodes,
+template <bool StoreNodes>
+steiner_graph<StoreNodes>
+steiner_graph<StoreNodes>::make_graph(std::vector<node_info_type> &&triangulation_nodes,
                           base_topology_type &&triangulation_edges,
                           std::vector<std::array<triangle_node_id_type, 3>> &&faces, double epsilon) {
     assert(triangulation_nodes.size() == triangulation_edges.node_count());
@@ -120,7 +122,7 @@ steiner_graph::make_graph(std::vector<node_info_type> &&triangulation_nodes,
     auto poly = polyhedron<triangle_edge_id_type, 3>::make_polyhedron(triangulation, std::move(faces));
 
     std::vector<double> r_values(triangulation_nodes.size());
-    make_node_radii(triangulation_nodes, triangulation, poly, r_values);
+    make_node_radii<StoreNodes>(triangulation_nodes, triangulation, poly, r_values);
 
     // needed when using a table based implementation
     // const double min_inner_angle = M_PI / 180; // 1º
@@ -157,7 +159,8 @@ steiner_graph::make_graph(std::vector<node_info_type> &&triangulation_nodes,
 }
 
 
-steiner_graph steiner_graph::make_graph(const steiner_graph &other, const subgraph<base_topology_type> &subgraph) {
+template <bool StoreNodes>
+steiner_graph<StoreNodes> steiner_graph<StoreNodes>::make_graph(const steiner_graph &other, const subgraph<base_topology_type> &subgraph) {
     base_topology_type::builder builder;
     std::unordered_map<triangle_node_id_type, bool> contained;
 
@@ -234,7 +237,8 @@ steiner_graph steiner_graph::make_graph(const steiner_graph &other, const subgra
 }
 
 
-steiner_graph::steiner_graph(steiner_graph &&other) noexcept
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::steiner_graph(steiner_graph &&other) noexcept
         : _node_count(other._node_count),
           _edge_count(other._edge_count),
           _epsilon(other._epsilon),
@@ -246,7 +250,8 @@ steiner_graph::steiner_graph(steiner_graph &&other) noexcept
     other._edge_count = 0;
 }
 
-steiner_graph::steiner_graph(std::vector<node_info_type> &&triangulation_nodes,
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::steiner_graph(std::vector<node_info_type> &&triangulation_nodes,
                              adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&triangulation_edges,
                              polyhedron<triangle_edge_id_type, 3> &&triangles,
                              subdivision_info_type &&table,
@@ -302,41 +307,60 @@ steiner_graph::steiner_graph(std::vector<node_info_type> &&triangulation_nodes,
 }
 
 
-steiner_graph::coordinate_type const &steiner_graph::node_coordinates_first(triangle_edge_id_type id) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::coordinate_type const &steiner_graph<StoreNodes>::node_coordinates_first(triangle_edge_id_type id) const {
     return _base_nodes[_base_topology.source(id)].coordinates;
 }
 
-steiner_graph::coordinate_type steiner_graph::node_coordinates_mid(triangle_edge_id_type id) const {
-    const steiner_graph::coordinate_type &c2 = _base_nodes[_base_topology.destination(id)].coordinates;
-    const steiner_graph::coordinate_type &c1 = _base_nodes[_base_topology.source(id)].coordinates;
-    const auto relative = _table.relative_position_mid(id);
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::coordinate_type steiner_graph<StoreNodes>::node_coordinates_mid(triangle_edge_id_type id) const {
+    if constexpr (StoreNodes) {
+        return _table.node_coordinates(id, _table.edge(id).mid_index);
+    } else {
+        const steiner_graph::coordinate_type &c2 = _base_nodes[_base_topology.destination(id)].coordinates;
+        const steiner_graph::coordinate_type &c1 = _base_nodes[_base_topology.source(id)].coordinates;
+        const auto relative = _table.relative_position_mid(id);
 
-    return interpolate_linear(c1, c2, relative);
+        return interpolate_linear(c1, c2, relative);
+    }
 }
 
-steiner_graph::coordinate_type const &steiner_graph::node_coordinates_last(triangle_edge_id_type id) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::coordinate_type const &steiner_graph<StoreNodes>::node_coordinates_last(triangle_edge_id_type id) const {
     return _base_nodes[_base_topology.destination(id)].coordinates;
 }
 
-steiner_graph::coordinate_type steiner_graph::node_coordinates(node_id_type id) const {
-    const coordinate_type &c2 = _base_nodes[_base_topology.destination(id.edge)].coordinates;
-    const coordinate_type &c1 = _base_nodes[_base_topology.source(id.edge)].coordinates;
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::coordinate_type steiner_graph<StoreNodes>::node_coordinates(node_id_type id) const {
+    if constexpr (StoreNodes) {
+        return _table.node_coordinates(id.edge, id.steiner_index);
+    } else {
+        const coordinate_type &c2 = _base_nodes[_base_topology.destination(id.edge)].coordinates;
+        const coordinate_type &c1 = _base_nodes[_base_topology.source(id.edge)].coordinates;
 
-    return _table.node_coordinates(id.edge, id.steiner_index, c1, c2);
+        return _table.node_coordinates(id.edge, id.steiner_index, c1, c2);
+    }
 }
 
-steiner_graph::coordinate_type steiner_graph::node_coordinates_steiner(node_id_type id) const {
-    const auto relative = _table.relative_position_steiner(id.edge, id.steiner_index);
-    return interpolate_linear(node_coordinates_first(id.edge), node_coordinates_last(id.edge), relative);
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::coordinate_type steiner_graph<StoreNodes>::node_coordinates_steiner(node_id_type id) const {
+    if constexpr (StoreNodes) {
+        return _table.node_coordinates(id.edge, id.steiner_index);
+    } else {
+        const auto relative = _table.relative_position_steiner(id.edge, id.steiner_index);
+        return interpolate_linear(node_coordinates_first(id.edge), node_coordinates_last(id.edge), relative);
+    }
 }
 
 
-steiner_graph::coordinate_type const &steiner_graph::node_coordinates(triangle_node_id_type id) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::coordinate_type const &steiner_graph<StoreNodes>::node_coordinates(triangle_node_id_type id) const {
     return _base_nodes[id].coordinates;
 }
 
-std::span<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>>
-steiner_graph::outgoing_edges(triangle_node_id_type base_node_id) const {
+template <bool StoreNodes>
+std::span<internal_adjacency_list_edge<typename steiner_graph<StoreNodes>::node_id_type, typename steiner_graph<StoreNodes>::edge_info_type>>
+steiner_graph<StoreNodes>::outgoing_edges(triangle_node_id_type base_node_id) const {
     static std::vector<internal_adjacency_list_edge<node_id_type, edge_info_type>> edges;
     static std::vector<coordinate_t> destination_coordinates;
 
@@ -387,8 +411,9 @@ steiner_graph::outgoing_edges(triangle_node_id_type base_node_id) const {
     return {edges.begin(), edges.end()};
 }
 
-std::span<internal_adjacency_list_edge<steiner_graph::node_id_type, steiner_graph::edge_info_type>>
-steiner_graph::outgoing_edges(node_id_type node_id) const {
+template <bool StoreNodes>
+std::span<internal_adjacency_list_edge<typename steiner_graph<StoreNodes>::node_id_type, typename steiner_graph<StoreNodes>::edge_info_type>>
+steiner_graph<StoreNodes>::outgoing_edges(node_id_type node_id) const {
     static std::vector<internal_adjacency_list_edge<node_id_type, edge_info_type>> edges;
     static std::vector<coordinate_type> destination_coordinates;
 
@@ -483,19 +508,23 @@ steiner_graph::outgoing_edges(node_id_type node_id) const {
     return {edges.begin(), edges.end()};
 }
 
-steiner_graph::node_info_type steiner_graph::node(node_id_type id) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::node_info_type steiner_graph<StoreNodes>::node(node_id_type id) const {
     return node_info_type{node_coordinates(id)};
 }
 
-steiner_graph::node_id_type steiner_graph::source(edge_id_type id) {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::node_id_type steiner_graph<StoreNodes>::source(edge_id_type id) {
     return {id.source.edge, id.source.steiner_index};
 }
 
-steiner_graph::node_id_type steiner_graph::destination(edge_id_type id) {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::node_id_type steiner_graph<StoreNodes>::destination(edge_id_type id) {
     return {id.destination.edge, id.destination.steiner_index};
 }
 
-steiner_graph::edge_info_type steiner_graph::edge(edge_id_type id) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::edge_info_type steiner_graph<StoreNodes>::edge(edge_id_type id) const {
     edge_info_type result;
     auto const src = node(source(id));
     auto const dest = node(destination(id));
@@ -503,8 +532,9 @@ steiner_graph::edge_info_type steiner_graph::edge(edge_id_type id) const {
     return result;
 }
 
-steiner_graph::edge_id_type
-steiner_graph::edge_id(node_id_type src, node_id_type dest) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::edge_id_type
+steiner_graph<StoreNodes>::edge_id(node_id_type src, node_id_type dest) const {
     assert(src.edge >= 0 && src.steiner_index >= 0);
     assert(static_cast<size_t>(src.edge) < _base_topology.edge_count() &&
            src.steiner_index < _table.edge(src.edge).node_count);
@@ -514,8 +544,9 @@ steiner_graph::edge_id(node_id_type src, node_id_type dest) const {
 }
 
 // TODO fix
+template <bool StoreNodes>
 bool
-steiner_graph::has_edge(node_id_type src, node_id_type dest) const {
+steiner_graph<StoreNodes>::has_edge(node_id_type src, node_id_type dest) const {
     return true;
     assert(_base_topology.source(src.edge) < _base_topology.destination(src.edge));
     assert(_base_topology.source(dest.edge) < _base_topology.destination(dest.edge));
@@ -601,7 +632,8 @@ steiner_graph::has_edge(node_id_type src, node_id_type dest) const {
 }
 
 
-steiner_graph::subgraph_type steiner_graph::make_subgraph(const path_type &route) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::subgraph_type steiner_graph<StoreNodes>::make_subgraph(const path_type &route) const {
     std::vector<node_id_type> nodes(route.nodes);
     std::vector<edge_id_type> edges;
     for (size_t i = 1; i < route.nodes.size(); i++) {
@@ -613,7 +645,8 @@ steiner_graph::subgraph_type steiner_graph::make_subgraph(const path_type &route
     return {std::move(nodes), std::move(edges)};
 }
 
-steiner_graph::distance_type steiner_graph::path_length(const path_type &route) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::distance_type steiner_graph<StoreNodes>::path_length(const path_type &route) const {
     distance_type result = 0;
 
     for (size_t i = 1; i < route.nodes.size(); i++) {
@@ -625,48 +658,58 @@ steiner_graph::distance_type steiner_graph::path_length(const path_type &route) 
     return result;
 }
 
-steiner_graph::subdivision_info_type::subdivision_edge_info const &
-steiner_graph::steiner_info(triangle_edge_id_type id) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::subdivision_info_type::subdivision_edge_info const &
+steiner_graph<StoreNodes>::steiner_info(triangle_edge_id_type id) const {
     return _table.edge(id);
 }
 
-steiner_graph::subdivision_info_type::subdivision_edge_info &
-steiner_graph::steiner_info(triangle_edge_id_type id) {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::subdivision_info_type::subdivision_edge_info &
+steiner_graph<StoreNodes>::steiner_info(triangle_edge_id_type id) {
     return _table.edge(id);
 }
 
-steiner_graph::node_id_iterator_type steiner_graph::node_ids(triangle_edge_id_type edge) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::node_id_iterator_type steiner_graph<StoreNodes>::node_ids(triangle_edge_id_type edge) const {
     return {this, {edge, 0}, {edge + 1, 0}};
 }
 
-steiner_graph::node_id_iterator_type steiner_graph::node_ids() const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::node_id_iterator_type steiner_graph<StoreNodes>::node_ids() const {
     return {this, {0, 0}, {static_cast<edge_id_t>(_base_topology.edge_count()), 0}};
 }
 
 
-steiner_graph::node_info_type steiner_graph::node(triangle_node_id_type id) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::node_info_type steiner_graph<StoreNodes>::node(triangle_node_id_type id) const {
     return _base_nodes[id];
 }
 
-bool steiner_graph::is_base_node(node_id_type id) const {
+template <bool StoreNodes>
+bool steiner_graph<StoreNodes>::is_base_node(node_id_type id) const {
     return id.steiner_index == 0 || id.steiner_index == steiner_info(id.edge).node_count - 1;
 }
 
-bool steiner_graph::is_boundary_node(triangle_node_id_type id) const {
+template <bool StoreNodes>
+bool steiner_graph<StoreNodes>::is_boundary_node(triangle_node_id_type id) const {
     return _polyhedron.is_boundary_node(id);
 }
 
-bool steiner_graph::is_boundary_edge(triangle_edge_id_type id) const {
+template <bool StoreNodes>
+bool steiner_graph<StoreNodes>::is_boundary_edge(triangle_edge_id_type id) const {
     return _polyhedron.is_boundary_edge(id);
 }
 
-steiner_graph::triangle_node_id_type steiner_graph::base_node_id(node_id_type id) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::triangle_node_id_type steiner_graph<StoreNodes>::base_node_id(node_id_type id) const {
     assert(is_base_node(id));
     return id.steiner_index <= steiner_info(id.edge).mid_index ? base_graph().source(id.edge)
                                                                : base_graph().destination(id.edge);
 }
 
-steiner_graph::node_id_type steiner_graph::from_base_node_id(int node) const {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::node_id_type steiner_graph<StoreNodes>::from_base_node_id(int node) const {
     if (optional::is_none(node)) [[unlikely]]
         return optional::none_value<node_id_type>;
 
@@ -684,8 +727,9 @@ steiner_graph::node_id_type steiner_graph::from_base_node_id(int node) const {
     return optional::none_value<node_id_type>;
 }
 
-steiner_graph::distance_type
-steiner_graph::on_edge_distance(triangle_edge_id_type edge, intra_edge_id_type first,
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::distance_type
+steiner_graph<StoreNodes>::on_edge_distance(triangle_edge_id_type edge, intra_edge_id_type first,
                                 intra_edge_id_type second) const {
     distance_type relative1 = _table.relative_position(edge, first);
     distance_type relative2 = _table.relative_position(edge, second);
@@ -693,7 +737,8 @@ steiner_graph::on_edge_distance(triangle_edge_id_type edge, intra_edge_id_type f
     return std::abs(relative2 - relative1) * length;
 }
 
-steiner_graph::node_id_iterator_type steiner_graph::node_id_iterator_type::operator++() {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::node_id_iterator_type steiner_graph<StoreNodes>::node_id_iterator_type::operator++() {
     auto result = *this;
     _current_node.steiner_index++;
     if (_current_node.steiner_index >= _graph_ptr->_table.edge(_current_node.edge).node_count) {
@@ -710,7 +755,8 @@ steiner_graph::node_id_iterator_type steiner_graph::node_id_iterator_type::opera
 }
 
 
-steiner_graph::node_id_iterator_type steiner_graph::node_id_iterator_type::operator++(int) {
+template <bool StoreNodes>
+steiner_graph<StoreNodes>::node_id_iterator_type steiner_graph<StoreNodes>::node_id_iterator_type::operator++(int) {
     _current_node.steiner_index++;
     if (_current_node.steiner_index >= _graph_ptr->_table.edge(_current_node.edge).node_count) {
         _current_node.steiner_index = 0;

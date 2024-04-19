@@ -62,7 +62,7 @@ std_graph_t make_beeline(GraphT const &graph, typename GraphT::node_id_type from
 }
 
 template<RoutableGraph GraphT>
-QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to, RoutingConfiguration const& config)
+QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to, RoutingConfiguration const& config) requires (!SteinerGraph<GraphT>)
         : _from(from)
         , _to(to)
         , _from_internal(from)
@@ -73,8 +73,8 @@ QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from,
         , _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates))
         , _configuration(config) {};
 
-template<>
-QueryImplementation<steiner_graph>::QueryImplementation(steiner_graph const &graph, long from, long to, RoutingConfiguration const& config)
+template<RoutableGraph GraphT>
+QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to, RoutingConfiguration const& config) requires SteinerGraph<GraphT>
         : _from(from)
         , _to(to)
         , _from_internal(graph.from_base_node_id(from))

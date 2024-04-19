@@ -78,7 +78,7 @@ class steiner_labels {
 public:
     using value_type = Label;
 
-    using label_iterator_type = nested_iterator<typename std::vector<bool>::const_iterator, steiner_graph::node_id_iterator_type>;
+    using label_iterator_type = nested_iterator<typename std::vector<bool>::const_iterator, typename G::node_id_iterator_type>;
 
 private:
     using node_id_type = typename G::node_id_type;

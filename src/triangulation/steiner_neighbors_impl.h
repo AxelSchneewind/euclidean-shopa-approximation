@@ -81,15 +81,15 @@ steiner_neighbors<Graph, Labels, P, Config>::vertex_neighbors(const NodeCostPair
 
     for (auto &&edge: _graph->base_graph().outgoing_edges(base_node_id)) [[likely]] {
         auto e_id{_graph->base_graph().edge_id(base_node_id, edge.destination)};
-        steiner_graph::node_id_type const destination{e_id, static_cast<steiner_graph::intra_edge_id_type>(1)};
+        typename Graph::node_id_type const destination{e_id, static_cast<typename Graph::intra_edge_id_type>(1)};
         // assert(_graph->has_edge(base_node_id, destination));
         insert(destination, node, out, coordinates_out);
     }
 
     for (auto &&edge: _graph->base_graph().incoming_edges(base_node_id)) [[likely]] {
         auto e_id{_graph->base_graph().edge_id(edge.destination, base_node_id)};
-        steiner_graph::node_id_type const destination{e_id, _graph->steiner_info(e_id).node_count -
-                                                            static_cast<steiner_graph::intra_edge_id_type>(2)};
+        typename Graph::node_id_type const destination{e_id, _graph->steiner_info(e_id).node_count -
+                                                            static_cast<typename Graph::intra_edge_id_type>(2)};
         // assert(_graph->has_edge(base_node_id, destination));
         insert(destination, node, out, coordinates_out);
     }
@@ -105,16 +105,16 @@ steiner_neighbors<Graph, Labels, P, Config>::on_edge_neighbors(const NodeCostPai
 
     // for neighboring node on own edge
     if (node_id.steiner_index < steiner_info.node_count - 1) [[likely]] {
-        steiner_graph::node_id_type const destination{node_id.edge, node_id.steiner_index +
-                                                                    static_cast<steiner_graph::intra_edge_id_type>(1)};
+        typename Graph::node_id_type const destination{node_id.edge, node_id.steiner_index +
+                                                                    static_cast<typename Graph::intra_edge_id_type>(1)};
         assert(_graph->has_edge(node_id, destination));
         insert(destination, node, out, coordinates_out);
     }
 
     // for other neighboring node on own edge
     if (node_id.steiner_index > 0) [[likely]] {
-        steiner_graph::node_id_type const destination{node_id.edge, node_id.steiner_index -
-                                                                    static_cast<steiner_graph::intra_edge_id_type>(1)};
+        typename Graph::node_id_type const destination{node_id.edge, node_id.steiner_index -
+                                                                    static_cast<typename Graph::intra_edge_id_type>(1)};
         assert(_graph->has_edge(node_id, destination));
         insert(destination, node, out, coordinates_out);
     }
@@ -458,7 +458,7 @@ NeighborFindingAlgorithm::BINSEARCH == Config || NeighborFindingAlgorithm::LINEA
     bool orientation;
     bool norientation;
 
-    steiner_graph::node_id_type destination{edge_id, mid_index};
+    typename Graph::node_id_type destination{edge_id, mid_index};
     assert(mid_index >= 0 && mid_index <= right_index);
 
     if (left_index >= right_index) [[unlikely]]
@@ -705,7 +705,7 @@ void steiner_neighbors<Graph, Labels, P, Config>::from_base_node(const NodeCostP
 
     // should not be necessary
     // auto &&base_node_id = _graph->base_node_id(_source);
-    // if constexpr (steiner_graph::face_crossing_from_base_nodes) {
+    // if constexpr (typename Graph::face_crossing_from_base_nodes) {
     //     // face-crossing edges
     //     auto &&triangle_edges = _graph->base_polyhedron().node_edges(base_node_id);
     //     for (auto base_edge_id: triangle_edges) [[likely]] {
@@ -730,7 +730,7 @@ steiner_neighbors<Graph, Labels, P, Config>::from_start_node(const NodeCostPair 
     auto &&base_node_id = _graph->base_node_id(_source);
 
     // face-crossing edges: make epsilon spanner in all directions
-    if constexpr (steiner_graph::face_crossing_from_base_nodes) {
+    if constexpr (Graph::face_crossing_from_base_nodes) {
         for (auto &&base_edge_id: _graph->base_polyhedron().node_edges(base_node_id)) [[likely]] {
             epsilon_spanner(node, base_edge_id, out, coordinates_out);
         }
@@ -758,7 +758,7 @@ steiner_neighbors<Graph, Labels, P, Config>::from_boundary_node(const NodeCostPa
     vertex_neighbors(node, out, coordinates_out);
 
     //
-    if constexpr (steiner_graph::face_crossing_from_base_nodes) {
+    if constexpr (Graph::face_crossing_from_base_nodes) {
         // face-crossing edges: make epsilon spanner in all directions
         for (auto &&base_edge_id: _graph->base_polyhedron().node_edges(base_node_id)) [[likely]] {
             epsilon_spanner(node, base_edge_id, out, coordinates_out);
@@ -781,7 +781,7 @@ steiner_neighbors<Graph, Labels, P, Config>::from_steiner_node(const NodeCostPai
     }
 
     // if no face crossing segments from base nodes, have to generate epsilon spanner here for vertex neighboring steiner point
-    if constexpr (!steiner_graph::face_crossing_from_base_nodes) {
+    if constexpr (!Graph::face_crossing_from_base_nodes) {
         if (node.steiner_index == 1 || node.steiner_index == _graph.steiner_info(node.edge).node_count - 1) {
             // make epsilon spanner in all directions
             for (auto &&base_edge_id: _graph->base_polyhedron().edges(node.edge)) [[likely]] {

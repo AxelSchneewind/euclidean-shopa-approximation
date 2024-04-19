@@ -6,6 +6,7 @@
 #include "../file-io/fmi_file_io.h"
 #include "../graph/geometry.h"
 #include "TypeErasure.h"
+#include "RoutingConfig.h"
 
 #include <memory>
 #include <fstream>
@@ -14,7 +15,8 @@
 enum class GraphType {
     NONE,
     STD_GRAPH,
-    STEINER_GRAPH,
+    STEINER_GRAPH_IMPLICIT,
+    STEINER_GRAPH_COORDS_EXPLICIT,
 };
 
 class GraphInterface {
@@ -96,10 +98,10 @@ public:
     Graph(GraphT&& graph) : Graph(GraphImplementation<GraphT>( std::forward<GraphT>( graph ) ) ) {}
 
     template<typename ...Args>
-    void read_graph_file(std::string path, Args... args);
+    void read_graph_file(std::string path, RoutingConfiguration const& config, Args... args);
 
     template<typename ...Args>
-    void read_graph_file(std::string path, double epsilon, Args... args);
+    void read_graph_file(std::string path, RoutingConfiguration const& config, double epsilon, Args... args);
 
     long node_at(coordinate_t& coordinates) const override { return impl->node_at(coordinates); }
 

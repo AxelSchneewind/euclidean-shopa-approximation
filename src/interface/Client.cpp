@@ -61,16 +61,16 @@ void Client::read_graph_file(std::string path) {
     process_mem_usage(vm, res);
 
     if (path.ends_with(".graph")) {
-        _graph.read_graph_file(path, 0.5F);
+        _graph.read_graph_file(path, _routing_config, 0.5F);
         process_mem_usage(vm_graph, res_graph);
     } else if (path.ends_with(".fmi")) {
-        _graph.read_graph_file(path);
+        _graph.read_graph_file(path, _routing_config);
         process_mem_usage(vm_graph, res_graph);
     } else if (path.ends_with(".sch")) {
-        _graph.read_graph_file(path);
+        _graph.read_graph_file(path, _routing_config);
         process_mem_usage(vm_graph, res_graph);
     } else if (path.ends_with(".gl")) {
-        _graph.read_graph_file(path);
+        _graph.read_graph_file(path, _routing_config);
         process_mem_usage(vm_graph, res_graph);
     } else {
         throw std::invalid_argument("unrecognized file ending");
@@ -93,7 +93,7 @@ void Client::read_graph_file(std::string path, double epsilon) {
     process_mem_usage(vm, res);
 
     if (path.ends_with(".graph")) {
-        _graph.read_graph_file(path, epsilon);
+        _graph.read_graph_file(path, _routing_config, epsilon);
         process_mem_usage(vm_graph, res_graph);
     } else {
         throw std::invalid_argument("unrecognized file ending");

@@ -63,9 +63,9 @@ fmi_file_io::write(std::ostream &output, const Graph &graph) {
     return output;
 }
 
-template<>
+template<SteinerGraph Graph, class formatter>
 std::ostream &
-fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &output, const steiner_graph &graph) {
+fmi_file_io::write(std::ostream &output, const Graph &graph) {
     using f = stream_encoders::encode_text;
 
     size_t node_count = graph.node_count();
@@ -78,7 +78,7 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
 
     // write base node coordinates
     size_t index = 0;
-    std::unordered_map<steiner_graph::triangle_node_id_type, size_t> base_indices;
+    std::unordered_map<typename Graph::triangle_node_id_type, size_t> base_indices;
     for (auto&& node: graph.base_graph().node_ids()) {
         assert(node == index);
         base_indices[node] = index++;
@@ -88,7 +88,7 @@ fmi_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &ou
     }
 
     // make ids for all nodes (including steiner points)
-    std::unordered_map<steiner_graph::node_id_type, size_t> indices;
+    std::unordered_map<typename Graph::node_id_type, size_t> indices;
     for (auto&& node: graph.node_ids()) {
         if (graph.is_base_node(node)) { // for base vertices, index is node id
             indices[node] = base_indices[graph.base_node_id(node)];

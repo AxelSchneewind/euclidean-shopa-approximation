@@ -6,7 +6,7 @@
 
 #include <iomanip>
 
-template<Topology Graph, typename format>
+template<typename Graph, typename format>
 std::ostream &gl_file_io::write(std::ostream &output, const Graph &graph, int line_width, int color) {
     using f = format;
 
@@ -41,9 +41,9 @@ std::ostream &gl_file_io::write(std::ostream &output, const Graph &graph, int li
     return output;
 }
 
-template<>
+template<SteinerGraph Graph, class format>
 std::ostream &
-gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &graph, int line_width, int color) {
+gl_file_io::write(std::ostream &output, const Graph &graph, int line_width, int color) {
     using f = stream_encoders::encode_text;
 
     size_t node_count = graph.node_count();
@@ -55,14 +55,14 @@ gl_file_io::write<steiner_graph>(std::ostream &output, const steiner_graph &grap
     f::write(output, '\n');
 
     size_t index = 0;
-    std::unordered_map<steiner_graph::base_topology_type::node_id_type, size_t> base_indices;
+    std::unordered_map<typename Graph::base_topology_type::node_id_type, size_t> base_indices;
     for (auto&& node: graph.base_graph().node_ids()) {
         base_indices[node] = index++;
         auto&& n = graph.node(node);
         f::write(output, n) << '\n';
     }
 
-    std::unordered_map<steiner_graph::node_id_type, size_t> indices;
+    std::unordered_map<typename Graph::node_id_type, size_t> indices;
     for (auto&& node: graph.node_ids()) {
         if (graph.is_base_node(node)) {
             indices[node] = base_indices[graph.base_node_id(node)];

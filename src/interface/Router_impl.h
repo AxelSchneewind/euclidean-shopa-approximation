@@ -39,9 +39,9 @@ struct Implementation {
 };
 
 
-template<bool use_a_star, NeighborFindingAlgorithm n, Pruning simplifications>
-struct Implementation<steiner_graph, false, use_a_star, n, simplifications> {
-    using graph_t = steiner_graph;
+template<SteinerGraph GraphImpl, bool use_a_star, NeighborFindingAlgorithm n, Pruning simplifications>
+struct Implementation<GraphImpl, false, use_a_star, n, simplifications> {
+    using graph_t = GraphImpl;
     using node_id_t = typename graph_t::node_id_type;
     using base_node_id_t = typename graph_t::triangle_node_id_type;
     using distance_t = typename graph_t::distance_type;
@@ -69,16 +69,16 @@ struct Implementation<steiner_graph, false, use_a_star, n, simplifications> {
     static_assert(alignof(ncp_impl) == alignof(node_cost_pair_t));
 
     // using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
-    using labels_t = steiner_labels<steiner_graph, label_t>;
+    using labels_t = steiner_labels<graph_t, label_t>;
     using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
-    using neighbors_t = steiner_neighbors<steiner_graph, labels_t, simplifications, n>;
-    using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<steiner_graph>, no_heuristic>::type>;
-    using routing_t = router<steiner_graph, dijkstra_t>;
+    using neighbors_t = steiner_neighbors<graph_t, labels_t, simplifications, n>;
+    using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<graph_t>, no_heuristic>::type>;
+    using routing_t = router<graph_t, dijkstra_t>;
 };
 
-template<bool use_a_star, NeighborFindingAlgorithm n, Pruning simplifications>
-struct Implementation<steiner_graph, true, use_a_star, n, simplifications> {
-    using graph_t = steiner_graph;
+template<SteinerGraph GraphImpl, bool use_a_star, NeighborFindingAlgorithm n, Pruning simplifications>
+struct Implementation<GraphImpl, true, use_a_star, n, simplifications> {
+    using graph_t = GraphImpl;
     using node_id_t = typename graph_t::node_id_type;
     using base_node_id_t = typename graph_t::triangle_node_id_type;
     using distance_t = typename graph_t::distance_type;
@@ -97,11 +97,11 @@ struct Implementation<steiner_graph, true, use_a_star, n, simplifications> {
     using node_cost_pair_t = node_label<ncp_impl>;
     using label_t = node_label<label_impl>;
 
-    using labels_t = frontier_labels<node_cost_pair_t, label_t>;
+    using labels_t = frontier_labels<graph_t, node_cost_pair_t, label_t>;
     using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
-    using neighbors_t = steiner_neighbors<steiner_graph, labels_t, simplifications, n>;
-    using dijkstra_t = dijkstra<steiner_graph, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<steiner_graph>, no_heuristic>::type>;
-    using routing_t = router<steiner_graph, dijkstra_t>;
+    using neighbors_t = steiner_neighbors<graph_t, labels_t, simplifications, n>;
+    using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<graph_t>, no_heuristic>::type>;
+    using routing_t = router<graph_t, dijkstra_t>;
 };
 
 
@@ -193,8 +193,10 @@ static inline std::unique_ptr<RouterInterface> by_a_star(Graph const& graph, Rou
 
 static inline std::unique_ptr<RouterInterface> by_graph_impl(Graph const& graph, RoutingConfiguration const& config) {
     switch (graph.type()) {
-        case GraphType::STEINER_GRAPH:
-            return by_a_star<steiner_graph>(graph, config);
+        case GraphType::STEINER_GRAPH_IMPLICIT:
+            return by_a_star<steiner_graph<false>>(graph, config);
+        case GraphType::STEINER_GRAPH_COORDS_EXPLICIT:
+            return by_a_star<steiner_graph<true>>(graph, config);
         case GraphType::STD_GRAPH:
             return by_a_star<std_graph_t>(graph, config);
         case GraphType::NONE:

@@ -90,6 +90,7 @@ struct std::hash<steiner_edge_id<N>> {
 /**
  * provides access to a virtual graph derived from a base graph
  */
+ template <bool StoreNodes>
 class steiner_graph {
 public:
     using triangle_node_id_type = node_id_t;
@@ -108,7 +109,7 @@ public:
     using polyhedron_type = polyhedron<int, 3>;
     using topology_type = steiner_graph;
 
-    using subdivision_info_type = subdivision;
+    using subdivision_info_type = subdivision<StoreNodes>;
 
     using intra_edge_id_type = typename subdivision_info_type::steiner_index_type;
 
@@ -130,8 +131,7 @@ public:
         node_id_type _current_node;
         node_id_type _last_node;
 
-    public:
-        node_id_iterator_type(const steiner_graph *graph, node_id_type current, node_id_type max)
+    public: node_id_iterator_type(const steiner_graph *graph, node_id_type current, node_id_type max)
                 : _graph_ptr(graph),
                   _current_node(current),
                   _last_node(max) {
@@ -309,5 +309,10 @@ public:
 
 };
 
-static_assert(Topology<steiner_graph>);
-static_assert(RoutableGraph<steiner_graph>);
+template<typename T>
+concept SteinerGraph = std::same_as<T, steiner_graph<true>> || std::same_as<T, steiner_graph<false>>;
+
+static_assert(Topology<steiner_graph<true>>);
+static_assert(RoutableGraph<steiner_graph<true>>);
+static_assert(Topology<steiner_graph<false>>);
+static_assert(RoutableGraph<steiner_graph<false>>);

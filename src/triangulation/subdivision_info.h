@@ -2,6 +2,7 @@
 
 #include "../graph/adjacency_list.h"
 #include "polyhedron.h"
+#include "fast_map.h"
 
 #include <limits>
 #include <utility>
@@ -10,8 +11,13 @@
 #include <cmath>
 
 
+template<bool StoreCoordinates>
 class subdivision {
 public:
+    static constexpr bool store_node_coordinates{StoreCoordinates};
+    using coordinate_type = coordinate_t;
+
+    using edge_id_type = int;
     using steiner_index_type = int;
 
     struct subdivision_edge_info {
@@ -39,14 +45,30 @@ public:
     static constexpr size_t max_steiner_count_per_edge = std::numeric_limits<steiner_index_type>::max();
 private:
 
-    // here, some lower bounds can be imposed to prevent numerical issues
+    // here, a lower bound can be imposed to prevent numerical issues
     static constexpr long double min_r_value = 0x1p-38;
 
     std::vector<subdivision_edge_info> _edges;
 
+    using coordinate_container = fast_map<edge_id_type, steiner_index_type, coordinate_type>;
+    coordinate_container _coordinates;
+
     size_t edges_capped{0};
 
-    subdivision(std::vector<subdivision_edge_info> &&edges) : _edges{std::move(edges)} {};
+
+    [[using gnu : hot, pure, always_inline]]
+    static coordinate_type compute_node_coordinates(steiner_index_type steiner_index,
+                                                    subdivision_edge_info const &edge,
+                                                    coordinate_type const &c1,
+                                                    coordinate_type const &c2);
+
+
+    subdivision(std::vector<subdivision_edge_info> &&edges,
+                fast_map<edge_id_type, steiner_index_type, coordinate_type> &&coordinates) requires(store_node_coordinates)
+            : _edges{std::move(edges)}, _coordinates{std::move(coordinates)} {};
+
+    subdivision(std::vector<subdivision_edge_info> &&edges) requires (!store_node_coordinates): _edges{std::move(edges)},
+                                                                                               _coordinates(0) { };
 
 
 public:
@@ -58,8 +80,11 @@ public:
     subdivision(subdivision &&other) noexcept = default;
 
     [[using gnu : hot, pure, always_inline]]
-    coordinate_t node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_t const &c1,
-                                  coordinate_t const &c2) const;
+    coordinate_type node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_type const &c1,
+                                     coordinate_type const &c2) const requires(!store_node_coordinates);
+
+    [[using gnu : hot, pure, always_inline]]
+    coordinate_type const& node_coordinates(edge_id_t edge, steiner_index_type steiner_index) const requires(store_node_coordinates);
 
     [[using gnu : hot, pure, always_inline]]
     double relative_position(edge_id_t edge, steiner_index_type steiner_index) const;
@@ -85,9 +110,9 @@ public:
 
     [[gnu::cold]]
     static subdivision make_subdivision_info(
-            adjacency_list<int> const&triangulation,
-            std::vector<node_t> const&nodes,
-            polyhedron<int, 3> const&polyhedron,
-            std::vector<double> const&r_values,
+            adjacency_list<int> const &triangulation,
+            std::vector<node_t> const &nodes,
+            polyhedron<int, 3> const &polyhedron,
+            std::vector<double> const &r_values,
             double epsilon);
 };
