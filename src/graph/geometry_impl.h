@@ -7,7 +7,7 @@
 
 
 coordinate_t::component_type std::atan2(coordinate_t const& direction) {
-    [[assume(std::isnormal(direction.x), std::isnormal(direction.y))]]
+    [[assume(std::isnormal(direction.x) && std::isnormal(direction.y))]];
     return std::atan2(direction.x, direction.y);
 }
 
@@ -15,7 +15,7 @@ coordinate_t::component_type std::atan2(coordinate_t const& direction) {
 coordinate_t::component_type
 distance_euclidean(coordinate_t const& c1, coordinate_t c2) {
     c2 -= c1;
-    [[assume((std::isnormal(c2.y), std::isnormal(c2.x)))]]
+    [[assume((std::isnormal(c2.y) && std::isnormal(c2.x) && std::isnormal(c1.y) && std::isnormal(c1.x)))]];
     return std::sqrt(c2.y * c2.y + c2.x * c2.x);
 }
 
@@ -132,7 +132,7 @@ line_distance(coordinate_t source, coordinate_t destination, coordinate_t point)
 inline coordinate_t
 interpolate_linear(coordinate_t source, coordinate_t destination, double const relative) {
     // return { std::lerp(source.latitude, destination.latitude, relative), std::lerp(source.longitude, destination.longitude, relative) };
-    [[assume(std::isnormal(relative))]]
+    [[assume(std::isnormal(relative))]];
     destination -= source;
     destination *= relative;
     return source + destination;
