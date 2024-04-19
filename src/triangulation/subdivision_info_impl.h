@@ -258,7 +258,7 @@ inline double subdivision::relative_position_steiner(edge_id_t const edge, stein
         assert(index != 0 || relative == info.r_first);
         assert(relative >= info.r_first - 0.002F);
         assert(relative <= info.mid_position + 0.002F);
-        [[assume(std::isnormal(relative) && relative >= 0.0)]]
+        [[assume(std::isnormal(relative) && relative >= 0.0)]];
         return std::clamp(relative, 0.0, 1.0);
     }
 
@@ -271,7 +271,7 @@ inline double subdivision::relative_position_steiner(edge_id_t const edge, stein
     assert(relative >= info.r_second - 0.002F);
     assert(relative <= 1.0F - info.mid_position + 0.002F);
     relative = 1.0 - relative;
-    [[assume(std::isnormal(relative) && relative >= 0.0)]]
+    [[assume(std::isnormal(relative) && relative >= 0.0)]];
     return std::clamp(relative, 0.0, 1.0);
 }
 
