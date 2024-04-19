@@ -271,7 +271,7 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
                     std::cout << " (" << std::setw(12)
                               << _router.forward_current().heuristic() << ") ";
                 }
-                std::cout << " of "
+                std::cout << " of beeline distance "
                           << _query_ptr->beeline_distance() << ", ";
 
                 if constexpr (requires(RouterT::labels_type && l) { l.aggregate_count(); }) {
@@ -279,8 +279,8 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
                               << _router.forward_labels().aggregate_count();
                 }
 
-                std::cout << "memory usage : VM " << std::setw(9) << vm / 1024 << "MiB" << std::flush;
-                usleep(100000);
+                std::cout << "memory usage (VM): " << std::setw(9) << vm / 1024 << "MiB" << std::flush;
+                usleep(100000); // wait for 100ms
             }
 
             std::cout << ", done" << std::endl;
