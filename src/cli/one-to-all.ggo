@@ -1,7 +1,7 @@
 package "Routing"
 purpose ""
-usage "route --graph-file /path/to/graph-file --output-directory /path/to/results-directory --epsilon 0.5 -q src0,dest0,..."
-description "computes the shortest path for each given pair of source and destination node."
+usage "compute_ota --graph-file /path/to/graph-file --output-directory /path/to/results-directory --epsilon 0.5 -q src0,src1,..."
+description "computes the shortest path tree for each given source node."
 
 args ""
 
@@ -13,16 +13,10 @@ section "triangulation"
 option "epsilon" e "ε value to use for discretizing the triangulation (if a .graph file is given)" double default="0.0" optional
 
 section "query"
-option "query" q "pair(s) of source and destination node ids" string multiple
+option "query" q "list of source node ids" string multiple
 # not implemented
 # option "coordinates" - "interpret the pair(s) of source and destination nodes as their coordinates" flag off
 # option "stdin" i "indicates that queries should be read from stdin" flag off
-
-section "output" sectiondesc="options for the command line output"
-# option "csv-format" c "indicates that routing information should be printed in the csv format" flag off
-option "projection" p "which projection to apply to coordinates when writing to files" values="none","google_bing","wgs84" enum default="none" optional
-option "tree" t "maximum tree size to export to graph file" int default="1000000" optional argoptional
-option "live-status" l "print live status about computation to stdout" flag on
 
 section "routing algorithms" sectiondesc="some advanced options on dijkstra search"
 option "astar" a "use A* heuristic to speed up one-to-one queries" flag off
@@ -30,18 +24,3 @@ option "neighbor-finding" - "the type of algorithm to find neighbors with minima
 
 option "pruning" - "which type of pruning to use for steiner graphs" values="none","prune","prune-min-angle" enum default="prune" optional
 option "no-tree" - "if enabled, only computes distances without keeping tree information (does not produce paths)" flag off
-
-# option <long> <short> "<desc>"
-# 	{details="<detailed description>"}
-# 	{argtype} {typestr="<type descr>"}
-# 	{values="<value1>","<value2>",...}
-# 	{default="<default value>"}
-# 	{dependon="<other option>"}
-# 	{required} {argoptional} {multiple}
-# 	{hidden}
-
-# option <long> <short> "<desc>" flag <on/off>
-
-# section "section" {sectiondesc="optional section description"}
-
-# text "a textual sentence"
