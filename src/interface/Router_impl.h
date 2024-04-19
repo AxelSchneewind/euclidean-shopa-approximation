@@ -9,6 +9,7 @@
 #include "../routing/node_label.h"
 
 
+// for selecting a type based on some compile-time value
 template<bool condition, typename True, typename False>
 struct if_or_else {
     using type = void;
@@ -25,6 +26,7 @@ struct if_or_else<false, True, False> {
 };
 
 
+// template for structs that define the types for an implementation depending on some parameters
 template<typename GraphImplementation, bool only_distance, bool use_a_star, NeighborFindingAlgorithm config, Pruning simplifications>
 struct Implementation {
     using graph_t = void;
@@ -36,8 +38,8 @@ struct Implementation {
 };
 
 
-template<bool only_distance, bool use_a_star, NeighborFindingAlgorithm n, Pruning simplifications>
-struct Implementation<steiner_graph, only_distance, use_a_star, n, simplifications> {
+template<bool use_a_star, NeighborFindingAlgorithm n, Pruning simplifications>
+struct Implementation<steiner_graph, false, use_a_star, n, simplifications> {
     using graph_t = steiner_graph;
     using node_id_t = typename graph_t::node_id_type;
     using base_node_id_t = typename graph_t::triangle_node_id_type;
@@ -131,8 +133,8 @@ struct Implementation<std_graph_t, only_distance, use_a_star, n, simplifications
     using routing_t = router<graph_t, dijkstra_t>;
 };
 
-template<typename GraphImpl, bool use_a_star, bool only_distance, Pruning simplifications, NeighborFindingAlgorithm algorithm>
-std::unique_ptr<RouterInterface> make_router(Graph const &graph, RoutingConfiguration const& config) {
+template<typename GraphImpl, bool only_distance, bool use_a_star, Pruning simplifications, NeighborFindingAlgorithm algorithm>
+static inline std::unique_ptr<RouterInterface> make_router(Graph const &graph, RoutingConfiguration const& config) {
     if constexpr(std::same_as<typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::graph_t, void>) {
         return {};
     } else {
@@ -143,7 +145,7 @@ std::unique_ptr<RouterInterface> make_router(Graph const &graph, RoutingConfigur
 }
 
 template<typename GraphImpl, bool use_a_star, bool only_distance, Pruning simplifications>
-std::unique_ptr<RouterInterface> by_algorithm(Graph const& graph, RoutingConfiguration const& config) {
+static inline std::unique_ptr<RouterInterface> by_algorithm(Graph const& graph, RoutingConfiguration const& config) {
     switch (config.neighbor_selection_algorithm) {
         case RoutingConfiguration::NeighborFindingAlgorithm::LINEAR:
             return make_router<GraphImpl, use_a_star, only_distance, simplifications, NeighborFindingAlgorithm::LINEAR>(graph, config);
@@ -158,7 +160,7 @@ std::unique_ptr<RouterInterface> by_algorithm(Graph const& graph, RoutingConfigu
 }
 
 template<typename GraphImpl, bool use_a_star, bool only_distance>
-std::unique_ptr<RouterInterface> by_pruning(Graph const& graph, RoutingConfiguration const& config) {
+static inline std::unique_ptr<RouterInterface> by_pruning(Graph const& graph, RoutingConfiguration const& config) {
     switch (config.pruning) {
         case RoutingConfiguration::Pruning::UNPRUNED:
             return by_algorithm<GraphImpl, use_a_star, only_distance, Pruning::UNPRUNED>(graph, config);
@@ -171,26 +173,24 @@ std::unique_ptr<RouterInterface> by_pruning(Graph const& graph, RoutingConfigura
 }
 
 template<typename GraphImpl, bool use_a_star>
-std::unique_ptr<RouterInterface> by_only_distance(Graph const& graph, RoutingConfiguration const& config) {
+static inline std::unique_ptr<RouterInterface> by_only_distance(Graph const& graph, RoutingConfiguration const& config) {
     if (config.only_distance) {
         return by_pruning<GraphImpl, use_a_star, true>(graph, config);
     } else {
         return by_pruning<GraphImpl, use_a_star, true>(graph, config);
     }
-    return {};
 }
 
 template<typename GraphImpl>
-std::unique_ptr<RouterInterface> by_a_star(Graph const& graph, RoutingConfiguration const& config) {
+static inline std::unique_ptr<RouterInterface> by_a_star(Graph const& graph, RoutingConfiguration const& config) {
     if (config.use_a_star) {
         return by_only_distance<GraphImpl, true>(graph, config);
     } else {
         return by_only_distance<GraphImpl, false>(graph, config);
     }
-    return {};
 }
 
-std::unique_ptr<RouterInterface> by_graph_impl(Graph const& graph, RoutingConfiguration const& config) {
+static inline std::unique_ptr<RouterInterface> by_graph_impl(Graph const& graph, RoutingConfiguration const& config) {
     switch (graph.type()) {
         case GraphType::STEINER_GRAPH:
             return by_a_star<steiner_graph>(graph, config);
@@ -202,8 +202,7 @@ std::unique_ptr<RouterInterface> by_graph_impl(Graph const& graph, RoutingConfig
     return {};
 }
 
-
-std::unique_ptr<RouterInterface> select_routing_impl(Graph const& graph, RoutingConfiguration const& config) {
+static inline std::unique_ptr<RouterInterface> select_routing_impl(Graph const& graph, RoutingConfiguration const& config) {
     return by_graph_impl(graph, config);
 }
 
