@@ -24,9 +24,9 @@ main(int argc, char *argv[]) {
     output_directory = arguments.output_directory_arg;
 
     RoutingConfiguration config;
+    config.store_coords = arguments.coords_explicit_flag;
     config.use_a_star = arguments.astar_flag;
     config.live_status = arguments.live_status_flag;
-
     config.tree_size = (arguments.tree_given) ? arguments.tree_arg : 0;
 
     // read graph

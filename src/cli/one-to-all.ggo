@@ -11,6 +11,7 @@ option "output-directory" o "path to output directory (where the subdirectory wi
 
 section "triangulation"
 option "epsilon" e "ε value to use for discretizing the triangulation (if a .graph file is given)" double default="0.0" optional
+option "coords-explicit" - "if set, stores the coordinates of steiner points explicitly" flag off
 
 section "query"
 option "query" q "list of source node ids" string multiple
