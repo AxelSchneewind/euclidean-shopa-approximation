@@ -18,6 +18,12 @@ option "query" q "list of source node ids" string multiple
 # option "coordinates" - "interpret the pair(s) of source and destination nodes as their coordinates" flag off
 # option "stdin" i "indicates that queries should be read from stdin" flag off
 
+section "output" sectiondesc="options for the command line output"
+# option "csv-format" c "indicates that routing information should be printed in the csv format" flag off
+option "projection" p "which projection to apply to coordinates when writing to files" values="none","google_bing","wgs84" enum default="none" optional
+option "tree" t "maximum tree size to export to graph file" int default="1000000" optional argoptional
+option "live-status" l "print live status about computation to stdout" flag on
+
 section "routing algorithms" sectiondesc="some advanced options on dijkstra search"
 option "astar" a "use A* heuristic to speed up one-to-one queries" flag off
 option "neighbor-finding" - "the type of algorithm to find neighbors with minimal bending angle" values="param","trig","binary","linear" enum default="param" optional
