@@ -52,11 +52,11 @@ struct gengetopt_args_info
   double epsilon_arg;	/**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) (default='0.0').  */
   char * epsilon_orig;	/**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) original value given at command line.  */
   const char *epsilon_help; /**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) help description.  */
-  char ** query_arg;	/**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed).  */
-  char ** query_orig;	/**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed) original value given at command line.  */
-  unsigned int query_min; /**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed)'s minimum occurreces */
-  unsigned int query_max; /**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed)'s maximum occurreces */
-  const char *query_help; /**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed) help description.  */
+  char ** query_arg;	/**< @brief pair(s) of source and destination node ids.  */
+  char ** query_orig;	/**< @brief pair(s) of source and destination node ids original value given at command line.  */
+  unsigned int query_min; /**< @brief pair(s) of source and destination node ids's minimum occurreces */
+  unsigned int query_max; /**< @brief pair(s) of source and destination node ids's maximum occurreces */
+  const char *query_help; /**< @brief pair(s) of source and destination node ids help description.  */
   enum enum_projection projection_arg;	/**< @brief which projection to apply to coordinates when writing to files (default='none').  */
   char * projection_orig;	/**< @brief which projection to apply to coordinates when writing to files original value given at command line.  */
   const char *projection_help; /**< @brief which projection to apply to coordinates when writing to files help description.  */
