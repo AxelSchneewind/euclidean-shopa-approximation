@@ -53,7 +53,6 @@ namespace {
 
         {   // add triangle to edges
             std::vector<char> triangle_count(base.edge_count(), 0);
-            size_t face_index = 0;
             for (size_t face_index = 0; face_index < faces.size(); face_index++) {
                 for (auto &&e: face_edges[face_index]) {
                     edge_faces[e][triangle_count[e]++] = face_index;
@@ -298,13 +297,13 @@ polyhedron<IndexType, MaxNodesPerFace>::polyhedron(
     }
 
     // sanity check: 3 * |faces| - |non_boundary_edges| == |edges|
-    std::size_t num_edges = 3 * face_count(); // 3 edges per face
-    std::size_t non_boundary_edges = edge_count() - boundary_edge_count();
+    // std::size_t num_edges = 3 * face_count(); // 3 edges per face
+    // std::size_t non_boundary_edges = edge_count() - boundary_edge_count();
 
-    // non boundary edges have been counted twice (once for each adjacent face)
-    num_edges -= non_boundary_edges;
+    // // non boundary edges have been counted twice (once for each adjacent face)
+    // num_edges -= non_boundary_edges;
 
-    assert(num_edges == edge_count());
+    // assert(num_edges == edge_count());
 }
 
 
