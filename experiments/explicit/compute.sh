@@ -32,7 +32,7 @@ fi
 
 
 ############################ refined graph using triangle (Shewchuk) ############################
-# refined graph with steiner points
+# no pruning
 if [ ! -d "$OUTPUT_DIR/implicit-ref-unpruned" ]; then
 	EPSILONS=("1.0" "0.5" "0.25")
 	for eps in "${EPSILONS[@]}"; do
@@ -41,7 +41,7 @@ if [ ! -d "$OUTPUT_DIR/implicit-ref-unpruned" ]; then
 fi
 process_results "$OUTPUT_DIR/implicit-ref-unpruned" "$OUTPUT_DIR/results-implicit-ref-unpruned.csv" milos-implicit-ref-unpruned
 
-# refined graph with steiner points
+# default pruning
 if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned" ]; then
 	EPSILONS=("1.0" "0.5" "0.25")
 	for eps in "${EPSILONS[@]}"; do
@@ -49,6 +49,16 @@ if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned" ]; then
 	done
 fi
 process_results "$OUTPUT_DIR/implicit-ref-pruned" "$OUTPUT_DIR/results-implicit-ref-pruned.csv" milos-implicit-ref-pruned
+
+# pruned by minimal bending angle
+if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-min-angle" ]; then
+	EPSILONS=("1.0" "0.5" "0.25")
+	for eps in "${EPSILONS[@]}"; do
+	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-min-angle/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle"
+	done
+fi
+process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle" "$OUTPUT_DIR/results-implicit-ref-pruned-min-angle.csv" milos-implicit-ref-pruned-min-angle
+
 
 
 ######################################## unrefined graph ########################################
