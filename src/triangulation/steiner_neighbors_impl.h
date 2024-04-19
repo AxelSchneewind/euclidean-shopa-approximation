@@ -12,10 +12,11 @@
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 template<typename NodeCostPair>
 void
-steiner_neighbors<Graph, Labels, P, Config>::insert(node_id_type const &neighbor, coordinate_t const &neighbor_coordinate,
-                                                 NodeCostPair const &current,
-                                                 std::vector<NodeCostPair> &out,
-                                                 std::vector<coordinate_t> &out_coordinates) const {
+steiner_neighbors<Graph, Labels, P, Config>::insert(node_id_type const &neighbor,
+                                                    coordinate_t const &neighbor_coordinate,
+                                                    NodeCostPair const &current,
+                                                    std::vector<NodeCostPair> &out,
+                                                    std::vector<coordinate_t> &out_coordinates) const {
     out.emplace_back(neighbor, current.node(), current.distance());
     out_coordinates.emplace_back(neighbor_coordinate);
 }
@@ -24,8 +25,8 @@ steiner_neighbors<Graph, Labels, P, Config>::insert(node_id_type const &neighbor
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels, P, Config>::insert(node_id_type const &neighbor, NodeCostPair const &current,
-                                                      std::vector<NodeCostPair> &out,
-                                                      std::vector<coordinate_t> &out_coordinates) const {
+                                                         std::vector<NodeCostPair> &out,
+                                                         std::vector<coordinate_t> &out_coordinates) const {
     coordinate_t destination_coordinate{_graph->node_coordinates(neighbor)};
     return insert(neighbor, destination_coordinate, current, out, out_coordinates);
 }
@@ -75,7 +76,7 @@ template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Co
 template<typename NodeCostPair>
 void
 steiner_neighbors<Graph, Labels, P, Config>::vertex_neighbors(const NodeCostPair &node, std::vector<NodeCostPair> &out,
-                                                           std::vector<coordinate_t> &coordinates_out) {
+                                                              std::vector<coordinate_t> &coordinates_out) {
     auto &&base_node_id{_graph->base_node_id(_source)};
 
     for (auto &&edge: _graph->base_graph().outgoing_edges(base_node_id)) [[likely]] {
@@ -98,7 +99,7 @@ template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Co
 template<typename NodeCostPair>
 void
 steiner_neighbors<Graph, Labels, P, Config>::on_edge_neighbors(const NodeCostPair &node, std::vector<NodeCostPair> &out,
-                                                            std::vector<coordinate_t> &coordinates_out) {
+                                                               std::vector<coordinate_t> &coordinates_out) {
     auto const &node_id{_source};
     auto &&steiner_info = _graph->steiner_info(node_id.edge);
 
@@ -123,7 +124,7 @@ steiner_neighbors<Graph, Labels, P, Config>::on_edge_neighbors(const NodeCostPai
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels, P, Config>::operator()(const NodeCostPair &node, std::vector<NodeCostPair> &out,
-                                                          std::vector<coordinate_t> &coordinates_out) {
+                                                             std::vector<coordinate_t> &coordinates_out) {
     auto const &node_id = node.node();
     assert(!optional::is_none(node_id));
 
@@ -140,8 +141,6 @@ void steiner_neighbors<Graph, Labels, P, Config>::operator()(const NodeCostPair 
     // compute direction from face crossing predecessor
     if constexpr (HasFaceCrossingPredecessor<NodeCostPair, Graph>) {
         auto &&face_crossing_predecessor = node.face_crossing_predecessor();
-        assert(is_start_node || (!optional::is_none(node.face_crossing_predecessor()) &&
-                                 node.face_crossing_predecessor() != _source));
         if (!optional::is_none(face_crossing_predecessor) && face_crossing_predecessor != _source)
             _direction = _source_coordinate - _graph->node_coordinates(face_crossing_predecessor);
     } else if constexpr (HasFaceCrossingPredecessor<typename Labels::value_type, Graph>) {
@@ -166,35 +165,40 @@ void steiner_neighbors<Graph, Labels, P, Config>::operator()(const NodeCostPair 
         }
     }
 
-    // set face crossing predecessor of neighbors
+    // update face crossing predecessor of neighbors
     if constexpr (HasFaceCrossingPredecessor<typename Labels::value_type, Graph>) {
-        // if this node is a boundary node, set it as the new face crossing predecessor
         auto &label = (*_labels)[_source];
+
+        // if this node is a boundary node, set it as the new face crossing predecessor, otherwise use value of parent
         auto fcp = (optional::is_none(label.face_crossing_predecessor()) || is_boundary_node)
                    ? _source : label.face_crossing_predecessor();
 
+        // store value in output buffer
         assert(!optional::is_none(fcp));
         for (auto &ncp: out) [[likely]] {
             (*_labels)[ncp.node()].face_crossing_predecessor() = fcp;
         }
     } else if constexpr (HasFaceCrossingPredecessor<NodeCostPair, Graph>) {
+        // if this node is a boundary node, set it as the new face crossing predecessor, otherwise use value of parent
         auto fcp = (optional::is_none(node.face_crossing_predecessor()) || is_boundary_node)
                    ? _source : node.face_crossing_predecessor();
 
+        // store value in output buffer
         assert(!optional::is_none(fcp));
         for (auto &ncp: out) [[likely]] {
             ncp.face_crossing_predecessor() = fcp;
         }
     }
 
-    // compute distances (can be vectorized)
+    // compute distances (can possibly be auto-vectorized)
     if constexpr (HasDistance<NodeCostPair>) {
         assert(out.size() == coordinates_out.size());
 
-        for (size_t e = 0; e < out.size(); ++e) [[likely]] {
-            out[e].distance() = _labels->at(_source).distance();
-            assert(out[e].distance() >= 0.0);
-        }
+        // probably not required
+        // for (size_t e = 0; e < out.size(); ++e) [[likely]] {
+        //     out[e].distance() = _labels->at(_source).distance();
+        //     assert(out[e].distance() >= 0.0);
+        // }
 
         for (size_t e = 0; e < out.size(); ++e) [[likely]] {
             if (_source.edge != out[e].node().edge) // use euclidean distance for face crossing segments
@@ -225,7 +229,7 @@ void steiner_neighbors<Graph, Labels, P, Config>::operator()(const NodeCostPair 
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 coordinate_t::component_type
 steiner_neighbors<Graph, Labels, P, Config>::min_angle_relative_value_matmul(base_edge_id_type edge_id,
-                                                                          coordinate_t direction_source) const requires (
+                                                                             coordinate_t direction_source) const requires (
 NeighborFindingAlgorithm::PARAM == Config) {
     // compute intersection point_source + b * direction_source = point_target + result * direction_target
 
@@ -264,7 +268,7 @@ NeighborFindingAlgorithm::PARAM == Config) {
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 coordinate_t::component_type
 steiner_neighbors<Graph, Labels, P, Config>::min_angle_relative_value_atan2(base_edge_id_type edge_id,
-                                                                         coordinate_t const &direction) const requires (
+                                                                            coordinate_t const &direction) const requires (
 NeighborFindingAlgorithm::ATAN2 == Config) {
     // src->left, right-left
     coordinate_t source_left;
@@ -318,9 +322,9 @@ NeighborFindingAlgorithm::ATAN2 == Config) {
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 coordinate_t::component_type
 steiner_neighbors<Graph, Labels, P, Config>::min_angle_relative_value_atan2(coordinate_t left,
-                                                                         coordinate_t right,
-                                                                         coordinate_t::component_type direction_left,
-                                                                         coordinate_t::component_type direction_dir) const requires (
+                                                                            coordinate_t right,
+                                                                            coordinate_t::component_type direction_left,
+                                                                            coordinate_t::component_type direction_dir) const requires (
 NeighborFindingAlgorithm::ATAN2 == Config) {
     // left->right
     right = left - right;
@@ -426,7 +430,7 @@ ignore(const coordinate_t::component_type direction_left, const coordinate_t::co
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 steiner_neighbors<Graph, Labels, P, Config>::node_id_type
 steiner_neighbors<Graph, Labels, P, Config>::min_angle_neighbor_binary_search(const base_edge_id_type &edge_id,
-                                                                           const coordinate_t &direction)requires (
+                                                                              const coordinate_t &direction)requires (
 NeighborFindingAlgorithm::BINSEARCH == Config || NeighborFindingAlgorithm::LINEAR == Config) {
     assert(direction.x != 0 || direction.y != 0);
     auto &&destination_steiner_info = _graph->steiner_info(edge_id);
@@ -517,7 +521,7 @@ NeighborFindingAlgorithm::BINSEARCH == Config || NeighborFindingAlgorithm::LINEA
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 steiner_neighbors<Graph, Labels, P, Config>::node_id_type
 steiner_neighbors<Graph, Labels, P, Config>::min_angle_neighbor_atan2(base_edge_id_type edge_id,
-                                                                   const coordinate_t &direction) const requires (
+                                                                      const coordinate_t &direction) const requires (
 NeighborFindingAlgorithm::ATAN2 == Config) {
     auto angle_dir{std::atan2(direction)};
     auto left{_graph->node_coordinates_first(edge_id)};
@@ -543,7 +547,7 @@ NeighborFindingAlgorithm::ATAN2 == Config) {
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 steiner_neighbors<Graph, Labels, P, Config>::node_id_type
 steiner_neighbors<Graph, Labels, P, Config>::min_angle_neighbor_matmul(const base_edge_id_type &edge_id,
-                                                                    const coordinate_t &direction) requires (
+                                                                       const coordinate_t &direction) requires (
 NeighborFindingAlgorithm::PARAM == Config) {
     auto rel = min_angle_relative_value_matmul(edge_id, direction);
 
@@ -553,13 +557,46 @@ NeighborFindingAlgorithm::PARAM == Config) {
     return {edge_id, _graph->subdivision_info().index(edge_id, rel)};
 }
 
+
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 template<typename NodeCostPair>
 void
 steiner_neighbors<Graph, Labels, P, Config>::add_min_angle_neighbor(const NodeCostPair &node,
-                                                                 coordinate_t const &direction,
-                                                                 std::vector<NodeCostPair> &out,
-                                                                 std::vector<coordinate_t> &out_coordinates) {
+                                                                    coordinate_t const &direction,
+                                                                    std::vector<NodeCostPair> &out,
+                                                                    std::vector<coordinate_t> &out_coordinates) requires (Pruning::UNPRUNED == P) {
+    auto const &node_id = node.node();
+
+    // face-crossing edges
+    for (auto &&edge_id: _graph->base_polyhedron().edges(node_id.edge)) [[likely]] {
+        assert(edge_id != node_id.edge);
+
+        // get neighbor
+        node_id_type other;
+        if constexpr (NeighborFindingAlgorithm::ATAN2 == Config) {
+            other = min_angle_neighbor_atan2(edge_id, direction);
+        } else if constexpr (NeighborFindingAlgorithm::BINSEARCH == Config) {
+            other = min_angle_neighbor_binary_search(edge_id, direction);
+        } else if constexpr (NeighborFindingAlgorithm::PARAM == Config) {
+            other = min_angle_neighbor_matmul(edge_id, direction);
+        } else if constexpr (NeighborFindingAlgorithm::LINEAR == Config) {
+            other = min_angle_neighbor_binary_search(edge_id, direction);
+        }
+
+        if (optional::is_none(other))
+            continue;
+
+        epsilon_spanner(node, edge_id, out, out_coordinates);
+    }
+}
+
+template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
+template<typename NodeCostPair>
+void
+steiner_neighbors<Graph, Labels, P, Config>::add_min_angle_neighbor(const NodeCostPair &node,
+                                                                    coordinate_t const &direction,
+                                                                    std::vector<NodeCostPair> &out,
+                                                                    std::vector<coordinate_t> &out_coordinates) requires (Pruning::UNPRUNED != P) {
     auto const &node_id = node.node();
 
     // face-crossing edges
@@ -660,8 +697,8 @@ steiner_neighbors<Graph, Labels, P, Config>::add_min_angle_neighbor(const NodeCo
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels, P, Config>::from_base_node(const NodeCostPair &node,
-                                                              std::vector<NodeCostPair> &out,
-                                                              std::vector<coordinate_t> &coordinates_out) {
+                                                                 std::vector<NodeCostPair> &out,
+                                                                 std::vector<coordinate_t> &coordinates_out) {
     _base_node_count++;
 
     vertex_neighbors(node, out, coordinates_out);
@@ -686,8 +723,9 @@ void steiner_neighbors<Graph, Labels, P, Config>::from_base_node(const NodeCostP
 
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 template<typename NodeCostPair>
-void steiner_neighbors<Graph, Labels, P, Config>::from_start_node(const NodeCostPair &node, std::vector<NodeCostPair> &out,
-                                                               std::vector<coordinate_t> &coordinates_out) {
+void
+steiner_neighbors<Graph, Labels, P, Config>::from_start_node(const NodeCostPair &node, std::vector<NodeCostPair> &out,
+                                                             std::vector<coordinate_t> &coordinates_out) {
     _base_node_count++;
     auto &&base_node_id = _graph->base_node_id(_source);
 
@@ -707,8 +745,8 @@ template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Co
 template<typename NodeCostPair>
 void
 steiner_neighbors<Graph, Labels, P, Config>::from_boundary_node(const NodeCostPair &node,
-                                                             std::vector<NodeCostPair> &out,
-                                                             std::vector<coordinate_t> &coordinates_out) {
+                                                                std::vector<NodeCostPair> &out,
+                                                                std::vector<coordinate_t> &coordinates_out) {
     _boundary_node_count++;
     auto &&base_node_id = _graph->base_node_id(_source);
 
@@ -734,7 +772,7 @@ template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Co
 template<typename NodeCostPair>
 void
 steiner_neighbors<Graph, Labels, P, Config>::from_steiner_node(const NodeCostPair &node, std::vector<NodeCostPair> &out,
-                                                            std::vector<coordinate_t> &out_coordinates) {
+                                                               std::vector<coordinate_t> &out_coordinates) {
     _steiner_point_count++;
 
     // add neighbors that make up steiner interval crossed by ray source-coordinate->direction
@@ -761,9 +799,10 @@ steiner_neighbors<Graph, Labels, P, Config>::from_steiner_node(const NodeCostPai
 template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
 template<typename NodeCostPair>
 void steiner_neighbors<Graph, Labels, P, Config>::epsilon_spanner(const NodeCostPair &node,
-                                                               const base_edge_id_type &edge_id,
-                                                               std::vector<NodeCostPair> &out,
-                                                               std::vector<coordinate_t> &coordinates_out) {
+                                                                  const base_edge_id_type &edge_id,
+                                                                  std::vector<NodeCostPair> &out,
+                                                                  std::vector<coordinate_t> &coordinates_out) requires (
+Pruning::UNPRUNED != P) {
     auto &&destination_steiner_info = _graph->steiner_info(edge_id);
 
     if constexpr (simplify_epsilon_spanner) {
@@ -862,6 +901,36 @@ void steiner_neighbors<Graph, Labels, P, Config>::epsilon_spanner(const NodeCost
                 past = false;
             }
         }
+    }
+}
+
+template<typename Graph, typename Labels, Pruning P, NeighborFindingAlgorithm Config>
+template<typename NodeCostPair>
+void steiner_neighbors<Graph, Labels, P, Config>::epsilon_spanner(const NodeCostPair &node,
+                                                                             const base_edge_id_type &edge_id,
+                                                                             std::vector<NodeCostPair> &out,
+                                                                             std::vector<coordinate_t> &out_coordinates) requires (
+Pruning::UNPRUNED == P) {
+    auto &&destination_steiner_info = _graph->steiner_info(edge_id);
+
+
+    // add segments to points left of mid point
+    node_id_type destination{edge_id, destination_steiner_info.mid_index};
+    for (; destination.steiner_index >= 1; --destination.steiner_index) [[likely]] {
+        coordinate_t const destination_coordinate{_graph->node_coordinates(destination)};
+
+        assert(_graph->has_edge(_source, destination));
+        insert(destination, destination_coordinate, node, out, out_coordinates);
+    }
+
+    // add segments to points right of mid point
+    destination.steiner_index = destination_steiner_info.mid_index + 1;
+    for (; destination.steiner_index <
+           destination_steiner_info.node_count - 1; ++destination.steiner_index) [[likely]] {
+        coordinate_t const destination_coordinate{_graph->node_coordinates(destination)};
+
+        assert(_graph->has_edge(_source, destination));
+        insert(destination, destination_coordinate, node, out, out_coordinates);
     }
 }
 
