@@ -89,7 +89,7 @@ make_queries(){
 
     local GRAPH_FILE=$1
     local QUERY_FILE=$2
-    local NUM_QUERIES=${3:-100}
+    local NUM_QUERIES=${3:-10}
 
     # check graph file validity
     if [[ ! -f "$GRAPH_FILE" ]]; then
@@ -117,7 +117,7 @@ make_ota_queries(){
 
     local GRAPH_FILE=$1
     local QUERY_FILE=$2
-    local NUM_QUERIES=${3:-100}
+    local NUM_NODES=${3:-10}
 
     # check graph file validity
     if [[ ! -f "$GRAPH_FILE" ]]; then
@@ -128,7 +128,6 @@ make_ota_queries(){
     touch "$QUERY_FILE"
     
     # select given number of nodes randomly from boundary nodes in triangulation
-    local NUM_NODES=$(NUM_QUERIES)
     echo "selecting $NUM_NODES nodes from graph $GRAPH_NAME..."
     local NODES=$($FIND_NODES -g "$GRAPH_FILE" -b -r $NUM_NODES)
     local NODES=$(echo "$NODES" | sed -z -E "s/\n/,/g")
