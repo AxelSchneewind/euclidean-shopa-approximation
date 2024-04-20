@@ -178,7 +178,7 @@ static inline std::unique_ptr<RouterInterface> by_only_distance(Graph const& gra
     if (config.only_distance) {
         return by_pruning<GraphImpl, use_a_star, true>(graph, config);
     } else {
-        return by_pruning<GraphImpl, use_a_star, true>(graph, config);
+        return by_pruning<GraphImpl, use_a_star, false>(graph, config);
     }
 }
 
