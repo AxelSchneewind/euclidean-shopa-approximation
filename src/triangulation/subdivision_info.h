@@ -46,7 +46,7 @@ public:
 private:
 
     // here, a lower bound can be imposed to prevent numerical issues
-    static constexpr long double min_r_value = 0x1p-38;
+    static constexpr long double min_r_value = 0x1p-84;
 
     std::vector<subdivision_edge_info> _edges;
 
