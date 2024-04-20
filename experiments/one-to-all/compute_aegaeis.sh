@@ -25,7 +25,7 @@ mkdir -p "$OUTPUT_DIR"
 
 # make queries
 if [ ! -f "$QUERY_FILE" ]; then
-  make_queries "$UNREF_TRIANGULATION_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
+  make_ota_queries "$UNREF_TRIANGULATION_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
 fi
 
 ########################################## refined graph #########################################

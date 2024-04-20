@@ -3,7 +3,7 @@
 source ../utils.sh
 
 # number of queries
-NUM_QUERIES=100
+NUM_QUERIES=1
 
 # maximum tree size to write to files (0 to disable tree output)
 TREE_SIZE=0
@@ -27,7 +27,7 @@ mkdir -p "$OUTPUT_DIR"
 
 # make queries
 if [ ! -f "$QUERY_FILE" ]; then
-	make_queries "$TRIANGULATION_UNREF_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
+	make_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
 fi
 
 
@@ -45,7 +45,7 @@ process_results "$OUTPUT_DIR/implicit-ref-unpruned" "$OUTPUT_DIR/results-implici
 if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned" ]; then
 	EPSILONS=("1.0" "0.5" "0.25")
 	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref/$eps" "$QUERY_FILE" "$eps" "--pruning=prune"
+	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-pruned/$eps" "$QUERY_FILE" "$eps" "--pruning=prune"
 	done
 fi
 process_results "$OUTPUT_DIR/implicit-ref-pruned" "$OUTPUT_DIR/results-implicit-ref-pruned.csv" milos-implicit-ref-pruned
@@ -54,7 +54,7 @@ process_results "$OUTPUT_DIR/implicit-ref-pruned" "$OUTPUT_DIR/results-implicit-
 if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-min-angle" ]; then
 	EPSILONS=("1.0" "0.5" "0.25")
 	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-min-angle/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle"
+	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-pruned-min-angle/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle"
 	done
 fi
 process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle" "$OUTPUT_DIR/results-implicit-ref-pruned-min-angle.csv" milos-implicit-ref-pruned-min-angle
@@ -63,31 +63,31 @@ process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle" "$OUTPUT_DIR/results
 
 ######################################## unrefined graph ########################################
 # no pruning
-if [ ! -d "$OUTPUT_DIR/implicit-unref-unpruned" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-unpruned/$eps" "$QUERY_FILE" "$eps" "--pruning=none"
-	done
-fi
-process_results "$OUTPUT_DIR/implicit-unref-unpruned" "$OUTPUT_DIR/results-implicit-unref-unpruned.csv" milos-implicit-unref-unpruned
+# if [ ! -d "$OUTPUT_DIR/implicit-unref-unpruned" ]; then
+# 	EPSILONS=("1.0" "0.5" "0.25")
+# 	for eps in "${EPSILONS[@]}"; do
+# 	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-unpruned/$eps" "$QUERY_FILE" "$eps" "--pruning=none"
+# 	done
+# fi
+# process_results "$OUTPUT_DIR/implicit-unref-unpruned" "$OUTPUT_DIR/results-implicit-unref-unpruned.csv" milos-implicit-unref-unpruned
 
 # default pruning
-if [ ! -d "$OUTPUT_DIR/implicit-unref-pruned" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref/$eps" "$QUERY_FILE" "$eps" "--pruning=prune"
-	done
-fi
-process_results "$OUTPUT_DIR/implicit-unref-pruned" "$OUTPUT_DIR/results-implicit-unref-pruned.csv" milos-implicit-unref-pruned
-
-# pruned by minimal bending angle
-if [ ! -d "$OUTPUT_DIR/implicit-unref-pruned-min-angle" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-min-angle/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle"
-	done
-fi
-process_results "$OUTPUT_DIR/implicit-unref-pruned-min-angle" "$OUTPUT_DIR/results-implicit-unref-pruned-min-angle.csv" milos-implicit-unref-pruned-min-angle
+# if [ ! -d "$OUTPUT_DIR/implicit-unref-pruned" ]; then
+# 	EPSILONS=("1.0" "0.5" "0.25")
+# 	for eps in "${EPSILONS[@]}"; do
+# 	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-pruned/$eps" "$QUERY_FILE" "$eps" "--pruning=prune"
+# 	done
+# fi
+# process_results "$OUTPUT_DIR/implicit-unref-pruned" "$OUTPUT_DIR/results-implicit-unref-pruned.csv" milos-implicit-unref-pruned
+# 
+# # pruned by minimal bending angle
+# if [ ! -d "$OUTPUT_DIR/implicit-unref-pruned-min-angle" ]; then
+# 	EPSILONS=("1.0" "0.5" "0.25")
+# 	for eps in "${EPSILONS[@]}"; do
+# 	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref--pruned-min-angle/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle"
+# 	done
+# fi
+# process_results "$OUTPUT_DIR/implicit-unref-pruned-min-angle" "$OUTPUT_DIR/results-implicit-unref-pruned-min-angle.csv" milos-implicit-unref-pruned-min-angle
 
 ######################################### explicit graph ########################################
 # exact solutions

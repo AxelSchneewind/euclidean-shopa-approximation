@@ -109,6 +109,34 @@ make_queries(){
     echo "${NODES[@]}"
 }
 
+make_ota_queries(){
+    if [[ -z "$2" ]]; then
+	    echo "usage: make_queries path/to/graph_file.graph path/to/queries.txt count"
+	    exit
+    fi
+
+    local GRAPH_FILE=$1
+    local QUERY_FILE=$2
+    local NUM_QUERIES=${3:-100}
+
+    # check graph file validity
+    if [[ ! -f "$GRAPH_FILE" ]]; then
+	    echo "invalid graph file"
+	    exit
+    fi
+
+    touch "$QUERY_FILE"
+    
+    # select given number of nodes randomly from boundary nodes in triangulation
+    local NUM_NODES=$(NUM_QUERIES)
+    echo "selecting $NUM_NODES nodes from graph $GRAPH_NAME..."
+    local NODES=$($FIND_NODES -g "$GRAPH_FILE" -b -r $NUM_NODES)
+    local NODES=$(echo "$NODES" | sed -z -E "s/\n/,/g")
+    local NODES=${NODES::-1}
+    echo "$NODES" > "$QUERY_FILE"
+    echo "${NODES[@]}"
+}
+
 
 
 process_results() {
