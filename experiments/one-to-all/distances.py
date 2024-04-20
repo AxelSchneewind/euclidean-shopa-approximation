@@ -6,7 +6,7 @@ import pandas as pd
 
 
 def read_distances(file):
-    data = pd.read_csv(file, dtypes={ 'distance': np.float64, 'node':np.int64 })
+    data = pd.read_csv(file, dtypes={ 'distance': np.float64, 1:np.int64 })
     data.sort_values(by='node', inplace=True)
     return data
 
