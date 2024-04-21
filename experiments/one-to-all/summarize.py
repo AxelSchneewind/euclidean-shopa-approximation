@@ -23,7 +23,9 @@ columns = {
     'stored edge count',
     'time',
     'cost',
-    'tree size'
+    'tree size',
+    'memory usage final',
+    'memory usage graph',
 }
 
 def filter_epsilon(data, eps):
@@ -58,6 +60,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', '-f', required=True, action='append', help='path to the input file')
     parser.add_argument('--output-epsilon', '-e', help='path to the output file for statistics per epsilon')
+    parser.add_argument('--output-benchmark', '-b', help='path to the output file for statistics per benchmark')
     parser.add_argument('--output-queries', '-q', help='path to the output file for statistics per query')
     parser.add_argument('--output-worst-quality-queries', '-s', default='stdout', help='path to the output file for a list of the queries with worst quality')
     parser.add_argument('--columns', '-c', default='time', help='the columns to summarize (comma separated list)')
@@ -88,6 +91,21 @@ def main():
                       by_epsilon.quantile(0.01), by_epsilon.quantile(0.1), by_epsilon.quantile(0.25),
                       by_epsilon.quantile(0.75), by_epsilon.quantile(0.9), by_epsilon.quantile(0.99),
                       sep=',', file=eps_file)
+
+    # by benchmark
+    if args.output_benchmark is not None:
+        eps_file = open(args.output_benchmark, mode='a') if args.output_epsilon != 'stdout' else sys.stdout
+        print('column,epsilon,count,mean,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=eps_file)
+        for column in columns:
+            for epsilon in data['epsilon'].unique():
+                by_epsilon = filter_epsilon(data, epsilon)
+                for bench in data['benchmark'].unique():
+                    by_epsilon = by_epsilon[by_epsilon['benchmark']==bench][column]
+                    by_epsilon = by_epsilon[column]
+                    print(column, epsilon, by_epsilon.count(), by_epsilon.mean(), by_epsilon.min(), by_epsilon.median(), by_epsilon.max(), by_epsilon.std(),
+                          by_epsilon.quantile(0.01), by_epsilon.quantile(0.1), by_epsilon.quantile(0.25),
+                          by_epsilon.quantile(0.75), by_epsilon.quantile(0.9), by_epsilon.quantile(0.99),
+                          sep=',', file=eps_file)
 
     # info on each query
     if args.output_queries is not None:
