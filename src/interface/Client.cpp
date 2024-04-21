@@ -27,7 +27,7 @@ Client::Client(GraphT &&__graph)
 
     double vm, res;
     process_mem_usage(vm, res);
-    statistics.put(Statistics::MEMORY_USAGE_GRAPH, vm / 1024);
+    statistics.put(Statistics::MEMORY_USAGE_GRAPH, res / 1024);
 }
 
 template<typename GraphT, typename RoutingT>
@@ -46,7 +46,7 @@ Client::Client(GraphT &&graph, RoutingT &&router)
 
     double vm, res;
     process_mem_usage(vm, res);
-    statistics.put(Statistics::MEMORY_USAGE_GRAPH, vm / 1024);
+    statistics.put(Statistics::MEMORY_USAGE_GRAPH, res / 1024);
 }
 
 
@@ -62,25 +62,22 @@ void Client::read_graph_file(std::string path) {
 
     if (path.ends_with(".graph")) {
         _graph.read_graph_file(path, _routing_config, 0.5F);
-        process_mem_usage(vm_graph, res_graph);
     } else if (path.ends_with(".fmi")) {
         _graph.read_graph_file(path, _routing_config);
-        process_mem_usage(vm_graph, res_graph);
     } else if (path.ends_with(".sch")) {
         _graph.read_graph_file(path, _routing_config);
-        process_mem_usage(vm_graph, res_graph);
     } else if (path.ends_with(".gl")) {
         _graph.read_graph_file(path, _routing_config);
-        process_mem_usage(vm_graph, res_graph);
     } else {
         throw std::invalid_argument("unrecognized file ending");
     }
+    process_mem_usage(vm_graph, res_graph);
     input.close();
 
     std::cout << "\b\b\b, done\n";
 
     _graph.write_graph_stats(statistics);
-    statistics.put(Statistics::MEMORY_USAGE_GRAPH, (vm_graph - vm) / 1024);
+    statistics.put(Statistics::MEMORY_USAGE_GRAPH, (res_graph - res) / 1024);
 };
 
 template<>
@@ -103,7 +100,7 @@ void Client::read_graph_file(std::string path, double epsilon) {
     std::cout << "\b\b\b, done\n";
 
     _graph.write_graph_stats(statistics);
-    statistics.put(Statistics::MEMORY_USAGE_GRAPH, (vm_graph - vm) / 1024);
+    statistics.put(Statistics::MEMORY_USAGE_GRAPH, (res_graph - res) / 1024);
 };
 
 void Client::write_info(std::ostream& output) const {
@@ -153,7 +150,7 @@ void Client::compute_route(long from, long to) {
     // store memory usage
     double vm, res;
     process_mem_usage(vm, res);
-    statistics.put(Statistics::MEMORY_USAGE_FINAL, vm / 1024);
+    statistics.put(Statistics::MEMORY_USAGE_FINAL, res / 1024);
 
     _query = _router.query();
     _result = _router.result();
@@ -171,7 +168,7 @@ void Client::compute_one_to_all(long from) {
     // store memory usage
     double vm, res;
     process_mem_usage(vm, res);
-    statistics.put(Statistics::MEMORY_USAGE_FINAL, vm / 1024);
+    statistics.put(Statistics::MEMORY_USAGE_FINAL, res / 1024);
 
     _query = _router.query();
     _result = _router.result();
@@ -189,7 +186,7 @@ void Client::compute_one_to_all(long from, std::ostream &out) {
     // store memory usage
     double vm, res;
     process_mem_usage(vm, res);
-    statistics.put(Statistics::MEMORY_USAGE_FINAL, vm / 1024);
+    statistics.put(Statistics::MEMORY_USAGE_FINAL, res / 1024);
 
     _query = _router.query();
     _result = _router.result();
