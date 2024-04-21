@@ -3,7 +3,7 @@
 source ../utils.sh
 
 # number of queries
-NUM_QUERIES=4
+NUM_QUERIES=12
 
 # maximum tree size to write to files (0 to disable tree output)
 TREE_SIZE=0
@@ -22,7 +22,7 @@ mkdir -p "$OUTPUT_DIR"
 
 # make queries
 if [ ! -f "$QUERY_FILE" ]; then
-  make_queries "$UNREF_TRIANGULATION_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
+  make_queries "$TRIANGULATION_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
 fi
 
 # ######################################### refined graph ########################################
