@@ -31,3 +31,5 @@ for g in results/*/ ; do
 		done
 	done
 done
+
+csvstack $(find results -name quality.csv) > results/quality.csv
