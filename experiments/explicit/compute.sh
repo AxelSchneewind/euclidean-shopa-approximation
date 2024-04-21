@@ -3,7 +3,7 @@
 source ../utils.sh
 
 # number of queries
-NUM_QUERIES=1
+NUM_QUERIES=50
 
 # maximum tree size to write to files (0 to disable tree output)
 TREE_SIZE=0
@@ -59,6 +59,15 @@ if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-min-angle" ]; then
 fi
 process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle" "$OUTPUT_DIR/results-implicit-ref-pruned-min-angle.csv" milos-implicit-ref-pruned-min-angle
 
+# default pruning with explicit coordinate storage
+if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-exp" ]; then
+	EPSILONS=("1.0" "0.5" "0.25")
+	for eps in "${EPSILONS[@]}"; do
+	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-pruned-exp/$eps" "$QUERY_FILE" "$eps" "--pruning=prune --coords-explicit"
+	done
+fi
+process_results "$OUTPUT_DIR/implicit-ref-pruned-exp" "$OUTPUT_DIR/results-implicit-ref-pruned-exp.csv" milos-implicit-ref-pruned
+
 
 
 ######################################## unrefined graph ########################################
@@ -79,7 +88,7 @@ process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle" "$OUTPUT_DIR/results
 # 	done
 # fi
 # process_results "$OUTPUT_DIR/implicit-unref-pruned" "$OUTPUT_DIR/results-implicit-unref-pruned.csv" milos-implicit-unref-pruned
-# 
+# # 
 # # pruned by minimal bending angle
 # if [ ! -d "$OUTPUT_DIR/implicit-unref-pruned-min-angle" ]; then
 # 	EPSILONS=("1.0" "0.5" "0.25")

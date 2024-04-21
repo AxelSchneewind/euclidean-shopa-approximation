@@ -24,6 +24,7 @@ for g in results/*/ ; do
 			DIR="$e"
 			DIR="${DIR/explicit-ref/implicit-ref-pruned}"
 			DIR="${DIR/explicit-unref/implicit-unref-pruned}"
+			DIR="${DIR/-exp/}"
 			DIR="${DIR/-min-angle/}"
 			DIR="${DIR/-pruned/-unpruned}"
 			REFERENCE=$DIR
