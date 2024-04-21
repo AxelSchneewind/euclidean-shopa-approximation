@@ -69,7 +69,7 @@ public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::shared_ptr<aggregate_info>);
 
-    frontier_labels(std::shared_ptr<Graph> graph, label_type default_value = optional::none_value<label_type>, distance_type frontier_width = 0.2);
+    frontier_labels(std::shared_ptr<Graph> graph, label_type default_value = optional::none_value<label_type>, distance_type frontier_width = 0.4);
 
     frontier_labels(frontier_labels &&) noexcept = default;
 
@@ -117,15 +117,18 @@ void frontier_labels<Graph, NodeCostPair, Label>::set_frontier_distance(distance
 
 template<typename Graph, DistanceNodeCostPair NodeCostPair, HasDistance Label>
 Label const& frontier_labels<Graph, NodeCostPair, Label>::operator[](node_id_type node) const {
-    if (!_expanded_node_aggregates.contains(node.edge))
-        _expanded_node_aggregates[node.edge] = {std::vector<Label>(_graph->steiner_info(node.edge).node_count, _default_value)};
+    if (!_expanded_node_aggregates.contains(node.edge)) {
+	    assert(false);
+    }
     return _expanded_node_aggregates.at(node.edge).labels[node.steiner_index];
 }
 
 template<typename Graph, DistanceNodeCostPair NodeCostPair, HasDistance Label>
 Label& frontier_labels<Graph, NodeCostPair, Label>::operator[](node_id_type node) {
-    if (!_expanded_node_aggregates.contains(node.edge))
+    if (!_expanded_node_aggregates.contains(node.edge)) {
         _expanded_node_aggregates[node.edge] = {std::vector<Label>(_graph->steiner_info(node.edge).node_count, _default_value)};
+	_active_aggregates.push({node.edge, _min_value});
+    }
     return _expanded_node_aggregates.at(node.edge).labels[node.steiner_index];
 }
 

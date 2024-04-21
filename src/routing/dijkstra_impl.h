@@ -250,6 +250,11 @@ dijkstra<G, Q, L, N, Heuristic>::step() {
     _queue.pop();
     _pull_count++;
 
+    // inform labels of new distance
+    if constexpr (requires (L l, distance_type d) {l.set_frontier_distance(d);} ){
+	_labels->set_frontier_distance(ncp.value());
+    }
+
     // remove already labelled nodes
     while (!_queue.empty() && _labels->at(_queue.top().node()).distance() < _queue.top().distance()) [[likely]] {
         _queue.pop();
