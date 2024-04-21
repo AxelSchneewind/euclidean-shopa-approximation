@@ -27,13 +27,13 @@ compute_ota_queries() {
 
     # check query file validity
     if [[ ! -f "$QUERY_FILE" ]]; then
-	    echo "invalid query file"
+	    echo "invalid query file: $QUERY_FILE"
 	    exit
     fi
 
     # check graph file validity
     if [[ ! -f "$GRAPH_FILE" ]]; then
-	    echo "invalid graph file"
+	    echo "invalid graph file: $GRAPH_FILE"
 	    exit
     fi
 
@@ -61,13 +61,13 @@ compute_shopa_queries() {
 
     # check query file validity
     if [[ ! -f "$QUERY_FILE" ]]; then
-	    echo "invalid query file"
+	    echo "invalid query file: $QUERY_FILE"
 	    exit
     fi
 
     # check graph file validity
     if [[ ! -f "$GRAPH_FILE" ]]; then
-	    echo "invalid graph file"
+	    echo "invalid graph file: $GRAPH_FILE"
 	    exit
     fi
     
@@ -93,7 +93,7 @@ make_queries(){
 
     # check graph file validity
     if [[ ! -f "$GRAPH_FILE" ]]; then
-	    echo "invalid graph file"
+	    echo "invalid graph file: $GRAPH_FILE"
 	    exit
     fi
 
@@ -121,7 +121,7 @@ make_ota_queries(){
 
     # check graph file validity
     if [[ ! -f "$GRAPH_FILE" ]]; then
-	    echo "invalid graph file"
+	    echo "invalid graph file $GRAPH_FILE"
 	    exit
     fi
 
