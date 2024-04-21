@@ -43,8 +43,8 @@ compute_ota_queries() {
     local QUERIES="$(cat ${QUERY_FILE})"
 
     # run computations
-    echo "$ROUTER_OTA --epsilon ${EPSILON} ${PARAMS} -p wgs84 -a $ASTAR -t$TREE_SIZE -l --graph-file ${GRAPH_FILE} --output-directory ${OUTPUT_DIR} --query ${QUERIES}"
-    $ROUTER_OTA --epsilon "${EPSILON}" ${PARAMS} -p wgs84 -a "$ASTAR" -t$TREE_SIZE -l --graph-file "${GRAPH_FILE}" --output-directory "${OUTPUT_DIR}" --query "${QUERIES}" > "${OUTPUT_DIR}/out.log" 2>&1
+    echo "$ROUTER_OTA --epsilon ${EPSILON} ${PARAMS} -p wgs84 -t$TREE_SIZE -l --graph-file ${GRAPH_FILE} --output-directory ${OUTPUT_DIR} --query ${QUERIES}"
+    $ROUTER_OTA --epsilon "${EPSILON}" ${PARAMS} -p wgs84 -t$TREE_SIZE -l --graph-file "${GRAPH_FILE}" --output-directory "${OUTPUT_DIR}" --query "${QUERIES}" > "${OUTPUT_DIR}/out.log" 2>&1
 }
 
 compute_shopa_queries() {
