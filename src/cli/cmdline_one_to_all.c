@@ -51,7 +51,6 @@ const char *gengetopt_args_info_help[] = {
   "  -l, --live-status            print live status about computation to stdout\n                                 (default=on)",
   "\nrouting algorithms:",
   "  some advanced options on dijkstra search",
-  "  -a, --astar                  use A* heuristic to speed up one-to-one queries\n                                 (default=off)",
   "      --neighbor-finding=ENUM  the type of algorithm to find neighbors with\n                                 minimal bending angle  (possible\n                                 values=\"param\", \"trig\", \"binary\",\n                                 \"linear\" default=`param')",
   "      --pruning=ENUM           which type of pruning to use for steiner graphs\n                                 (possible values=\"none\", \"prune\",\n                                 \"prune-min-angle\" default=`prune')",
   "      --no-tree                if enabled, only computes distances without\n                                 keeping tree information (does not produce\n                                 paths)  (default=off)",
@@ -98,7 +97,6 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->projection_given = 0 ;
   args_info->tree_given = 0 ;
   args_info->live_status_given = 0 ;
-  args_info->astar_given = 0 ;
   args_info->neighbor_finding_given = 0 ;
   args_info->pruning_given = 0 ;
   args_info->no_tree_given = 0 ;
@@ -122,7 +120,6 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->tree_arg = 1000000;
   args_info->tree_orig = NULL;
   args_info->live_status_flag = 1;
-  args_info->astar_flag = 0;
   args_info->neighbor_finding_arg = neighbor_finding_arg_param;
   args_info->neighbor_finding_orig = NULL;
   args_info->pruning_arg = pruning_arg_prune;
@@ -148,10 +145,9 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->projection_help = gengetopt_args_info_help[12] ;
   args_info->tree_help = gengetopt_args_info_help[13] ;
   args_info->live_status_help = gengetopt_args_info_help[14] ;
-  args_info->astar_help = gengetopt_args_info_help[17] ;
-  args_info->neighbor_finding_help = gengetopt_args_info_help[18] ;
-  args_info->pruning_help = gengetopt_args_info_help[19] ;
-  args_info->no_tree_help = gengetopt_args_info_help[20] ;
+  args_info->neighbor_finding_help = gengetopt_args_info_help[17] ;
+  args_info->pruning_help = gengetopt_args_info_help[18] ;
+  args_info->no_tree_help = gengetopt_args_info_help[19] ;
   
 }
 
@@ -395,8 +391,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "tree", args_info->tree_orig, 0);
   if (args_info->live_status_given)
     write_into_file(outfile, "live-status", 0, 0 );
-  if (args_info->astar_given)
-    write_into_file(outfile, "astar", 0, 0 );
   if (args_info->neighbor_finding_given)
     write_into_file(outfile, "neighbor-finding", args_info->neighbor_finding_orig, cmdline_parser_neighbor_finding_values);
   if (args_info->pruning_given)
@@ -1015,14 +1009,13 @@ cmdline_parser_internal (
         { "projection",	1, NULL, 'p' },
         { "tree",	2, NULL, 't' },
         { "live-status",	0, NULL, 'l' },
-        { "astar",	0, NULL, 'a' },
         { "neighbor-finding",	1, NULL, 0 },
         { "pruning",	1, NULL, 0 },
         { "no-tree",	0, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVg:o:e:q:p:t::la", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVg:o:e:q:p:t::l", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1113,16 +1106,6 @@ cmdline_parser_internal (
           if (update_arg((void *)&(args_info->live_status_flag), 0, &(args_info->live_status_given),
               &(local_args_info.live_status_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "live-status", 'l',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'a':	/* use A* heuristic to speed up one-to-one queries.  */
-        
-        
-          if (update_arg((void *)&(args_info->astar_flag), 0, &(args_info->astar_given),
-              &(local_args_info.astar_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "astar", 'a',
               additional_error))
             goto failure;
         

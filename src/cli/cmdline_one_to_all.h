@@ -67,8 +67,6 @@ struct gengetopt_args_info
   const char *tree_help; /**< @brief maximum tree size to export to graph file help description.  */
   int live_status_flag;	/**< @brief print live status about computation to stdout (default=on).  */
   const char *live_status_help; /**< @brief print live status about computation to stdout help description.  */
-  int astar_flag;	/**< @brief use A* heuristic to speed up one-to-one queries (default=off).  */
-  const char *astar_help; /**< @brief use A* heuristic to speed up one-to-one queries help description.  */
   enum enum_neighbor_finding neighbor_finding_arg;	/**< @brief the type of algorithm to find neighbors with minimal bending angle (default='param').  */
   char * neighbor_finding_orig;	/**< @brief the type of algorithm to find neighbors with minimal bending angle original value given at command line.  */
   const char *neighbor_finding_help; /**< @brief the type of algorithm to find neighbors with minimal bending angle help description.  */
@@ -88,7 +86,6 @@ struct gengetopt_args_info
   unsigned int projection_given ;	/**< @brief Whether projection was given.  */
   unsigned int tree_given ;	/**< @brief Whether tree was given.  */
   unsigned int live_status_given ;	/**< @brief Whether live-status was given.  */
-  unsigned int astar_given ;	/**< @brief Whether astar was given.  */
   unsigned int neighbor_finding_given ;	/**< @brief Whether neighbor-finding was given.  */
   unsigned int pruning_given ;	/**< @brief Whether pruning was given.  */
   unsigned int no_tree_given ;	/**< @brief Whether no-tree was given.  */
