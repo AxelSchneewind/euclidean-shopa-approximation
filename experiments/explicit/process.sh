@@ -31,6 +31,6 @@ for g in results/*/ ; do
 			describe_distances "$e" "$REFERENCE"
 		done
 	done
+	csvstack $(find $g -name quality.csv) > $g/quality.csv
 done
 
-csvstack $(find results -name quality.csv) > results/quality.csv
