@@ -234,7 +234,7 @@ void Router::RouterImplementation<GraphT, RouterT>::compute_route(long from, lon
 
     auto const before = std::chrono::high_resolution_clock::now();
 
-    out << "node," << from << '\n';
+    out << "node,distance" << '\n';
     _router.init(_query_ptr->from_internal(), _query_ptr->to_internal());
     while (!_router.done()) {
         if constexpr (requires(GraphT g, typename GraphT::node_id_type n) { g.is_base_node(n); g.base_node_id(n); }) {
