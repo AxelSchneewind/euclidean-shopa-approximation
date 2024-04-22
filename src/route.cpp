@@ -31,8 +31,10 @@ main(int argc, char *argv[]) {
     config.only_distance = arguments.no_tree_flag;
     config.use_a_star = arguments.astar_flag;
     config.live_status = arguments.live_status_flag;
+    config.tree_size = (arguments.tree_given) ? arguments.tree_arg : 0;
 
     // TODO: move to Client.cpp somehow
+    std::cout << "algorithm :" << arguments.neighbor_finding_arg << ", pruning: " << arguments.pruning_arg << '\n';
     static const std::unordered_map<enum_neighbor_finding, RoutingConfiguration::NeighborFindingAlgorithm> algorithms = {
             {neighbor_finding_arg_param,  RoutingConfiguration::NeighborFindingAlgorithm::PARAM},
             {neighbor_finding_arg_trig,   RoutingConfiguration::NeighborFindingAlgorithm::ATAN2},
@@ -51,7 +53,6 @@ main(int argc, char *argv[]) {
     config.neighbor_selection_algorithm = algorithms.at(arguments.neighbor_finding_arg);
     config.pruning = pruning.at(arguments.pruning_arg);
 
-    config.tree_size = (arguments.tree_given) ? arguments.tree_arg : 0;
 
     // read graph
     Client client;
