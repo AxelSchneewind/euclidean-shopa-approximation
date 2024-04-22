@@ -282,7 +282,7 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
                               << _router.forward_labels().aggregate_count();
                 }
 
-                std::cout << "memory usage (VM): " << std::setw(9) << vm / 1024 << "MiB" << std::flush;
+                std::cout << "memory usage (res): " << std::setw(9) << res / 1024 << "MiB" << std::flush;
                 usleep(100000); // wait for 100ms
             }
 
