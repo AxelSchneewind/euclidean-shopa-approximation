@@ -279,7 +279,7 @@ void Router::RouterImplementation<GraphT, RouterT>::perform_query(const Query &q
 
                 if constexpr (requires(RouterT::labels_type && l) { l.aggregate_count(); }) {
                     std::cout << "node aggregates currently expanded: " << std::setw(10)
-                              << _router.forward_labels().aggregate_count();
+                              << _router.forward_labels().aggregate_count() << ", ";
                 }
 
                 std::cout << "memory usage (res): " << std::setw(9) << res / 1024 << "MiB" << std::flush;
