@@ -59,6 +59,16 @@ if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-min-angle" ]; then
 fi
 process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle" "$OUTPUT_DIR/results-implicit-ref-pruned-min-angle.csv" milos-implicit-ref-pruned-min-angle
 
+## explicit node coordinate storage
+# no pruning with explicit coordinate storage
+if [ ! -d "$OUTPUT_DIR/implicit-ref-unpruned-exp" ]; then
+	EPSILONS=("1.0" "0.5" "0.25")
+	for eps in "${EPSILONS[@]}"; do
+	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-unpruned-exp/$eps" "$QUERY_FILE" "$eps" "--pruning=none --coords-explicit"
+	done
+fi
+process_results "$OUTPUT_DIR/implicit-ref-unpruned-exp" "$OUTPUT_DIR/results-implicit-ref-unpruned-exp.csv" milos-implicit-ref-unpruned-exp
+
 # default pruning with explicit coordinate storage
 if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-exp" ]; then
 	EPSILONS=("1.0" "0.5" "0.25")
@@ -66,7 +76,16 @@ if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-exp" ]; then
 	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-pruned-exp/$eps" "$QUERY_FILE" "$eps" "--pruning=prune --coords-explicit"
 	done
 fi
-process_results "$OUTPUT_DIR/implicit-ref-pruned-exp" "$OUTPUT_DIR/results-implicit-ref-pruned-exp.csv" milos-implicit-ref-pruned
+process_results "$OUTPUT_DIR/implicit-ref-pruned-exp" "$OUTPUT_DIR/results-implicit-ref-pruned-exp.csv" milos-implicit-ref-pruned-exp
+
+# pruned by minimal bending angle with explicit coordinate storage
+if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-min-angle-exp" ]; then
+	EPSILONS=("1.0" "0.5" "0.25")
+	for eps in "${EPSILONS[@]}"; do
+	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-pruned-min-angle-exp/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle --coords-explicit"
+	done
+fi
+process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle-exp" "$OUTPUT_DIR/results-implicit-ref-pruned-min-angle-exp.csv" milos-implicit-ref-pruned-min-angle-exp
 
 
 
