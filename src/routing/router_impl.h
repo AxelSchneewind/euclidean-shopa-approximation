@@ -7,7 +7,7 @@ template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::node_cost_pair_type const &router<Graph, Dijkstra>::forward_current() const { return _forward_current; }
 
 template<typename Graph, typename Dijkstra>
-router<Graph, Dijkstra>::distance_type router<Graph, Dijkstra>::forward_distance() const { return forward_labels().at(_forward_current.node()).distance(); }
+router<Graph, Dijkstra>::distance_type router<Graph, Dijkstra>::forward_distance() const { return _forward_current.value(); }
 
 template<typename Graph, typename Dijkstra>
 auto &&router<Graph, Dijkstra>::forward_search() const { return _forward_search; }

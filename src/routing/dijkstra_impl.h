@@ -252,11 +252,11 @@ dijkstra<G, Q, L, N, Heuristic>::step() {
 
     // inform labels of new distance
     if constexpr (requires (L l, distance_type d) {l.set_frontier_distance(d);} ){
-	_labels->set_frontier_distance(ncp.value());
+	    _labels->set_frontier_distance(ncp.value());
     }
 
     // remove already labelled nodes
-    while (!_queue.empty() && _labels->at(_queue.top().node()).distance() < _queue.top().distance()) [[likely]] {
+    while (!_queue.empty() && _labels->contains(_queue.top().node()) && _labels->at(_queue.top().node()).distance() < _queue.top().distance()) [[likely]] {
         _queue.pop();
     }
 }
@@ -321,7 +321,6 @@ G::subgraph_type dijkstra<G, Q, L, N, Heuristic>::shortest_path_tree(std::size_t
 
         remove_duplicates(nodes);
         remove_duplicates(edges);
-
     }
 
     typename G::subgraph_type subgraph{std::move(nodes), std::move(edges)};
