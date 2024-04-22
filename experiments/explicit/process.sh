@@ -29,8 +29,8 @@ for g in results/*/ ; do
 			DIR="${DIR/-pruned/-unpruned}"
 			REFERENCE=$DIR
 			describe_distances "$e" "$REFERENCE"
+			csvstack $(find $e -name quality.csv) > $m/quality.csv
 		done
 	done
-	csvstack $(find $g -name quality.csv) > $g/quality.csv
 done
 
