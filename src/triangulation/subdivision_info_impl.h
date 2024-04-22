@@ -227,8 +227,6 @@ subdivision<StoreCoords>::compute_node_coordinates(steiner_index_type steiner_in
                                       subdivision::subdivision_edge_info const &info,
                                       coordinate_t const &c1,
                                       coordinate_t const &c2) {
-    assert(edge >= 0 && static_cast<size_t>(edge) < _edges.size());
-
     assert(steiner_index >= 0);
     assert(steiner_index < info.node_count);
 
