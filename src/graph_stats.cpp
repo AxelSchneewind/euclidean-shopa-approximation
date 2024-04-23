@@ -71,21 +71,38 @@ void show_info<mode_arg_steiner_points_by_angle>(gengetopt_args_info const &args
 
 template<>
 void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
-    std::ifstream input(args.graph_file_arg);
-    auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input, parse_float_or_fraction(args.epsilon_arg));
-    input.close();
     if (!args.no_header_flag)
         std::cout
-                << "graph,epsilon,stored node count,stored edge count,stored boundary edge count,face count,node count,edge count,memory usage\n";
-    std::cout << parse_graph_name(args.graph_file_arg)
-              << ',' << args.epsilon_arg
-              << ',' << graph.base_graph().node_count()
-              << ',' << graph.base_graph().edge_count()
-              << ',' << graph.base_polyhedron().boundary_edge_count()
-              << ',' << graph.base_polyhedron().face_count()
-              << ',' << graph.node_count()
-              << ',' << graph.edge_count()
-              << ',' << memory_usage_kilo_bytes() << '\n';
+                << "graph,epsilon,stored node count,stored edge count,stored boundary edge count,face count,node count,edge count,memory usage,memory usage semi-explicit\n";
+
+    static constexpr size_t max_memory {4 * 1024 * 1024 * 1024}; // 2 GiB
+    bool measure_semi_explicit{ false };
+    {
+    	std::ifstream input(args.graph_file_arg);
+        auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input, parse_float_or_fraction(args.epsilon_arg));
+        input.close();
+        std::cout << parse_graph_name(args.graph_file_arg)
+                  << ',' << args.epsilon_arg
+                  << ',' << graph.base_graph().node_count()
+                  << ',' << graph.base_graph().edge_count()
+                  << ',' << graph.base_polyhedron().boundary_edge_count()
+                  << ',' << graph.base_polyhedron().face_count()
+                  << ',' << graph.node_count()
+                  << ',' << graph.edge_count()
+                  << ',' << memory_usage_kilo_bytes();
+
+	// only allow up to to GiB of node coordinates
+	measure_semi_explicit = (graph.node_count() * 16) <= max_memory; 
+    }
+
+    if (measure_semi_explicit) {
+    	std::ifstream input(args.graph_file_arg);
+        auto graph = triangulation_file_io::read_steiner<steiner_graph<true>>(input, parse_float_or_fraction(args.epsilon_arg));
+        input.close();
+        std::cout << ',' << memory_usage_kilo_bytes() << '\n';
+    } else {
+        std::cout << ",\n";
+    }
 }
 
 template<>
