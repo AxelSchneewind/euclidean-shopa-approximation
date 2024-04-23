@@ -205,8 +205,8 @@ subdivision<StoreCoords>::make_subdivision_info(const adjacency_list<int> &trian
 
     if constexpr (store_node_coordinates) {
         // precompute coordinates
-        coordinate_container coordinates(result.size());
-        for (edge_id_type edge = 0; edge < result.size(); ++edge) {
+        coordinate_container coordinates(triangulation.edge_count());
+        for (edge_id_type edge = 0; edge < triangulation.edge_count(); ++edge) {
             coordinates.append(edge, result[edge].node_count);
             for (int index = 0; index < result[edge].node_count; ++index) {
                 coordinates.at(edge, index) = compute_node_coordinates(index, result[edge],
