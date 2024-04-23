@@ -75,7 +75,7 @@ void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
         std::cout
                 << "graph,epsilon,stored node count,stored edge count,stored boundary edge count,face count,node count,edge count,memory usage,memory usage semi-explicit\n";
 
-    static constexpr size_t max_memory {4 * 1024 * 1024 * 1024}; // 2 GiB
+    static constexpr size_t max_memory {4UL * 1024UL * 1024UL* 1024UL}; // 2 GiB
     bool measure_semi_explicit{ false };
     {
     	std::ifstream input(args.graph_file_arg);
