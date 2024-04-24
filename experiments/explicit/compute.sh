@@ -3,13 +3,10 @@
 source ../utils.sh
 
 # number of queries
-NUM_QUERIES=50
+NUM_QUERIES=10
 
 # maximum tree size to write to files (0 to disable tree output)
 TREE_SIZE=0
-
-# toggle A* here (on/off)
-ASTAR=on
 
 # graph files
 TRIANGULATION_REF_GRAPH=milos-ref.graph
@@ -27,74 +24,97 @@ mkdir -p "$OUTPUT_DIR"
 
 # make queries
 if [ ! -f "$QUERY_FILE" ]; then
-	make_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
+	make_queries "$TRIANGULATION_UNREF_GRAPH" "$QUERY_FILE" "$NUM_QUERIES"
 fi
+
+# 
+compute_bench() {
+	local GRAPH_FILE="$1"
+	local PRUNING="$2"
+	local NEIGHBOR_FINDING="$3"
+	local QUERIES="$4"
+	local STORAGE="$5"
+
+	# 
+	if [[ "${GRAPH_FILE: -4}" == ".fmi" ]]; then
+		local STORAGE="explicit"
+		local BENCHMARK_NAME="$STORAGE"
+		local DIRECTORY_NAME="$OUTPUT_DIR/$BENCHMARK_NAME"
+		local ARGUMENTS="-t0"
+
+		if [ ! -d "$DIRECTORY_NAME/1.0" ]; then
+			compute_shopa_queries "$EXPLICIT_REF_10_GRAPH" "$DIRECTORY_NAME/1.0" "$QUERY_FILE" 1.0 "$ARGUMENTS"
+		fi
+		if [ ! -d "$DIRECTORY_NAME/0.5" ]; then
+			compute_shopa_queries "$EXPLICIT_REF_05_GRAPH" "$DIRECTORY_NAME/0.5" "$QUERY_FILE" 0.5 "$ARGUMENTS"
+		fi
+		if [ ! -d "$DIRECTORY_NAME/0.25" ]; then
+			compute_shopa_queries "$EXPLICIT_REF_025_GRAPH" "$DIRECTORY_NAME/0.25" "$QUERY_FILE" 0.25 "$ARGUMENTS"
+		fi
+		process_results "$DIRECTORY_NAME" "$OUTPUT_DIR/$BENCHMARK_NAME.csv" $BENCHMARK_NAME
+
+	else
+		local STORAGE="implicit"
+		local BENCHMARK_NAME="$STORAGE-$PRUNING-$NEIGHBOR_FINDING"
+		local DIRECTORY_NAME="$OUTPUT_DIR/$BENCHMARK_NAME"
+		local ARGUMENTS="-t0 --pruning=$PRUNING --neighbor-finding=$NEIGHBOR_FINDING"
+
+		# 
+		if [[ "${STORAGE}" == "semi-explicit" ]]; then
+			local STORAGE="semi-implicit"
+			local BENCHMARK_NAME="$STORAGE-$PRUNING-$NEIGHBOR_FINDING"
+			local DIRECTORY_NAME="$OUTPUT_DIR/$BENCHMARK_NAME"
+			local ARGUMENTS="--pruning=$PRUNING --neighbor-finding=$NEIGHBOR_FINDING --coords-explicit"
+		fi
+
+		EPSILONS=("1.0" "0.5" "0.25")
+		for eps in "${EPSILONS[@]}"; do
+			if [ ! -d "$DIRECTORY_NAME/$eps" ]; then
+		    		compute_shopa_queries "$GRAPH_FILE" "$DIRECTORY_NAME/$eps" "$QUERIES" "$eps" "$ARGUMENTS"
+			fi
+		done
+		process_results "$DIRECTORY_NAME" "$OUTPUT_DIR/$BENCHMARK_NAME.csv" $BENCHMARK_NAME
+	fi
+}
 
 
 ############################ refined graph using triangle (Shewchuk) ############################
-# no pruning
-if [ ! -d "$OUTPUT_DIR/implicit-ref-unpruned" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-unpruned/$eps" "$QUERY_FILE" "$eps" "--pruning=none"
-	done
-fi
-process_results "$OUTPUT_DIR/implicit-ref-unpruned" "$OUTPUT_DIR/results-implicit-ref-unpruned.csv" milos-implicit-ref-unpruned
+#
+# GRAPH_FILE="$1"
+# PRUNING="$2":  ("none", "prune", "prune-min-angle")
+# NEIGHBOR_FINDING="$3": "param", "trig", "binary", "linear"
+# QUERIES="$4"
+# STORAGE="$5"
+compute_bench "$TRIANGULATION_REF_GRAPH" "none" "param" "$QUERY_FILE"  "implicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "none" "trig" "$QUERY_FILE"   "implicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "none" "binary" "$QUERY_FILE" "implicit"
 
-# default pruning
-if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-pruned/$eps" "$QUERY_FILE" "$eps" "--pruning=prune"
-	done
-fi
-process_results "$OUTPUT_DIR/implicit-ref-pruned" "$OUTPUT_DIR/results-implicit-ref-pruned.csv" milos-implicit-ref-pruned
+compute_bench "$TRIANGULATION_REF_GRAPH" "none" "param" "$QUERY_FILE"  "semi-explicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "none" "trig" "$QUERY_FILE"   "semi-explicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "none" "binary" "$QUERY_FILE" "semi-explicit"
 
-# pruned by minimal bending angle
-if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-min-angle" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-pruned-min-angle/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle"
-	done
-fi
-process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle" "$OUTPUT_DIR/results-implicit-ref-pruned-min-angle.csv" milos-implicit-ref-pruned-min-angle
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune" "param" "$QUERY_FILE"  "implicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune" "trig" "$QUERY_FILE"   "implicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune" "binary" "$QUERY_FILE" "implicit"
 
-## explicit node coordinate storage
-# no pruning with explicit coordinate storage
-if [ ! -d "$OUTPUT_DIR/implicit-ref-unpruned-exp" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-unpruned-exp/$eps" "$QUERY_FILE" "$eps" "--pruning=none --coords-explicit"
-	done
-fi
-process_results "$OUTPUT_DIR/implicit-ref-unpruned-exp" "$OUTPUT_DIR/results-implicit-ref-unpruned-exp.csv" milos-implicit-ref-unpruned-exp
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune" "param" "$QUERY_FILE"  "semi-explicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune" "trig" "$QUERY_FILE"   "semi-explicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune" "binary" "$QUERY_FILE" "semi-explicit"
 
-# default pruning with explicit coordinate storage
-if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-exp" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-pruned-exp/$eps" "$QUERY_FILE" "$eps" "--pruning=prune --coords-explicit"
-	done
-fi
-process_results "$OUTPUT_DIR/implicit-ref-pruned-exp" "$OUTPUT_DIR/results-implicit-ref-pruned-exp.csv" milos-implicit-ref-pruned-exp
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune-min-angle" "param" "$QUERY_FILE"  "implicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune-min-angle" "trig" "$QUERY_FILE"   "implicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune-min-angle" "binary" "$QUERY_FILE" "implicit"
 
-# pruned by minimal bending angle with explicit coordinate storage
-if [ ! -d "$OUTPUT_DIR/implicit-ref-pruned-min-angle-exp" ]; then
-	EPSILONS=("1.0" "0.5" "0.25")
-	for eps in "${EPSILONS[@]}"; do
-	    compute_ota_queries "$TRIANGULATION_REF_GRAPH" "$OUTPUT_DIR/implicit-ref-pruned-min-angle-exp/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle --coords-explicit"
-	done
-fi
-process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle-exp" "$OUTPUT_DIR/results-implicit-ref-pruned-min-angle-exp.csv" milos-implicit-ref-pruned-min-angle-exp
-
-
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune-min-angle" "param" "$QUERY_FILE"  "semi-explicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune-min-angle" "trig" "$QUERY_FILE"   "semi-explicit"
+compute_bench "$TRIANGULATION_REF_GRAPH" "prune-min-angle" "binary" "$QUERY_FILE" "semi-explicit"
 
 ######################################## unrefined graph ########################################
 # no pruning
 # if [ ! -d "$OUTPUT_DIR/implicit-unref-unpruned" ]; then
 # 	EPSILONS=("1.0" "0.5" "0.25")
 # 	for eps in "${EPSILONS[@]}"; do
-# 	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-unpruned/$eps" "$QUERY_FILE" "$eps" "--pruning=none"
+# 	    compute_shopa_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-unpruned/$eps" "$QUERY_FILE" "$eps" "--pruning=none"
 # 	done
 # fi
 # process_results "$OUTPUT_DIR/implicit-unref-unpruned" "$OUTPUT_DIR/results-implicit-unref-unpruned.csv" milos-implicit-unref-unpruned
@@ -103,7 +123,7 @@ process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle-exp" "$OUTPUT_DIR/res
 # if [ ! -d "$OUTPUT_DIR/implicit-unref-pruned" ]; then
 # 	EPSILONS=("1.0" "0.5" "0.25")
 # 	for eps in "${EPSILONS[@]}"; do
-# 	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-pruned/$eps" "$QUERY_FILE" "$eps" "--pruning=prune"
+# 	    compute_shopa_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-pruned/$eps" "$QUERY_FILE" "$eps" "--pruning=prune"
 # 	done
 # fi
 # process_results "$OUTPUT_DIR/implicit-unref-pruned" "$OUTPUT_DIR/results-implicit-unref-pruned.csv" milos-implicit-unref-pruned
@@ -112,27 +132,16 @@ process_results "$OUTPUT_DIR/implicit-ref-pruned-min-angle-exp" "$OUTPUT_DIR/res
 # if [ ! -d "$OUTPUT_DIR/implicit-unref-pruned-min-angle" ]; then
 # 	EPSILONS=("1.0" "0.5" "0.25")
 # 	for eps in "${EPSILONS[@]}"; do
-# 	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref--pruned-min-angle/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle"
+# 	    compute_shopa_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-pruned-min-angle/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle"
 # 	done
 # fi
 # process_results "$OUTPUT_DIR/implicit-unref-pruned-min-angle" "$OUTPUT_DIR/results-implicit-unref-pruned-min-angle.csv" milos-implicit-unref-pruned-min-angle
 
 ######################################### explicit graph ########################################
 # exact solutions
-if [ ! -d "$OUTPUT_DIR/explicit-ref/1.0" ]; then
-	compute_ota_queries "$EXPLICIT_REF_10_GRAPH" "$OUTPUT_DIR/explicit-ref/1.0" "$QUERY_FILE" 1.0 ""
-	process_results "$OUTPUT_DIR/explicit-ref/1.0" "$OUTPUT_DIR/results-explicit-ref-10.csv" milos-explicit-ref-10
-fi
-if [ ! -d "$OUTPUT_DIR/explicit-ref/0.5" ]; then
-	compute_ota_queries "$EXPLICIT_REF_05_GRAPH" "$OUTPUT_DIR/explicit-ref/0.5" "$QUERY_FILE" 0.5 ""
-	process_results "$OUTPUT_DIR/explicit-ref/0.5" "$OUTPUT_DIR/results-explicit-ref-05.csv" milos-explicit-ref-05
-fi
-if [ ! -d "$OUTPUT_DIR/explicit-ref/0.25" ]; then
-	compute_ota_queries "$EXPLICIT_REF_025_GRAPH" "$OUTPUT_DIR/explicit-ref/0.25" "$QUERY_FILE" 0.25 ""
-	process_results "$OUTPUT_DIR/explicit-ref/0.25" "$OUTPUT_DIR/results-explicit-ref-025.csv" milos-explicit-ref-025
-fi
-
-
+compute_bench "$EXPLICIT_REF_10_GRAPH" "" "" "$QUERY_FILE"  "explicit"
+compute_bench "$EXPLICIT_REF_05_GRAPH" "" "" "$QUERY_FILE"  "explicit"
+compute_bench "$EXPLICIT_REF_025_GRAPH" "" "" "$QUERY_FILE"  "explicit"
 
 ######################################### postprocessing ########################################
 # aggregate results into one file
