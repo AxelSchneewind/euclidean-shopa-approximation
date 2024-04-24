@@ -214,6 +214,7 @@ subdivision<StoreCoords>::make_subdivision_info(const adjacency_list<int> &trian
                                                                        nodes[triangulation.destination(edge)].coordinates);
             }
         }
+	coordinates.shrink_to_fit();
 
         return {std::move(result), std::move(coordinates)};
     } else {
