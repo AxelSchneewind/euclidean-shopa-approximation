@@ -3,7 +3,7 @@
 source ../utils.sh
 
 # number of queries
-NUM_QUERIES=10
+NUM_QUERIES=1
 
 # maximum tree size to write to files (0 to disable tree output)
 TREE_SIZE=0
@@ -17,8 +17,8 @@ EXPLICIT_REF_025_GRAPH=milos-ref-025.fmi
 # EXPLICIT_GRAPH=pruned.fmi
 
 # output paths
-OUTPUT_DIR=results/milos
-QUERY_FILE=results/milos/queries.txt
+OUTPUT_DIR=test/milos
+QUERY_FILE=test/milos/queries.txt
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -40,7 +40,7 @@ compute_bench() {
 		local STORAGE="explicit"
 		local BENCHMARK_NAME="$STORAGE"
 		local DIRECTORY_NAME="$OUTPUT_DIR/$BENCHMARK_NAME"
-		local ARGUMENTS="-t0"
+		local ARGUMENTS=""
 
 		if [ ! -d "$DIRECTORY_NAME/1.0" ]; then
 			compute_shopa_queries "$EXPLICIT_REF_10_GRAPH" "$DIRECTORY_NAME/1.0" "$QUERY_FILE" 1.0 "$ARGUMENTS"
@@ -57,7 +57,7 @@ compute_bench() {
 		local STORAGE="implicit"
 		local BENCHMARK_NAME="$STORAGE-$PRUNING-$NEIGHBOR_FINDING"
 		local DIRECTORY_NAME="$OUTPUT_DIR/$BENCHMARK_NAME"
-		local ARGUMENTS="-t0 --pruning=$PRUNING --neighbor-finding=$NEIGHBOR_FINDING"
+		local ARGUMENTS="--pruning=$PRUNING --neighbor-finding=$NEIGHBOR_FINDING"
 
 		# 
 		if [[ "${STORAGE}" == "semi-explicit" ]]; then
