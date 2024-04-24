@@ -82,4 +82,9 @@ void fast_map<AggregateId, IntraAggregateId, Info>::clear() {
 }
 
 template<typename AggregateId, typename IntraAggregateId, typename Info>
+void fast_map<AggregateId, IntraAggregateId, Info>::shrink_to_fit() {
+    _entries.shrink_to_fit();
+}
+
+template<typename AggregateId, typename IntraAggregateId, typename Info>
 std::size_t fast_map<AggregateId, IntraAggregateId, Info>::size() const { return _entries.size(); }

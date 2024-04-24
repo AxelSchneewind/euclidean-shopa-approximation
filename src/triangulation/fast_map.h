@@ -48,4 +48,6 @@ public:
     std::size_t size() const;
 
     void clear();
+
+    void shrink_to_fit();
 };
