@@ -43,13 +43,13 @@ compute_bench() {
 		local ARGUMENTS=""
 
 		if [ ! -d "$DIRECTORY_NAME/1.0" ]; then
-			compute_shopa_queries "$EXPLICIT_REF_10_GRAPH" "$DIRECTORY_NAME/1.0" "$QUERY_FILE" 1.0 "$ARGUMENTS"
+			compute_ota_queries "$EXPLICIT_REF_10_GRAPH" "$DIRECTORY_NAME/1.0" "$QUERY_FILE" 1.0 "$ARGUMENTS"
 		fi
 		if [ ! -d "$DIRECTORY_NAME/0.5" ]; then
-			compute_shopa_queries "$EXPLICIT_REF_05_GRAPH" "$DIRECTORY_NAME/0.5" "$QUERY_FILE" 0.5 "$ARGUMENTS"
+			compute_ota_queries "$EXPLICIT_REF_05_GRAPH" "$DIRECTORY_NAME/0.5" "$QUERY_FILE" 0.5 "$ARGUMENTS"
 		fi
 		if [ ! -d "$DIRECTORY_NAME/0.25" ]; then
-			compute_shopa_queries "$EXPLICIT_REF_025_GRAPH" "$DIRECTORY_NAME/0.25" "$QUERY_FILE" 0.25 "$ARGUMENTS"
+			compute_ota_queries "$EXPLICIT_REF_025_GRAPH" "$DIRECTORY_NAME/0.25" "$QUERY_FILE" 0.25 "$ARGUMENTS"
 		fi
 		process_results "$DIRECTORY_NAME" "$OUTPUT_DIR/$BENCHMARK_NAME.csv" $BENCHMARK_NAME
 
@@ -70,7 +70,7 @@ compute_bench() {
 		EPSILONS=("1.0" "0.5" "0.25")
 		for eps in "${EPSILONS[@]}"; do
 			if [ ! -d "$DIRECTORY_NAME/$eps" ]; then
-		    		compute_shopa_queries "$GRAPH_FILE" "$DIRECTORY_NAME/$eps" "$QUERIES" "$eps" "$ARGUMENTS"
+		    		compute_ota_queries "$GRAPH_FILE" "$DIRECTORY_NAME/$eps" "$QUERIES" "$eps" "$ARGUMENTS"
 			fi
 		done
 		process_results "$DIRECTORY_NAME" "$OUTPUT_DIR/$BENCHMARK_NAME.csv" $BENCHMARK_NAME
