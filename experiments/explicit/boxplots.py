@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 import math
 import argparse
 import sys
+import re
 
 
 
@@ -23,6 +24,9 @@ def main():
     parser.add_argument('--column', '-c', default='time', help='the column to show box plots of')
     parser.add_argument('--fliers', action='store_true', help='whether to show fliers on boxplots')
     parser.add_argument('--means', action='store_true', help='whether to show means on boxplots')
+
+    parser.add_argument('--epsilon', '-e', action='append', help='epsilons to plot')
+    parser.add_argument('--benchmarks', '-b', default='*', help='a regex for selecting benchmarks to plot')
     args = parser.parse_args()
 
     # load data and filter out unusable results
@@ -43,8 +47,11 @@ def main():
 
 
     # by benchmark
-    plots = [(b,eps) for eps in data['epsilon'].unique() for b in data['benchmark'].unique() ]
-    plots = [p for p in filter(lambda x: len(data.loc[(data['benchmark'] == x[0]) & (data['epsilon'] == x[1])]) > 0, plots)]
+    matcher = re.compile(args.benchmarks)
+    benchs = [ b for b in filter(lambda x: matcher.match(x) is not None, data['benchmark'].unique()) ]
+    epsilons = [ eps for eps in filter(lambda x: str(x) in args.epsilon, data['epsilon'].unique()) ]
+    plots = [(b,eps) for eps in epsilons for b in benchs ]
+    plots = [ p for p in filter(lambda x: len(data.loc[(data['benchmark'] == x[0]) & (data['epsilon'] == x[1])]) > 0, plots) ]
 
     column_by_epsilon = [ data.loc[(data['benchmark'] == b) & (data['epsilon'] == eps), args.column] for (b,eps) in plots ]
     print(len(column_by_epsilon), len(plots))
