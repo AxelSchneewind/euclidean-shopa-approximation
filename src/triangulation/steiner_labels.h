@@ -86,7 +86,7 @@ private:
     using intra_edge_id_type = typename G::triangle_edge_id_type;
     using distance_type = typename G::distance_type;
 
-    using labels_type = fast_map<edge_id_type, intra_edge_id_type, value_type>;
+    using labels_type = fast_map<edge_id_type, intra_edge_id_type, long, value_type>;
 
     std::shared_ptr<G> _graph;
 

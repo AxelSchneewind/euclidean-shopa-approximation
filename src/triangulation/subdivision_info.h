@@ -50,7 +50,7 @@ private:
 
     std::vector<subdivision_edge_info> _edges;
 
-    using coordinate_container = fast_map<edge_id_type, steiner_index_type, coordinate_type>;
+    using coordinate_container = fast_map<edge_id_type, steiner_index_type, int, coordinate_type>;
     coordinate_container _coordinates;
 
     size_t edges_capped{0};
@@ -64,7 +64,7 @@ private:
 
 
     subdivision(std::vector<subdivision_edge_info> &&edges,
-                fast_map<edge_id_type, steiner_index_type, coordinate_type> &&coordinates) requires(store_node_coordinates)
+                coordinate_container &&coordinates) requires(store_node_coordinates)
             : _edges{std::move(edges)}, _coordinates{std::move(coordinates)} {};
 
     subdivision(std::vector<subdivision_edge_info> &&edges) requires (!store_node_coordinates): _edges{std::move(edges)},

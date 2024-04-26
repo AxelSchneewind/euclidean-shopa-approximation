@@ -10,12 +10,12 @@
  * @tparam IntraAggregateId second key
  * @tparam Info elements to store
  */
-template <typename AggregateId, typename IntraAggregateId, typename Info>
+template <typename AggregateId, typename IntraAggregateId, typename Index, typename Info>
 class fast_map {
 private:
     using aggregate_id_type = AggregateId;
     using intra_aggregate_id_type = IntraAggregateId;
-    using index_type = int;
+    using index_type = Index;
     using entry_type = Info;
 
     std::vector<index_type> _aggregate_index;
@@ -24,7 +24,7 @@ private:
 public:
     using info_type = Info;
 
-    fast_map (size_t aggregate_count);
+    fast_map(size_t aggregate_count);
 
     bool contains(aggregate_id_type id) const;
 
