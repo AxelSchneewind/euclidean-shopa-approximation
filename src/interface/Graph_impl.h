@@ -60,6 +60,8 @@ void Graph::GraphImplementation<GraphT>::write_graph_stats(std::ostream &output)
 
 template<typename GraphT>
 void Graph::GraphImplementation<GraphT>::write_graph_stats(table &out) const {
+    out.put(Statistics::GRAPH_FILE, _graph_file);
+
     if constexpr (SteinerGraph<GraphT>) {
         out.put(Statistics::NODE_COUNT, graph->node_count());
         out.put(Statistics::EDGE_COUNT, graph->edge_count());
@@ -118,6 +120,11 @@ std::size_t Graph::GraphImplementation<GraphT>::edge_count() const {
 template<typename GraphT>
 std::size_t Graph::GraphImplementation<GraphT>::node_count() const {
     return graph->node_count();
+}
+
+template<typename GraphT>
+std::string& Graph::GraphImplementation<GraphT>::graph_file() {
+    return _graph_file;
 }
 
 
@@ -298,8 +305,7 @@ void Graph::read_graph_file(std::string path, RoutingConfiguration const &config
     else
         throw std::invalid_argument("unrecognized file ending");
 
-
-    input.close();
+    impl->graph_file() = path;
 }
 
 
@@ -332,6 +338,5 @@ void Graph::read_graph_file(std::string path, RoutingConfiguration const &config
     else
     throw std::invalid_argument("unrecognized file ending");
 
-
-    input.close();
+    impl->graph_file() = path;
 }

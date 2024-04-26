@@ -23,6 +23,8 @@ class GraphInterface {
 public:
     virtual ~GraphInterface() = default;
 
+    virtual std::string& graph_file() = 0;
+
     virtual void project(Projection projection) = 0;
 
     virtual void write_graph_file(std::string path) const = 0;
@@ -53,6 +55,7 @@ private:
     public:
         std::shared_ptr<GraphT> graph;
         GraphType _type {GraphType::NONE};
+	std::string _graph_file{};
 
         GraphImplementation(GraphT&& graph) : graph{std::make_shared<GraphT>(std::move(graph))} {}
 
@@ -62,6 +65,8 @@ private:
         ~GraphImplementation() = default;
 
         void project(Projection projection) override;
+
+    	std::string& graph_file() override;
 
         void write_graph_file(std::string path) const override;
         void write_graph_file(std::string path, int color, int linewidth) const override;
@@ -118,6 +123,8 @@ public:
     std::size_t node_count() const override { return impl->node_count(); }
 
     std::size_t edge_count() const override { return impl->edge_count(); }
+
+    std::string& graph_file() override { return impl->graph_file(); }
 
     coordinate_t node_coordinates(long node_id) const override { return impl->node_coordinates(node_id); }
 

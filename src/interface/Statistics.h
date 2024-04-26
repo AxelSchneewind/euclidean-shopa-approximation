@@ -35,6 +35,7 @@ enum Statistics {
     NEIGHBORS_STEINER_POINT_COUNT,
     NEIGHBORS_STEINER_POINT_NEIGHBORS_COUNT,
     NEIGHBORS_STEINER_POINT_ANGLE_CHECK_COUNT,
+    GRAPH_FILE,
     PATH,
     NUM_COLUMNS
 };
@@ -73,5 +74,6 @@ const std::array<std::string, NUM_COLUMNS> COLUMNS{
     "neighbors steiner point count",
     "neighbors steiner point neighbors count",
     "neighbors steiner point search iteration count",
+    "graph",
     "path"
 };
