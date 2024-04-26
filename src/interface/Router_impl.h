@@ -140,7 +140,7 @@ static inline std::unique_ptr<RouterInterface> make_router(Graph const &graph, R
         return {};
     } else {
         using routing_t = typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::routing_t;
-        std::cout << "selected Implementation: " << Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications> << ", \n";
+        std::cout << "selected Implementation: " << typeid(Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>).name() << ", \n";
         std::cout << "" << typeid(routing_t).name() << ", " << typeid(GraphImpl).name() << '\n';
         return std::make_unique<Router::RouterImplementation<GraphImpl, routing_t>>(
                 graph.get_implementation<GraphImpl>(), routing_t(graph.get_implementation<GraphImpl>()), config);
