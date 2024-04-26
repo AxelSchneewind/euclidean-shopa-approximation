@@ -57,7 +57,7 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     std::vector<std::array<typename Graph::triangle_node_id_type, 3>> faces;
 
     if (node_count >= static_cast<std::size_t>(std::numeric_limits<int>::max()) || triangle_count >= static_cast<std::size_t>(std::numeric_limits<int>::max()))
-        throw std::runtime_error("node or face count to high");
+        throw std::runtime_error("node or face count too high");
 
     nodes.resize(node_count);
     faces.resize(triangle_count);
