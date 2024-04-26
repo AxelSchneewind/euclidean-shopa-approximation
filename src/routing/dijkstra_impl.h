@@ -264,6 +264,7 @@ dijkstra<G, Q, L, N, Heuristic>::step() {
 
 template<RoutableGraph G, DijkstraQueue<G> Q, DijkstraLabels<typename G::node_id_type, typename Q::value_type, typename Q::value_type> L, NeighborsGetter<typename Q::value_type> N, typename Heuristic>
 G::path_type dijkstra<G, Q, L, N, Heuristic>::path(node_id_type target) const {
+    static constexpr size_t max_path_length {1000000};
     typename G::node_id_type fwd_node = target;
 
     std::vector<typename G::node_id_type> result;
@@ -273,7 +274,7 @@ G::path_type dijkstra<G, Q, L, N, Heuristic>::path(node_id_type target) const {
         return {std::move(result)};
 
     if constexpr (HasPredecessor<typename L::value_type>) {
-        while (!optional::is_none(fwd_node) && fwd_node != _start_node) {
+        while (!optional::is_none(fwd_node) && fwd_node != _start_node && result.size() < max_path_length) {
             fwd_node = get_label(fwd_node).predecessor();
 
             if (optional::is_none(fwd_node)) break;
@@ -296,6 +297,7 @@ G::subgraph_type dijkstra<G, Q, L, N, Heuristic>::shortest_path_tree(std::size_t
     std::vector<typename G::node_id_type> nodes;
     std::vector<typename G::edge_id_type> edges;
 
+    std::cout << "reached(start_node): " << reached(_start_node) << '\n';std::cout << "HasPredecessor<L::value_type>: " << HasPredecessor<typename L::value_type> << '\n';
     if (!reached(_start_node))
         return {std::move(nodes), std::move(edges)};
 
