@@ -6,7 +6,7 @@ source ../utils.sh
 NUM_QUERIES=1
 
 # maximum tree size to write to files (0 to disable tree output)
-TREE_SIZE=10000000
+TREE_SIZE=0
 
 # graph files
 TRIANGULATION_REF_GRAPH=milos-ref.graph
@@ -17,8 +17,8 @@ EXPLICIT_REF_025_GRAPH=milos-ref-025.fmi
 # EXPLICIT_GRAPH=pruned.fmi
 
 # output paths
-OUTPUT_DIR=test/milos
-QUERY_FILE=test/milos/queries.txt
+OUTPUT_DIR=results/milos
+QUERY_FILE=results/milos/queries.txt
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -43,15 +43,15 @@ compute_bench() {
 		local ARGUMENTS=""
 
 		if [ ! -d "$DIRECTORY_NAME/1.0" ]; then
-			compute_shopa_queries "$EXPLICIT_REF_10_GRAPH" "$DIRECTORY_NAME/1.0" "$QUERY_FILE" 1.0 "$ARGUMENTS"
+			compute_ota_queries "$EXPLICIT_REF_10_GRAPH" "$DIRECTORY_NAME/1.0" "$QUERY_FILE" 1.0 "$ARGUMENTS"
 			process_results "$DIRECTORY_NAME" "$OUTPUT_DIR/$BENCHMARK_NAME.csv" "$BENCHMARK_NAME"
 		fi
 		if [ ! -d "$DIRECTORY_NAME/0.5" ]; then
-			compute_shopa_queries "$EXPLICIT_REF_05_GRAPH" "$DIRECTORY_NAME/0.5" "$QUERY_FILE" 0.5 "$ARGUMENTS"
+			compute_ota_queries "$EXPLICIT_REF_05_GRAPH" "$DIRECTORY_NAME/0.5" "$QUERY_FILE" 0.5 "$ARGUMENTS"
 			process_results "$DIRECTORY_NAME" "$OUTPUT_DIR/$BENCHMARK_NAME.csv" "$BENCHMARK_NAME"
 		fi
 		if [ ! -d "$DIRECTORY_NAME/0.25" ]; then
-			compute_shopa_queries "$EXPLICIT_REF_025_GRAPH" "$DIRECTORY_NAME/0.25" "$QUERY_FILE" 0.25 "$ARGUMENTS"
+			compute_ota_queries "$EXPLICIT_REF_025_GRAPH" "$DIRECTORY_NAME/0.25" "$QUERY_FILE" 0.25 "$ARGUMENTS"
 			process_results "$DIRECTORY_NAME" "$OUTPUT_DIR/$BENCHMARK_NAME.csv" "$BENCHMARK_NAME"
 		fi
 
@@ -69,8 +69,7 @@ compute_bench() {
 			local ARGUMENTS="--pruning=$PRUNING --neighbor-finding=$NEIGHBOR_FINDING --coords-explicit"
 		fi
 
-		EPSILONS=("1.0")
-		# "0.5" "0.25")
+		EPSILONS=("1.0" "0.5" "0.25")
 		for eps in "${EPSILONS[@]}"; do
 			if [ ! -d "$DIRECTORY_NAME/$eps" ]; then
 		    		compute_shopa_queries "$GRAPH_FILE" "$DIRECTORY_NAME/$eps" "$QUERIES" "$eps" "$ARGUMENTS"
