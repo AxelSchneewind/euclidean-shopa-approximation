@@ -71,7 +71,7 @@ struct Implementation<GraphImpl, false, use_a_star, n, simplifications> {
     // using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
     using labels_t = steiner_labels<graph_t, label_t>;
     using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
-    using neighbors_t = steiner_neighbors<graph_t, labels_t, simplifications, n>;
+    using neighbors_t = typename if_or_else<simplifications != Pruning::UNPRUNED, steiner_neighbors<graph_t, labels_t, simplifications, n>, default_neighbors<graph_t>>::type;
     using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<graph_t>, no_heuristic>::type>;
     using routing_t = router<graph_t, dijkstra_t>;
 };
@@ -99,7 +99,7 @@ struct Implementation<GraphImpl, true, use_a_star, n, simplifications> {
 
     using labels_t = frontier_labels<graph_t, node_cost_pair_t, label_t>;
     using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
-    using neighbors_t = steiner_neighbors<graph_t, labels_t, simplifications, n>;
+    using neighbors_t = typename if_or_else<simplifications != Pruning::UNPRUNED, steiner_neighbors<graph_t, labels_t, simplifications, n>, default_neighbors<graph_t>>::type;
     using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<graph_t>, no_heuristic>::type>;
     using routing_t = router<graph_t, dijkstra_t>;
 };
@@ -140,8 +140,14 @@ static inline std::unique_ptr<RouterInterface> make_router(Graph const &graph, R
         return {};
     } else {
         using routing_t = typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::routing_t;
-        std::cout << "selected Implementation: " << typeid(Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>).name() << ", \n";
-        std::cout << "" << typeid(routing_t).name() << ", " << typeid(GraphImpl).name() << '\n';
+	std::cout << "selected Implementation: \n"
+	          << "only_distance: " << only_distance << ", A*: " << use_a_star << ", pruning: " << (int)simplifications << ", neighbor finding " << (int)algorithm << ", \n"
+	          << "graph:         " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::graph_t).name() << ", \n"
+	          << "queue:         " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::queue_t).name() << ", \n"
+	          << "labels:        " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::labels_t).name() << ", \n"
+	          << "neighbors:     " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::neighbors_t).name() << ", \n"
+	          << "dijkstra:      " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::dijkstra_t).name() << ", \n";
+
         return std::make_unique<Router::RouterImplementation<GraphImpl, routing_t>>(
                 graph.get_implementation<GraphImpl>(), routing_t(graph.get_implementation<GraphImpl>()), config);
     }
@@ -214,6 +220,8 @@ static inline std::unique_ptr<RouterInterface> select_routing_impl(Graph const& 
 
 Router::Router(const Graph &graph, RoutingConfiguration const &config)
         : _config(config) {
+    std::cout << "selecting implementation by:\n"
+              << "A*: " << config.use_a_star << ", only-distance: " << config.only_distance << ", pruning: " << (int)(config.pruning) << ", neighbor finding: " << (int)(config.neighbor_selection_algorithm) << "\n\n";
     impl = select_routing_impl(graph, config);
 
     if (!impl) {
