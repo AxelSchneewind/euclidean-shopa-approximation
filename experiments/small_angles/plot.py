@@ -58,5 +58,7 @@ if __name__ == "__main__":
     plt.xlim((plt.xlim()[1], plt.xlim()[0])) 
     plt.tight_layout() 
     plt.legend()
-    plt.show()
+    plt.savefig('out.pgf')
+    plt.savefig('out.pdf')
+    # plt.show()
 
