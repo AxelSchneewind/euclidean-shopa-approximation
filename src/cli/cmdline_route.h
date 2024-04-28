@@ -69,10 +69,10 @@ struct gengetopt_args_info
   const char *live_status_help; /**< @brief print live status about computation to stdout help description.  */
   int astar_flag;	/**< @brief use A* heuristic to speed up one-to-one queries (default=off).  */
   const char *astar_help; /**< @brief use A* heuristic to speed up one-to-one queries help description.  */
-  enum enum_neighbor_finding neighbor_finding_arg;	/**< @brief the type of algorithm to find neighbors with minimal bending angle (default='param').  */
+  enum enum_neighbor_finding neighbor_finding_arg;	/**< @brief the type of algorithm to find neighbors with minimal bending angle.  */
   char * neighbor_finding_orig;	/**< @brief the type of algorithm to find neighbors with minimal bending angle original value given at command line.  */
   const char *neighbor_finding_help; /**< @brief the type of algorithm to find neighbors with minimal bending angle help description.  */
-  enum enum_pruning pruning_arg;	/**< @brief which type of pruning to use for steiner graphs (default='prune').  */
+  enum enum_pruning pruning_arg;	/**< @brief which type of pruning to use for steiner graphs.  */
   char * pruning_orig;	/**< @brief which type of pruning to use for steiner graphs original value given at command line.  */
   const char *pruning_help; /**< @brief which type of pruning to use for steiner graphs help description.  */
   int no_tree_flag;	/**< @brief if enabled, only computes distances without keeping tree information (does not produce paths) (default=off).  */

@@ -27,9 +27,9 @@ option "live-status" l "print live status about computation to stdout" flag on
 
 section "routing algorithms" sectiondesc="some advanced options on dijkstra search"
 option "astar" a "use A* heuristic to speed up one-to-one queries" flag off
-option "neighbor-finding" - "the type of algorithm to find neighbors with minimal bending angle" values="param","trig","binary","linear" enum default="param" optional
+option "neighbor-finding" - "the type of algorithm to find neighbors with minimal bending angle" values="param","trig","binary","linear" enum optional
 
-option "pruning" - "which type of pruning to use for steiner graphs" values="none","prune","prune-min-angle" enum default="prune" optional
+option "pruning" - "which type of pruning to use for steiner graphs" values="none","prune","prune-min-angle" enum optional
 option "no-tree" - "if enabled, only computes distances without keeping tree information (does not produce paths)" flag off
 
 # option <long> <short> "<desc>"

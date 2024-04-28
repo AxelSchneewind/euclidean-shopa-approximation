@@ -30,6 +30,27 @@ main(int argc, char *argv[]) {
     config.live_status = arguments.live_status_flag;
     config.tree_size = (arguments.tree_given) ? arguments.tree_arg : 0;
 
+    // TODO: move to Client.cpp somehow
+    const std::unordered_map<enum_neighbor_finding, RoutingConfiguration::NeighborFindingAlgorithm> algorithms = {
+        {neighbor_finding_arg_param,  RoutingConfiguration::NeighborFindingAlgorithm::PARAM},
+        {neighbor_finding_arg_trig,   RoutingConfiguration::NeighborFindingAlgorithm::ATAN2},
+        {neighbor_finding_arg_binary, RoutingConfiguration::NeighborFindingAlgorithm::BINSEARCH},
+        {neighbor_finding_arg_linear, RoutingConfiguration::NeighborFindingAlgorithm::LINEAR},
+        {neighbor_finding__NULL,      RoutingConfiguration::NeighborFindingAlgorithm::PARAM}
+    };
+
+    static const std::unordered_map<enum_pruning, RoutingConfiguration::Pruning> pruning = {
+            {pruning__NULL,                         RoutingConfiguration::Pruning::PRUNE_DEFAULT},
+            {pruning_arg_none,                      RoutingConfiguration::Pruning::UNPRUNED},
+            {pruning_arg_prune,                     RoutingConfiguration::Pruning::PRUNE_DEFAULT},
+            {pruning_arg_pruneMINUS_minMINUS_angle, RoutingConfiguration::Pruning::MinBendingAngleESpanner}
+    };
+
+    config.neighbor_selection_algorithm = algorithms.at(arguments.neighbor_finding_arg);
+    config.pruning = pruning.at(arguments.pruning_arg);
+
+
+
     // read graph
     Client client;
     client.configure(config);
@@ -42,7 +63,6 @@ main(int argc, char *argv[]) {
 
     bool from_stdin = (arguments.query_given < 1);
     std::size_t query_index = 0;
-    std::cout << "configuration: epsilon = " << epsilon << ", A* = " << config.use_a_star << ", neighbor finding = " << (int)config.neighbor_selection_algorithm << ", pruning = " << (int)config.pruning << '\n';
 
     while (true) {
         // get query

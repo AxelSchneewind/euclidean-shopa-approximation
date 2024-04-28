@@ -33,8 +33,10 @@ main(int argc, char *argv[]) {
     config.live_status = arguments.live_status_flag;
     config.tree_size = (arguments.tree_given) ? arguments.tree_arg : 0;
 
+    std::cout << "algorithm :" << arguments.neighbor_finding_orig << ", pruning: " << arguments.pruning_orig << '\n' << "\n";
+
+
     // TODO: move to Client.cpp somehow
-    std::cout << "algorithm :" << arguments.neighbor_finding_arg << ", pruning: " << arguments.pruning_arg << '\n';
     static const std::unordered_map<enum_neighbor_finding, RoutingConfiguration::NeighborFindingAlgorithm> algorithms = {
             {neighbor_finding_arg_param,  RoutingConfiguration::NeighborFindingAlgorithm::PARAM},
             {neighbor_finding_arg_trig,   RoutingConfiguration::NeighborFindingAlgorithm::ATAN2},
@@ -57,6 +59,7 @@ main(int argc, char *argv[]) {
     // read graph
     Client client;
     client.configure(config);
+
     if (arguments.epsilon_given && graph_file.extension() == ".graph")
         client.read_graph_file(graph_file, epsilon);
     else

@@ -52,8 +52,8 @@ const char *gengetopt_args_info_help[] = {
   "\nrouting algorithms:",
   "  some advanced options on dijkstra search",
   "  -a, --astar                  use A* heuristic to speed up one-to-one queries\n                                 (default=off)",
-  "      --neighbor-finding=ENUM  the type of algorithm to find neighbors with\n                                 minimal bending angle  (possible\n                                 values=\"param\", \"trig\", \"binary\",\n                                 \"linear\" default=`param')",
-  "      --pruning=ENUM           which type of pruning to use for steiner graphs\n                                 (possible values=\"none\", \"prune\",\n                                 \"prune-min-angle\" default=`prune')",
+  "      --neighbor-finding=ENUM  the type of algorithm to find neighbors with\n                                 minimal bending angle  (possible\n                                 values=\"param\", \"trig\", \"binary\",\n                                 \"linear\")",
+  "      --pruning=ENUM           which type of pruning to use for steiner graphs\n                                 (possible values=\"none\", \"prune\",\n                                 \"prune-min-angle\")",
   "      --no-tree                if enabled, only computes distances without\n                                 keeping tree information (does not produce\n                                 paths)  (default=off)",
     0
 };
@@ -123,9 +123,9 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->tree_orig = NULL;
   args_info->live_status_flag = 1;
   args_info->astar_flag = 0;
-  args_info->neighbor_finding_arg = neighbor_finding_arg_param;
+  args_info->neighbor_finding_arg = neighbor_finding__NULL;
   args_info->neighbor_finding_orig = NULL;
-  args_info->pruning_arg = pruning_arg_prune;
+  args_info->pruning_arg = pruning__NULL;
   args_info->pruning_orig = NULL;
   args_info->no_tree_flag = 0;
   
@@ -1148,7 +1148,7 @@ cmdline_parser_internal (
           
             if (update_arg( (void *)&(args_info->neighbor_finding_arg), 
                  &(args_info->neighbor_finding_orig), &(args_info->neighbor_finding_given),
-                &(local_args_info.neighbor_finding_given), optarg, cmdline_parser_neighbor_finding_values, "param", ARG_ENUM,
+                &(local_args_info.neighbor_finding_given), optarg, cmdline_parser_neighbor_finding_values, 0, ARG_ENUM,
                 check_ambiguity, override, 0, 0,
                 "neighbor-finding", '-',
                 additional_error))
@@ -1162,7 +1162,7 @@ cmdline_parser_internal (
           
             if (update_arg( (void *)&(args_info->pruning_arg), 
                  &(args_info->pruning_orig), &(args_info->pruning_given),
-                &(local_args_info.pruning_given), optarg, cmdline_parser_pruning_values, "prune", ARG_ENUM,
+                &(local_args_info.pruning_given), optarg, cmdline_parser_pruning_values, 0, ARG_ENUM,
                 check_ambiguity, override, 0, 0,
                 "pruning", '-',
                 additional_error))
