@@ -46,7 +46,7 @@ def main():
     print(data)
 
 
-    # by benchmark
+    # by benchmark and epsilon
     matcher = re.compile(args.benchmarks)
     benchs = [ b for b in filter(lambda x: matcher.match(x) is not None, data['benchmark'].unique()) ]
     epsilons = [ eps for eps in filter(lambda x: str(x) in args.epsilon, data['epsilon'].unique()) ]
