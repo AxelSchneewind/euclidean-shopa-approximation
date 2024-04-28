@@ -75,11 +75,12 @@ void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
         std::cout
                 << "graph,epsilon,stored node count,stored edge count,stored boundary edge count,face count,node count,edge count,memory usage,memory usage semi-explicit\n";
 
-    static constexpr size_t max_memory {4UL * 1024UL * 1024UL* 1024UL}; // 2 GiB
-    bool measure_semi_explicit{ false };
+    static constexpr size_t max_memory{4UL * 1024UL * 1024UL * 1024UL}; // 2 GiB
+    bool measure_semi_explicit{false};
     {
-    	std::ifstream input(args.graph_file_arg);
-        auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input, parse_float_or_fraction(args.epsilon_arg));
+        std::ifstream input(args.graph_file_arg);
+        auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input, parse_float_or_fraction(
+                args.epsilon_arg));
         input.close();
         std::cout << parse_graph_name(args.graph_file_arg)
                   << ',' << args.epsilon_arg
@@ -91,13 +92,14 @@ void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
                   << ',' << graph.edge_count()
                   << ',' << memory_usage_kilo_bytes();
 
-	// only allow up to to GiB of node coordinates
-	measure_semi_explicit = (graph.node_count() * 16) <= max_memory; 
+        // only allow up to to GiB of node coordinates
+        measure_semi_explicit = (graph.node_count() * 16) <= max_memory;
     }
 
     if (measure_semi_explicit) {
-    	std::ifstream input(args.graph_file_arg);
-        auto graph = triangulation_file_io::read_steiner<steiner_graph<true>>(input, parse_float_or_fraction(args.epsilon_arg));
+        std::ifstream input(args.graph_file_arg);
+        auto graph = triangulation_file_io::read_steiner<steiner_graph<true>>(input, parse_float_or_fraction(
+                args.epsilon_arg));
         input.close();
         std::cout << ',' << memory_usage_kilo_bytes() << '\n';
     } else {
@@ -108,19 +110,20 @@ void show_info<mode_arg_steiner_graph_size>(gengetopt_args_info const &args) {
 template<>
 void show_info<mode_arg_points_per_edge>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
-    auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input, parse_float_or_fraction(args.epsilon_arg));
+    auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input,
+                                                                           parse_float_or_fraction(args.epsilon_arg));
 
     // set up bins
-    static constexpr size_t max_size  = steiner_graph<false>::subdivision_info_type::max_steiner_count_per_edge;
+    static constexpr size_t max_size = steiner_graph<false>::subdivision_info_type::max_steiner_count_per_edge;
     std::vector<std::size_t> count(args.bins_arg, 0);
 
-    static constexpr float base = 1.1;
+    static constexpr float base = 2.0;
     static constexpr float base_log = std::log2(base);
     for (size_t e = 0; e < graph.base_graph().edge_count(); ++e) {
         auto &&steiner_info = graph.steiner_info(e);
-        size_t bin = std::floor(std::log2(steiner_info.node_count) / base_log);
-	if (bin < args.bins_arg)
-        	count[bin]++;
+        size_t bin = std::floor(4 * std::log2(steiner_info.node_count) / base_log);
+        if (bin < args.bins_arg)
+            count[bin]++;
     }
 
     if (!args.no_header_flag)
@@ -135,7 +138,8 @@ void show_info<mode_arg_points_per_edge>(gengetopt_args_info const &args) {
 template<>
 void show_info<mode_arg_node_radii>(gengetopt_args_info const &args) {
     std::ifstream input(args.graph_file_arg);
-    auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input, parse_float_or_fraction(args.epsilon_arg));
+    auto graph = triangulation_file_io::read_steiner<steiner_graph<false>>(input,
+                                                                           parse_float_or_fraction(args.epsilon_arg));
 
     // set up bins
     std::vector<std::size_t> count(args.bins_arg, 0);
@@ -153,7 +157,7 @@ void show_info<mode_arg_node_radii>(gengetopt_args_info const &args) {
 
 
     for (int b = 0; b < args.bins_arg; ++b) {
-        std::cout << ((float)b / args.bins_arg) << ',' << count[b] << '\n';
+        std::cout << ((float) b / args.bins_arg) << ',' << count[b] << '\n';
     }
     std::cout << std::flush;
 }
@@ -261,7 +265,7 @@ main(int argc, char *argv[]) {
     gengetopt_args_info args;
     cmdline_parser(argc, static_cast<char **>(argv), &args);
 
-    for (auto const& mode: std::span{args.mode_arg, args.mode_arg + args.mode_given})
+    for (auto const &mode: std::span{args.mode_arg, args.mode_arg + args.mode_given})
         switch (mode) {
             case mode_arg_steiner_points_by_angle:
                 show_info<mode_arg_steiner_points_by_angle>(args);
