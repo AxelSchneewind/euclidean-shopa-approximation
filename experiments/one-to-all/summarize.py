@@ -99,8 +99,8 @@ def main():
         for column in columns:
             for epsilon in data['epsilon'].unique():
                 by_epsilon = filter_epsilon(data, epsilon)
-                for bench in data['benchmark'].unique():
-                    by_epsilon = by_epsilon[by_epsilon['benchmark']==bench][column]
+                for b in data['benchmark'].unique():
+                    by_epsilon = by_epsilon[by_epsilon['benchmark'] == b][column]
                     by_epsilon = by_epsilon[column]
                     print(column, epsilon, by_epsilon.count(), by_epsilon.mean(), by_epsilon.min(), by_epsilon.median(), by_epsilon.max(), by_epsilon.std(),
                           by_epsilon.quantile(0.01), by_epsilon.quantile(0.1), by_epsilon.quantile(0.25),
