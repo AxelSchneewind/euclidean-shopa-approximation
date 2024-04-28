@@ -15,7 +15,6 @@ mkdir plots
 
 # TODO output distributions of solution qualities per vertex
 
-
 # triangle graph
 python plot_over_epsilon.py -f results/aegaeis/results.csv -t=triangle -c=time --fliers -o plots/boxplots_time_triangle$PLOT_FILE_TYPE
 python plot_over_epsilon.py -f results/aegaeis/results.csv -t=triangle -c='memory usage final' --fliers -o plots/boxplots_mem_triangle$PLOT_FILE_TYPE
@@ -39,4 +38,34 @@ python plot_over_epsilon.py -f results/aegaeis/results.csv -t=unref -c='tree siz
 python summarize.py -f results/aegaeis/results.csv -t=unref --output-epsilon=summaries/unref-epsilon.csv --column='time,memory usage final,queue pull count,queue push count,neighbors base node neighbors count,neighbors boundary node neighbors count,neighbors steiner point neighbors count,tree size'
 python summarize.py -f results/aegaeis/results.csv -t=unref --output-queries=summaries/unref-queries.csv --column='time,memory usage final,queue pull count,queue push count,neighbors base node neighbors count,neighbors boundary node neighbors count,neighbors steiner point neighbors count,tree size'
 python summarize.py -f results/aegaeis/results.csv -t=unref --output-benchmark=summaries/unref-benchmarks.csv --column='time,memory usage final,queue pull count,queue push count,neighbors base node neighbors count,neighbors boundary node neighbors count,neighbors steiner point neighbors count,tree size'
+
+
+
+
+DISTANCE_SCRIPT=../explicit/distances.py
+
+
+describe_distances() {
+	local DIRECTORY=$1
+	local REFERENCE_DIRECTORY=$2
+
+	for q in "$DIRECTORY"*/ ; do
+		QUERY=$(basename $q)
+		echo "python $DISTANCE_SCRIPT" "$q"distances.csv "$REFERENCE_DIRECTORY""$QUERY"/distances.csv "$q"quality.csv
+		python "$DISTANCE_SCRIPT" "$q"distances.csv "$REFERENCE_DIRECTORY""$QUERY"/distances.csv "$q"quality.csv
+	done
+}
+
+
+# iterate over graphs
+for g in results/*/ ; do
+	for m in $g*/ ; do
+		for e in $m*/ ; do
+			DIR="$e"
+			REFERENCE=$g/vis/0.0/
+			describe_distances "$e" "$REFERENCE"
+			csvstack $(find $e -name quality.csv) > $m/quality.csv
+		done
+	done
+done
 
