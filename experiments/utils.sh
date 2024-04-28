@@ -161,11 +161,7 @@ process_results() {
     # remove ms unit for timings
     sed -e 's/ms//g' -i "$CSV_RESULTS"
 
-    # add columns with graph and benchmark name
-    sed -e '1,1s/$/,graph/' -i "$CSV_RESULTS"
-    sed -e '2,$s/$/,GRAPH/' -i "$CSV_RESULTS"
-    sed -e "s/GRAPH/$GRAPH_NAME/" -i "$CSV_RESULTS"
-
+    # add columns with benchmark name
     sed -e '1,1s/$/,benchmark/' -i "$CSV_RESULTS"
     sed -e '2,$s/$/,NAME/' -i "$CSV_RESULTS"
     sed -e "s/NAME/$NAME/" -i "$CSV_RESULTS"
