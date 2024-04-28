@@ -19,13 +19,13 @@ concept HasFaceCrossingPredecessor = requires {
     { n.face_crossing_predecessor() };
 };
 
-enum class Pruning {
+enum class Pruning : int {
     UNPRUNED,           // search full graph, currently not implemented
     PRUNE_DEFAULT,      // prune like stated in my thesis
     MinBendingAngleESpanner // alternative pruning, minimizing bending angles per epsilon spanner
 };
 
-enum class NeighborFindingAlgorithm {
+enum class NeighborFindingAlgorithm : int {
     PARAM,
     ATAN2,
     BINSEARCH,

@@ -5,12 +5,12 @@ struct RoutingConfiguration {
     bool live_status {true};
     bool only_distance{false};
     bool store_coords {false};
-    enum class Pruning {
+    enum class Pruning : int{
         UNPRUNED,
         PRUNE_DEFAULT,
         MinBendingAngleESpanner
     } pruning;
-    enum class NeighborFindingAlgorithm {
+    enum class NeighborFindingAlgorithm : int {
         PARAM,
         ATAN2,
         BINSEARCH,
