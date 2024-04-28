@@ -36,6 +36,7 @@ compute () {
 
   graph_stats -g $GRAPH -m inangle_distribution > $DIR/inangles.csv
   graph_stats -g $GRAPH -m node_radii > $DIR/radii.csv
+  graph_stats -g $GRAPH -e 0.25 -m points_per_edge > $DIR/ppe.csv
   graph_stats -g $GRAPH -m bounding_box > $DIR/bounding_box.txt
 }
 
