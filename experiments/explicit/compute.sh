@@ -38,7 +38,7 @@ compute_bench() {
 	# 
 	if [[ "${GRAPH_FILE: -4}" == ".fmi" ]]; then
 		local STORAGE="explicit"
-		local BENCHMARK_NAME="$STORAGE"
+		local BENCHMARK_NAME="milos-$STORAGE"
 		local DIRECTORY_NAME="$OUTPUT_DIR/$BENCHMARK_NAME"
 		local ARGUMENTS=""
 
@@ -63,8 +63,8 @@ compute_bench() {
 
 		# 
 		if [[ "${STORAGE}" == "semi-explicit" ]]; then
-			local STORAGE="semi-implicit"
-			local BENCHMARK_NAME="$STORAGE-$PRUNING-$NEIGHBOR_FINDING"
+			local STORAGE="semi-explicit"
+			local BENCHMARK_NAME="milos-$STORAGE-$PRUNING-$NEIGHBOR_FINDING"
 			local DIRECTORY_NAME="$OUTPUT_DIR/$BENCHMARK_NAME"
 			local ARGUMENTS="--pruning=$PRUNING --neighbor-finding=$NEIGHBOR_FINDING --coords-explicit"
 		fi
