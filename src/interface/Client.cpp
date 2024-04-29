@@ -43,10 +43,6 @@ Client::Client(GraphT &&graph, RoutingT &&router)
 
     statistics.put(Statistics::NODE_COUNT, graph.node_count());
     statistics.put(Statistics::EDGE_COUNT, graph.edge_count());
-
-    double vm, res;
-    process_mem_usage(vm, res);
-    statistics.put(Statistics::MEMORY_USAGE_GRAPH, res / 1024);
 }
 
 
