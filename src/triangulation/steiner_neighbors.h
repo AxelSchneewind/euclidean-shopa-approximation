@@ -239,7 +239,18 @@ public:
     steiner_neighbors &operator=(steiner_neighbors &&) noexcept = default;
 
     [[gnu::cold]]
-    void init(node_id_type /*source*/, node_id_type /*target*/) { }
+    void init(node_id_type /*source*/, node_id_type /*target*/) {
+	// reset statistics
+    	_base_node_count = 0;
+    	_boundary_node_count = 0;
+    	_steiner_point_count = 0;
+
+    	_base_node_neighbor_count = 0;
+    	_boundary_node_neighbor_count = 0;
+    	_steiner_point_neighbor_count = 0;
+
+    	_steiner_point_angle_test_count = 0;
+    }
 
 
     // entry points
