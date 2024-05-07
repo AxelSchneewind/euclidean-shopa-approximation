@@ -70,7 +70,7 @@ if [ ! -d "$OUTPUT_DIR/triangle-pruned-min-angle" ]; then
   # refined graph with steiner points
   EPSILONS=("1.0" "0.5" "0.25" "0.125" "0.0625" "0.03125" "0.015625")
   for eps in "${EPSILONS[@]}"; do
-    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle-pruned-min-angle/$eps/" "$QUERY_FILE" "$eps " "--pruning=prune-min-angle"
+    compute_shopa_queries "$TRIANGLE_TRIANGULATION_GRAPH" "$OUTPUT_DIR/triangle-pruned-min-angle/$eps/" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle"
   done
 fi
 process_results "$OUTPUT_DIR/triangle-pruned-min-angle" "$OUTPUT_DIR/results-triangle-pruned-min-angle.csv" aegaeis-triangle-pruned-min-angle
