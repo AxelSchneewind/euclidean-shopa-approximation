@@ -252,7 +252,7 @@ dijkstra<G, Q, L, N, Heuristic>::step() {
 
     // inform labels of new distance
     if constexpr (requires (L l, distance_type d) {l.set_frontier_distance(d);} ){
-	    _labels->set_frontier_distance(ncp.value());
+	    _labels->set_frontier_distance(ncp.distance());
     }
 
     // remove already labelled nodes
