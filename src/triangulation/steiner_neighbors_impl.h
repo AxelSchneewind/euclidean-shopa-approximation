@@ -17,6 +17,9 @@ steiner_neighbors<Graph, Labels, P, Config>::insert(node_id_type const &neighbor
                                                     NodeCostPair const &current,
                                                     std::vector<NodeCostPair> &out,
                                                     std::vector<coordinate_t> &out_coordinates) const {
+    // assert(neighbor.steiner_index < _graph->steiner_info(neighbor.edge).node_count);
+    if(neighbor.steiner_index >= _graph->steiner_info(neighbor.edge).node_count)
+	return;
     out.emplace_back(neighbor, current.node(), current.distance());
     out_coordinates.emplace_back(neighbor_coordinate);
 }
@@ -88,8 +91,7 @@ steiner_neighbors<Graph, Labels, P, Config>::vertex_neighbors(const NodeCostPair
 
     for (auto &&edge: _graph->base_graph().incoming_edges(base_node_id)) [[likely]] {
         auto e_id{_graph->base_graph().edge_id(edge.destination, base_node_id)};
-        typename Graph::node_id_type const destination{e_id, _graph->steiner_info(e_id).node_count -
-                                                            static_cast<typename Graph::intra_edge_id_type>(2)};
+        typename Graph::node_id_type const destination{e_id, static_cast<typename Graph::intra_edge_id_type>(_graph->steiner_info(e_id).node_count - 2)};
         // assert(_graph->has_edge(base_node_id, destination));
         insert(destination, node, out, coordinates_out);
     }
@@ -449,8 +451,9 @@ NeighborFindingAlgorithm::BINSEARCH == Config || NeighborFindingAlgorithm::LINEA
     using intra_edge_id_type = typename node_id_type::intra_edge_id_type;
     intra_edge_id_type left_index = 1;
     intra_edge_id_type right_index = destination_steiner_info.node_count - 2;
-    intra_edge_id_type mid_index = std::clamp(destination_steiner_info.mid_index, (intra_edge_id_type) (left_index + 1),
-                                              (intra_edge_id_type) (right_index - 1));
+    intra_edge_id_type mid_index = std::clamp(destination_steiner_info.mid_index
+		    , static_cast<intra_edge_id_type>(left_index + 1)
+		    , static_cast<intra_edge_id_type>(right_index - 1));
 
     bool orientation;
     bool norientation;
@@ -473,12 +476,11 @@ NeighborFindingAlgorithm::BINSEARCH == Config || NeighborFindingAlgorithm::LINEA
     }
 
     // check which half of the edge is used
-    bool const right_half = orientation;
-    coordinate_t::component_type const base = (right_half) ? destination_steiner_info.base_second
-                                                           : destination_steiner_info.base_first;
-    coordinate_t::component_type const ln_base = base;
-    // coordinate_t::component_type const ln_base = std::log(base);
-    coordinate_t::component_type const log_base_inv = 1 / base;
+    // bool const right_half = orientation;
+    // coordinate_t::component_type const base = (right_half) ? destination_steiner_info.base_second
+    //                                                        : destination_steiner_info.base_first;
+    // coordinate_t::component_type const ln_base = base;
+    // coordinate_t::component_type const log_base_inv = 1 / base;
 
     left_index = orientation * mid_index + norientation * left_index;
     right_index = norientation * mid_index + orientation * right_index;
@@ -488,12 +490,14 @@ NeighborFindingAlgorithm::BINSEARCH == Config || NeighborFindingAlgorithm::LINEA
         intra_edge_id_type step = (right_index - left_index) / 2;
 		// std::floor(std::log((1 + std::exp(ln_base * (right_index - left_index))) / 2) * log_base_inv);
         assert(step >= 0);
-        mid_index = right_half ? (right_index - step) : (left_index + step);
-        mid_index = std::clamp(mid_index, (intra_edge_id_type) (left_index + 1),
-                               (intra_edge_id_type) (right_index - 1));
+        // mid_index = right_half ? (right_index - step) : (left_index + step);
+        mid_index = left_index + step;
+        mid_index = std::clamp(mid_index
+			, static_cast<intra_edge_id_type>(left_index + 1)
+			, static_cast<intra_edge_id_type>(right_index - 1));
         assert (left_index >= right_index || (left_index <= mid_index && mid_index <= right_index));
 
-        // update node ids
+        // update node id
         destination.steiner_index = mid_index;
 
         // get coordinates
@@ -510,7 +514,7 @@ NeighborFindingAlgorithm::BINSEARCH == Config || NeighborFindingAlgorithm::LINEA
 
         _steiner_point_angle_test_count++;
     }
-    assert(mid_index > 0 && mid_index < destination_steiner_info.node_count - 1);
+    assert(mid_index > 0 && mid_index < destination_steiner_info.node_count - 2);
 
     return destination;
 }
@@ -644,17 +648,16 @@ steiner_neighbors<Graph, Labels, P, Config>::add_min_angle_neighbor(const NodeCo
             }
 
 	    // 
-            _steiner_point_angle_test_count += other.steiner_index - destination.steiner_index;
             destination.steiner_index++;
             insert(destination, destination_coordinate, node, out, out_coordinates);
 
             // select closest neighbor from right sub-cone
             destination = other;
-            destination.steiner_index++;
+
             last_distance = std::numeric_limits<coordinate_t::component_type>::max();
             past = false;
             for (; destination.steiner_index <
-                   destination_steiner_info.node_count - 1; ++destination.steiner_index) [[likely]] {
+                   destination_steiner_info.node_count - 1 && !past; ++destination.steiner_index) [[likely]] {
                 destination_coordinate = _graph->node_coordinates(destination);
                 coordinate_t const new_direction{destination_coordinate - _source_coordinate};
 
@@ -673,7 +676,6 @@ steiner_neighbors<Graph, Labels, P, Config>::add_min_angle_neighbor(const NodeCo
                 _steiner_point_angle_test_count++;
             }
 
-            _steiner_point_angle_test_count += destination.steiner_index - other.steiner_index;
             destination.steiner_index--;
             insert(destination, destination_coordinate, node, out, out_coordinates);
         }
@@ -856,6 +858,7 @@ Pruning::UNPRUNED != P) {
 		} else {
 			can_insert = true;
 		}
+		continue;
 	    }
 
             // past if distance starts getting larger
