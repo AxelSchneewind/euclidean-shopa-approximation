@@ -50,13 +50,13 @@ struct Implementation<GraphImpl, false, use_a_star, n, simplifications> {
         distance_t _distance;
         distance_t _heuristic;
         node_id_t _node{optional::none_value<node_id_t>};
+        node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
     };
 
     struct label_impl {
         distance_t _distance{infinity<distance_t>};
         distance_t _heuristic{infinity<distance_t>};
         node_id_t _predecessor{optional::none_value<node_id_t>};
-        node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
     };
 
     using node_cost_pair_t = node_label<ncp_impl>;
@@ -87,11 +87,11 @@ struct Implementation<GraphImpl, true, use_a_star, n, simplifications> {
         distance_t _distance;
         distance_t _heuristic;
         node_id_t _node{optional::none_value<node_id_t>};
+        node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
     };
 
     struct label_impl {
         distance_t _distance{infinity<distance_t>};
-        node_id_t _face_crossing_predecessor{optional::none_value<node_id_t>};
     };
 
     using node_cost_pair_t = node_label<ncp_impl>;
@@ -146,7 +146,7 @@ static inline std::unique_ptr<RouterInterface> make_router(Graph const &graph, R
 	          << "queue:         " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::queue_t).name() << ", \n"
 	          << "labels:        " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::labels_t).name() << ", \n"
 	          << "neighbors:     " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::neighbors_t).name() << ", \n"
-	          << "dijkstra:      " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::dijkstra_t).name() << ", \n";
+	          << "dijkstra:      " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::dijkstra_t).name() << "\n";
 
         return std::make_unique<Router::RouterImplementation<GraphImpl, routing_t>>(
                 graph.get_implementation<GraphImpl>(), routing_t(graph.get_implementation<GraphImpl>()), config);
@@ -220,8 +220,6 @@ static inline std::unique_ptr<RouterInterface> select_routing_impl(Graph const& 
 
 Router::Router(const Graph &graph, RoutingConfiguration const &config)
         : _config(config) {
-    std::cout << "selecting implementation by:\n"
-              << "A*: " << config.use_a_star << ", only-distance: " << config.only_distance << ", pruning: " << (int)(config.pruning) << ", neighbor finding: " << (int)(config.neighbor_selection_algorithm) << "\n\n";
     impl = select_routing_impl(graph, config);
 
     if (!impl) {
