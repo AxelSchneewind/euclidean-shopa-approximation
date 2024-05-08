@@ -33,8 +33,6 @@ main(int argc, char *argv[]) {
     config.live_status = arguments.live_status_flag;
     config.tree_size = (arguments.tree_given) ? arguments.tree_arg : 0;
 
-    std::cout << "algorithm :" << arguments.neighbor_finding_orig << ", pruning: " << arguments.pruning_orig << '\n' << "\n";
-
 
     // TODO: move to Client.cpp somehow
     static const std::unordered_map<enum_neighbor_finding, RoutingConfiguration::NeighborFindingAlgorithm> algorithms = {
