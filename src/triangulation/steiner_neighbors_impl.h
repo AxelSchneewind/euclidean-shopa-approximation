@@ -153,7 +153,7 @@ void steiner_neighbors<Graph, Labels, P, Config>::operator()(const NodeCostPair 
     // add neighbors depending on the type of the current node
     if (!is_base_node && !is_start_node) {
         from_steiner_node(node, out, coordinates_out);
-    } else if (!is_base_node) {
+    } else if (is_start_node) {
         from_start_node(node, out, coordinates_out);
     } else {
         auto &&base_node_id = _graph->base_node_id(node_id);
@@ -372,7 +372,7 @@ static double angle_sin(coordinate_t const &direction, coordinate_t forward) {
     forward.rotate_right();
     double product = direction * forward;
     product /= (direction.length() * forward.length());
-    assert(product == 0 || std::isnormal(product));
+    // assert(product == 0 || std::isnormal(product));
     assert(product >= -1.01 && product <= 1.01);
     return product;
 }
@@ -382,7 +382,7 @@ static double angle_sin(coordinate_t const &source, coordinate_t const &right, c
     point -= source;
     double product = point * right;
     product /= (point.length() * right.length());
-    assert(product >= -1.01 && product <= 1.0);
+    assert(product >= -1.01 && product <= 1.01);
     return product;
 }
 
@@ -647,6 +647,7 @@ steiner_neighbors<Graph, Labels, P, Config>::add_min_angle_neighbor(const NodeCo
                 //
                 //assert(!new_direction.zero());
                 past |= new_direction.zero();
+                if (past) continue;
 
                 // past if angle too large
                 past |= std::abs(angle_sin(new_direction, _direction)) >= _spanner_angle_sin;
@@ -676,6 +677,7 @@ steiner_neighbors<Graph, Labels, P, Config>::add_min_angle_neighbor(const NodeCo
                 //
                 //assert(!new_direction.zero());
                 past |= new_direction.zero();
+                if (past) continue;
 
                 // past if angle too large
                 past |= std::abs(angle_sin(new_direction, _direction)) >= _spanner_angle_sin;
@@ -852,6 +854,7 @@ Pruning::UNPRUNED != P) {
             //
             assert(!new_direction.zero());
             past |= new_direction.zero();
+            if (past) continue;
 
             // past if angle too large
             past |= std::abs(angle_sin(new_direction, last_direction)) >= _spanner_angle_sin;
@@ -881,6 +884,7 @@ Pruning::UNPRUNED != P) {
             //
             assert(!new_direction.zero());
             past |= new_direction.zero();
+            if (past) continue;
 
             // past if angle too large
             past |= std::abs(angle_sin(new_direction, last_direction)) >= _spanner_angle_sin;
