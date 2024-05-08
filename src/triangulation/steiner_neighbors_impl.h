@@ -442,7 +442,7 @@ NeighborFindingAlgorithm::BINSEARCH == Config || NeighborFindingAlgorithm::LINEA
     right.rotate_right();
 
     // ensure "right" direction corresponds to higher steiner indices on target edge
-    right *= ((target_first - target_last) * right);
+    right *= (((target_first - target_last) * right) < 0) ? -1.0 : 1.0;
     assert(!right.zero());
 
     // binary search for node with minimal angle using the derivative over the angle depending on steiner index
@@ -485,8 +485,8 @@ NeighborFindingAlgorithm::BINSEARCH == Config || NeighborFindingAlgorithm::LINEA
 
     while (right_index - left_index >= 2) [[likely]] {
         // compute m-value,  can possibly be further improved
-        intra_edge_id_type step = std::floor(
-                std::log((1 + std::exp(ln_base * (right_index - left_index))) / 2) * log_base_inv);
+        intra_edge_id_type step = (right_index - left_index) / 2;
+		// std::floor(std::log((1 + std::exp(ln_base * (right_index - left_index))) / 2) * log_base_inv);
         assert(step >= 0);
         mid_index = right_half ? (right_index - step) : (left_index + step);
         mid_index = std::clamp(mid_index, (intra_edge_id_type) (left_index + 1),
