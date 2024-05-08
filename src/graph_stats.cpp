@@ -117,11 +117,10 @@ void show_info<mode_arg_points_per_edge>(gengetopt_args_info const &args) {
     static constexpr size_t max_size = steiner_graph<false>::subdivision_info_type::max_steiner_count_per_edge;
     std::vector<std::size_t> count(args.bins_arg, 0);
 
-    static constexpr float base = 2.0;
-    static constexpr float base_log = std::log2(base);
+    static constexpr int factor = 8;
     for (size_t e = 0; e < graph.base_graph().edge_count(); ++e) {
         auto &&steiner_info = graph.steiner_info(e);
-        size_t bin = std::floor(4 * std::log2(steiner_info.node_count) / base_log);
+        size_t bin = std::floor(factor * std::log2(steiner_info.node_count));
         if (bin < args.bins_arg)
             count[bin]++;
     }
@@ -130,7 +129,7 @@ void show_info<mode_arg_points_per_edge>(gengetopt_args_info const &args) {
         std::cout << "log(number of points),count\n";
 
     for (int b = 0; b < args.bins_arg; ++b) {
-        std::cout << b << ',' << count[b] << '\n';
+        std::cout << ((double)b/factor) << ',' << count[b] << '\n';
     }
     std::cout << std::flush;
 }
