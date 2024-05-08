@@ -71,7 +71,7 @@ struct Implementation<GraphImpl, false, use_a_star, n, simplifications> {
     // using node_cost_pair_t = geometric_node_cost_pair<node_id_t, distance_t, float, node_id_t>;
     using labels_t = steiner_labels<graph_t, label_t>;
     using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
-    using neighbors_t = typename if_or_else<simplifications != Pruning::UNPRUNED, steiner_neighbors<graph_t, labels_t, simplifications, n>, default_neighbors<graph_t>>::type;
+    using neighbors_t = steiner_neighbors<graph_t, labels_t, simplifications, n>;
     using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<graph_t>, no_heuristic>::type>;
     using routing_t = router<graph_t, dijkstra_t>;
 };
@@ -99,7 +99,7 @@ struct Implementation<GraphImpl, true, use_a_star, n, simplifications> {
 
     using labels_t = frontier_labels<graph_t, node_cost_pair_t, label_t>;
     using queue_t = dijkstra_queue<node_cost_pair_t, typename if_or_else<use_a_star, compare_heuristic, compare_distance>::type>;
-    using neighbors_t = typename if_or_else<simplifications != Pruning::UNPRUNED, steiner_neighbors<graph_t, labels_t, simplifications, n>, default_neighbors<graph_t>>::type;
+    using neighbors_t = steiner_neighbors<graph_t, labels_t, simplifications, n>;
     using dijkstra_t = dijkstra<graph_t, queue_t, labels_t, neighbors_t, typename if_or_else<use_a_star, a_star_heuristic<graph_t>, no_heuristic>::type>;
     using routing_t = router<graph_t, dijkstra_t>;
 };
