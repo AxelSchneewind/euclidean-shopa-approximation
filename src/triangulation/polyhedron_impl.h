@@ -108,7 +108,7 @@ namespace {
         std::fill(out.begin(), out.end(), false);
 
         // a vertex is a boundary vertex if there exists an edge that only has one adjacent face
-#pragma omp parallel for
+// #pragma omp parallel for
         for (size_t i = 0; i < triangulation.edge_count(); i++) {
             bool const one_adjacent_face = optional::is_none(edge_faces[i][1]);
             out[i] = one_adjacent_face;

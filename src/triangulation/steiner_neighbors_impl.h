@@ -18,7 +18,7 @@ steiner_neighbors<Graph, Labels, P, Config>::insert(node_id_type const &neighbor
                                                     std::vector<NodeCostPair> &out,
                                                     std::vector<coordinate_t> &out_coordinates) const {
     // assert(neighbor.steiner_index < _graph->steiner_info(neighbor.edge).node_count);
-    if(neighbor.steiner_index >= _graph->steiner_info(neighbor.edge).node_count)
+    if(neighbor.steiner_index < 0 || neighbor.steiner_index >= _graph->steiner_info(neighbor.edge).node_count)
 	return;
     out.emplace_back(neighbor, current.node(), current.distance());
     out_coordinates.emplace_back(neighbor_coordinate);
@@ -591,6 +591,7 @@ steiner_neighbors<Graph, Labels, P, Config>::add_min_angle_neighbor(const NodeCo
     // face-crossing edges
     for (auto &&edge_id: _graph->base_polyhedron().edges(node_id.edge)) [[likely]] {
         assert(edge_id != node_id.edge);
+	assert(!optional::is_none(edge_id));
 
         // get neighbor
         node_id_type other;

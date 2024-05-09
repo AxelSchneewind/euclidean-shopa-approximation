@@ -770,3 +770,4 @@ steiner_graph<StoreNodes>::node_id_iterator_type steiner_graph<StoreNodes>::node
 
     return *this;
 }
+

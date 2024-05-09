@@ -53,6 +53,7 @@ steiner_labels<G, Label>::at(node_id_type node) const {
     assert(!optional::is_none(node));
     if (_graph->is_base_node(node)) [[unlikely]] {
         assert(!optional::is_none(_graph->base_node_id(node)));
+	assert(_graph->base_node_id(node) >= 0 && _graph->base_node_id(node) < _base_labels.size());
         return _base_labels[_graph->base_node_id(node)];
     }
 
@@ -66,6 +67,7 @@ Label& steiner_labels<G, Label>::at(node_id_type node) {
 
     if (_graph->is_base_node(node)) [[unlikely]] {
         assert(!optional::is_none(_graph->base_node_id(node)));
+	assert(_graph->base_node_id(node) >= 0 && _graph->base_node_id(node) < _base_labels.size());
         return _base_labels[_graph->base_node_id(node)];
     }
 
@@ -80,6 +82,7 @@ Label& steiner_labels<G, Label>::operator[](node_id_type node) {
 
     if (_graph->is_base_node(node)) [[unlikely]] {
         assert(!optional::is_none(_graph->base_node_id(node)));
+	assert(_graph->base_node_id(node) >= 0 && _graph->base_node_id(node) < _base_labels.size());
         return _base_labels[_graph->base_node_id(node)];
     }
 

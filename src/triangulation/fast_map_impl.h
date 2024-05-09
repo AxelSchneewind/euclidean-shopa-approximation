@@ -17,6 +17,7 @@ template<typename AggregateId, typename IntraAggregateId, typename Index, typena
 Info const &
 fast_map<AggregateId, IntraAggregateId, Index, Info>::at(aggregate_id_type aggregate_id, intra_aggregate_id_type intra_aggregate_id) const {
     assert(contains(aggregate_id));
+    assert(_aggregate_index[aggregate_id] + intra_aggregate_id < _entries.size());
     return _entries[_aggregate_index[aggregate_id] + intra_aggregate_id];
 }
 
@@ -25,6 +26,7 @@ template<typename Pair> requires requires (Pair t) { t.first(); t.second(); }
 typename fast_map<AggregateId, IntraAggregateId, Index, Info>::info_type& fast_map<AggregateId, IntraAggregateId, Index, Info>::
 operator[](Pair&& index) {
     assert(contains(index.first()));
+    assert(_aggregate_index[index.first()] + index.second() < _entries.size());
     return _entries[_aggregate_index[index.first()] + index.second()];
 }
 
@@ -33,6 +35,7 @@ template<typename Pair> requires requires (Pair t) { t.first(); t.second(); }
 typename fast_map<AggregateId, IntraAggregateId, Index, Info>::info_type const& fast_map<AggregateId, IntraAggregateId, Index, Info>::
 operator[](Pair&& index) const {
     assert(contains(index.first()));
+    assert(_aggregate_index[index.first()] + index.second() < _entries.size());
     return _entries[_aggregate_index[index.first()] + index.second()];
 }
 
@@ -40,6 +43,7 @@ template<typename AggregateId, typename IntraAggregateId, typename Index, typena
 Info &
 fast_map<AggregateId, IntraAggregateId, Index, Info>::at(aggregate_id_type aggregate_id, intra_aggregate_id_type intra_aggregate_id) {
     assert(contains(aggregate_id));
+    assert(_aggregate_index[aggregate_id] + intra_aggregate_id < _entries.size());
     return _entries[_aggregate_index[aggregate_id] + intra_aggregate_id];
 }
 
