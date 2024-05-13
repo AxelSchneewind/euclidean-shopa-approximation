@@ -56,8 +56,27 @@ subdivision<StoreCoords>::make_subdivision_info(const adjacency_list<int> &trian
             auto c3 = nodes[node3].coordinates;
 
             // compute angles
-            auto a1 = inner_angle(c1, c2, c1, c3);
-            auto a2 = inner_angle(c2, c1, c2, c3);
+            // auto a1 = inner_angle(c1, c2, c1, c3);
+            // auto a2 = inner_angle(c2, c1, c2, c3);
+
+            double a1;
+            if ((c2 - c1) * (c2 - c3) <= 0.0)
+                a1 = std::numbers::pi;
+            else {
+                auto forward = (c2 - c1);
+                forward.rotate_right();
+                a1 = std::abs(forward * (c2 - c3));
+            }
+            // auto a2 = inner_angle(c2, c1, c2, c3);
+            double a2;
+            if ((c1 - c2) * (c3 - c2) <= 0.0)
+                a2 = std::numbers::pi;
+            else {
+                auto forward = (c1 - c2);
+                forward.rotate_right();
+                a2 = std::abs(forward * (c3 - c2));
+            }
+
             assert(std::fabs((a1 + a2 + inner_angle(c3, c1, c3, c2)) - std::numbers::pi) <
                    std::numbers::pi / 180); // check that sum of inner angles is 180º (+- 1º for rounding)
 
@@ -66,13 +85,13 @@ subdivision<StoreCoords>::make_subdivision_info(const adjacency_list<int> &trian
             if (a2 < angle2)
                 angle2 = a2;
         }
-        angle1 = std::clamp(angle1, 0.0l, std::numbers::pi_v<long double> / 2);
-        angle2 = std::clamp(angle2, 0.0l, std::numbers::pi_v<long double> / 2);
+        angle1 = std::clamp(angle1, 0.0l, 1.0l);
+        angle2 = std::clamp(angle2, 0.0l, 1.0l);
 
         // relative value where the mid-point (with max distance to other edges) lies between node1 and node2
-        long double const mid_position = 1.0l / (1.0l + (std::sin(angle1) / std::sin(angle2)));
+        long double const mid_position = 1.0l / (1.0l + (angle1 / angle2));
         {
-            assert(std::abs(mid_position + (1.0l / (1.0l + std::sin(angle2) / std::sin(angle1))) - 1.0) < 0.01);
+            assert(std::abs(mid_position + (1.0l / (1.0l + angle2 / angle1)) - 1.0) < 0.01);
             assert(mid_position <= 1 && mid_position >= 0);
         }
 
@@ -90,8 +109,8 @@ subdivision<StoreCoords>::make_subdivision_info(const adjacency_list<int> &trian
         long double min_base_second = std::pow(r_second, -1.0 / (max_steiner_count_per_edge / 2));
         assert(r_first * std::pow(min_base_first, max_steiner_count_per_edge) >= 1.0);
         assert(r_second * std::pow(min_base_second, max_steiner_count_per_edge) >= 1.0);
-        long double const base_first = std::clamp(1.0l + epsilon * std::sin(angle1), min_base_first, 10.0l);
-        long double const base_second = std::clamp(1.0l + epsilon * std::sin(angle2), min_base_second, 10.0l);
+        long double const base_first = std::clamp(1.0l + epsilon * angle1, min_base_first, 10.0l);
+        long double const base_second = std::clamp(1.0l + epsilon * angle2, min_base_second, 10.0l);
         if (base_first == min_base_first || base_second == min_base_second) {
             edges_capped++;
             std::cerr << "number of points on edge " << edge_id << " is bounded by index datatype ("
