@@ -190,8 +190,8 @@ public:
             base_topology_type::SIZE_PER_EDGE + polyhedron_type::SIZE_PER_EDGE + subdivision_info_type::SIZE_PER_EDGE;
 
 private:
-    size_t _node_count;
-    size_t _edge_count;
+    long long _node_count;
+    long long _edge_count;
 
     // the epsilon value used for discretization
     double _epsilon;
@@ -218,9 +218,9 @@ public:
 
     std::span<const node_info_type> base_nodes() const { return { _base_nodes.begin(), _base_nodes.end() }; }
 
-    size_t node_count() const { return _node_count; }
+    long long node_count() const { return _node_count; }
 
-    size_t edge_count() const { return _edge_count; }
+    long long edge_count() const { return _edge_count; }
 
     size_t face_count() const { return _polyhedron.face_count(); }
 

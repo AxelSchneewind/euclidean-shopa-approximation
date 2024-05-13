@@ -278,10 +278,10 @@ steiner_graph<StoreNodes>::steiner_graph(std::vector<node_info_type> &&triangula
             assert (!optional::is_none(edge_id));
 
             // count steiner points, but not base nodes here
-            _node_count += _table.edge(edge_id).node_count - 2;
+            _node_count += static_cast<long long>(_table.edge(edge_id).node_count - 2L);
 
             // edges on this edge (counts (v,p_1), (p_i, p_i+1), (p_k,w) and their inverses)
-            _edge_count += 2 * (steiner_info(edge_id).node_count - 1);
+            _edge_count += static_cast<long long>(2L * (steiner_info(edge_id).node_count - 1));
 
             // edges between this edge and another one
             for (auto &&other_edge_id: _polyhedron.edges(edge_id)) {
@@ -289,7 +289,7 @@ steiner_graph<StoreNodes>::steiner_graph(std::vector<node_info_type> &&triangula
                 assert (_base_topology.source(other_edge_id) < _base_topology.destination(other_edge_id));
 
                 // only count segments from this edge to the other, as other edge will be looped over too
-                _edge_count += (steiner_info(edge_id).node_count - 2) * (steiner_info(other_edge_id).node_count - 2);
+                _edge_count += static_cast<long long>(steiner_info(edge_id).node_count - 2L) * static_cast<long long>(steiner_info(other_edge_id).node_count - 2L);
             }
         }
     }
@@ -300,7 +300,7 @@ steiner_graph<StoreNodes>::steiner_graph(std::vector<node_info_type> &&triangula
         for (auto &&node: base_graph().node_ids()) {
             for (auto &&reachable_edges = _polyhedron.node_edges(node); auto &&edge_id: reachable_edges) {
                     assert(!optional::is_none(edge_id));
-                    _edge_count += 2 * (steiner_info(edge_id).node_count - 2);
+                    _edge_count += static_cast<long long>(2L * (steiner_info(edge_id).node_count - 2));
             }
         }
     }
@@ -733,8 +733,8 @@ steiner_graph<StoreNodes>::on_edge_distance(triangle_edge_id_type edge, intra_ed
                                 intra_edge_id_type second) const {
     distance_type relative1 = _table.relative_position(edge, first);
     distance_type relative2 = _table.relative_position(edge, second);
-    distance_type length = (node_coordinates_last(edge) - node_coordinates_first(edge)).length();
-    return std::abs(relative2 - relative1) * length;
+    distance_type length = distance(node_coordinates_last(edge), node_coordinates_first(edge));
+    return (std::abs(relative2 - relative1) * length) * (1.0 + std::numeric_limits<distance_type>::epsilon());
 }
 
 template <bool StoreNodes>
