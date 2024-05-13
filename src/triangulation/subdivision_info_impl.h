@@ -64,8 +64,9 @@ subdivision<StoreCoords>::make_subdivision_info(const adjacency_list<int> &trian
                 a1 = std::numbers::pi;
             else {
                 auto forward = (c2 - c1);
+		auto direction = (c2 - c3);
                 forward.rotate_right();
-                a1 = std::abs(forward * (c2 - c3));
+                a1 = std::abs(forward * direction / std::sqrt(forward.sqr_length() * direction.sqr_length()));
             }
             // auto a2 = inner_angle(c2, c1, c2, c3);
             double a2;
@@ -73,8 +74,9 @@ subdivision<StoreCoords>::make_subdivision_info(const adjacency_list<int> &trian
                 a2 = std::numbers::pi;
             else {
                 auto forward = (c1 - c2);
-                forward.rotate_right();
-                a2 = std::abs(forward * (c3 - c2));
+		auto direction = (c3 - c2);
+		forward.rotate_right();
+                a2 = std::abs(forward * direction / std::sqrt(forward.sqr_length() * direction.sqr_length()) );
             }
 
             assert(std::fabs((a1 + a2 + inner_angle(c3, c1, c3, c2)) - std::numbers::pi) <
