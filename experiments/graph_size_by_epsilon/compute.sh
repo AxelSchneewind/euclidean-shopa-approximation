@@ -3,8 +3,8 @@
 source ../utils.sh
 
 # specify paths to graph files here
-GRAPH_AEGS_REF=$GRAPH_DIR/aegaeis/aegaeis-ref-new.graph
-GRAPH_AEGS_TRIANGLE=$GRAPH_DIR/aegaeis/aegaeis-ref.graph
+GRAPH_AEGS_REF=$GRAPH_DIR/aegaeis/aegaeis-ref.graph
+GRAPH_AEGS_TRIANGLE=$GRAPH_DIR/aegaeis/aegaeis-ref-new.graph
 GRAPH_AEGS_UNREF=$GRAPH_DIR/aegaeis/aegaeis-unref.graph
 GRAPH_MILOS_REF=../explicit/milos-ref.graph
 GRAPH_MILOS_UNREF=../explicit/milos.graph
@@ -45,8 +45,8 @@ compute $GRAPH_AEGS_TRIANGLE
 compute $GRAPH_AEGS_UNREF
 compute $GRAPH_MILOS_REF
 compute $GRAPH_MILOS_UNREF
-# compute $GRAPH_PATA
-# compute $GRAPH_MEDI
+compute $GRAPH_PATA
+compute $GRAPH_MEDI
 
 # combine results
 csvstack results/results_*.csv > results/results.csv
