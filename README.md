@@ -11,6 +11,8 @@ as well as the implementation of the pruned search.
 The project can be built using CMake.
 It optionally requires doxygen (for documentation) and gengetopt (for modifying parsing of command line parameters) to be installed.
 
+The can be compiled by GCC 11.4.0 and newer.
+
 To build, run
 ```sh
 mkdir cmake-build-release
