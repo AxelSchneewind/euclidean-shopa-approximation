@@ -1,6 +1,11 @@
 # Euclidean shortest path approximation
 
-TODO
+This repository contains the code used for my thesis on the topic
+`Fully-polynomial-time Approximation Schemes for the Euclidean Shortest Path Problem`.
+
+The relevant code for the discretization is contained in the `src/triangulation` directory.
+It contains the implementation of the implicit/semi-explicit graph representation 
+as well as the implementation of the pruned search.
 
 ## Building
 The project can be built using CMake.
@@ -19,8 +24,8 @@ The following executables are provided:
 - `graph_stats`: reads a .graph file and outputs a chosen type of information on the graph (size, inner angles, points inserted per edge)
 - `find_nodes`: reads a .graph file and selects a given number of nodes with a given property
 - `make_explicit`: reads a .graph file and constructs the explicit graph representation (for a given epsilon) and writes to a file
-- `make_gl`: reads a .fmi file and converts it to a .gl file for rendering
-- 
+- `make_gl`: reads a .fmi or .graph file and converts it to a .gl file for rendering
+- `convert`: reads a .graph file and converts it to .node and .ele files used by triangle (Shewchuck) and vice versa.
 - `prune_graph`: cuts out a subgraph from a .fmi or .graph file by a given bounding box
 
 ## Computing shortest paths
