@@ -44,7 +44,7 @@ main(int argc, char *argv[]) {
     };
 
     static const std::unordered_map<enum_pruning, RoutingConfiguration::Pruning> pruning = {
-            {pruning__NULL,                         RoutingConfiguration::Pruning::PRUNE_DEFAULT},
+            {pruning__NULL,                         RoutingConfiguration::Pruning::MinBendingAngleESpanner},
             {pruning_arg_none,                      RoutingConfiguration::Pruning::UNPRUNED},
             {pruning_arg_prune,                     RoutingConfiguration::Pruning::PRUNE_DEFAULT},
             {pruning_arg_pruneMINUS_minMINUS_angle, RoutingConfiguration::Pruning::MinBendingAngleESpanner}

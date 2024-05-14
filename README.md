@@ -33,8 +33,10 @@ The following executables are provided:
 
 ## Computing shortest paths
 Example:
+
 ```
-compute_shopa --graph-file aegaeis-ref.graph -o output-dir/ -e 0.5 -q $(find_nodes --graph-file aegaeis-ref.graph -b -r 2)
+compute_shopa --graph-file aegaeis-ref.graph -o output-dir/ -e 0.5 -q $(find_nodes --graph-file aegaeis-ref.graph -b -r 2 | sed -z -e 's/\n/,/g')
+
 ```
 Selects two random boundary vertices and computes a shortest path between them and writes the results to the given output directory.
 
