@@ -2,7 +2,7 @@
 
 
 import matplotlib
-matplotlib.use("pgf")
+# matplotlib.use("pgf")
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
