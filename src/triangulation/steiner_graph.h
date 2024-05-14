@@ -231,23 +231,23 @@ public:
     node_id_iterator_type node_ids(triangle_edge_id_type edge) const;
 
     // computes the coordinates of a node with given id
-    [[using gnu: pure, hot, always_inline]]
+    [[using gnu: pure, hot]]
     coordinate_type node_coordinates(node_id_type id) const;
 
-    [[using gnu : hot, always_inline]]
+    [[using gnu : hot]]
     coordinate_type node_coordinates_steiner(node_id_type id) const;
 
-    [[using gnu : hot, always_inline]]
+    [[using gnu : hot]]
     coordinate_type const& node_coordinates_first(triangle_edge_id_type id) const;
 
-    [[using gnu : hot, always_inline]]
+    [[using gnu : hot]]
     coordinate_type node_coordinates_mid(triangle_edge_id_type id) const;
 
-    [[using gnu : pure, hot, always_inline]]
+    [[using gnu : pure, hot]]
     coordinate_type const& node_coordinates_last(triangle_edge_id_type id) const;
 
     // computes the coordinates of a node with given id
-    [[using gnu : pure, hot, always_inline]]
+    [[using gnu : pure, hot]]
     coordinate_type const& node_coordinates(triangle_node_id_type id) const;
 
     distance_type on_edge_distance(triangle_edge_id_type edge, intra_edge_id_type first, intra_edge_id_type second) const;
