@@ -42,4 +42,4 @@ Selects two random boundary vertices and computes a shortest path between them a
 
 In the experiments directory, the conducted experiments are included. They contain the respective scripts to run the experiments. For the experiments relying on specific graph instances, their paths have to be specified in experiments/utils.sh.
 For the experiments to work, the directory build directory should be added to `$PATH`.
-Some scripts for processing the results also require the `model` directory to be in the `$PYTHONPATH`-variable (also needs to be exported).
+Some scripts for processing the results also require the `model` directory to be in the `$PYTHONPATH`-variable (also needs to be exported). Some also need `csvkit` to be installed.
