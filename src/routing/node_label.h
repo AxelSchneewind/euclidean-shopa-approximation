@@ -28,22 +28,20 @@ private:
 
 public:
     constexpr node_label() {
-        if consteval {
-            if constexpr (HasDistance) {
-                _impl._distance = std::numeric_limits<double>::infinity();
-            }
-            if constexpr (HasHeuristic) {
-                _impl._heuristic = std::numeric_limits<double>::infinity();
-            }
-            if constexpr (HasPredecessor) {
-                _impl._predecessor = optional::none_value<decltype(_impl._predecessor)>;
-            }
-            if constexpr (HasFaceCrossingPredecessor) {
-                _impl._face_crossing_predecessor = optional::none_value<decltype(_impl._face_crossing_predecessor)>;
-            }
-            if constexpr (HasNode) {
-                _impl._node = optional::none_value<decltype(_impl._node)>;
-            }
+        if constexpr (HasDistance) {
+            _impl._distance = std::numeric_limits<double>::infinity();
+        }
+        if constexpr (HasHeuristic) {
+            _impl._heuristic = std::numeric_limits<double>::infinity();
+        }
+        if constexpr (HasPredecessor) {
+            _impl._predecessor = optional::none_value<decltype(_impl._predecessor)>;
+        }
+        if constexpr (HasFaceCrossingPredecessor) {
+            _impl._face_crossing_predecessor = optional::none_value<decltype(_impl._face_crossing_predecessor)>;
+        }
+        if constexpr (HasNode) {
+            _impl._node = optional::none_value<decltype(_impl._node)>;
         }
     };
 
