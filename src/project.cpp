@@ -36,6 +36,10 @@ int main(int argc, const char* argv[]) {
 
         nodes.resize(node_count);
         file_io::read_nodes<node_t>(input, nodes);
+
+        if (' ' == input.peek() || '\n' == input.peek() || '\t' == input.peek())
+            input.get();
+
         rem = std::string(std::istreambuf_iterator<char>(input), {});
     }
 
