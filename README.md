@@ -41,4 +41,5 @@ Selects two random boundary vertices and computes a shortest path between them a
 ## Experiments
 
 In the experiments directory, the conducted experiments are included. They contain the respective scripts to run the experiments. For the experiments relying on specific graph instances, their paths have to be specified in experiments/utils.sh.
+For the experiments to work, the directory build directory should be added to `$PATH`.
 
