@@ -44,15 +44,15 @@ compute_bench() {
 
 		if [ ! -d "$DIRECTORY_NAME/1.0" ]; then
 			compute_ota_queries "$EXPLICIT_REF_10_GRAPH" "$DIRECTORY_NAME/1.0" "$QUERY_FILE" 1.0 "$ARGUMENTS"
-			process_results "$DIRECTORY_NAME" "$OUTPUT_DIR/results-$BENCHMARK_NAME-10.csv" "$BENCHMARK_NAME-10"
+			process_results "$DIRECTORY_NAME/1.0" "$OUTPUT_DIR/results-$BENCHMARK_NAME-10.csv" "$BENCHMARK_NAME-10"
 		fi
 		if [ ! -d "$DIRECTORY_NAME/0.5" ]; then
 			compute_ota_queries "$EXPLICIT_REF_05_GRAPH" "$DIRECTORY_NAME/0.5" "$QUERY_FILE" 0.5 "$ARGUMENTS"
-			process_results "$DIRECTORY_NAME" "$OUTPUT_DIR/results-$BENCHMARK_NAME-05.csv" "$BENCHMARK_NAME-05"
+			process_results "$DIRECTORY_NAME/0.5" "$OUTPUT_DIR/results-$BENCHMARK_NAME-05.csv" "$BENCHMARK_NAME-05"
 		fi
 		if [ ! -d "$DIRECTORY_NAME/0.25" ]; then
 			compute_ota_queries "$EXPLICIT_REF_025_GRAPH" "$DIRECTORY_NAME/0.25" "$QUERY_FILE" 0.25 "$ARGUMENTS"
-			process_results "$DIRECTORY_NAME" "$OUTPUT_DIR/results-$BENCHMARK_NAME-025.csv" "$BENCHMARK_NAME-025"
+			process_results "$DIRECTORY_NAME/0.25" "$OUTPUT_DIR/results-$BENCHMARK_NAME-025.csv" "$BENCHMARK_NAME-025"
 		fi
 
 	else
@@ -66,11 +66,10 @@ compute_bench() {
 			local STORAGE_TXT="semi-explicit"
 			local BENCHMARK_NAME="milos-$STORAGE_TXT-$PRUNING-$NEIGHBOR_FINDING"
 			local DIRECTORY_NAME="$OUTPUT_DIR/$BENCHMARK_NAME"
-			local ARGUMENTS="--pruning=$PRUNING --neighbor-finding=$NEIGHBOR_FINDING --coords-explicit"
+			local ARGUMENTS="--pruning $PRUNING --neighbor-finding $NEIGHBOR_FINDING --coords-explicit"
 		fi
 
-		EPSILONS=("1.0")
-		#"0.5" "0.25")
+		EPSILONS=("1.0" "0.5" "0.25")
 		for eps in "${EPSILONS[@]}"; do
 			if [ ! -d "$DIRECTORY_NAME/$eps" ]; then
 		    		compute_ota_queries "$GRAPH_FILE" "${DIRECTORY_NAME}/$eps" "$QUERIES" "$eps" "${ARGUMENTS}"
@@ -112,36 +111,8 @@ compute_bench "$TRIANGULATION_REF_GRAPH" "prune-min-angle" "param" "$QUERY_FILE"
 compute_bench "$TRIANGULATION_REF_GRAPH" "prune-min-angle" "trig" "$QUERY_FILE"   "semi-explicit"
 compute_bench "$TRIANGULATION_REF_GRAPH" "prune-min-angle" "binary" "$QUERY_FILE" "semi-explicit"
 
-######################################## unrefined graph ########################################
-# no pruning
-# if [ ! -d "$OUTPUT_DIR/implicit-unref-unpruned" ]; then
-# 	EPSILONS=("1.0" "0.5" "0.25")
-# 	for eps in "${EPSILONS[@]}"; do
-# 	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-unpruned/$eps" "$QUERY_FILE" "$eps" "--pruning=none"
-# 	done
-# fi
-# process_results "$OUTPUT_DIR/implicit-unref-unpruned" "$OUTPUT_DIR/results-implicit-unref-unpruned.csv" milos-implicit-unref-unpruned
-
-# default pruning
-# if [ ! -d "$OUTPUT_DIR/implicit-unref-pruned" ]; then
-# 	EPSILONS=("1.0" "0.5" "0.25")
-# 	for eps in "${EPSILONS[@]}"; do
-# 	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-pruned/$eps" "$QUERY_FILE" "$eps" "--pruning=prune"
-# 	done
-# fi
-# process_results "$OUTPUT_DIR/implicit-unref-pruned" "$OUTPUT_DIR/results-implicit-unref-pruned.csv" milos-implicit-unref-pruned
-# # 
-# # pruned by minimal bending angle
-# if [ ! -d "$OUTPUT_DIR/implicit-unref-pruned-min-angle" ]; then
-# 	EPSILONS=("1.0" "0.5" "0.25")
-# 	for eps in "${EPSILONS[@]}"; do
-# 	    compute_ota_queries "$TRIANGULATION_UNREF_GRAPH" "$OUTPUT_DIR/implicit-unref-pruned-min-angle/$eps" "$QUERY_FILE" "$eps" "--pruning=prune-min-angle"
-# 	done
-# fi
-# process_results "$OUTPUT_DIR/implicit-unref-pruned-min-angle" "$OUTPUT_DIR/results-implicit-unref-pruned-min-angle.csv" milos-implicit-unref-pruned-min-angle
-
 ######################################### explicit graph ########################################
-# exact solutions
+# explicit solutions
 compute_bench "$EXPLICIT_REF_10_GRAPH" "" "" "$QUERY_FILE"  "explicit"
 compute_bench "$EXPLICIT_REF_05_GRAPH" "" "" "$QUERY_FILE"  "explicit"
 compute_bench "$EXPLICIT_REF_025_GRAPH" "" "" "$QUERY_FILE"  "explicit"
