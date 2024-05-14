@@ -109,34 +109,34 @@ private:
                           std::vector<coordinate_t> &coordinates_out);
 
     // finding the intersection of a ray with an edge, depending on algorithm selected
-    [[using gnu : always_inline, hot]]
+    [[using gnu : hot]]
     coordinate_t::component_type
     min_angle_relative_value_matmul(base_edge_id_type edge_id, coordinate_t direction) const requires (
     NeighborFindingAlgorithm::PARAM == Config);
 
-    [[using gnu : always_inline, hot]]
+    [[using gnu : hot]]
     coordinate_t::component_type
     min_angle_relative_value_atan2(base_edge_id_type edge_id, coordinate_t const &direction) const requires (
     NeighborFindingAlgorithm::ATAN2 == Config);
 
-    [[using gnu : always_inline, hot]]
+    [[using gnu : hot]]
     coordinate_t::component_type min_angle_relative_value_atan2(coordinate_t left,
                                                                 coordinate_t right,
                                                                 coordinate_t::component_type direction_left,
                                                                 coordinate_t::component_type direction_dir) const requires (
     NeighborFindingAlgorithm::ATAN2 == Config);
 
-    [[using gnu : always_inline, hot]]
+    [[using gnu : hot]]
     node_id_type
     min_angle_neighbor_matmul(base_edge_id_type const &edge_id,
                               coordinate_t const &direction) requires (NeighborFindingAlgorithm::PARAM == Config);
 
-    [[using gnu : always_inline, hot]]
+    [[using gnu : hot]]
     node_id_type min_angle_neighbor_atan2(base_edge_id_type edge_id, const coordinate_t &direction) const
     requires (NeighborFindingAlgorithm::ATAN2 == Config);
 
 
-    [[using gnu : always_inline, hot]]
+    [[using gnu : hot]]
     node_id_type
     min_angle_neighbor_binary_search(base_edge_id_type const &edge_id,
                                      const coordinate_t &direction) requires (

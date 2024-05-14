@@ -7,7 +7,6 @@
 
 
 coordinate_t::component_type std::atan2(coordinate_t const& direction) {
-    [[assume(std::isnormal(direction.x) && std::isnormal(direction.y))]];
     return std::atan2(direction.x, direction.y);
 }
 
@@ -15,7 +14,6 @@ coordinate_t::component_type std::atan2(coordinate_t const& direction) {
 coordinate_t::component_type
 distance_euclidean(coordinate_t const& c1, coordinate_t c2) {
     c2 -= c1;
-    [[assume((std::isnormal(c2.y) && std::isnormal(c2.x) && std::isnormal(c1.y) && std::isnormal(c1.x)))]];
     return std::sqrt(c2.y * c2.y + c2.x * c2.x);
 }
 
