@@ -62,7 +62,7 @@ std_graph_t make_beeline(GraphT const &graph, typename GraphT::node_id_type from
 }
 
 template<RoutableGraph GraphT>
-QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to, RoutingConfiguration const& config)
+QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to, RoutingConfiguration const& config) requires (!SteinerGraph<GraphT>)
         : _from(from)
         , _to(to)
         , _from_internal(from)
@@ -73,8 +73,8 @@ QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from,
         , _beeline_distance(distance(graph.node(_from_internal).coordinates, graph.node(_to_internal).coordinates))
         , _configuration(config) {};
 
-template<>
-QueryImplementation<steiner_graph>::QueryImplementation(steiner_graph const &graph, long from, long to, RoutingConfiguration const& config)
+template<RoutableGraph GraphT>
+QueryImplementation<GraphT>::QueryImplementation(GraphT const &graph, long from, long to, RoutingConfiguration const& config) requires SteinerGraph<GraphT>
         : _from(from)
         , _to(to)
         , _from_internal(graph.from_base_node_id(from))
@@ -104,13 +104,13 @@ void QueryImplementation<GraphT>::write(table &out) const {
     // coordinates (with lower precision to remove differences due to different input precisions)
     int precision = 8;
     std::stringstream src_lat;
-    src_lat << std::setprecision(precision) << static_cast<float>(_from_coordinates.latitude);
+    src_lat << std::setprecision(precision) << static_cast<float>(_from_coordinates.y);
     std::stringstream src_lon;
-    src_lon << std::setprecision(precision) << static_cast<float>(_from_coordinates.longitude);
+    src_lon << std::setprecision(precision) << static_cast<float>(_from_coordinates.x);
     std::stringstream tgt_lat;
-    tgt_lat << std::setprecision(precision) << static_cast<float>(_to_coordinates.latitude);
+    tgt_lat << std::setprecision(precision) << static_cast<float>(_to_coordinates.y);
     std::stringstream tgt_lon;
-    tgt_lon << std::setprecision(precision) << _to_coordinates.longitude;
+    tgt_lon << std::setprecision(precision) << _to_coordinates.x;
 
     out.put(Statistics::FROM_LAT, src_lat.str());
     out.put(Statistics::FROM_LON, src_lon.str());
@@ -119,7 +119,8 @@ void QueryImplementation<GraphT>::write(table &out) const {
 
     // configuration
     out.put(Statistics::ASTAR, _configuration.use_a_star);
-    out.put(Statistics::NEIGHBOR_FINDING, _configuration.min_angle_neighbor_method);
+    out.put(Statistics::NEIGHBOR_FINDING, (int)_configuration.neighbor_selection_algorithm);
+    out.put(Statistics::PRUNING, (int)_configuration.pruning);
 
     //
     out.put(Statistics::BEELINE_DISTANCE, beeline_distance());

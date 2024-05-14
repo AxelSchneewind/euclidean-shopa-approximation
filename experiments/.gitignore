@@ -1,0 +1,15 @@
+# 
+*/results/
+*/plots/
+*/summaries/
+
+#
+*/*.png
+*/*.pgf
+*/*.csv
+*/*.txt
+
+# 
+*/*.graph
+*/*.fmi
+*/*.gl

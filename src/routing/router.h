@@ -21,9 +21,6 @@ protected:
 
     node_cost_pair_type _forward_current;
 
-private:
-    void step_forward();
-
 public:
     static constexpr size_t SIZE_PER_NODE = 2 * Dijkstra::SIZE_PER_NODE;
     static constexpr size_t SIZE_PER_EDGE = 2 * Dijkstra::SIZE_PER_EDGE;
@@ -51,6 +48,17 @@ public:
      * calculates a one to one route using bidirectional dijkstra. init() has to be called first
      */
     void compute();
+
+    /**
+     *
+     */
+    void step_forward();
+
+    /**
+     *
+     * @return
+     */
+    bool done();
 
     /**
      * returns the distance of the calculated route

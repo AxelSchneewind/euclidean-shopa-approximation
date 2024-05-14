@@ -66,10 +66,10 @@ public:
      * @param from the node from where destination is reached (can be filtered out)
      * @return
      */
-    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    std::span<const internal_adjacency_list_edge<NodeId, E>>
     outgoing_edges(NodeId source, NodeId from) const;
 
-    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent> outgoing_edges(NodeId source) const;
+    std::span<const internal_adjacency_list_edge<NodeId, E>> outgoing_edges(NodeId source) const;
 
 
     /**
@@ -78,10 +78,10 @@ public:
      * @param from the node from where destination is reached (can be filtered out)
      * @return
      */
-    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    std::span<const internal_adjacency_list_edge<NodeId, E>>
     incoming_edges(NodeId destination, NodeId from) const;
 
-    std::span<const internal_adjacency_list_edge<NodeId, E>, std::dynamic_extent>
+    std::span<const internal_adjacency_list_edge<NodeId, E>>
     incoming_edges(NodeId destination) const;
 
     /**
@@ -151,6 +151,15 @@ public:
     make_bidirectional_undirected(std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> edges);
 
     /**
+     * makes an unidirectional adjacency list from the given
+     * @param edges
+     * @return
+     */
+    static adjacency_list<NodeId, E>
+    make_unidirectional(std::shared_ptr<const unidirectional_adjacency_list<NodeId, E>> forward);
+
+
+    /**
      * makes an undirected bidirectional adjacency list from the given uni-directional one, i.e. uses it for backward and forward edges
      * @param edges
      * @return
@@ -159,11 +168,22 @@ public:
     make_bidirectional_undirected(unidirectional_adjacency_list<NodeId, E> &&forward);
 
     /**
+     * makes an unidirectional adjacency list from the given
+     * @param edges
+     * @return
+     */
+    static adjacency_list<NodeId, E>
+    make_unidirectional(unidirectional_adjacency_list<NodeId, E> &&forward);
+
+
+    /**
      * inverts this adjacency list
      * @param other
      * @return
      */
     static adjacency_list<NodeId, E> invert(const adjacency_list<NodeId, E> &other);
 };
+
+
 
 static_assert(Topology<adjacency_list<int, int>>);

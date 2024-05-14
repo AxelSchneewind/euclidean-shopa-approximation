@@ -7,7 +7,7 @@ template<typename Graph, typename Dijkstra>
 router<Graph, Dijkstra>::node_cost_pair_type const &router<Graph, Dijkstra>::forward_current() const { return _forward_current; }
 
 template<typename Graph, typename Dijkstra>
-router<Graph, Dijkstra>::distance_type router<Graph, Dijkstra>::forward_distance() const { return forward_labels().at(_forward_current.node()).distance(); }
+router<Graph, Dijkstra>::distance_type router<Graph, Dijkstra>::forward_distance() const { return _forward_current.value(); }
 
 template<typename Graph, typename Dijkstra>
 auto &&router<Graph, Dijkstra>::forward_search() const { return _forward_search; }
@@ -40,10 +40,16 @@ router<Graph, Dijkstra>::step_forward() {
     _forward_search.step();
 
     // update current node
-    if (!forward_search().queue_empty())
+    if (!_forward_search.queue_empty())
         _forward_current = _forward_search.current();
     else
         _forward_current = optional::none_value<node_cost_pair_type>;
+}
+
+template<typename Graph, typename Dijkstra>
+bool
+router<Graph, Dijkstra>::done() {
+    return _forward_search.queue_empty() || (!optional::is_none(_target_node) && _forward_search.reached(_target_node));
 }
 
 template<typename Graph, typename Dijkstra>
@@ -52,13 +58,11 @@ router<Graph, Dijkstra>::compute() {
     assert(!optional::is_none(_start_node));
     assert(optional::is_none(_target_node) || !_forward_search.reached(_target_node));
 
-    bool done = _forward_search.queue_empty();
-    while (!done) {
+    while (!done()) {
         step_forward();
-
-        done = _forward_search.queue_empty();
-        done |= !optional::is_none(_target_node) && _forward_search.reached(_target_node);
     }
+
+    _forward_search.queue().clear();
 }
 
 template<typename Graph, typename Dijkstra>

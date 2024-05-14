@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 dtypes = {
     'epsilon': float,
@@ -9,6 +10,7 @@ dtypes = {
     'tree size': int,
     'astar': int,
     'neighbor finding algorithm': int,
+    'pruning': int,
     'source latitude': float,
     'source longitude': float,
     'target latitude': float,
@@ -35,6 +37,44 @@ dtypes = {
     'benchmark': str
 }
 
+column_units = {
+    'epsilon': '',
+    'source': '',
+    'target': '',
+    'cost': '',
+    'time': 'ms',
+    'tree size': 'nodes',
+    'astar': '',
+    'neighbor finding algorithm': '',
+    'pruning': '',
+    'source latitude': 'º',
+    'source longitude': 'º',
+    'target latitude': 'º',
+    'target longitude': 'º',
+    'node count': '',
+    'edge count': '',
+    'stored node count': '',
+    'stored edge count': '',
+    'memory usage graph': 'MiB',
+    'memory usage final': 'MiB',
+    'beeline distance': '',
+    'queue pull count': '',
+    'queue push count': '',
+    'queue max size': '',
+    'edges checked': '',
+    'neighbors base node count': '',
+    'neighbors base node neighbors count': '',
+    'neighbors boundary node count': '',
+    'neighbors boundary node neighbors count': '',
+    'neighbors steiner point count': '',
+    'neighbors steiner point neighbors count': '',
+    'neighbors steiner point search iteration count': '',
+    'graph': '',
+    'benchmark': '',
+    'ratio': '',
+    'optimal cost': ''
+}
+
 converters = {
 
 }
@@ -51,8 +91,11 @@ def add_optimal_cost(data):
     r = []
     for i, row in data.iterrows():
         ref = reference(data, row)
-        r = r + [ref['item'].item()]
-    data['optimal cost'] = numpy.array(r, dtype='float')
+        if len(ref['cost']) > 0:
+            r = r + [ref['cost'].iloc[0].item() ]
+        else:
+            r = r + [ 0.0 ]
+    data['optimal cost'] = np.array(r, dtype='float')
     return data
 
 

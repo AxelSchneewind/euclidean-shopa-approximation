@@ -21,6 +21,7 @@ enum Statistics {
     TIME,
     ASTAR,
     NEIGHBOR_FINDING,
+    PRUNING,
     BEELINE_DISTANCE,
     TREE_SIZE,
     QUEUE_PULL_COUNT,
@@ -34,6 +35,7 @@ enum Statistics {
     NEIGHBORS_STEINER_POINT_COUNT,
     NEIGHBORS_STEINER_POINT_NEIGHBORS_COUNT,
     NEIGHBORS_STEINER_POINT_ANGLE_CHECK_COUNT,
+    GRAPH_FILE,
     PATH,
     NUM_COLUMNS
 };
@@ -58,6 +60,7 @@ const std::array<std::string, NUM_COLUMNS> COLUMNS{
     "time",
     "astar",
     "neighbor finding algorithm",
+    "pruning",
     "beeline distance",
     "tree size",
     "queue pull count",
@@ -71,5 +74,6 @@ const std::array<std::string, NUM_COLUMNS> COLUMNS{
     "neighbors steiner point count",
     "neighbors steiner point neighbors count",
     "neighbors steiner point search iteration count",
+    "graph",
     "path"
 };

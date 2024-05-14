@@ -105,6 +105,12 @@ public:
         [[gnu::cold]]
         void make_offsets();
 
+        [[gnu::cold]]
+        void sort_edges();
+
+        [[gnu::cold]]
+        void remove_duplicates();
+
     public:
         using edge_type = adjacency_list_edge<NodeId, E>;
 
@@ -114,7 +120,7 @@ public:
 
         adjacency_list_builder(const adjacency_list_builder &other) = default;
 
-        adjacency_list_builder(std::size_t node_count) : _node_count(node_count) { _edges.reserve(4 * _node_count); };
+        adjacency_list_builder(std::size_t node_count) : _node_count(node_count) { _edges.reserve(4 * _node_count); _offsets.reserve(node_count); };
 
         ~adjacency_list_builder() = default;
 
@@ -128,24 +134,40 @@ public:
             return _edges[index];
         }
 
-        void sort_edges();
-
-        void remove_duplicates();
-
+        /**
+         * removes nodes that have no incident edges
+         */
         void remove_unconnected_nodes();
 
-        // template<std::predicate<node_id_type> NodePredicate>
-        // void filter_nodes(NodePredicate &&node_predicate);
+        void finalize() { sort_edges(); remove_duplicates(); _edges.shrink_to_fit(); };
 
-        // template<std::predicate<edge_info_type> EdgePredicate>
-        // void filter_edges(EdgePredicate &&edge_predicate);
+        template<std::predicate<node_id_type> NodePredicate>
+        void filter_nodes(NodePredicate &&node_predicate);
 
-        void reorder_nodes(std::span<node_id_type> new_node_ids);
+        template<std::predicate<edge_info_type> EdgePredicate>
+        void filter_edges(EdgePredicate &&edge_predicate);
 
-        std::span<edge_type, std::dynamic_extent> edges() { return {_edges.begin(), _edges.end()}; }
+        /**
+         * permutes the order of nodes and adjusts the edge list accordingly
+         * @param new_node_ids
+         */
+        void permute_nodes(std::span<node_id_type> new_node_ids);
 
+        std::span<edge_type> edges() {
+            finalize();
+            return {_edges.begin(), _edges.end()};
+        }
+
+        /**
+         * makes edges from the given faces, such that each edge (v,w) has v < w
+         * @param faces
+         */
         void add_edges_from_triangulation(std::vector<std::array<node_id_type, 3>> const &faces);
 
+        /**
+         * makes edges from the given faces, such that each edge (v,w) has v < w
+         * @param faces
+         */
         void add_edges_from_triangulation(std::vector<std::array<node_id_type, 3>> &&faces);
 
         void add_edges(std::vector<edge_type> const &edges);
@@ -161,6 +183,9 @@ public:
 
         void add_edge(NodeId source, NodeId destination);
 
+        /**
+         * for each edge (v,w), inserts (w,v)
+         */
         void insert_backward_edges();
 
         [[gnu::cold]]

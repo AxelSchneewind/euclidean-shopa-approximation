@@ -12,10 +12,15 @@ public:
     template<Topology Graph, typename format = stream_encoders::encode_text>
     static Graph read(std::istream &input_size, std::istream& input_nodes, std::istream& input_edges);
 
-    static steiner_graph read_steiner(std::istream &input_size, std::istream& input_nodes, std::istream& input_triangles, double epsilon);
-    static steiner_graph read_steiner(std::istream &input, double epsilon) { return read_steiner(input, input, input, epsilon); };
+    template <SteinerGraph Graph>
+    static Graph read_steiner(std::istream &input_size, std::istream& input_nodes, std::istream& input_triangles, double epsilon);
+    template <SteinerGraph Graph>
+    static Graph read_steiner(std::istream &input, double epsilon) { return read_steiner<Graph>(input, input, input, epsilon); };
 
-    template<Topology Graph, typename format = stream_encoders::encode_text>
+    template <typename Graph, typename format = stream_encoders::encode_text>
+    static void write(std::ostream &output, const Graph &graph);
+
+    template <SteinerGraph Graph, typename format = stream_encoders::encode_text>
     static void write(std::ostream &output, const Graph &graph);
 };
 

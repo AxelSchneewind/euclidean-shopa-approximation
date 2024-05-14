@@ -31,11 +31,12 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_VERSION
 /** @brief the program version */
-#define CMDLINE_PARSER_VERSION "1.0"
+#define CMDLINE_PARSER_VERSION "0.1"
 #endif
 
 enum enum_projection { projection__NULL = -1, projection_arg_none = 0, projection_arg_google_bing, projection_arg_wgs84 };
 enum enum_neighbor_finding { neighbor_finding__NULL = -1, neighbor_finding_arg_param = 0, neighbor_finding_arg_trig, neighbor_finding_arg_binary, neighbor_finding_arg_linear };
+enum enum_pruning { pruning__NULL = -1, pruning_arg_none = 0, pruning_arg_prune, pruning_arg_pruneMINUS_minMINUS_angle };
 
 /** @brief Where the command line options are stored */
 struct gengetopt_args_info
@@ -51,45 +52,46 @@ struct gengetopt_args_info
   double epsilon_arg;	/**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) (default='0.0').  */
   char * epsilon_orig;	/**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) original value given at command line.  */
   const char *epsilon_help; /**< @brief ε value to use for discretizing the triangulation (if a .graph file is given) help description.  */
-  char ** query_arg;	/**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed).  */
-  char ** query_orig;	/**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed) original value given at command line.  */
-  unsigned int query_min; /**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed)'s minimum occurreces */
-  unsigned int query_max; /**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed)'s maximum occurreces */
-  const char *query_help; /**< @brief pair(s) of source and destination node ids (either their ids, or their coordinates if --coordinates is passed) help description.  */
-  int coordinates_flag;	/**< @brief interpret the pair(s) of source and destination nodes as their coordinates (default=off).  */
-  const char *coordinates_help; /**< @brief interpret the pair(s) of source and destination nodes as their coordinates help description.  */
-  int stdin_flag;	/**< @brief indicates that queries should be read from stdin (default=off).  */
-  const char *stdin_help; /**< @brief indicates that queries should be read from stdin help description.  */
-  int csv_format_flag;	/**< @brief indicates that routing information should be printed in the csv format (default=off).  */
-  const char *csv_format_help; /**< @brief indicates that routing information should be printed in the csv format help description.  */
+  int coords_explicit_flag;	/**< @brief if set, stores the coordinates of steiner points explicitly (default=off).  */
+  const char *coords_explicit_help; /**< @brief if set, stores the coordinates of steiner points explicitly help description.  */
+  char ** query_arg;	/**< @brief pair(s) of source and destination node ids.  */
+  char ** query_orig;	/**< @brief pair(s) of source and destination node ids original value given at command line.  */
+  unsigned int query_min; /**< @brief pair(s) of source and destination node ids's minimum occurreces */
+  unsigned int query_max; /**< @brief pair(s) of source and destination node ids's maximum occurreces */
+  const char *query_help; /**< @brief pair(s) of source and destination node ids help description.  */
   enum enum_projection projection_arg;	/**< @brief which projection to apply to coordinates when writing to files (default='none').  */
   char * projection_orig;	/**< @brief which projection to apply to coordinates when writing to files original value given at command line.  */
   const char *projection_help; /**< @brief which projection to apply to coordinates when writing to files help description.  */
-  int tree_arg;	/**< @brief maximum tree size to export to graph file (default='1234567').  */
+  int tree_arg;	/**< @brief maximum tree size to export to graph file (default='1000000').  */
   char * tree_orig;	/**< @brief maximum tree size to export to graph file original value given at command line.  */
   const char *tree_help; /**< @brief maximum tree size to export to graph file help description.  */
-  int live_status_flag;	/**< @brief show live status on route computation (default=on).  */
-  const char *live_status_help; /**< @brief show live status on route computation help description.  */
-  int astar_flag;	/**< @brief use A* heuristic to speed up routing (default=off).  */
-  const char *astar_help; /**< @brief use A* heuristic to speed up routing help description.  */
-  enum enum_neighbor_finding neighbor_finding_arg;	/**< @brief the type of algorithm to find neighbors with minimal bending angle (default='param').  */
+  int live_status_flag;	/**< @brief print live status about computation to stdout (default=on).  */
+  const char *live_status_help; /**< @brief print live status about computation to stdout help description.  */
+  int astar_flag;	/**< @brief use A* heuristic to speed up one-to-one queries (default=off).  */
+  const char *astar_help; /**< @brief use A* heuristic to speed up one-to-one queries help description.  */
+  enum enum_neighbor_finding neighbor_finding_arg;	/**< @brief the type of algorithm to find neighbors with minimal bending angle.  */
   char * neighbor_finding_orig;	/**< @brief the type of algorithm to find neighbors with minimal bending angle original value given at command line.  */
   const char *neighbor_finding_help; /**< @brief the type of algorithm to find neighbors with minimal bending angle help description.  */
+  enum enum_pruning pruning_arg;	/**< @brief which type of pruning to use for steiner graphs.  */
+  char * pruning_orig;	/**< @brief which type of pruning to use for steiner graphs original value given at command line.  */
+  const char *pruning_help; /**< @brief which type of pruning to use for steiner graphs help description.  */
+  int no_tree_flag;	/**< @brief if enabled, only computes distances without keeping tree information (does not produce paths) (default=off).  */
+  const char *no_tree_help; /**< @brief if enabled, only computes distances without keeping tree information (does not produce paths) help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int graph_file_given ;	/**< @brief Whether graph-file was given.  */
   unsigned int output_directory_given ;	/**< @brief Whether output-directory was given.  */
   unsigned int epsilon_given ;	/**< @brief Whether epsilon was given.  */
+  unsigned int coords_explicit_given ;	/**< @brief Whether coords-explicit was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
-  unsigned int coordinates_given ;	/**< @brief Whether coordinates was given.  */
-  unsigned int stdin_given ;	/**< @brief Whether stdin was given.  */
-  unsigned int csv_format_given ;	/**< @brief Whether csv-format was given.  */
   unsigned int projection_given ;	/**< @brief Whether projection was given.  */
   unsigned int tree_given ;	/**< @brief Whether tree was given.  */
   unsigned int live_status_given ;	/**< @brief Whether live-status was given.  */
   unsigned int astar_given ;	/**< @brief Whether astar was given.  */
   unsigned int neighbor_finding_given ;	/**< @brief Whether neighbor-finding was given.  */
+  unsigned int pruning_given ;	/**< @brief Whether pruning was given.  */
+  unsigned int no_tree_given ;	/**< @brief Whether no-tree was given.  */
 
 } ;
 
@@ -216,6 +218,7 @@ int cmdline_parser_required (struct gengetopt_args_info *args_info,
 
 extern const char *cmdline_parser_projection_values[];  /**< @brief Possible values for projection. */
 extern const char *cmdline_parser_neighbor_finding_values[];  /**< @brief Possible values for neighbor-finding. */
+extern const char *cmdline_parser_pruning_values[];  /**< @brief Possible values for pruning. */
 
 
 #ifdef __cplusplus

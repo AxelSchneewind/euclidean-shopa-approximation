@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
         face_count = 0;
         for (size_t i = 0; i < triangles.size(); ++i) {
             auto& triangle = triangles[i];
-            if (is_in_rectangle(nodes[triangle[0]].coordinates, bottom_left, top_right) &&
-                is_in_rectangle(nodes[triangle[1]].coordinates, bottom_left, top_right) &&
+            if (is_in_rectangle(nodes[triangle[0]].coordinates, bottom_left, top_right) ||
+                is_in_rectangle(nodes[triangle[1]].coordinates, bottom_left, top_right) ||
                 is_in_rectangle(nodes[triangle[2]].coordinates, bottom_left, top_right)) {
 
                 contained[triangle[0]] = true;
@@ -93,6 +93,7 @@ int main(int argc, char *argv[]) {
         file_io::write_nodes<node_t>(output, {nodes.begin(), nodes.end()});
         file_io::write_triangles<node_id_t>(output, {triangles.begin(), triangles.end()});
     }
+
     if (graph_file.ends_with(".fmi")) {
         std::size_t node_count, edge_count;
         input >> node_count;
@@ -101,15 +102,16 @@ int main(int argc, char *argv[]) {
         std::vector<node_t> nodes(node_count);
         file_io::read_nodes<node_t>(input, { nodes.begin(), nodes.end() });
 
-	using edge_type = adjacency_list_edge<node_id_t, edge_t>;
+	    using edge_type = adjacency_list_edge<node_id_t, edge_t>;
         std::vector<edge_type> edges(edge_count);
         file_io::read_edges<edge_type>(input, {edges.begin(), edges.end()});
 
+        // TODO use adjacency_list_builder::filter_nodes
         // find edges in selected area and their respective nodes
         std::unordered_map<int, bool> contained;
         edge_count = 0;
         for (size_t i = 0; i < edges.size(); ++i) {
-            if (is_in_rectangle(nodes[edges[i].source].coordinates, bottom_left, top_right) &&
+            if (is_in_rectangle(nodes[edges[i].source].coordinates, bottom_left, top_right) ||
                 is_in_rectangle(nodes[edges[i].destination].coordinates, bottom_left, top_right)) {
 
                 contained[edges[i].source] = true;

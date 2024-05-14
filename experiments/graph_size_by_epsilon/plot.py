@@ -2,7 +2,7 @@
 
 
 import matplotlib
-matplotlib.use("pgf")
+# matplotlib.use("pgf")
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
@@ -11,20 +11,20 @@ import sys
 import math
 
 
-matplotlib.rcParams.update({
-    "pgf.texsystem": "xelatex",
-    "pgf.preamble": '',
-    'font.family': 'serif',
-    'text.usetex': True,
-    'pgf.rcfonts': False,
-})
+# matplotlib.rcParams.update({
+#     "pgf.texsystem": "xelatex",
+#     "pgf.preamble": '',
+#     'font.family': 'serif',
+#     'text.usetex': True,
+#     'pgf.rcfonts': False,
+# })
 
 
 def read(file):
     return pd.read_csv(file)
 
 def plot(data, x_column, y_column):
-    label = '$|V_\\varepsilon|$ for {}'.format(data['graph'].iloc[0])
+    label = '$|V_\\varepsilon|$ for {}'.format(data['graph'].iloc[0].replace('.graph',''))
 
     x_values = data[x_column]
     y_values = data[y_column]
@@ -58,11 +58,10 @@ if __name__ == "__main__":
 
     data = read(file)
 
-    for graph in data['graph'].drop_duplicates():
+    for graph in data['graph'].unique():
         d = data[data['graph'] == graph]
         plot(d, x, y)
         plot_theory(d, x, graph, math.pi / 6)
-
 
     plt.xlabel(r'$\varepsilon$')
     plt.ylabel(r'$|V_\varepsilon|$')
@@ -71,7 +70,7 @@ if __name__ == "__main__":
     plt.xlim((plt.xlim()[1], plt.xlim()[0])) 
     plt.tight_layout() 
     plt.legend()
-    # plt.show()
+    plt.show()
     plt.savefig('out.pgf')
     plt.savefig('out.pdf')
 

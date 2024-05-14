@@ -42,7 +42,8 @@ triangulation_file_io::read(std::istream &input_size, std::istream &input_nodes,
     return Graph::make_graph(std::move(nodes), std::move(adj_list));
 }
 
-steiner_graph
+template <SteinerGraph Graph>
+Graph
 triangulation_file_io::read_steiner(std::istream &input_size, std::istream &input_nodes, std::istream &input_triangles,
                                     double epsilon) {
     using f = stream_encoders::encode_text;
@@ -51,41 +52,34 @@ triangulation_file_io::read_steiner(std::istream &input_size, std::istream &inpu
     std::size_t node_count{f::template read<size_t>(input_size)};
     std::size_t triangle_count{f::template read<size_t>(input_size)};
 
-    std::vector<steiner_graph::node_info_type> nodes;
-    std::vector<steiner_graph::adjacency_list_type::builder::edge_type> edges;
-    std::vector<std::array<steiner_graph::triangle_node_id_type, 3>> faces;
+    std::vector<typename Graph::node_info_type> nodes;
+    std::vector<typename Graph::adjacency_list_type::builder::edge_type> edges;
+    std::vector<std::array<typename Graph::triangle_node_id_type, 3>> faces;
 
-    if (node_count >= (std::size_t)std::numeric_limits<int>::max || triangle_count >= (std::size_t) std::numeric_limits<int>::max)
-        throw std::runtime_error("node or face count to high");
+    if (node_count >= static_cast<std::size_t>(std::numeric_limits<int>::max()) || triangle_count >= static_cast<std::size_t>(std::numeric_limits<int>::max()))
+        throw std::runtime_error("node or face count too high");
 
     nodes.resize(node_count);
     faces.resize(triangle_count);
 
-    file_io::read_nodes<steiner_graph::node_info_type, f>(input_nodes, {nodes.begin(), nodes.end()});
-    triangle_count = file_io::read_triangles<steiner_graph::base_topology_type::node_id_type, f>(input_triangles, {faces.begin(), faces.end()});
+    file_io::read_nodes<typename Graph::node_info_type, f>(input_nodes, {nodes.begin(), nodes.end()});
+    triangle_count = file_io::read_triangles<typename Graph::base_topology_type::node_id_type, f>(input_triangles, {faces.begin(), faces.end()});
     faces.resize(triangle_count);
 
-    steiner_graph::adjacency_list_type::builder adj_list_builder;
+    typename Graph::adjacency_list_type::builder adj_list_builder;
     adj_list_builder.add_edges_from_triangulation(faces);
 
-    auto adj_list = steiner_graph::adjacency_list_type::make_bidirectional(adj_list_builder.get());
-    return steiner_graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces), epsilon);
+    auto adj_list = Graph::adjacency_list_type::make_bidirectional(adj_list_builder.get());
+    return Graph::make_graph(std::move(nodes), std::move(adj_list), std::move(faces), epsilon);
 }
 
-template<>
-steiner_graph triangulation_file_io::read<steiner_graph>(std::istream &input) {
-    return read_steiner(input, 0.5);
+template<typename Graph, typename format>
+void triangulation_file_io::write(std::ostream &output, const Graph &graph) {
+    throw std::runtime_error("not implemented");
 }
 
-
-template<Topology Graph, typename format>
-void triangulation_file_io::write(std::ostream &/*output*/, const Graph &/*graph*/) {
-    throw;
-}
-
-template<>
-void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text>(std::ostream &output,
-                                                                               const steiner_graph &graph) {
+template<SteinerGraph Graph, typename format>
+void triangulation_file_io::write(std::ostream &output, const Graph &graph) {
     stream_encoders::encode_text f;
 
     f.write(output, graph.base_graph().node_count());
@@ -95,8 +89,8 @@ void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text>(s
 
     std::ranges::for_each(graph.base_nodes(), [ &f, &output](auto&& node) {
         f.write(output, std::setprecision(20));
-        f.write(output, node.coordinates.latitude) << ' ';
-        f.write(output, node.coordinates.longitude);
+        f.write(output, node.coordinates.y) << ' ';
+        f.write(output, node.coordinates.x);
         f.write(output, '\n');
     });
 
@@ -109,23 +103,21 @@ void triangulation_file_io::write<steiner_graph, stream_encoders::encode_text>(s
 
             // only insert once (if e is the edge with the smallest id)
             if (e <= edges[0] && e <= edges[1] && e <= edges[2]) {
-                auto n0 = graph.base_graph().destination(edges[0]);
-                auto n1 = graph.base_graph().destination(edges[1]);
-                auto n2 = graph.base_graph().destination(edges[2]);
+                std::array<typename Graph::triangle_edge_id_type, 6> nodes {
+                        graph.base_graph().destination(edges[0]),
+                        graph.base_graph().destination(edges[1]),
+                        graph.base_graph().destination(edges[2]),
+                        graph.base_graph().source(edges[0]),
+                        graph.base_graph().source(edges[1]),
+                        graph.base_graph().source(edges[2]),
+                };
+                std::ranges::sort(nodes);
 
-                // make sure the lowest node id appears first
-                if (n0 > n1)
-                    std::swap(n0, n1);
-                if (n0 > n2)
-                    std::swap(n0, n2);
-                if (n1 > n2)
-                    std::swap(n1, n2);
-
-                f.write(output, n0);
+                f.write(output, nodes[0]);
                 f.write(output, ' ');
-                f.write(output, n1);
+                f.write(output, nodes[2]);
                 f.write(output, ' ');
-                f.write(output, n2);
+                f.write(output, nodes[4]);
                 f.write(output, '\n');
             }
         }

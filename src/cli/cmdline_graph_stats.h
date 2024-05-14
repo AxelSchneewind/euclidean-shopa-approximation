@@ -31,7 +31,7 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_VERSION
 /** @brief the program version */
-#define CMDLINE_PARSER_VERSION "1.0"
+#define CMDLINE_PARSER_VERSION "0.1"
 #endif
 
 enum enum_mode { mode__NULL = -1, mode_arg_steiner_graph_size = 0, mode_arg_bounding_box, mode_arg_inangle_distribution, mode_arg_node_radii, mode_arg_points_per_edge, mode_arg_steiner_points_by_angle };

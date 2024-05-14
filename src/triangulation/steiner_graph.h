@@ -90,6 +90,7 @@ struct std::hash<steiner_edge_id<N>> {
 /**
  * provides access to a virtual graph derived from a base graph
  */
+ template <bool StoreNodes>
 class steiner_graph {
 public:
     using triangle_node_id_type = node_id_t;
@@ -105,10 +106,10 @@ public:
     using base_topology_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
     using adjacency_list_type = adjacency_list<triangle_node_id_type, triangle_edge_info_type>;
 
-    using polyhedron_type = polyhedron<base_topology_type, 3>;
+    using polyhedron_type = polyhedron<int, 3>;
     using topology_type = steiner_graph;
 
-    using subdivision_info_type = subdivision;
+    using subdivision_info_type = subdivision<StoreNodes>;
 
     using intra_edge_id_type = typename subdivision_info_type::steiner_index_type;
 
@@ -130,8 +131,7 @@ public:
         node_id_type _current_node;
         node_id_type _last_node;
 
-    public:
-        node_id_iterator_type(const steiner_graph *graph, node_id_type current, node_id_type max)
+    public: node_id_iterator_type(const steiner_graph *graph, node_id_type current, node_id_type max)
                 : _graph_ptr(graph),
                   _current_node(current),
                   _last_node(max) {
@@ -178,7 +178,7 @@ public:
 
     steiner_graph(std::vector<node_info_type> &&triangulation_nodes,
                   adjacency_list<triangle_node_id_type, triangle_edge_info_type> &&triangulation_edges,
-                  polyhedron<base_topology_type, 3> &&triangles,
+                  polyhedron<triangle_edge_id_type, 3> &&triangles,
                   subdivision_info_type &&table,
                   double epsilon);
 
@@ -190,8 +190,8 @@ public:
             base_topology_type::SIZE_PER_EDGE + polyhedron_type::SIZE_PER_EDGE + subdivision_info_type::SIZE_PER_EDGE;
 
 private:
-    size_t _node_count;
-    size_t _edge_count;
+    long long _node_count;
+    long long _edge_count;
 
     // the epsilon value used for discretization
     double _epsilon;
@@ -218,9 +218,9 @@ public:
 
     std::span<const node_info_type> base_nodes() const { return { _base_nodes.begin(), _base_nodes.end() }; }
 
-    size_t node_count() const { return _node_count; }
+    long long node_count() const { return _node_count; }
 
-    size_t edge_count() const { return _edge_count; }
+    long long edge_count() const { return _edge_count; }
 
     size_t face_count() const { return _polyhedron.face_count(); }
 
@@ -231,23 +231,23 @@ public:
     node_id_iterator_type node_ids(triangle_edge_id_type edge) const;
 
     // computes the coordinates of a node with given id
-    [[using gnu: pure, hot, always_inline]]
+    [[using gnu: pure, hot]]
     coordinate_type node_coordinates(node_id_type id) const;
 
-    [[using gnu : hot, always_inline]]
+    [[using gnu : hot]]
     coordinate_type node_coordinates_steiner(node_id_type id) const;
 
-    [[using gnu : hot, always_inline]]
+    [[using gnu : hot]]
     coordinate_type const& node_coordinates_first(triangle_edge_id_type id) const;
 
-    [[using gnu : hot, always_inline]]
+    [[using gnu : hot]]
     coordinate_type node_coordinates_mid(triangle_edge_id_type id) const;
 
-    [[using gnu : pure, hot, always_inline]]
+    [[using gnu : pure, hot]]
     coordinate_type const& node_coordinates_last(triangle_edge_id_type id) const;
 
     // computes the coordinates of a node with given id
-    [[using gnu : pure, hot, always_inline]]
+    [[using gnu : pure, hot]]
     coordinate_type const& node_coordinates(triangle_node_id_type id) const;
 
     distance_type on_edge_distance(triangle_edge_id_type edge, intra_edge_id_type first, intra_edge_id_type second) const;
@@ -293,8 +293,10 @@ public:
     std::span<internal_adjacency_list_edge<node_id_type, edge_info_type>>
     incoming_edges(triangle_node_id_type base_node_id) const { return outgoing_edges(base_node_id); };
 
+    [[gnu::cold]]
     distance_type path_length(const path_type &route) const;
 
+    [[gnu::cold]]
     subgraph_type make_subgraph(const path_type &route) const;
 
     [[gnu::cold]]
@@ -307,5 +309,10 @@ public:
 
 };
 
-static_assert(Topology<steiner_graph>);
-static_assert(RoutableGraph<steiner_graph>);
+template<typename T>
+concept SteinerGraph = std::same_as<T, steiner_graph<true>> || std::same_as<T, steiner_graph<false>>;
+
+static_assert(Topology<steiner_graph<true>>);
+static_assert(RoutableGraph<steiner_graph<true>>);
+static_assert(Topology<steiner_graph<false>>);
+static_assert(RoutableGraph<steiner_graph<false>>);

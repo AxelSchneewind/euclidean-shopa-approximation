@@ -8,9 +8,9 @@ include_directories(include)
 
 include(CPack)
 
-set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall -Wextra -Wpedantic -fopenmp") # -Wextra
-set(CMAKE_CXX_FLAGS_DEBUG "-g") # -D_GLIBCXX_DEBUG -fsanitize=address
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Ofast")
+set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall -fopenmp")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -D_GLIBCXX_DEBUG") # -fsanitize=address
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 
 
 # make file containing a version name
@@ -42,42 +42,33 @@ else (DOXYGEN_FOUND)
     message("Doxygen needs to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
 
+set(VERSION 0.1)
+
 # gengetopt
 find_program(GENGETOPT gengetopt)
 if (GENGETOPT)
-    add_custom_target(cmdline_graph_stats ALL
-            COMMAND cp src/cli/graph_stats.ggo ${CMAKE_BINARY_DIR}/graph_stats.ggo
-            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/graph_stats.ggo
-            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/graph_stats.ggo -F cmdline_graph_stats --output-dir=src/cli  #--set-version=${VERSION}
-            SOURCES src/cli/graph_stats.ggo
-            DEPENDS version
+    add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/src/cli/cmdline_graph_stats.c
+            COMMAND ${GENGETOPT} -i src/cli/graph_stats.ggo -F cmdline_graph_stats --output-dir=src/cli  --set-version=${VERSION}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             VERBATIM)
 
-    add_custom_target(cmdline_route ALL
-            COMMAND cp src/cli/route.ggo ${CMAKE_BINARY_DIR}/route.ggo
-            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/route.ggo
-            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/route.ggo -F cmdline_route --output-dir=src/cli  #--set-version=${VERSION}
-            SOURCES src/cli/route.ggo
-            DEPENDS version
+    add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/src/cli/cmdline_route.c
+            COMMAND ${GENGETOPT} -i src/cli/route.ggo -F cmdline_route --output-dir=src/cli  --set-version=${VERSION}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             VERBATIM)
 
-    add_custom_target(cmdline_find_nodes ALL
-            COMMAND cp src/cli/find_nodes.ggo ${CMAKE_BINARY_DIR}/find_nodes.ggo
-            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/find_nodes.ggo
-            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/find_nodes.ggo -F cmdline_find_nodes --output-dir=src/cli  #--set-version=${VERSION}
-            SOURCES src/cli/find_nodes.ggo
-            DEPENDS version
+    add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/src/cli/cmdline_one_to_all.c
+            COMMAND ${GENGETOPT} -i src/cli/one-to-all.ggo -F cmdline_one_to_all --output-dir=src/cli  --set-version=${VERSION}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             VERBATIM)
 
-    add_custom_target(cmdline_prune_graph ALL
-            COMMAND cp src/cli/prune_graph.ggo ${CMAKE_BINARY_DIR}/prune_graph.ggo
-            COMMAND echo -n "version \"1.0\"" >> ${CMAKE_BINARY_DIR}/prune_graph.ggo
-            COMMAND ${GENGETOPT} -i ${CMAKE_BINARY_DIR}/prune_graph.ggo -F cmdline_prune_graph --output-dir=src/cli --set-version=${VERSION}
-            SOURCES src/cli/prune_graph.ggo
-            DEPENDS version
+    add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/src/cli/cmdline_find_nodes.c
+            COMMAND ${GENGETOPT} -i src/cli/find_nodes.ggo -F cmdline_find_nodes --output-dir=src/cli  --set-version=${VERSION}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            VERBATIM)
+
+    add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/src/cli/cmdline_prune_graph.c
+            COMMAND ${GENGETOPT} -i src/cli/prune_graph.ggo -F cmdline_prune_graph --output-dir=src/cli --set-version=${VERSION}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             VERBATIM)
 
@@ -87,39 +78,34 @@ endif (GENGETOPT)
 
 
 ################################### BINARIES ###################################
-#
+# executables that may not be linked against librouting
 add_executable(prune_graph src/prune_graph.cpp src/cli/cmdline_prune_graph.c)
 add_executable(find_nodes src/find_nodes.cpp src/cli/cmdline_find_nodes.c)
+add_executable(extract_boundary src/extract_boundary.cpp)
+
+add_executable(graph_stats src/graph_stats.cpp src/cli/cmdline_graph_stats.c)
+
 
 # compile implementation into one library file
 add_library(routing src/interface/Client.cpp)
-target_compile_options(routing PUBLIC "-ffast-math")
+# target_compile_options(routing PUBLIC "-ffast-math")
 link_libraries(routing)
 
 # executables that will be linked against routing library
 add_executable(project_graph src/project.cpp)
+add_executable(make_explicit src/make_explicit.cpp)
 
 add_executable(convert src/convert.cpp)
 add_executable(make_gl src/make_gl.cpp)
-add_executable(make_pruned_gl src/make_pruned_gl.cpp)
 add_executable(make_bin src/make_bin.cpp)
 
-add_executable(route src/route.cpp src/cli/cmdline_route.c)
-
-add_executable(distance_one_to_all src/distance_one_to_all.cpp)
-add_executable(graph_stats src/graph_stats.cpp src/cli/cmdline_graph_stats.c)
-
-if (GENGETOPT)
-    add_dependencies(route cmdline_route)
-    add_dependencies(prune_graph cmdline_prune_graph)
-    add_dependencies(find_nodes cmdline_find_nodes)
-    add_dependencies(graph_stats cmdline_graph_stats)
-endif(GENGETOPT)
+add_executable(compute_shopa src/route.cpp src/cli/cmdline_route.c)
+add_executable(compute_ota src/distance_one_to_all.cpp src/cli/cmdline_one_to_all.c)
 
 ################################# INSTALLATION #################################
 # if access to this directory is missing, add a different one and append it to your PATH
 set(CMAKE_INSTALL_PREFIX /opt/routing)
-install(TARGETS route graph_stats make_gl prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
+install(TARGETS compute_ota compute_shopa graph_stats make_gl extract_boundary make_explicit prune_graph project_graph convert find_nodes RUNTIME DESTINATION bin)
 
 # make sure this library is in your PYTHONPATH for experiments to work
 install(DIRECTORY model DESTINATION lib)

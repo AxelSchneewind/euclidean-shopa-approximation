@@ -12,8 +12,8 @@ TREE_SIZE=10000
 ASTAR=on
 
 # graph files
-VISIBILITY_GRAPH=/opt/routing/graphs/toy/toy.fmi
-TRIANGULATION_GRAPH=/opt/routing/graphs/toy/toy.graph
+VISIBILITY_GRAPH=$GRAPH_DIR/toy/toy.fmi
+TRIANGULATION_GRAPH=$GRAPH_DIR/toy/toy.graph
 
 # output paths
 OUTPUT_DIR=results/toy
@@ -40,7 +40,7 @@ process_results "$OUTPUT_DIR/raw" "$OUTPUT_DIR/results-raw.csv" toy-raw
 if [ ! -d "$OUTPUT_DIR/approximate" ]; then
 	EPSILONS=("1.0" "0.5" "0.2" "0.1" "0.05" "0.02")
 	for eps in "${EPSILONS[@]}"; do
-	    compute_single "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate" "$QUERY_FILE" "$eps" ""
+	    compute_single "$TRIANGULATION_GRAPH" "$OUTPUT_DIR/approximate/$eps" "$QUERY_FILE" "$eps" ""
 	done
 fi
 process_results "$OUTPUT_DIR/approximate" "$OUTPUT_DIR/results-approximate.csv" toy-approximate

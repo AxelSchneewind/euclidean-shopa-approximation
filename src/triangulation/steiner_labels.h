@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../routing/dijkstra_concepts.h"
-#include "compact_node_info_container.h"
 #include "fast_map.h"
 
 #include <functional>
@@ -79,7 +78,7 @@ class steiner_labels {
 public:
     using value_type = Label;
 
-    using label_iterator_type = nested_iterator<typename std::vector<bool>::const_iterator, steiner_graph::node_id_iterator_type>;
+    using label_iterator_type = nested_iterator<typename std::vector<bool>::const_iterator, typename G::node_id_iterator_type>;
 
 private:
     using node_id_type = typename G::node_id_type;
@@ -87,7 +86,7 @@ private:
     using intra_edge_id_type = typename G::triangle_edge_id_type;
     using distance_type = typename G::distance_type;
 
-    using labels_type = fast_map<edge_id_type, intra_edge_id_type, value_type>;
+    using labels_type = fast_map<edge_id_type, intra_edge_id_type, long, value_type>;
 
     std::shared_ptr<G> _graph;
 
@@ -96,11 +95,13 @@ private:
     std::vector<value_type> _base_labels;
     labels_type _labels;
 
+    value_type _default_value;
+
 public:
     static constexpr size_t SIZE_PER_NODE = 0;
     static constexpr size_t SIZE_PER_EDGE = sizeof(std::unique_ptr<std::vector<Label>>);
 
-    steiner_labels(std::shared_ptr<G> graph);
+    steiner_labels(std::shared_ptr<G> graph, value_type default_value);
 
     ~steiner_labels() = default;
 
@@ -126,5 +127,8 @@ public:
     label_iterator_type all_visited() const;
 
     [[gnu::hot]]
-    Label& operator[](node_id_type const& node);
+    Label& operator[](node_id_type node);
+
+    void clear();
 };
+

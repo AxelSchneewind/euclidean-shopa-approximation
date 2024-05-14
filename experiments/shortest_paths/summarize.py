@@ -1,5 +1,7 @@
 #!/bin/python
 
+import model as bench
+
 import pandas as pd
 import numpy as np
 
@@ -34,11 +36,11 @@ def exclude_epsilon(data, eps):
 
 def filter(data):
     # check that cost value is finite
-    invalid_cost = data.loc[(data['cost'] == math.inf) | (data['cost'] == math.nan)]
+    invalid_cost = data.loc[(data['cost'] == math.inf) | (data['cost'] == math.nan) | (data['cost'] == -math.inf)]
     if len(invalid_cost) != 0:
         print('ignored by cost value: ', file=sys.stderr)
         print(invalid_cost, file=sys.stderr)
-    data = data.loc[(data['cost'] != math.inf) & (data['cost'] != math.nan)]
+    data = data.loc[(data['cost'] != math.inf) & (data['cost'] != -math.inf) & (data['cost'] != math.nan)]
 
     # check that exact value exists
     # has_reference = np.array([reference(data, row).shape[0] != 0 for i, row in data.iterrows()], dtype='bool')
@@ -49,10 +51,10 @@ def filter(data):
 
     # check that coordinates of source and target coordinates match
     coords_match = np.array([
-        (reference(data, row)['source latitude'] == row['source latitude'])
-        & (reference(data, row)['source longitude'] == row['source longitude'])
-        & (reference(data, row)['target latitude'] == row['target latitude'])
-        & (reference(data, row)['target longitude'] == row['target longitude']).all() for i,row in data.iterrows() ], dtype='bool')
+        (bench.reference(data, row)['source latitude'] == row['source latitude'])
+        & (bench.reference(data, row)['source longitude'] == row['source longitude'])
+        & (bench.reference(data, row)['target latitude'] == row['target latitude'])
+        & (bench.reference(data, row)['target longitude'] == row['target longitude']).all() for i,row in data.iterrows() ], dtype='bool')
     if len(coords_match[(coords_match == False)]) != 0:
         print('mismatch in source/target coordinates', file=sys.stderr)
         print(data.loc[coords_match == False], file=sys.stderr)
@@ -64,37 +66,67 @@ def filter(data):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', '-f', required=True, action='append', help='path to the input file')
-    parser.add_argument('--output-epsilon', '-e', default='stdout', help='path to the output file for statistics per epsilon')
-    parser.add_argument('--output-queries', '-q', default='stdout', help='path to the output file for statistics per query')
-    parser.add_argument('--column', '-c', default='time', help='the column to summarize')
+    parser.add_argument('--output-epsilon', '-e', help='path to the output file for statistics per epsilon')
+    parser.add_argument('--output-queries', '-q', help='path to the output file for statistics per query')
+    parser.add_argument('--output-worst-quality-queries', '-s', default='stdout', help='path to the output file for a list of the queries with worst quality')
+    parser.add_argument('--columns', '-c', default='time', help='the columns to summarize (comma separated list)')
+    parser.add_argument('--graph-type', '-t', default='triangle')
     args = parser.parse_args()
+
+    # list of columns can be given
+    columns = args.columns.split(',')
 
     # load data and filter out unusable results
     data = bench.load(args.file)
     data = filter(data)
 
+    # compare given graph type to exact values
+    graph_type = '-' + args.graph_type
+    data = data.loc[(data['benchmark'].str.contains(graph_type)) | (data['benchmark'].str.contains('-exact'))]
+    print('summarizing columns: ', columns, '\nfor benchmarks: ', data['benchmark'].unique())
+
+    # list suspicious queries
+    sus = data.loc[data['ratio'] > 1.02][['source', 'target', 'epsilon', 'cost', 'ratio']]
+    sus = sus.loc[sus['epsilon'] != math.inf]
+    if len(sus) > 0:
+        sus.sort_values(by='ratio', inplace=True, ascending=False)
+        print('some results are suspiciously bad: ', file=sys.stderr)
+        print(sus, file=sys.stderr)
+    sus = data.loc[data['ratio'] < 1.00][['source', 'target', 'epsilon', 'cost', 'optimal cost', 'ratio']]
+    sus = sus['epsilon'] != math.inf
+    if len(sus) > 0:
+        sus.sort_values(by='ratio', inplace=True, ascending=True)
+        print('some results are suspiciously good: ', file=sys.stderr)
+        print(sus, file=sys.stderr)
+
     # by epsilon
-    eps_file = args.output_epsilon if args.output_epsilon != 'stdout' else sys.stdout
-    print('epsilon,count,mean,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=eps_file)
-    for epsilon in data['epsilon'].unique():
-        by_epsilon = filter_epsilon(data, epsilon)
-        by_epsilon = by_epsilon[args.column]
-        print(epsilon, by_epsilon.count(), by_epsilon.mean(), by_epsilon.min(), by_epsilon.median(), by_epsilon.max(), by_epsilon.std(),
-              by_epsilon.quantile(0.01), by_epsilon.quantile(0.1), by_epsilon.quantile(0.25),
-              by_epsilon.quantile(0.75), by_epsilon.quantile(0.9), by_epsilon.quantile(0.99),
-              sep=',', file=eps_file)
+    if args.output_epsilon is not None:
+        eps_file = open(args.output_epsilon, mode='a') if args.output_epsilon != 'stdout' else sys.stdout
+        print('column,epsilon,count,mean,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=eps_file)
+        for column in columns:
+            for epsilon in data['epsilon'].unique():
+                by_epsilon = filter_epsilon(data, epsilon)
+                by_epsilon = by_epsilon[column]
+                if len(by_epsilon) > 0:
+                    print(column, epsilon, by_epsilon.count(), by_epsilon.mean(), by_epsilon.min(), by_epsilon.median(), by_epsilon.max(), by_epsilon.std(),
+                          by_epsilon.quantile(0.01), by_epsilon.quantile(0.1), by_epsilon.quantile(0.25),
+                          by_epsilon.quantile(0.75), by_epsilon.quantile(0.9), by_epsilon.quantile(0.99),
+                          sep=',', file=eps_file)
 
     # info on each query
-    q_file = args.output_queries if args.output_queries != 'stdout' else sys.stdout
-    print('source,target,count,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=q_file)
-    for s in data['source'].unique():
-        for t in data[(data['source'] == s)]['target'].unique():
-            by_query = data[(data['source'] == s) & (data['target'] == t)]
-            by_query = by_query[args.column]
-            print(s, t, by_query.count(), by_query.mean(), by_query.min(), by_query.median(), by_query.max(), by_query.std(),
-                by_query.quantile(0.01), by_query.quantile(0.1), by_query.quantile(0.25),
-                by_query.quantile(0.75), by_query.quantile(0.9), by_query.quantile(0.99),
-                sep=',', file=q_file)
+    if args.output_queries is not None:
+        q_file = open(args.output_queries, mode='a') if args.output_queries != 'stdout' else sys.stdout
+        print('column,source,target,count,min,median,max,std,p1,p10,p25,p75,p90,p99', sep='', file=q_file)
+        for column in columns:
+            for s in data['source'].unique():
+                for t in data[(data['source'] == s)]['target'].unique():
+                    by_query = data[(data['source'] == s) & (data['target'] == t)]
+                    by_query = by_query[column]
+                    print(column, s, t, by_query.count(), by_query.mean(), by_query.min(), by_query.median(), by_query.max(), by_query.std(),
+                        by_query.quantile(0.01), by_query.quantile(0.1), by_query.quantile(0.25),
+                        by_query.quantile(0.75), by_query.quantile(0.9), by_query.quantile(0.99),
+                        sep=',', file=q_file)
+    print('done')
 
 
 if __name__ == "__main__":

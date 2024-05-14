@@ -11,6 +11,9 @@
 #include <cstdint>
 
 
+/**
+ * uses precomputed relative positions for classes of edges, depending on the minimal angles
+ */
 class subdivision_table {
 private:
     using steiner_index_type = int;
@@ -104,7 +107,7 @@ public:
     static std::vector<subdivision_edge_info> make_subdivision_info(
             const adjacency_list<int> &triangulation,
             const std::vector<node_t> &nodes,
-            const polyhedron<adjacency_list<int>, 3> &polyhedron,
+            const polyhedron<int, 3> &polyhedron,
             const std::vector<edge_class> &table,
             const std::vector<double> &r_values,
             double epsilon);

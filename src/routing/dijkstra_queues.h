@@ -34,7 +34,7 @@ private:
     std::shared_ptr<Labels> _labels;
 public:
     template<typename Graph>
-    compare_heuristic_remote(Graph&&, std::shared_ptr<Labels> labels) : _labels{std::move(labels)} {}
+    compare_heuristic_remote(std::shared_ptr<Graph>, std::shared_ptr<Labels> labels) : _labels{std::move(labels)} {}
 
     template<typename NodeCostPair>
     [[using gnu : always_inline, hot]]
@@ -45,7 +45,7 @@ public:
 
 struct no_heuristic {
     template <typename Graph, typename Labels>
-    no_heuristic(Graph&&, Labels&&) {}
+    no_heuristic(std::shared_ptr<Graph>, Labels&&) {}
 
     template<typename R>
     void operator()(R& node) {
@@ -69,7 +69,7 @@ public:
     constexpr a_star_heuristic(std::shared_ptr<Graph> graph) : _graph{graph} {}
 
     template<typename Labels>
-    constexpr a_star_heuristic(std::shared_ptr<Graph> graph, Labels&&) : _graph{graph} {}
+    constexpr a_star_heuristic(std::shared_ptr<Graph> graph, std::shared_ptr<Labels>) : _graph{graph} {}
 
     void init(node_id_type source, node_id_type target) {
         _target_coordinate = _graph->node_coordinates(!optional::is_none(target) ? target : source);
@@ -115,6 +115,7 @@ public:
     template <typename NodeId>
     void init(NodeId /*start_node*/, NodeId /*target_node*/) {
         base_queue_type::c.clear();
+        base_queue_type::c.reserve(8192);
     }
 
     template<typename... Args>
@@ -126,7 +127,6 @@ public:
         assert(ncp.distance() != infinity<decltype(ncp.distance())>);
         base_queue_type::emplace(std::move(ncp));
     }
-
 
     template <typename R>
     void push_range(R&& nodes) {
@@ -141,5 +141,6 @@ public:
 
     void clear() {
         base_queue_type::c.clear();
+        base_queue_type::c.shrink_to_fit();
     }
 };

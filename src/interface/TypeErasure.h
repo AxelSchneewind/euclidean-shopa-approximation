@@ -22,6 +22,8 @@ public:
     template <typename Implementation>
     Base& operator=(std::shared_ptr<Implementation> implementation) { impl = std::move(implementation); }
 
+    operator bool() { return static_cast<bool>(impl);}
+
     template<typename Implementation>
     Implementation& get_implementation() {
         if (typeid(std::remove_cvref_t<Implementation>) == typeid(*(impl.get())))

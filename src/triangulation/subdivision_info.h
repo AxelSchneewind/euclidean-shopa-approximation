@@ -2,6 +2,7 @@
 
 #include "../graph/adjacency_list.h"
 #include "polyhedron.h"
+#include "fast_map.h"
 
 #include <limits>
 #include <utility>
@@ -10,9 +11,14 @@
 #include <cmath>
 
 
+template<bool StoreCoordinates>
 class subdivision {
 public:
-    using steiner_index_type = short;
+    static constexpr bool store_node_coordinates{StoreCoordinates};
+    using coordinate_type = coordinate_t;
+
+    using edge_id_type = int;
+    using steiner_index_type = int;
 
     struct subdivision_edge_info {
         // (1+ epsilon * sin(alpha)) for both sides of this edge
@@ -39,12 +45,31 @@ public:
     static constexpr size_t max_steiner_count_per_edge = std::numeric_limits<steiner_index_type>::max();
 private:
 
-    // here, some lower bounds can be imposed to prevent numerical issues
-    static constexpr long double min_r_value = 0x1p-6;
+    // here, a lower bound can be imposed to prevent numerical issues
+    static constexpr long double min_r_value = 0x1p-84;
 
-    std::vector<subdivision_edge_info> edges;
+    std::vector<subdivision_edge_info> _edges;
+
+    using coordinate_container = fast_map<edge_id_type, steiner_index_type, int, coordinate_type>;
+    coordinate_container _coordinates;
 
     size_t edges_capped{0};
+
+
+    [[using gnu : hot, pure]]
+    static coordinate_type compute_node_coordinates(steiner_index_type steiner_index,
+                                                    subdivision_edge_info const &edge,
+                                                    coordinate_type const &c1,
+                                                    coordinate_type const &c2);
+
+
+    subdivision(std::vector<subdivision_edge_info> &&edges,
+                coordinate_container &&coordinates) requires(store_node_coordinates)
+            : _edges{std::move(edges)}, _coordinates{std::move(coordinates)} {};
+
+    subdivision(std::vector<subdivision_edge_info> &&edges) requires (!store_node_coordinates): _edges{std::move(edges)},
+                                                                                               _coordinates(0) { };
+
 
 public:
     static constexpr std::size_t SIZE_PER_NODE = 0;
@@ -54,26 +79,40 @@ public:
 
     subdivision(subdivision &&other) noexcept = default;
 
-    subdivision(std::vector<subdivision_edge_info> &&edges) : edges{std::move(edges)} {};
+    [[using gnu : hot, pure]]
+    coordinate_type node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_type const &c1,
+                                     coordinate_type const &c2) const requires(!store_node_coordinates);
 
-    [[using gnu : hot, pure, always_inline]]
-    coordinate_t node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_t const& c1, coordinate_t const& c2) const;
+    [[using gnu : hot, pure]]
+    coordinate_type const& node_coordinates(edge_id_t edge, steiner_index_type steiner_index) const requires(store_node_coordinates);
 
+    [[using gnu : hot, pure]]
     double relative_position(edge_id_t edge, steiner_index_type steiner_index) const;
+
+    [[using gnu : hot, pure]]
     double relative_position_mid(edge_id_t edge) const;
+
+    [[using gnu : hot, pure]]
     double relative_position_steiner(edge_id_t edge, steiner_index_type steiner_index) const;
+
+    [[using gnu : hot, pure]]
     steiner_index_type index(edge_id_t edge, double relative) const;
 
-    subdivision_edge_info& edge(edge_id_t edge);
-    subdivision_edge_info const& edge(edge_id_t edge) const;
+    [[using gnu : hot, pure]]
+    subdivision_edge_info &edge(edge_id_t edge);
+
+    [[using gnu : hot, pure]]
+    subdivision_edge_info const &edge(edge_id_t edge) const;
 
     // TODO move somewhere else
+    [[gnu::cold]]
     std::vector<std::size_t> offsets() const;
 
-    static std::vector<subdivision_edge_info> make_subdivision_info(
-            const adjacency_list<int> &triangulation,
-            const std::vector<node_t> &nodes,
-            const polyhedron<adjacency_list<int>, 3> &polyhedron,
-            const std::vector<double> &r_values,
+    [[gnu::cold]]
+    static subdivision make_subdivision_info(
+            adjacency_list<int> const &triangulation,
+            std::vector<node_t> const &nodes,
+            polyhedron<int, 3> const &polyhedron,
+            std::vector<double> const &r_values,
             double epsilon);
 };

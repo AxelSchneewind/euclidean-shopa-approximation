@@ -1,5 +1,7 @@
 #pragma once
 
+#include <concepts>
+#include <vector>
 
 template<typename T>
 concept HasDistance = requires(T t) {

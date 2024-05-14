@@ -5,8 +5,7 @@
 #include "Query_impl.h"
 
 #include "../routing_impl.h"
-
-#include "../util/memory_usage.h"
+#include "../util/memory_usage_impl.h"
 #include "../util/csv_impl.h"
 
 #include <thread>
@@ -14,7 +13,7 @@
 
 template<typename GraphT>
 Client::Client(GraphT &&__graph)
-        : _graph{std::forward<GraphT>(__graph)}, _router{_graph.get_implementation<GraphT const&>()}, statistics{COLUMNS} {
+        : _graph{std::forward<GraphT>(__graph)}, statistics{COLUMNS} {
     statistics.new_line();
 
     if constexpr (requires(GraphT graph) { graph.epsilon(); graph.base_graph(); }) {
@@ -28,7 +27,7 @@ Client::Client(GraphT &&__graph)
 
     double vm, res;
     process_mem_usage(vm, res);
-    statistics.put(Statistics::MEMORY_USAGE_GRAPH, vm / 1024);
+    statistics.put(Statistics::MEMORY_USAGE_GRAPH, res / 1024);
 }
 
 template<typename GraphT, typename RoutingT>
@@ -44,16 +43,12 @@ Client::Client(GraphT &&graph, RoutingT &&router)
 
     statistics.put(Statistics::NODE_COUNT, graph.node_count());
     statistics.put(Statistics::EDGE_COUNT, graph.edge_count());
-
-    double vm, res;
-    process_mem_usage(vm, res);
-    statistics.put(Statistics::MEMORY_USAGE_GRAPH, vm / 1024);
 }
 
 
 template<>
 void Client::read_graph_file(std::string path) {
-    std::cout << "reading graph from " << path << "..." << std::flush;
+    std::cout << "reading graph from " << path << "...";
 
     std::ifstream input(path);
 
@@ -62,33 +57,28 @@ void Client::read_graph_file(std::string path) {
     process_mem_usage(vm, res);
 
     if (path.ends_with(".graph")) {
-        _graph.read_graph_file(path, 0.5F);
-        process_mem_usage(vm_graph, res_graph);
+        _graph.read_graph_file(path, _routing_config, 0.5F);
     } else if (path.ends_with(".fmi")) {
-        _graph.read_graph_file(path);
-        process_mem_usage(vm_graph, res_graph);
+        _graph.read_graph_file(path, _routing_config);
     } else if (path.ends_with(".sch")) {
-        _graph.read_graph_file(path);
-        process_mem_usage(vm_graph, res_graph);
+        _graph.read_graph_file(path, _routing_config);
     } else if (path.ends_with(".gl")) {
-        _graph.read_graph_file(path);
-        process_mem_usage(vm_graph, res_graph);
+        _graph.read_graph_file(path, _routing_config);
     } else {
         throw std::invalid_argument("unrecognized file ending");
     }
+    process_mem_usage(vm_graph, res_graph);
     input.close();
 
     std::cout << "\b\b\b, done\n";
 
-    _router = {_graph, _routing_config};
-
     _graph.write_graph_stats(statistics);
-    statistics.put(Statistics::MEMORY_USAGE_GRAPH, (vm_graph - vm) / 1024);
+    statistics.put(Statistics::MEMORY_USAGE_GRAPH, (res_graph - res) / 1024);
 };
 
 template<>
 void Client::read_graph_file(std::string path, double epsilon) {
-    std::cout << "reading graph from " << path << "..." << std::flush;
+    std::cout << "reading graph from " << path << "...";
     std::ifstream input(path);
 
     double vm, res;
@@ -96,7 +86,7 @@ void Client::read_graph_file(std::string path, double epsilon) {
     process_mem_usage(vm, res);
 
     if (path.ends_with(".graph")) {
-        _graph.read_graph_file(path, epsilon);
+        _graph.read_graph_file(path, _routing_config, epsilon);
         process_mem_usage(vm_graph, res_graph);
     } else {
         throw std::invalid_argument("unrecognized file ending");
@@ -105,10 +95,8 @@ void Client::read_graph_file(std::string path, double epsilon) {
 
     std::cout << "\b\b\b, done\n";
 
-    _router = {_graph, _routing_config};
-
     _graph.write_graph_stats(statistics);
-    statistics.put(Statistics::MEMORY_USAGE_GRAPH, (vm_graph - vm) / 1024);
+    statistics.put(Statistics::MEMORY_USAGE_GRAPH, (res_graph - res) / 1024);
 };
 
 void Client::write_info(std::ostream& output) const {
@@ -135,7 +123,7 @@ void Client::write_info(std::ostream& output) const {
            << "\n    steiner point neighbors:              " << statistics.get(NEIGHBORS_STEINER_POINT_NEIGHBORS_COUNT)
            << "\n    steiner point search iterations:      " << statistics.get(NEIGHBORS_STEINER_POINT_ANGLE_CHECK_COUNT);
 
-    output <<"\n\n" << std::flush;
+    output <<"\n\n";
 }
 
 void Client::write_tree_file(std::string path) const {
@@ -146,4 +134,64 @@ void Client::write_tree_file(std::string path) const {
 
     std::string fwd{prefix + name + suffix};
     _result.tree_forward().write_graph_file(fwd, tree_color, 1);
+}
+
+void Client::compute_route(long from, long to) {
+    ensure_router();
+    _query = {};
+    _result = {};
+
+    _router.compute_route(from, to);
+
+    // store memory usage
+    double vm, res;
+    process_mem_usage(vm, res);
+    statistics.put(Statistics::MEMORY_USAGE_FINAL, res / 1024);
+
+    _query = _router.query();
+    _result = _router.result();
+    _query.write(statistics);
+    _result.write(statistics);
+}
+
+void Client::compute_one_to_all(long from) {
+    ensure_router();
+    _query = {};
+    _result = {};
+
+    _router.compute_route(from, -1);
+
+    // store memory usage
+    double vm, res;
+    process_mem_usage(vm, res);
+    statistics.put(Statistics::MEMORY_USAGE_FINAL, res / 1024);
+
+    _query = _router.query();
+    _result = _router.result();
+    _query.write(statistics);
+    _result.write(statistics);
+}
+
+void Client::compute_one_to_all(long from, std::ostream &out) {
+    ensure_router();
+    _query = {};
+    _result = {};
+
+    _router.compute_route(from, -1, out);
+
+    // store memory usage
+    double vm, res;
+    process_mem_usage(vm, res);
+    statistics.put(Statistics::MEMORY_USAGE_FINAL, res / 1024);
+
+    _query = _router.query();
+    _result = _router.result();
+    _query.write(statistics);
+    _result.write(statistics);
+}
+
+void Client::ensure_router() {
+    if (!_router) {
+        _router = {_graph, _routing_config};
+    }
 }

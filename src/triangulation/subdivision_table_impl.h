@@ -53,7 +53,7 @@ subdivision_table::precompute(double epsilon, double min_relative_r_value) {
 std::vector<subdivision_table::subdivision_edge_info>
 subdivision_table::make_subdivision_info(const adjacency_list<int> &triangulation,
                                          const std::vector<node_t> &nodes,
-                                         const polyhedron<adjacency_list<int>, 3> &polyhedron,
+                                         const polyhedron<int, 3> &polyhedron,
                                          const std::vector<edge_class> &table,
                                          const std::vector<double> &r_values,
                                          double epsilon) {

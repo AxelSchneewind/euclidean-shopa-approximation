@@ -10,15 +10,24 @@
 #include <cstddef>
 #include <vector>
 
+
+template <typename T, size_t Size>
+concept SizedTuple = std::ranges::random_access_range<T>
+                     && std::integral<typename T::value_type>
+                     && (Size == T::extent || Size == std::tuple_size_v<T> || Size == std::extent_v<T>);
+
+template <typename T, size_t Size>
+concept TupleRange = std::ranges::range<T> && SizedTuple<typename T::value_type, Size>;
+
 /**
  * stores the topology of a polyhedron. Provides O(1) access to adjacent edges for given nodes/edges
  */
-template<Topology BaseGraph, std::size_t MaxNodesPerFace>
+template<std::integral IndexType, std::size_t MaxNodesPerFace>
 class polyhedron {
 public:
-    using node_id_type = typename BaseGraph::node_id_type;
-    using edge_id_type = typename BaseGraph::edge_id_type;
-    using face_id_type = int;
+    using node_id_type = IndexType;
+    using edge_id_type = IndexType;
+    using face_id_type = IndexType;
 
     // edges that are part of a face
     static constexpr std::size_t EDGE_COUNT_PER_FACE = MaxNodesPerFace;
@@ -75,9 +84,9 @@ public:
     /**
      * @return
      */
+    template<Topology BaseGraph, TupleRange<MaxNodesPerFace> FaceRange>
     [[gnu::cold]]
-    static polyhedron make_polyhedron(BaseGraph const&triangulation_edges,
-                                    std::vector<std::array<node_id_type, MaxNodesPerFace>> &&faces);
+    static polyhedron make_polyhedron(BaseGraph const& triangulation_edges, FaceRange const& faces);
 
     [[gnu::hot]]
     std::span<const face_id_type, FACE_COUNT_PER_EDGE> edge_faces(edge_id_type edge) const;

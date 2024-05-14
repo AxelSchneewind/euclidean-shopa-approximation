@@ -4,23 +4,16 @@
 
 #include <cstddef>
 
-
-[[gnu::hot]]
-void atan2_approximation(std::size_t num_points, const coordinate_t* coordinates, coordinate_t::component_type out);
-
-
 namespace std {
-    [[using gnu : hot, const]]
-    coordinate_t::component_type atan2(coordinate_t const direction);
+    [[using gnu : hot, const, always_inline]]
+    coordinate_t::component_type atan2(coordinate_t const& direction);
 }
 
 
 // Euclidean distance
-[[gnu::hot]]
-[[gnu::const]]
-[[gnu::always_inline]]
+[[using gnu : hot, const, always_inline]]
 inline coordinate_t::component_type
-distance_euclidean(coordinate_t c1, coordinate_t c2);
+distance_euclidean(coordinate_t const& c1, coordinate_t c2);
 
 template <typename T>
 inline T
@@ -28,7 +21,7 @@ to_radians(T degrees);
 
 // exact distance on earths surface
 inline coordinate_t::component_type
-distance(coordinate_t c1, coordinate_t c2);
+distance(coordinate_t const& c1, coordinate_t const& c2);
 
 /**
  * angle in radians
@@ -49,15 +42,9 @@ angle(coordinate_t dir0, coordinate_t dir1);
 inline coordinate_t::component_type
 inner_angle(coordinate_t dir0, coordinate_t dir1);
 
-[[gnu::hot]]
-[[gnu::const]]
-[[gnu::always_inline]]
 inline coordinate_t::component_type
 angle_cos(coordinate_t const& dir0, coordinate_t const& dir1);
 
-[[gnu::hot]]
-[[gnu::const]]
-[[gnu::always_inline]]
 inline coordinate_t::component_type
 angle_cos_sqr(coordinate_t const& dir0, coordinate_t const& dir1);
 
@@ -72,9 +59,7 @@ line_distance(coordinate_t source, coordinate_t destination, coordinate_t point)
  * @param relative
  * @return
  */
-[[gnu::hot]]
-[[gnu::always_inline]]
-[[gnu::const]]
+[[using gnu : hot, const, always_inline]]
 inline coordinate_t
 interpolate_linear(coordinate_t source, coordinate_t destination, coordinate_t::component_type  relative);
 
