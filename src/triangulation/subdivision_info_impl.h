@@ -67,8 +67,8 @@ subdivision<StoreCoords>::make_subdivision_info(const adjacency_list<int> &trian
             if (a2 < angle2)
                 angle2 = a2;
         }
-	long double sin1 = std::sin(angle1);
-	long double sin2 = std::sin(angle2);
+        long double sin1 = std::sin(angle1);
+        long double sin2 = std::sin(angle2);
         sin1 = std::clamp(sin1, 0.0l, 1.0l);
         sin2 = std::clamp(sin2, 0.0l, 1.0l);
 

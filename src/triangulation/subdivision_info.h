@@ -56,7 +56,7 @@ private:
     size_t edges_capped{0};
 
 
-    [[using gnu : hot, pure, always_inline]]
+    [[using gnu : hot, pure]]
     static coordinate_type compute_node_coordinates(steiner_index_type steiner_index,
                                                     subdivision_edge_info const &edge,
                                                     coordinate_type const &c1,
@@ -79,29 +79,29 @@ public:
 
     subdivision(subdivision &&other) noexcept = default;
 
-    [[using gnu : hot, pure, always_inline]]
+    [[using gnu : hot, pure]]
     coordinate_type node_coordinates(edge_id_t edge, steiner_index_type steiner_index, coordinate_type const &c1,
                                      coordinate_type const &c2) const requires(!store_node_coordinates);
 
-    [[using gnu : hot, pure, always_inline]]
+    [[using gnu : hot, pure]]
     coordinate_type const& node_coordinates(edge_id_t edge, steiner_index_type steiner_index) const requires(store_node_coordinates);
 
-    [[using gnu : hot, pure, always_inline]]
+    [[using gnu : hot, pure]]
     double relative_position(edge_id_t edge, steiner_index_type steiner_index) const;
 
-    [[using gnu : hot, pure, always_inline]]
+    [[using gnu : hot, pure]]
     double relative_position_mid(edge_id_t edge) const;
 
-    [[using gnu : hot, pure, always_inline]]
+    [[using gnu : hot, pure]]
     double relative_position_steiner(edge_id_t edge, steiner_index_type steiner_index) const;
 
-    [[using gnu : hot, pure, always_inline]]
+    [[using gnu : hot, pure]]
     steiner_index_type index(edge_id_t edge, double relative) const;
 
-    [[using gnu : hot, pure, always_inline]]
+    [[using gnu : hot, pure]]
     subdivision_edge_info &edge(edge_id_t edge);
 
-    [[using gnu : hot, pure, always_inline]]
+    [[using gnu : hot, pure]]
     subdivision_edge_info const &edge(edge_id_t edge) const;
 
     // TODO move somewhere else
