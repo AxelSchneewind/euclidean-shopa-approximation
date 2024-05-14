@@ -83,13 +83,21 @@ def main():
     # compare given graph type to exact values
     graph_type = '-' + args.graph_type
     data = data.loc[(data['benchmark'].str.contains(graph_type)) | (data['benchmark'].str.contains('-exact'))]
-    print('using benchmarks: ', data['benchmark'].unique())
+    print('summarizing columns: ', columns, '\nfor benchmarks: ', data['benchmark'].unique())
 
     # list suspicious queries
     sus = data.loc[data['ratio'] > 1.02][['source', 'target', 'epsilon', 'cost', 'ratio']]
-    sus.sort_values(by='ratio', inplace=True, ascending=False)
-    print('some results are suspiciously bad: ', file=sys.stderr)
-    print(sus.loc[sus['epsilon'] != math.inf], file=sys.stderr)
+    sus = sus.loc[sus['epsilon'] != math.inf]
+    if len(sus) > 0:
+        sus.sort_values(by='ratio', inplace=True, ascending=False)
+        print('some results are suspiciously bad: ', file=sys.stderr)
+        print(sus, file=sys.stderr)
+    sus = data.loc[data['ratio'] < 1.00][['source', 'target', 'epsilon', 'cost', 'optimal cost', 'ratio']]
+    sus = sus['epsilon'] != math.inf
+    if len(sus) > 0:
+        sus.sort_values(by='ratio', inplace=True, ascending=True)
+        print('some results are suspiciously good: ', file=sys.stderr)
+        print(sus, file=sys.stderr)
 
     # by epsilon
     if args.output_epsilon is not None:
@@ -99,10 +107,11 @@ def main():
             for epsilon in data['epsilon'].unique():
                 by_epsilon = filter_epsilon(data, epsilon)
                 by_epsilon = by_epsilon[column]
-                print(column, epsilon, by_epsilon.count(), by_epsilon.mean(), by_epsilon.min(), by_epsilon.median(), by_epsilon.max(), by_epsilon.std(),
-                      by_epsilon.quantile(0.01), by_epsilon.quantile(0.1), by_epsilon.quantile(0.25),
-                      by_epsilon.quantile(0.75), by_epsilon.quantile(0.9), by_epsilon.quantile(0.99),
-                      sep=',', file=eps_file)
+                if len(by_epsilon) > 0:
+                    print(column, epsilon, by_epsilon.count(), by_epsilon.mean(), by_epsilon.min(), by_epsilon.median(), by_epsilon.max(), by_epsilon.std(),
+                          by_epsilon.quantile(0.01), by_epsilon.quantile(0.1), by_epsilon.quantile(0.25),
+                          by_epsilon.quantile(0.75), by_epsilon.quantile(0.9), by_epsilon.quantile(0.99),
+                          sep=',', file=eps_file)
 
     # info on each query
     if args.output_queries is not None:
@@ -117,6 +126,7 @@ def main():
                         by_query.quantile(0.01), by_query.quantile(0.1), by_query.quantile(0.25),
                         by_query.quantile(0.75), by_query.quantile(0.9), by_query.quantile(0.99),
                         sep=',', file=q_file)
+    print('done')
 
 
 if __name__ == "__main__":

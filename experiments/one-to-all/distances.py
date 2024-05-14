@@ -6,26 +6,38 @@ import pandas as pd
 
 
 def read_distances(file):
-    data = pd.read_csv(file, dtype={ 'distance': np.float64, 'node':np.int64 })
+    data = pd.read_csv(file, dtype={ 'distance': np.float64, 'node': np.int64 })
     data.sort_values(by='distance', ascending=True, inplace=True)
-    data.drop_duplicates(subset=['node'], keep='first', inplace=True, ignore_index=True)
+    data.drop_duplicates(subset='node', keep='first', inplace=True, ignore_index=True)
+    data = data.loc[data['distance'] != 0.0]
+    data = data.set_index('node')
     return data
 
 def add_ratio(data, reference):
-    distance_column = reference.columns[1]
-    data['ratio'] = data[distance_column] / reference[distance_column]
+    distance_column = 'distance'
+    data = data.join(reference, how='inner', rsuffix='_ref', validate='1:1')
+    data['ratio'] = (data['distance'] / data['distance_ref'])
     return data
 
 def describe(file, reference_file, output):
     data = read_distances(file)
     data_ref = read_distances(reference_file)
 
-    add_ratio(data, data_ref)
+    # filter by nodes that are contained in both lists
+    # keep = [ n in data['node'] for n in data_ref['node'] ]
+    # data_ref = data_ref.loc[keep]
+    # keep = [ n in data_ref['node'] for n in data['node'] ]
+    # data = data.loc[keep]
+
+    # data.reset_index(drop=True)
+    # data_ref.reset_index(drop=True)
+
+    data = add_ratio(data, data_ref)
+    data.sort_values(by='distance')
 
     description = data[['ratio']].describe().T
     description['file'] = file
     description['reference'] = reference_file
-    print(description)
     description.to_csv(output)
 
 
