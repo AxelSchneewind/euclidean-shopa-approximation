@@ -17,6 +17,7 @@ To build, run
 ```sh
 mkdir cmake-build-release
 cmake -B cmake-build-release -S . -DCMAKE_BUILD_TYPE=Release
+cmake --build cmake-build-release --target all
 ```
 
 The following executables are provided:
