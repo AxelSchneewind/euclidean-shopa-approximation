@@ -4,9 +4,9 @@
 
 #include "../routing_impl.h"
 #include "../routing/dijkstra_concepts.h"
+#include "../routing/node_label.h"
 
 #include <thread>
-#include "../routing/node_label.h"
 
 
 // for selecting a type based on some compile-time value
@@ -140,13 +140,14 @@ static inline std::unique_ptr<RouterInterface> make_router(Graph const &graph, R
         return {};
     } else {
         using routing_t = typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::routing_t;
-	std::cout << "selected Implementation: \n"
-	          << "only_distance: " << only_distance << ", A*: " << use_a_star << ", pruning: " << (int)simplifications << ", neighbor finding " << (int)algorithm << ", \n"
-	          << "graph:         " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::graph_t).name() << ", \n"
-	          << "queue:         " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::queue_t).name() << ", \n"
-	          << "labels:        " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::labels_t).name() << ", \n"
-	          << "neighbors:     " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::neighbors_t).name() << ", \n"
-	          << "dijkstra:      " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::dijkstra_t).name() << "\n";
+    // to debug selection of implementation
+	// std::cout << "selected Implementation: \n"
+	//           << "only_distance: " << only_distance << ", A*: " << use_a_star << ", pruning: " << (int)simplifications << ", neighbor finding " << (int)algorithm << ", \n"
+	//           << "graph:         " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::graph_t).name() << ", \n"
+	//           << "queue:         " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::queue_t).name() << ", \n"
+	//           << "labels:        " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::labels_t).name() << ", \n"
+	//           << "neighbors:     " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::neighbors_t).name() << ", \n"
+	//           << "dijkstra:      " <<typeid(typename Implementation<GraphImpl, only_distance, use_a_star, algorithm, simplifications>::dijkstra_t).name() << "\n";
 
         return std::make_unique<Router::RouterImplementation<GraphImpl, routing_t>>(
                 graph.get_implementation<GraphImpl>(), routing_t(graph.get_implementation<GraphImpl>()), config);
