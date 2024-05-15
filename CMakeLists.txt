@@ -8,8 +8,8 @@ include_directories(include)
 
 include(CPack)
 
-set(CMAKE_CXX_FLAGS "-march=native -mtune=native -Wall -fopenmp")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -D_GLIBCXX_DEBUG") # -fsanitize=address
+set(CMAKE_CXX_FLAGS "-march=native -mtune=native -fopenmp")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -D_GLIBCXX_DEBUG -Wall") # -fsanitize=address
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 
 

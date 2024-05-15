@@ -9,9 +9,9 @@ as well as the implementation of the pruned search.
 
 ## Building
 The project can be built using CMake.
-It optionally requires doxygen (for documentation) and gengetopt (for modifying parsing of command line parameters) to be installed.
+The code can be compiled with GCC 11.4.0 and newer.
+It optionally requires doxygen (for documentation) and gengetopt (for modifying parsing of command line parameters).
 
-The can be compiled by GCC 11.4.0 and newer.
 
 To build, run
 ```sh
@@ -19,7 +19,7 @@ mkdir cmake-build-release
 cmake -B cmake-build-release -S . -DCMAKE_BUILD_TYPE=Release
 cmake --build cmake-build-release --target all
 ```
-(sorry about the high compilation time and the warnings)
+Sorry about the high compilation time ;-)
 
 The following executables are provided:
 

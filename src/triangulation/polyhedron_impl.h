@@ -45,9 +45,7 @@ namespace {
                 assert(adjacent_edges.size() == MaxNodesPerFace);
 
                 // add edges array to face
-                size_t index = 0;
                 std::ranges::copy(adjacent_edges, face_edges[face_index].begin());
-                assert(index <= MaxNodesPerFace);
             }
         }
 
@@ -262,8 +260,8 @@ polyhedron<IndexType, MaxNodesPerFace>::polyhedron(
         std::vector<std::array<face_id_type, FACE_COUNT_PER_EDGE>> &&adjacent_faces,
         std::vector<bool> &&is_boundary_node, std::vector<bool> &&is_boundary_edge,
         std::vector<edge_id_type> &&node_edges, std::vector<int> &&node_edge_offsets)
-        : _boundary_node_count{std::ranges::count(is_boundary_node, true)}
-        , _boundary_edge_count{std::ranges::count(is_boundary_edge, true)}
+        : _boundary_node_count(std::ranges::count(is_boundary_node, true))
+        , _boundary_edge_count(std::ranges::count(is_boundary_edge, true))
         , _is_boundary_node{std::move(is_boundary_node)}
         , _is_boundary_edge{std::move(is_boundary_edge)}
         , _face_info{std::move(adjacent_edges)}
