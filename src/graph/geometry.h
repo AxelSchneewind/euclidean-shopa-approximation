@@ -5,13 +5,13 @@
 #include <cstddef>
 
 namespace std {
-    [[using gnu : hot, const, always_inline]]
+    [[using gnu : hot, const]]
     coordinate_t::component_type atan2(coordinate_t const& direction);
 }
 
 
 // Euclidean distance
-[[using gnu : hot, const, always_inline]]
+[[using gnu : hot, const]]
 inline coordinate_t::component_type
 distance_euclidean(coordinate_t const& c1, coordinate_t c2);
 
