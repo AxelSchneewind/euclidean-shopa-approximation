@@ -572,10 +572,7 @@ steiner_neighbors<Graph, Labels, P, Config>::add_min_angle_neighbor(const NodeCo
     for (auto &&edge_id: _graph->base_polyhedron().edges(node_id.edge)) [[likely]] {
         assert(edge_id != node_id.edge);
 
-        // get neighbor
-        node_id_type other = { node_id.edge, _graph->steiner_info(node_id.edge).mid_index };
-
-	epsilon_spanner(node, edge_id, out, out_coordinates);
+	    epsilon_spanner(node, edge_id, out, out_coordinates);
     }
 }
 
