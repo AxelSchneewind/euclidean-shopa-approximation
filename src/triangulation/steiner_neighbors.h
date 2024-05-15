@@ -21,8 +21,8 @@ concept HasFaceCrossingPredecessor = requires {
 
 enum class Pruning : int {
     UNPRUNED,           // search full graph, currently not implemented
-    PRUNE_DEFAULT,      // prune like stated in my thesis
-    MinBendingAngleESpanner // alternative pruning, minimizing bending angles per epsilon spanner
+    PRUNE_DEFAULT,      // default pruning
+    MinBendingAngleESpanner // alternative pruning, minimizing bending angles
 };
 
 enum class NeighborFindingAlgorithm : int {
@@ -40,7 +40,7 @@ private:
     using base_node_id_type = typename Graph::base_topology_type::node_id_type;
     using base_edge_id_type = typename Graph::base_topology_type::edge_id_type;
 
-    // if set to true, the implementation does not search for the closest neighbor in a sub-cone but selects the one with lowest bending angle
+    // if set to true, the implementation does not search for the closest neighbor in a sub-cone but the one with lowest bending angle
     static constexpr bool simplify_epsilon_spanner = (Simplifications == Pruning::MinBendingAngleESpanner);
 
     //
