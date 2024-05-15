@@ -19,6 +19,7 @@ mkdir cmake-build-release
 cmake -B cmake-build-release -S . -DCMAKE_BUILD_TYPE=Release
 cmake --build cmake-build-release --target all
 ```
+(sorry about the high compilation time and the warnings)
 
 The following executables are provided:
 
@@ -30,6 +31,11 @@ The following executables are provided:
 - `make_gl`: reads a .fmi or .graph file and converts it to a .gl file for rendering
 - `convert`: reads a .graph file and converts it to .node and .ele files used by triangle (Shewchuck) and vice versa.
 - `prune_graph`: cuts out a subgraph from a .fmi or .graph file by a given bounding box
+- `extract_boundary`: reads a .graph file and writes the boundary to a .fmi file.
+
+For the respective usage, run without arguments or with `--help`.
+
+
 
 ## Computing shortest paths
 Example:
@@ -38,7 +44,9 @@ Example:
 compute_shopa --graph-file aegaeis-ref.graph -o output-dir/ -e 0.5 -q $(find_nodes --graph-file aegaeis-ref.graph -b -r 2 | sed -z -e 's/\n/,/g')
 
 ```
-Selects two random boundary vertices and computes a shortest path between them and writes the results to the given output directory.
+Selects two random boundary vertices, computes a shortest path between them and writes the results to the given output directory. 
+To also output the shortest path tree as a .gl file, also pass `-tNUM` (with `NUM` being the maximal number of nodes to output).
+To enable A\*, pass `-a`.
 
 ## Experiments
 

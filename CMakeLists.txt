@@ -97,7 +97,6 @@ add_executable(make_explicit src/make_explicit.cpp)
 
 add_executable(convert src/convert.cpp)
 add_executable(make_gl src/make_gl.cpp)
-add_executable(make_bin src/make_bin.cpp)
 
 add_executable(compute_shopa src/route.cpp src/cli/cmdline_route.c)
 add_executable(compute_ota src/distance_one_to_all.cpp src/cli/cmdline_one_to_all.c)
